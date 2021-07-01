@@ -48,13 +48,11 @@ int main () {
 	// and compute their integral on the rectangle, using Gauss quadrature with 9 points :
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	fe.set_integrator ( tag::Gauss, tag::quad_9 );
-	cout << "integral of " << f.repr() << " = " << fe.integrate ( f, tag::over, rect_mesh ) << endl;
-	cout << "integral of " << g.repr() << " = " << fe.integrate ( g, tag::over, rect_mesh ) << endl;
-	
-	// new points, segments and rectangles are created by these calls
-	// the fields 'x', 'y' and 'z' are interpolated in the new vertices
-	// by using the information stored in the function xyz
+	// cout << "integral of " << f.repr() << " = " << fe.integrate ( f, tag::over, rect_mesh ) << endl;
+	// cout << "integral of " << g.repr() << " = " << fe.integrate ( g, tag::over, rect_mesh ) << endl;
 
+	// the above code does not work yet, but we are very close to getting it right ;-)
+	
 	// abstract variational formulation :
 	// auto & uu = FunctionOnMesh::unknown ( u, "Lagrange degree one");
 	// The values of 'uu' are related to the field 'u'.

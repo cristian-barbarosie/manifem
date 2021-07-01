@@ -1,27 +1,28 @@
 
-// maniFEM mesh.cpp 2020.01.03
+// mesh.cpp 2021.03.18
 
-//    This file is part of maniFEM, a C++ library for meshes on manifolds and finite elements.
+//   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//    ManiFEM is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Lesser General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
+//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   https://github.com/cristian-barbarosie/manifem
 
-//    ManiFEM is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU Lesser General Public License for more details.
+//   ManiFEM is free software: you can redistribute it and/or modify it
+//   under the terms of the GNU Lesser General Public License as published
+//   by the Free Software Foundation, either version 3 of the License
+//   or (at your option) any later version.
 
-//    You should have received a copy of the GNU Lesser General Public License
-//    along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
+//   ManiFEM is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//   See the GNU Lesser General Public License for more details.
 
-//    Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
-//    https://github.com/cristian-barbarosie/manifem
+//   You should have received a copy of the GNU Lesser General Public License
+//   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <forward_list>
 
 #include "mesh.h"
+#include "iterator.h"
 
 using namespace maniFEM;
 
@@ -44,8 +45,30 @@ std::vector < size_t > Cell::short_int_heap_size_neg ( Mesh::maximum_dimension_p
 
 	
 Cell::Core * const Cell::ghost { new Cell::Negative::Vertex ( tag::ghost ) };
-// static data member, see paragraph 8.14 in the manual
+// static data member, see paragraph 9.14 in the manual
 
+//-----------------------------------------------------------------------------//
+
+
+Mesh::Mesh ( const tag::DeepCopy &, const Mesh & msh )
+:	core { nullptr }, meth { & Mesh::Positive::methods_pos }
+{	size_t d = msh.dim();
+	if ( d > 1 )
+		this->core = new Mesh::Positive ( tag::of_dimension, d+1, tag::minus_one );
+	else
+	{	assert ( d == 1 );
+		this->core = new Mesh::OneDim::Positive ( );  }
+	std::list < Cell::Core* > & l = msh.core->cells[d];
+	std::list<Cell::Core*>::iterator it = l.begin();
+	for ( ; it != l.end(); it++ )
+	{	Cell::Core * cll_p = *it;
+		Cell cll ( tag::whose_core_is, cll_p );
+		cll.add_to ( *this );   }                                                    }
+
+//	CellIterator it = msh.iter_over ( tag::cells_of_dim, d );
+//	for ( it.reset(); it.in_range(); it++ )
+//	{	Cell cll = *it;
+	
 //-----------------------------------------------------------------------------//
 
 
@@ -159,14 +182,14 @@ Cell::Core * Mesh::Positive::last_segment ( )  // virtual from Mesh::Core
 	exit ( 1 );                                                                                     }
 
 Cell::Core * Mesh::OneDim::Positive::first_vertex ( )  // virtual from Mesh::Core
-// returns a positive vertex
+// returns a negative vertex
 {	this->order();
 	assert ( this->first_ver );
 	assert ( this->first_ver != Cell::ghost );
 	assert ( not this->first_ver->is_positive() );
 	assert ( this->last_ver );
 	assert ( this->last_ver->is_positive() );
-	return this->first_ver->reverse_p;              }
+	return this->first_ver;                         }
 
 Cell::Core * Mesh::OneDim::Positive::last_vertex ( )  // virtual from Mesh::Core
 {	this->order();
@@ -258,28 +281,34 @@ bool Cell::Core::Negative::belongs_to ( Mesh::Core * msh, const tag::NotOriented
 //-----------------------------------------------------------------------------//
 
 
-Cell::Core * Cell::Positive::Vertex::reverse ( const tag::BuildIfNotExists & )
+Cell::Core * Cell::Positive::Vertex::build_reverse ( )
 // virtual from Cell::Core
 
-{	if ( this->reverse_p == nullptr )
-		this->reverse_p = new Cell::Negative::Vertex ( tag::reverse_of, this );
+{	this->reverse_p = new Cell::Negative::Vertex ( tag::reverse_of, this );
 	return this->reverse_p;                                                    }
 
 
-Cell::Core * Cell::Positive::Segment::reverse ( const tag::BuildIfNotExists & )
+Cell::Core * Cell::Positive::Segment::build_reverse ( )
 // virtual from Cell::Core
 
-{	if ( this->reverse_p == nullptr )
-		this->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, this );
+{	this->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, this );
 	return this->reverse_p;                                                     }
 
 
-Cell::Core * Cell::Positive::reverse ( const tag::BuildIfNotExists & )
+Cell::Core * Cell::Positive::build_reverse ( )
 // virtual from Cell::Core
 
-{	if ( this->reverse_p == nullptr )
-		this->reverse_p = new Cell::Negative ( tag::reverse_of, this );
+{	this->reverse_p = new Cell::Negative ( tag::reverse_of, this );
 	return this->reverse_p;                                                   }
+
+
+Cell::Core * Cell::Core::Positive::reverse ( const tag::BuildIfNotExists & )
+// virtual from Cell::Core
+
+{	if ( this->reverse_p == nullptr )  this->reverse_p = this->build_reverse();
+	assert ( this->reverse_p );
+	assert ( not this->reverse_p->is_positive() );
+	return this->reverse_p;                                                      }
 
 
 Cell::Core * Cell::Core::Negative::reverse ( const tag::BuildIfNotExists & )
@@ -636,7 +665,7 @@ void Cell::Positive::Segment::add_to ( Mesh::Core * mmsh ) // virtual from Cell:
 
 	// msh->first_ver == nullptr  means no check, no ordering
 	// msh->first_ver == Cell::ghost  means closed chain
-	// see paragraph 8.14 in the manual
+	// see paragraph 9.14 in the manual
 	msh->first_ver = nullptr;
 	
 	msh->deep_connections ( this, this, Mesh::action_add );
@@ -668,7 +697,7 @@ void Cell::Positive::Segment::remove_from ( Mesh::Core * mmsh ) // virtual from 
 
 	// msh->first_ver == nullptr  means no check, no ordering
 	// msh->first_ver == Cell::ghost  means closed chain
-	// see paragraph 8.14 in the manual
+	// see paragraph 9.14 in the manual
 	msh->first_ver = nullptr;
 
 	msh->deep_connections ( this, this, Mesh::action_remove );
@@ -706,7 +735,7 @@ void Cell::Negative::Segment::add_to ( Mesh::Core * mmsh ) // virtual from Cell:
 
 	// msh->first_ver == nullptr  means no check, no ordering
 	// msh->first_ver == Cell::ghost  means closed chain
-	// see paragraph 8.14 in the manual
+	// see paragraph 9.14 in the manual
 	msh->first_ver = nullptr;
 	
 	msh->deep_connections ( pos_seg, this, Mesh::action_add_rev );
@@ -741,7 +770,7 @@ void Cell::Negative::Segment::remove_from ( Mesh::Core * mmsh ) // virtual from 
 
 	// msh->first_ver == nullptr  means no check, no ordering
 	// msh->first_ver == Cell::ghost  means closed chain
-	// see paragraph 8.14 in the manual
+	// see paragraph 9.14 in the manual
 	msh->first_ver = nullptr;
 	
 	msh->deep_connections ( pos_seg, this, Mesh::action_remove_rev );
@@ -896,7 +925,7 @@ void Mesh::action_add ( Cell::Core * cll, Cell::Core * o_cll,
 	assert ( msh_dim_p1 > cll_dim );
 	size_t dif_dim = msh_dim_p1 - cll_dim - 1;
 	assert ( cll_pos->meshes.size() > dif_dim );
-/////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 	// inspired in item 24 of the book : Scott Meyers, Effective STL           //
 	typedef std::map<Mesh::Core*,Cell::field_to_meshes> maptype;               //
 	maptype & cmd = cll_pos->meshes[dif_dim];                                  //
@@ -910,7 +939,7 @@ void Mesh::action_add ( Cell::Core * cll, Cell::Core * o_cll,
 	else                                                                       //
 	{ lb->second.counter_pos += cp;                                            //
 	  lb->second.counter_neg += cn;   }                                        //
-////////// code below is conceptually equivalent to the above //////////////////////
+////////// code below is conceptually equivalent to the above /////////////////
 //	if (cll->meshes[dif_dim].find(msh)==cll->meshes[dif_dim].end())     //
 //	{ msh->cells[cll->dim].push_front(o_cll);                           //
 //	  Cell::field_to_meshes field;                                      //
@@ -921,7 +950,7 @@ void Mesh::action_add ( Cell::Core * cll, Cell::Core * o_cll,
 //	else                                                                //
 //	{ cll->meshes[dif_dim][msh].counter_pos += cp;                      //
 //	  cll->meshes[dif_dim][msh].counter_neg += cn;   }                  //
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 } // end of Mesh::action_add
 
@@ -1145,6 +1174,8 @@ void Mesh::Core::deep_connections
 			short int mesh_counter_neg = higher_mesh_tri.counter_neg;
 			if ( lower_cell_tri.dim == higher_mesh_tri.dim )
 			{	assert ( lower_cell_tri.obj == cll );
+				// assert counters are 1 and 0
+				// assert higher_mesh_tri.obj is msh
 				action ( cll, o_cll, higher_mesh_tri.obj,
 				         cell_counter_pos*mesh_counter_pos + cell_counter_neg*mesh_counter_neg,
 				         cell_counter_pos*mesh_counter_neg + cell_counter_neg*mesh_counter_pos  );  }

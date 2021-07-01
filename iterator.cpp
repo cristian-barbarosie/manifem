@@ -1,23 +1,23 @@
 
-// maniFEM iterator.cpp 2019.10.30
+// iterator.cpp 2019.10.30
 
-//    This file is part of maniFEM, a C++ library for meshes on manifolds and finite elements.
+//   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//    ManiFEM is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Lesser General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
+//   Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   https://github.com/cristian-barbarosie/manifem
 
-//    ManiFEM is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU Lesser General Public License for more details.
+//   ManiFEM is free software: you can redistribute it and/or modify it
+//   under the terms of the GNU Lesser General Public License as published
+//   by the Free Software Foundation, either version 3 of the License
+//   or (at your option) any later version.
 
-//    You should have received a copy of the GNU Lesser General Public License
-//    along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
+//   ManiFEM is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//   See the GNU Lesser General Public License for more details.
 
-//    Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
-//    https://github.com/cristian-barbarosie/manifem
+//   You should have received a copy of the GNU Lesser General Public License
+//   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "iterator.h"
 
@@ -178,7 +178,8 @@ void CellIterator::Over::SegsOfNegChain::Reverse::reset ( )
 {	this->current_cell = this->mesh->first_segment();  }
 
 void CellIterator::Over::VerOfPosChain::reset ( )
-{	this->current_cell = this->mesh->first_vertex();  }
+{	this->current_cell = this->mesh->first_vertex()->reverse_p;
+	assert ( this->current_cell );                              }
 
 void CellIterator::Over::VerOfPosChain::Reverse::reset ( )
 {	this->current_cell = this->mesh->last_vertex();  }

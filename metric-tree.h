@@ -1,24 +1,24 @@
 
-// maniFEM/metric-tree.h 2020.02.01
+// metric-tree.h 2020.03
 
-//    This is MetricTree, a tiny C++ library for hierarchical organization
-//    of a cloud of points in a metric space
+//   This is MetricTree, a tiny C++ library for hierarchical organization
+//   of a cloud of points in a metric space.
 
-//    MetricTree is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Lesser General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
+//   Copyright 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   https://github.com/cristian-barbarosie/MetricTree
 
-//    MetricTree is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU Lesser General Public License for more details.
+//   MetricTree is free software: you can redistribute it and/or modify it
+//   under the terms of the GNU Lesser General Public License as published
+//   by the Free Software Foundation, either version 3 of the License
+//   or (at your option) any later version.
 
-//    You should have received a copy of the GNU Lesser General Public License
-//    along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
+//   MetricTree is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//   See the GNU Lesser General Public License for more details.
 
-//    Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
-//    https://github.com/cristian-barbarosie/MetricTree
+//   You should have received a copy of the GNU Lesser General Public License
+//   along with MetricTree.  If not, see <https://www.gnu.org/licenses/>.
 
 
 // a cloud, i.e. a set of points in a metric space, organized as a tree
@@ -54,8 +54,8 @@
 
 // we prefer to work with squared distance (thus avoiding computing square roots)
 
-// see paragraph 8.15 in the manual of maniFEM
-
+// see paragraph 10.16 in the manual of maniFEM
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 
 #include <iostream>
 #include <fstream>
@@ -100,8 +100,8 @@ class MetricTree
 
 	inline void remove ( Node * );
 
-	inline std::list < Point > find_close_neighbours_of ( const Point & P, double dd2 );
-	// return all points in the cloud whose squared distance to P is less than or equal to dd2
+	inline std::list < Point > find_close_neighbours_of ( const Point & P, double dd );
+	// return all points in the cloud whose distance to P is less than or equal to dd
 
 	inline double get_dist ( int r );
 	inline double get_sq_dist ( int r );
@@ -189,8 +189,8 @@ class MetricTree<Point,SqDist>::Node
 	void remove_from ( MetricTree * cloud );
 	
 	void get_close_neighbours_of
-	( const Point & P, double dd2, std::list < Point > & ll, MetricTree<Point,SqDist> * cloud );
-	// return all points in the cloud whose squared distance to P is less than or equal to dd2
+	( const Point & P, double dd, std::list < Point > & ll, MetricTree<Point,SqDist> * cloud );
+	// return all points in the cloud whose distance to P is less than or equal to dd
 	// the cloud is used as source of information (ratio etc)
 	
 	void promote ( MetricTree * cloud );
@@ -422,12 +422,12 @@ void MetricTree<Point,SqDist>::Node::remove_from
 
 template < typename Point, typename SqDist >
 inline std::list < Point > MetricTree<Point,SqDist>::find_close_neighbours_of
-( const Point & P, double dd2 )
+( const Point & P, double dd )
 
-// return all points in the cloud whose squared distance to P is less than or equal to dd2
+// return all points in the cloud whose distance to P is less than or equal to dd
 
 {	std::list < Point > ll;
-	this->root->get_close_neighbours_of ( P, dd2, ll, this );
+	this->root->get_close_neighbours_of ( P, dd, ll, this );
 	return ll;                                                 }
 
 //-----------------------------------------------------------------------------------------------//

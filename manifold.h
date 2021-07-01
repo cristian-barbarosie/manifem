@@ -1,23 +1,23 @@
 
-// maniFEM manifold.h 2020.01.25
+// manifold.h 2021.04.17
 
-//    This file is part of maniFEM, a C++ library for meshes on manifolds and finite elements.
+//   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//    ManiFEM is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Lesser General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
+//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   https://github.com/cristian-barbarosie/manifem
 
-//    ManiFEM is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU Lesser General Public License for more details.
+//   ManiFEM is free software: you can redistribute it and/or modify it
+//   under the terms of the GNU Lesser General Public License as published
+//   by the Free Software Foundation, either version 3 of the License
+//   or (at your option) any later version.
 
-//    You should have received a copy of the GNU Lesser General Public License
-//    along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
+//   ManiFEM is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//   See the GNU Lesser General Public License for more details.
 
-//    Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
-//    https://github.com/cristian-barbarosie/manifem
+//   You should have received a copy of the GNU Lesser General Public License
+//   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef MANIFEM_MANIFOLD_H
 #define MANIFEM_MANIFOLD_H
@@ -36,8 +36,10 @@ namespace maniFEM {
 
 namespace tag {
 	struct euclid { };  static const euclid Euclid;
+	struct lagrange { };  static const lagrange Lagrange;
 	struct Implicit { };  static const Implicit implicit;
 	struct Parametric { };  static const Parametric parametric;
+	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;
 }
 
 
@@ -61,7 +63,10 @@ class Manifold
 
 	inline Manifold ( const tag::NonExistent & ) : core ( nullptr ) { }
 
-	inline Manifold ( const tag::euclid &, const tag::OfDimension &, size_t dim );
+	inline Manifold ( const tag::euclid &, const tag::OfDimension &, const size_t dim );
+
+	inline Manifold ( const tag::euclid &, const tag::OfDimension &, const size_t dim,
+                    const tag::DoNotSetAsWorking &                                   );
 
 	inline Manifold ( const tag::Implicit &, const Manifold &, const Function & );
 
@@ -75,6 +80,9 @@ class Manifold
 	
 	inline Manifold ( const tag::Parametric &, const Manifold &,
 	       const Function::Equality &, const Function::Equality &, const Function::Equality & );
+
+	inline ~Manifold ( )
+	{} //	std::cout << "destructor Manifold" << std::endl;  }
 	
 	inline Manifold & operator= ( const Manifold & m )
 	{	core = m.core;
@@ -204,9 +212,10 @@ class Manifold::Core
 		double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const = 0;
 	
 	// P = sum c_k P_k,  sum c_k == 1
-	virtual void interpolate ( Cell::Positive::Vertex * P,
-		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const = 0;
-};
+	virtual void interpolate ( Cell::Positive::Vertex * P, std::vector < double > & coefs,
+														 std::vector < Cell::Positive::Vertex * > & points ) const = 0;
+
+}; // end of class Manifold::Core
 
 
 inline Function Manifold::coordinates ( ) const
@@ -340,7 +349,7 @@ inline Manifold Manifold::parametric ( const Function::Equality eq1,
         const Function::Equality eq2, const Function::Equality eq3 ) const
 {	return Manifold ( tag::parametric, *this, eq1, eq2, eq3 );  }
 
-//-------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 
 class Manifold::Euclid : public Manifold::Core
 
@@ -385,27 +394,27 @@ class Manifold::Euclid : public Manifold::Core
 		std::vector < double > & coefs, std::vector < Cell > & points ) const;
 	
   Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d ) ;
-  // virtual from Function::Core
+  // virtual from Manifold::Core
 	
-  Function get_coord_func ( ) const;  // virtual from Function::Core
+  Function get_coord_func ( ) const;  // virtual from Manifold::Core
 	
-	void set_coords ( const Function co );  // virtual from Function::Core
+	void set_coords ( const Function co );  // virtual from Manifold::Core
 
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core, here execution forbidden
 
 	class SqDist;
 	// a callable object returning the square of the distance between two points
-	// used for MetricTree, see paragraph 8.15 in the manual
+	// used for MetricTree, see paragraph 10.15 in the manual
 
 };  // end of class Manifold::Euclid
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
 
 class Manifold::Euclid::SqDist
 
 // a callable object returning the square of the distance between two points
-// used for MetricTree, see paragraph 8.15 in the manual
+// used for MetricTree, see paragraph 10.15 in the manual
 
 {	public :
 
@@ -426,9 +435,17 @@ class Manifold::Euclid::SqDist
 //    	Manifold RR2 ( tag::Euclid, 2);
 //      Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 
-inline Manifold::Manifold ( const tag::euclid &, const tag::OfDimension &, size_t d )
+inline Manifold::Manifold
+( const tag::euclid &, const tag::OfDimension &, const size_t d )
 :	Manifold ( tag::whose_core_is, new Manifold::Euclid ( d ) )
 {	assert ( d > 0 );  }
+
+inline Manifold::Manifold
+( const tag::euclid &, const tag::OfDimension &, const size_t d,
+  const tag::DoNotSetAsWorking & )
+:	core { new Manifold::Euclid ( d ) }
+{	assert ( this->core );
+	assert ( d > 0 );       }
 
 
 class Manifold::Implicit : public Manifold::Core
@@ -468,7 +485,7 @@ class Manifold::Implicit : public Manifold::Core
 	
 	Function get_coord_func ( ) const;  // virtual from Manifold::Core
 
-	void set_coords ( const Function co );  // virtual from Function::Core
+	void set_coords ( const Function co );  // virtual from Manifold::Core
 
 	// void project ( Cell::Positive::Vertex * ) const  stays pure virtual from Manifold::Core
 
@@ -558,7 +575,7 @@ inline Manifold::Manifold
 inline Manifold::Implicit::OneEquation::OneEquation
 ( const Manifold & m, const Function & f )
 : level_function ( f ),
-	grad_lev_func ( tag::non_existent )  // temporarily empty gradient
+	grad_lev_func ( 0. )  // temporarily zero gradient
 
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
@@ -568,18 +585,18 @@ inline Manifold::Implicit::OneEquation::OneEquation
 	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
 	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f.deriv(coord[i]);
 		grad->components.emplace_back ( f.deriv(coord[i]) );
-	this->grad_lev_func.core = std::shared_ptr<Function::Core> ( grad );        }
+	this->grad_lev_func = Function ( tag::whose_core_is, grad );                   }
 
 
 inline Manifold::Implicit::TwoEquations::TwoEquations
 ( const Manifold & m, const Function & f )
-: level_function_1 ( tag::non_existent),  // temporarily empty function
-	grad_lev_func_1 ( tag::non_existent ),  // temporarily empty gradient
+: level_function_1 ( 0. ),  // temporarily zero function
+	grad_lev_func_1 ( 0. ),  // temporarily zero gradient
 	level_function_2 ( f ),
-	grad_lev_func_2 ( tag::non_existent )  // temporarily empty gradient
+	grad_lev_func_2 ( 0. )  // temporarily zero gradient
 
 {	Manifold::Implicit::OneEquation * m_one_eq =
-		dynamic_cast<Manifold::Implicit::OneEquation*> ( m.core );
+		dynamic_cast < Manifold::Implicit::OneEquation * > ( m.core );
 	assert ( m_one_eq );
 	this->surrounding_space = m_one_eq->surrounding_space;
 	this->level_function_1 = m_one_eq->level_function;
@@ -589,15 +606,15 @@ inline Manifold::Implicit::TwoEquations::TwoEquations
 	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
 	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f.deriv(coord[i]);
 		grad->components.emplace_back ( f.deriv(coord[i]) );
-	this->grad_lev_func_2.core = std::shared_ptr<Function::Core> ( grad );        }
+	this->grad_lev_func_2 = Function ( tag::whose_core_is, grad );                   }
 
 
 inline Manifold::Implicit::TwoEquations::TwoEquations
 ( const Manifold & m, const Function & f1, const Function & f2 )
 : level_function_1 ( f1 ), 
-	grad_lev_func_1 ( tag::non_existent ),  // temporarily empty gradient
+	grad_lev_func_1 ( 0. ),  // temporarily zero gradient
 	level_function_2 ( f2 ),
-	grad_lev_func_2 ( tag::non_existent )  // temporarily empty gradient
+	grad_lev_func_2 ( 0. )  // temporarily zero gradient
 
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
@@ -607,11 +624,11 @@ inline Manifold::Implicit::TwoEquations::TwoEquations
 	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
 	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f1.deriv(coord[i]);
 		grad->components.emplace_back ( f1.deriv(coord[i]) );
-	this->grad_lev_func_1.core = std::shared_ptr<Function::Core> ( grad );
+	this->grad_lev_func_1 = Function ( tag::whose_core_is, grad );
 	grad = new Function::Aggregate ( tag::reserve_size, n );
 	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f2.deriv(coord[i]);
 		grad->components.emplace_back ( f2.deriv(coord[i]) );
-	this->grad_lev_func_2.core = std::shared_ptr<Function::Core> ( grad );         }
+	this->grad_lev_func_2 = Function ( tag::whose_core_is, grad );                 }
 
 
 class Manifold::Parametric : public Manifold::Core
@@ -622,7 +639,7 @@ class Manifold::Parametric : public Manifold::Core
 
 	Manifold surrounding_space;
 
-	std::map < std::shared_ptr < Function::Core >, std::shared_ptr < Function::Core > > equations;
+	std::map < Function::Core *, Function::Core * > equations;
 
 	inline Parametric ( )	:	Manifold::Core(), surrounding_space ( tag::non_existent ) { }
 
@@ -657,7 +674,7 @@ class Manifold::Parametric : public Manifold::Core
 	
 	Function get_coord_func ( ) const;  // virtual from Manifold::Core
 
-	void set_coords ( const Function co );  // virtual from Function::Core
+	void set_coords ( const Function co );  // virtual from Manifold::Core
 
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core

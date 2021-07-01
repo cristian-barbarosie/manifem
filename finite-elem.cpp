@@ -529,7 +529,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 			xyz_c = xyz_c && ( ( xP * psiP + xQ * psiQ + xR * psiR + xS * psiS ) / 4. );  }
 		assert ( xyz_c.nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                   }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
 
 	this->base_fun_1.clear();
 	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
@@ -543,7 +543,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 
 	// the only use of composing is to allow the calling code to
 	// differentiate base functions with respect to geometric coordinates
-	// and anyway this only works for a diffeomorpsm, not for an immersion
+	// and anyway this only works for a diffeomorphism, not for an immersion
 	
 //-----------------------------------------------------------------------------------------//
 
