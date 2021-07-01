@@ -52,10 +52,8 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 	seg.add_to_mesh ( *this );
 	Mesh::Connected::OneDim * this_core = tag::Util::assert_cast
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
-	// std::cout << A.core->nb_of_wrappers << " " << B.core->nb_of_wrappers << ", ";
 	this_core->first_ver = A;
 	this_core->last_ver = B;
-	// std::cout << A.core->nb_of_wrappers << " " << B.core->nb_of_wrappers << std::endl;
 }
 
 //----------------------------------------------------------------------------------//

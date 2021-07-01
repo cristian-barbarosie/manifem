@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.06.18
+// mesh.cpp 2021.06.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -46,23 +46,24 @@ std::vector < size_t > Cell::size_t_heap_size_neg ( Mesh::maximum_dimension_plus
 std::vector < size_t > Cell::short_int_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::short_int_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0 );
 
+// int Cell::counter { 0 };
+
 //-----------------------------------------------------------------------------//
 
 
-bool tag::Util::Core::default_dispose ( tag::Util::Core::DelegateDispose * that )
+bool tag::Util::Core::default_dispose_query ( tag::Util::Core::DelegateDispose * that )
 // static method
-{	tag::Util::Core * that_one = tag::Util::assert_cast
-		< tag::Util::Core::DelegateDispose*, tag::Util::Core* > ( that );
-	return that_one->dispose();      // calls tag::Util::Core::dispose
+{	tag::Util::Core * that_one = static_cast < tag::Util::Core* > ( that );
+	return that_one->dispose_query ();  // calls tag::Util::Core::dispose_query
 }
 
-bool tag::Util::Core::dispose_cell_with_reverse ( tag::Util::Core::DelegateDispose * that )
+bool tag::Util::Core::dispose_query_cell_with_reverse ( tag::Util::Core::DelegateDispose * that )
 // static method
 // a cell may still have one wrapper kept by its reverse which is a positive cell
 #ifdef MANIFEM_COLLECT_CM	
-{	tag::Util::Core * that_one = tag::Util::assert_cast
-		< tag::Util::Core::DelegateDispose*, tag::Util::Core* > ( that );
-	bool res = that_one->dispose();  // calls tag::Util::Core::dispose which decrements nb_of_wrappers
+{	tag::Util::Core * that_one = static_cast < tag::Util::Core* > ( that );
+	bool res = that_one->dispose_query ();
+	// calls tag::Util::Core::dispose_query which decrements nb_of_wrappers
 	assert ( not res );  // 'that' cell is kept alive by its reverse
 	if ( that->nb_of_wrappers == 1 )
 	{	Cell::Core * that_cell = tag::Util::assert_cast
@@ -73,9 +74,10 @@ bool tag::Util::Core::dispose_cell_with_reverse ( tag::Util::Core::DelegateDispo
 		// it suffices to ask the calling code to kill 'that'
 		// its reverse will be destroyed, too, in the process
 		{	that_cell->reverse_attr.core->reverse_attr.core = nullptr;
-			that_cell->reverse_attr.core->dispose_p = & tag::Util::Core::default_dispose;
-			return true;                                                                  }  }
-	return false;                                                                          }
+			that_cell->reverse_attr.core->dispose_query_p =
+				& tag::Util::Core::default_dispose_query;
+			return true;                                                 }  }
+	return false;                                                          }
 #else  // no MANIFEM_COLLECT_CM
 {	assert ( false );  }
 #endif  // MANIFEM_COLLECT_CM	
@@ -110,17 +112,17 @@ inline void shred_mesh ( Mesh::Core * msh )
 // it is not obvious whether a cell iterator would behave well
 // on a mesh which is being torn down to nothing ...
 	
-{	std::forward_list < Cell::Core * > l;
+{	std::forward_list < Cell > l;
+	// these Cell wrappers are useful, they prevent premature destruction of cells
 	{ // just a block of code for hiding 'it'
 	CellIterator::Core * it = msh->iterator
 		( tag::over_cells_of_max_dim, tag::as_they_are, tag::this_mesh_is_positive );
 	// iterates over cells of 'msh'
-	for ( it->reset(); it->in_range(); it->advance() )
-		l.push_front ( it->deref().core );
+	for ( it->reset(); it->in_range(); it->advance() ) l.push_front ( it->deref() );
 	} { // just a block of code for hiding 'it'
-	std::forward_list<Cell::Core*>::iterator it;
-	for ( it = l.begin(); it != l.end(); it++ )	
-		(*it)->remove_from_mesh ( msh );              }                                   }
+	std::forward_list<Cell>::iterator it;
+	for ( it = l.begin(); it != l.end(); it++ )
+		(*it).core->remove_from_mesh ( msh );	    }                                    }
 
 }  // anonymous namespace
 
@@ -135,7 +137,9 @@ Mesh::Fuzzy::~Fuzzy ()  // virtual
 
 // Mesh::STSI::~STSI ()  // virtual
 // {	// do not shred_mesh ! it will be called from ~Fuzzy
-// 	// just check that there are no self-intersections 
+// 	// just check that there are no self-intersections
+// 	// because if there are self-intersections,
+// 	// the destructor of Mesh::Fuzzy will get in trouble with cell_behind_within
 // }
 
 
@@ -167,7 +171,7 @@ Cell::Negative * Cell::Positive::Vertex::build_reverse ( const tag::OneDummyWrap
 // virtual from Cell::Positive
 {	assert ( not this->reverse_attr.exists() );
 	#ifdef MANIFEM_COLLECT_CM	
-	this->dispose_p = & tag::Util::Core::dispose_cell_with_reverse;
+	this->dispose_query_p = & tag::Util::Core::dispose_query_cell_with_reverse;
 	#endif  // MANIFEM_COLLECT_CM	
 	return new Cell::Negative::Vertex ( tag::reverse_of, this, tag::one_dummy_wrapper );  }
 
@@ -175,15 +179,15 @@ Cell::Negative * Cell::Positive::Segment::build_reverse ( const tag::OneDummyWra
 // virtual from Cell::Positive
 {	assert ( not this->reverse_attr.exists() );
 	#ifdef MANIFEM_COLLECT_CM	
-	this->dispose_p = & tag::Util::Core::dispose_cell_with_reverse;
-	#endif  // MANIFEM_COLLECT_CM	
+	this->dispose_query_p = & tag::Util::Core::dispose_query_cell_with_reverse;
+	#endif  // MANIFEM_COLLECT_CM
 	return new Cell::Negative::Segment ( tag::reverse_of, this, tag::one_dummy_wrapper );  }
 
 Cell::Negative * Cell::Positive::HighDim::build_reverse ( const tag::OneDummyWrapper & )
 // virtual from Cell::Positive
 {	assert ( not this->reverse_attr.exists() );
 	#ifdef MANIFEM_COLLECT_CM	
-	this->dispose_p = & tag::Util::Core::dispose_cell_with_reverse;
+	this->dispose_query_p = & tag::Util::Core::dispose_query_cell_with_reverse;
 	#endif  // MANIFEM_COLLECT_CM	
 	return new Cell::Negative::HighDim ( tag::reverse_of, this, tag::one_dummy_wrapper );  }
 
@@ -2168,7 +2172,8 @@ void Cell::Positive::Segment::remove_from_mesh ( Mesh::Core * msh )
 
 // there are many types of meshes, so we call a virtual method
 
-{	assert ( msh );  msh->remove_pos_seg ( this, tag::mesh_is_not_bdry );  }
+{	assert ( msh );
+	msh->remove_pos_seg ( this, tag::mesh_is_not_bdry );  }
 
 
 void Cell::Negative::Segment::add_to_mesh ( Mesh::Core * msh )
@@ -2546,15 +2551,18 @@ void Mesh::NotZeroDim::remove_pos_seg ( Cell::Positive::Segment * seg, const tag
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim.find(this) != seg->meshes_same_dim.end() );
 
-	break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
+  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
 	assert ( seg->base_attr.core->cell_behind_within.find(this) !=
 	         seg->base_attr.core->cell_behind_within.end()         );
 	seg->base_attr.core->cell_behind_within.erase(this);
+
 	assert ( seg->tip_attr.core->cell_behind_within.find(this) !=
 	         seg->tip_attr.core->cell_behind_within.end()         );
-	seg->tip_attr.core->cell_behind_within.erase(this);                         }
-	
+	seg->tip_attr.core->cell_behind_within.erase(this);
+
+}  // end of Mesh::NotZeroDim::remove_pos_seg with tag::mesh_is_not_bdry
+
 
 void Mesh::NotZeroDim::remove_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
 // virtual from Mesh::Core
@@ -2572,8 +2580,10 @@ void Mesh::NotZeroDim::remove_pos_seg ( Cell::Positive::Segment * seg, const tag
 	seg->base_attr.core->cell_behind_within.erase(this);
 	assert ( seg->tip_attr.core->cell_behind_within.find(this) !=
 	         seg->tip_attr.core->cell_behind_within.end()         );
-	seg->tip_attr.core->cell_behind_within.erase(this);                         }
-	
+	seg->tip_attr.core->cell_behind_within.erase(this);
+
+}  // end of Mesh::NotZeroDim::remove_pos_seg with tag::mesh_is_bdry
+
 
 void Mesh::NotZeroDim::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core
@@ -2687,9 +2697,11 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.find(this) !=
 	         pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
-	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);                   }
+	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);
 	
-	
+}  // end of Mesh::NotZeroDim::remove_neg_seg with tag::mesh_is_not_bdry
+
+
 void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
 // virtual from Mesh::Core
 	
@@ -2714,7 +2726,9 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.find(this) !=
 	         pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
-	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);                   }
+	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);
+
+}  // end of Mesh::NotZeroDim::remove_neg_seg with tag::mesh_is_bdry
 	
 	
 void Mesh::NotZeroDim::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
@@ -2795,8 +2809,10 @@ void Mesh::NotZeroDim::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const
 		         face_p->cell_behind_within.end()         );
 		assert ( face_p->cell_behind_within[this].core == cll );
 		// optimize map access !!
-		face_p->cell_behind_within.erase(this);                  }             }
+		face_p->cell_behind_within.erase(this);                  }
 
+}  // end of Mesh::NotZeroDim::remove_pos_hd_cell with tag::mesh_is_not_bdry
+	
 	
 void Mesh::NotZeroDim::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
 // virtual from Mesh::Core
@@ -2816,7 +2832,9 @@ void Mesh::NotZeroDim::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const
 		         face_p->cell_behind_within.end()         );
 		assert ( face_p->cell_behind_within[this].core == cll );
 		// optimize map access !!
-		face_p->cell_behind_within.erase(this);                  }              }
+		face_p->cell_behind_within.erase(this);                  }
+
+}  // end of Mesh::NotZeroDim::remove_pos_hd_cell with tag::mesh_is_bdry
 
 	
 void Mesh::NotZeroDim::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsNotBdry & )
@@ -2909,7 +2927,9 @@ void Mesh::NotZeroDim::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const
 		Cell::Core * rev_face = face_p->reverse_attr.core;
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
-		rev_face->cell_behind_within.erase(this);              }                         }
+		rev_face->cell_behind_within.erase(this);              }
+
+}  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_not_bdry
 
 	
 void Mesh::NotZeroDim::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
@@ -2932,7 +2952,9 @@ void Mesh::NotZeroDim::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const
 		Cell::Core * rev_face = face_p->reverse_attr.core;
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
-		rev_face->cell_behind_within.erase(this);              }                         }
+		rev_face->cell_behind_within.erase(this);              }
+
+}  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_bdry
 
 //-----------------------------------------------------------------------------//
 

@@ -1,5 +1,5 @@
 
-// mesh.h 2021.06.18
+// mesh.h 2021.06.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -162,6 +162,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Empty { };  static const Empty empty;
 	struct OneDummyWrapper { };  static const OneDummyWrapper one_dummy_wrapper;
 
+	namespace local_functions { };
+
 }  // end of namespace tag
 
 //-----------------------------------------------------------------------------//
@@ -180,6 +182,7 @@ template < class core_type >	class tag::Util::Wrapper
 
 	inline Wrapper ( const tag::Empty & ) : core { nullptr }  { }
 
+	// this constructor is avoided (replaced by direct assignment of core) in iterator.cpp
 	inline Wrapper ( const tag::WhoseCoreIs &, core_type * c, const tag::FreshlyCreated & )
 	: core { c }  // c just constructed with nb_of_wrappers == 1, no need to increment
 	{	assert ( c );  }
@@ -204,13 +207,13 @@ template < class core_type >	class tag::Util::Wrapper
 	
 	inline void dispose_core ( const tag::MayBeNull & )
 	{	if ( this->core )
-			if ( this->core->dispose() )
-				delete this->core;          }
+			if ( this->core->dispose_query () )
+				delete this->core;                 }
 	
 	inline void dispose_core ( const tag::SurelyNotNull & )
 	{	assert ( this->core );
-		if ( this->core->dispose() )
-			delete this->core;          }
+		if ( this->core->dispose_query () )
+			delete this->core;                }
 	
 	class Inactive;
 
@@ -228,7 +231,7 @@ template < class core_type >	class tag::Util::Wrapper
 // also useful for dynamic_cast
 // see e.g. item 7 in the book of Scott Meyers, Effective C++
 
-// most often than not, cores are built with nb_of_wrappers = 1
+// more often than not, cores are built with nb_of_wrappers = 1
 // although they did not meet any wrapper yet (they are newborn)
 // we assume that the 'new' command was issued by a wrapper
 // who is waiting for them to see the light of day and is eager to embrace them
@@ -240,47 +243,49 @@ class tag::Util::Core
 	size_t nb_of_wrappers;
 
 	inline Core ( const tag::OneDummyWrapper & ) : nb_of_wrappers { 1 } { }
-	// a new core is built through a wrapper
+	// a new core is often built through a wrapper
 	// thus, we initialize with one instead of zero
 
 	inline Core ( const tag::ZeroWrappers & ) : nb_of_wrappers { 0 } { }
-	// in rare cases, a core is built without a wrapper
+	// in some cases, a core is built without a wrapper
 	// like for negative cells
 	
 	virtual ~Core ( ) { }
 
-  inline bool dispose ( );
+  inline bool dispose_query ( );
 
 	class DelegateDispose;
 	class Inactive;
-	static bool default_dispose ( tag::Util::Core::DelegateDispose * );
-	static bool dispose_cell_with_reverse ( tag::Util::Core::DelegateDispose * );
+	static bool default_dispose_query ( tag::Util::Core::DelegateDispose * );
+	static bool dispose_query_cell_with_reverse ( tag::Util::Core::DelegateDispose * );
 
 };
 
 
 class tag::Util::Core::DelegateDispose : public tag::Util::Core
 
-// some classes need specialized 'dispose' method, e.g. cells having reverse
+// some classes need specialized 'dispose_query' method, e.g. cells having reverse
 
 {	public :
 
-	bool (*dispose_p) ( tag::Util::Core::DelegateDispose * ) { & tag::Util::Core::default_dispose };
+	bool (*dispose_query_p) ( tag::Util::Core::DelegateDispose * )
+	{ & tag::Util::Core::default_dispose_query };  // this is not the body of a function
+	// it is an initialization of the pointer-to-function
 
 	inline DelegateDispose ( bool (*disp) ( tag::Util::Core::DelegateDispose * ),
                            const tag::OneDummyWrapper &                        )
 	// a new core is built through a wrapper; thus, we initialize with one instead of zero
-	:	tag::Util::Core ( tag::one_dummy_wrapper ), dispose_p { disp } { }
+	:	tag::Util::Core ( tag::one_dummy_wrapper ), dispose_query_p { disp } { }
 
 	inline DelegateDispose ( bool (*disp) ( tag::Util::Core::DelegateDispose * ),
                            const tag::ZeroWrappers &                           )
 	// in rare cases, a core is built without a wrapper, like for negative cells
-	:	tag::Util::Core ( tag::zero_wrappers ), dispose_p { disp } { }
+	:	tag::Util::Core ( tag::zero_wrappers ), dispose_query_p { disp } { }
 	
 	virtual ~DelegateDispose ( ) { }
 
-	inline bool dispose ( )
-	{	return dispose_p ( this );  }
+	inline bool dispose_query ( )
+	{	return dispose_query_p ( this );  }
 
 };  // end of class tag::Util::Core
 
@@ -355,7 +360,9 @@ class CellIterator
 		class CellsOfConnectedOneDimMesh;
 		class VerticesOfConnectedOneDimMesh;
 		class SegmentsOfConnectedOneDimMesh;
-		class CellsOfFuzzyMesh;               };
+		class CellsOfFuzzyMesh;
+		class SegmentsAboveVertex;           };
+	class AroundCell;
 	struct Adaptor  {  class ForcePositive;  };
 
 };  // end of class CellIterator
@@ -404,6 +411,8 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 {	public :
 
 	typedef tag::Util::CellCore Core;
+
+	// static int counter;
 
 	// Cell::Core * core  inherited from tag::Util::Wrapper < Cell::Core >
 
@@ -1347,7 +1356,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	// and heterogeneous information here :
 	std::map < tag::KeyForHook, void * > hook;
 
-	// if 'this' is a face of another cell and that other cell belongs to some mesh msh,
+	// if 'this' is a face of another cell and that cell belongs to some mesh msh,
 	// cell_behind_within[msh] keeps that cell
 	// see methods Mesh::cell_behind and Mesh::cell_in_front_of
 	std::map < Mesh::Core *, Cell > cell_behind_within;
@@ -1356,11 +1365,15 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	// we use a wrapper as pointer
 	Cell reverse_attr;
 
+	#ifndef NDEBUG
+	std::string name;
+	#endif
+
 	inline CellCore ( const tag::OfDimension &, const size_t d,
                     const tag::HasNoReverse &, const tag::OneDummyWrapper & )
 	#ifdef MANIFEM_COLLECT_CM	
 	:	tag::Util::Core::DelegateDispose
-		( & tag::Util::Core::default_dispose, tag::one_dummy_wrapper ),
+		( & tag::Util::Core::default_dispose_query, tag::one_dummy_wrapper ),
 	#else  // no MANIFEM_COLLECT_CM
 	:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
 	#endif  // MANIFEM_COLLECT_CM	
@@ -1368,13 +1381,13 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 		size_t_heap ( Cell::size_t_heap_size_pos [d] ),
 		short_int_heap ( Cell::short_int_heap_size_pos [d] ),
 		reverse_attr ( tag::non_existent )
-	{ }
+	{	}  // { Cell::counter++;  }
 
 	inline CellCore ( const tag::OfDimension &, const size_t d,
                     const tag::ReverseOf &, Cell::Core * direct_cell_p, const tag::OneDummyWrapper & )
 	#ifdef MANIFEM_COLLECT_CM	
 	:	tag::Util::Core::DelegateDispose
-		( & tag::Util::Core::dispose_cell_with_reverse, tag::one_dummy_wrapper ),
+		( & tag::Util::Core::dispose_query_cell_with_reverse, tag::one_dummy_wrapper ),
 	#else  // no MANIFEM_COLLECT_CM
 	:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
 	#endif  // MANIFEM_COLLECT_CM	
@@ -1382,12 +1395,12 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 		size_t_heap ( Cell::size_t_heap_size_pos [d] ),
 		short_int_heap ( Cell::short_int_heap_size_pos [d] ),
 		reverse_attr ( tag::whose_core_is, direct_cell_p, tag::previously_existing, tag::surely_not_null )
-	{ }
+	{	}  // { Cell::counter++;  }
 
-	virtual ~CellCore ( )  // std::cout << Cell::counter << std::endl;
-	{ }
+	virtual ~CellCore ( )  // 
+	{	}  // { Cell::counter--;  std::cout << Cell::counter << std::endl;  }
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	virtual bool is_positive ( ) const = 0;
 	virtual Cell get_positive ( ) = 0;
@@ -1437,7 +1450,6 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	virtual void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry ) = 0;
 		
 	#ifndef NDEBUG
-	std::string name;
 	virtual std::string get_name ( ) = 0;
 	virtual void print_everything ( ) = 0;
 	#endif
@@ -1496,7 +1508,7 @@ class Cell::Positive : public Cell::Core
 		meshes ( sz )
 	{	}
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	bool is_positive ( ) const;  // virtual from Cell::Core
 	Cell get_positive ( );  // virtual from Cell::Core
@@ -1609,7 +1621,7 @@ class Cell::PositiveVertex : public Cell::Positive
 	Cell::Positive::Vertex & operator= ( const Cell::Positive::Vertex & ) = delete;
 	Cell::Positive::Vertex & operator= ( const Cell::Positive::Vertex && ) = delete;
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Positive
 	size_t get_dim ( ) const; // virtual from Cell::Core
@@ -1676,7 +1688,7 @@ class Cell::NegativeVertex : public Cell::Negative
 	Cell::Negative::Vertex & operator= ( const Cell::Negative::Vertex & ) = delete;
 	Cell::Negative::Vertex & operator= ( const Cell::Negative::Vertex && ) = delete;
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Negative
 	size_t get_dim ( ) const; // virtual from Cell::Core
@@ -1752,7 +1764,7 @@ class Cell::PositiveNotVertex : public Cell::Positive
 	: Cell::Positive ( tag::of_dim, d, tag::size_meshes, sz, tag::one_dummy_wrapper )
 	{	}
 	
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// Cell::Negative * build_reverse ( const tag::OneDummyWrapper & )
 	//   stays pure virtual from Cell::Positive
@@ -1916,7 +1928,7 @@ class Cell::NegativeSegment : public Cell::Negative::NotVertex
 	inline NegativeSegment
 		( const tag::ReverseOf &, Cell::Positive * direct_seg_p, const tag::OneDummyWrapper & );
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	NegativeSegment ( const Cell::Negative::Segment & ) = delete;
 	NegativeSegment ( const Cell::Negative::Segment && ) = delete;
@@ -2006,7 +2018,7 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 	Cell::Positive::HighDim & operator= ( const Cell::Positive::HighDim & ) = delete;
 	Cell::Positive::HighDim & operator= ( const Cell::Positive::HighDim && ) = delete;
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Positive
 	size_t get_dim ( ) const; // virtual
@@ -2081,7 +2093,7 @@ class Cell::NegativeHighDim : public Cell::Negative::NotVertex
 	Cell::Negative::HighDim & operator= ( const Cell::Negative::HighDim & ) = delete;
 	Cell::Negative::HighDim & operator= ( const Cell::Negative::HighDim && ) = delete;
 
-	// bool dispose ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Negative
 	size_t get_dim ( ) const; // virtual from Cell::Core
@@ -2169,7 +2181,7 @@ class tag::Util::MeshCore
 	{ }
 //	{	}
 
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	virtual size_t get_dim_plus_one ( ) = 0;
 
@@ -2411,7 +2423,7 @@ class Mesh::ZeroDim : public Mesh::Core
 	               tag::boundary_of, tag::positive_cell, seg_p, tag::one_dummy_wrapper )
 	{ }
 
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -2641,7 +2653,7 @@ class Mesh::NotZeroDim : public Mesh::Core
                       const tag::OneDummyWrapper &                                      )
 	:	Mesh::Core ( tag::of_dim, d, tag::minus_one, tag::one_dummy_wrapper )  { }
 
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	// size_t get_dim_plus_one ( )  stay pure virtual from Mesh::Core
 
@@ -2725,7 +2737,7 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 
 	virtual ~OneDim ();
 	
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -2954,7 +2966,7 @@ class Mesh::Connected::HighDim : public Mesh::NotZeroDim
 		const size_t m, const size_t n, const tag::OneDummyWrapper &,
 									 const tag::WithTriangles & wt = tag::not_with_triangles );
 
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -3009,7 +3021,7 @@ class Mesh::MultiplyConnected::OneDim : public Mesh::NotZeroDim
 		Cell::Positive::Vertex * B, const tag::DividedIn &, const size_t n, const tag::OneDummyWrapper & );
 	// defined in global.cpp
 	
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -3058,7 +3070,7 @@ class Mesh::MultiplyConnected::HighDim : public Mesh::NotZeroDim
 		:	Mesh::NotZeroDim ( tag::of_dimension, dim_p1, tag::minus_one, tag::one_dummy_wrapper )
 	{	}
 
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -3127,7 +3139,7 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 
 	virtual ~Fuzzy ();
 	
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -3357,7 +3369,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 
 	virtual ~STSI ();
 
-	// bool dispose ( )  defined by tag::Util::Core ifdef COLLECT_CM
+	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	// size_t get_dim_plus_one ( )  defined in Mesh::Fuzzy
 	// size_t number_of ( const tag::Vertices & )  defined in Mesh::Fuzzy
@@ -4368,17 +4380,10 @@ inline void Cell::Positive::NotVertex::cut_common ( Cell::Core * face_p )
 			rev_face_p->cell_behind_within.erase(msh);                     }  }                  }
 	
 
-inline bool tag::Util::Core::dispose ( )
-	{
-		if ( this->nb_of_wrappers == 0 )
-		{	Cell::Core* c = dynamic_cast < Cell::Core* > ( this);
-			if ( c ) std::cout << "cell ";
-			Mesh::Core* m = dynamic_cast < Mesh::Core* > ( this );
-			if ( m ) std::cout << "mesh ";
-			std::cout << this << " has zero wrappers" << std::endl;  }
-		assert ( this->nb_of_wrappers > 0 );
-		this->nb_of_wrappers--;
-		return this->nb_of_wrappers == 0;    }
+inline bool tag::Util::Core::dispose_query ( )
+{	assert ( this->nb_of_wrappers > 0 );
+	this->nb_of_wrappers--;
+	return this->nb_of_wrappers == 0;     }
 
 
 }  // namespace maniFEM

@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.06.18
+// progressive.cpp 2021.06.24
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -638,7 +638,12 @@ bool correctly_oriented ( const Mesh msh )
 	        xBC = x(C) - x(ver),  yBC = y(C) - y(ver);
 	return  xAB * yBC > yAB * xBC;;
 	
-}
+}  // end of correctly_oriented
+
+//-------------------------------------------------------------------------------------------------
+
+// a more complicated version of correctly_oriented can be found at
+// https://github.com/cristian-barbarosie/maniFEM-attic - attic.cpp
 
 //-------------------------------------------------------------------------------------------------
 
