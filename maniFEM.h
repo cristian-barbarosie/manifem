@@ -1,6 +1,6 @@
 
-//   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds,
-//   version 21.04
+//   this file is part of maniFEM, a C++ library for meshes and finite elements on manifolds
+//   release 21.06
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -18,9 +18,9 @@
 //   You should have received a copy of the GNU Lesser General Public License
 //   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "mesh.h"
 #include "iterator.h"
-#include "finite-elem.h"
 #include "field.h"
+#include "finite-elem.h"
 #include "function.h"
 #include "manifold.h"
+#include "mesh.h"

@@ -23,6 +23,7 @@
 #define MANIFEM_FIELD_H
 
 #include "mesh.h"
+#include "iterator.h"
 
 namespace maniFEM {
 

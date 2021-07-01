@@ -1,9 +1,9 @@
 
-// iterator.h 2019.12.30
+// iterator.h 2021.06.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -19,69 +19,23 @@
 //   You should have received a copy of the GNU Lesser General Public License
 //   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef MANIFEM_ITER_H
-#define MANIFEM_ITER_H
+#ifndef MANIFEM_ITERATOR_H
+#define MANIFEM_ITERATOR_H
 
 #include "mesh.h"
 
 namespace maniFEM {
 
 namespace tag {
-	struct DoNotOrderMesh { };  static const DoNotOrderMesh do_not_order_mesh;
+	struct OverTwoVerticesOfSeg { };
+	static const OverTwoVerticesOfSeg over_two_vertices_of_seg;
+	struct OverVerticesOf { };  static const OverVerticesOf over_vertices_of;
+	struct OverSegmentsOf { };  static const OverSegmentsOf over_segments_of;
+	struct OverCellsOf { };  static const OverCellsOf over_cells_of;
+	struct FuzzyPosMesh { };  static const FuzzyPosMesh fuzzy_pos_mesh;
 }
 
-	
-class CellIterator
-
-// a thin wrapper around a CellIterator::Core, with most methods delegated to 'core'
-
-{	public :
-
-	class Core;
-	
-	CellIterator::Core * core;
-
-	inline CellIterator ( const CellIterator & it );
-	inline CellIterator ( CellIterator && it );
-	
-	inline CellIterator
-	( const tag::OverCellsOf &, const Mesh & msh, const tag::OfDimension &, size_t );
-	
-	inline CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-                        const tag::OfDimension &, size_t, const tag::Reverse & );
-
-	inline CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-                        const tag::OfDimension &, size_t, const tag::ForcePositive & );
-
-	inline CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-	    const tag::OfDimension &, size_t, const tag::ForcePositive &, const tag::Reverse & );
-
-	inline CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-	    const tag::OfDimension &, size_t, const tag::Reverse &, const tag::ForcePositive & );
-
-	inline ~CellIterator ( );
-
-	inline CellIterator & operator= ( const CellIterator & it );
-	inline CellIterator & operator= ( const CellIterator && it );
-	
-	inline void reset ( Cell & );	
-	inline void reset ( );	
-	inline Cell operator* ( );
-	inline CellIterator & operator++ ( );
-	inline CellIterator & operator++ ( int );
-	inline CellIterator & advance ( );
-	inline bool in_range ( );
-
-	struct Over
-	{	class CellsOfMesh;  class CellsOfPosMesh;  class CellsOfNegMesh;
-		class CellsOfOneDimMesh;  class OrderedCells;
-		class SegsOfChain; class SegsOfPosChain;  class SegsOfNegChain;
-		class VerOfChain;  class VerOfPosChain;
-		class SegsOfLoop; class SegsOfPosLoop;  class SegsOfNegLoop;
-		class VerOfLoop;  class VerOfPosLoop;                              };
-		
-};  // end of class CellIterator
-
+// class CellIterator defined in mesh.h
 
 class CellIterator::Core
 
@@ -90,7 +44,7 @@ class CellIterator::Core
 // which may be positive or negative
 // for lower dimension, returns positive cells
 
-// or, iterates over all cells above a given cell
+// or, iterates over all cells above a given cell (containing a given cell)
 
 {	public :
 
@@ -98,1229 +52,1681 @@ class CellIterator::Core
 	
 	virtual ~Core ( ) { };
 
-	virtual void reset ( Cell::Core * cll ) = 0;
 	virtual void reset ( ) = 0;
-	virtual Cell::Core * deref ( ) = 0;
+	virtual void reset ( const tag::StartAt &, Cell::Core * cll ) = 0;
+	virtual Cell deref ( ) = 0;
 	virtual void advance ( ) = 0;
 	virtual bool in_range ( ) = 0;
 	
-  virtual void order_mesh ( ) = 0;
-			
 };  // end of class CellIterator::Core
 
-	
+
 inline CellIterator::CellIterator ( const CellIterator & it)
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "ManiFEM doesn't know (yet) how to copy construct an iterator. Sorry." << std::endl;
-	exit ( 1 );                                                                                        }
-// define virtual self-replicator for core iterators ?
+	exit ( 1 );                                                                                }
+// define virtual self-replicator for core iterators !!
 	
-inline CellIterator::CellIterator ( CellIterator && it)
-{	this->core = it.core;  } // it.~CellIterator();  }
-// should we destroy 'it' ?  if we do,
-// the core gets destroyed because that's how we define CellIterator::~CellIterator below
-// then how does the new iterator work ? without a core ?
-// if we don't, what happens to the memory slot occupied by 'it', more precisely by it->core ?
-// is it automatically released ?  hope so ...
+
+// inline CellIterator::CellIterator ( CellIterator && it)
+// {	this->core = std::move ( it.core );  }
 	
+
 inline CellIterator & CellIterator::operator= ( const CellIterator & it )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "ManiFEM doesn't know (yet) how to copy an iterator. Sorry." << std::endl;
 	exit ( 1 );                                                                                   }
-// define virtual self-replicator for core iterators ?
+// define virtual self-replicator for core iterators !!
 
-inline CellIterator & CellIterator::operator= ( const CellIterator && it )
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "ManiFEM doesn't know (yet) how to move an iterator. Sorry." << std::endl;
-	exit ( 1 );                                                                                   }
-// ownership transfer ? I don't know how to implement it ...
 
-inline CellIterator::~CellIterator ( )  { delete core; }
+// inline CellIterator & CellIterator::operator= ( CellIterator && it )
+// {	this->core = std::move ( it.core );  return *this;  }
 	
+
 inline void CellIterator::reset ( )  {  this->core->reset();  }
 
-inline void CellIterator::reset ( Cell & cll )  {  this->core->reset(cll.core);  }
+
+inline void CellIterator::reset ( const tag::StartAt &, Cell & cll )
+{  this->core->reset( tag::start_at, cll.core );  }
 	
+
 inline Cell CellIterator::operator* ( )
-{	return Cell ( tag::whose_core_is, this->core->deref() );  }
+{	return this->core->deref();  }
+
 
 inline CellIterator & CellIterator::operator++ ( )  {  return this->advance();  }
 
+
 inline CellIterator & CellIterator::operator++ ( int )  {  return this->advance();  }
 
+
 inline CellIterator & CellIterator::advance ( )
-{	this->core->advance();  return *this;  }
+{ this->core->advance();  return *this;  }
+
 
 inline bool CellIterator::in_range ( )  {  return this->core->in_range();  }
 		
-
-class CellIterator::Over::CellsOfMesh : public virtual CellIterator::Core
-
-// iterates over all cells of a given mesh (cells of given dimension)
-
-{	public :
-
-	std::list<Cell::Core*> * list_p;
-  std::list<Cell::Core*>::iterator iter;
-
-	// in the future, give separate treatment to one-dimensional meshes
-	
-	inline CellsOfMesh ( Mesh::Core * msh, size_t dim )
-	:	list_p { & ( msh->cells[dim] ) }, iter ( list_p->begin() )
-	{	}
-
-	void reset ( ); // virtual from CellIterator::Core
-	void reset ( Cell::Core * cll ); // virtual from CellIterator::Core
-	void advance ( ); // virtual from CellIterator::Core
-	// Cell::Core * deref ( ) remains pure virtual from CellIterator::Core
-	bool in_range ( ); // virtual from CellIterator::Core
-	
-  virtual void order_mesh ( );
-			
-};  // end of class CellIterator::Over::CellsOfMesh
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
 
 
-class CellIterator::Over::CellsOfPosMesh : public CellIterator::Over::CellsOfMesh
-
-// iterates over all cells of a positive mesh (cells of given dimension)
-// for maximum dimension (equal to the dimension of the mesh) returns oriented cells
-// which may be positive or negative
-// for lower dimension, returns positive cells
-
-{	public :
-	
-	inline CellsOfPosMesh ( Mesh::Core * msh, size_t dim )
-	:	CellIterator::Over::CellsOfMesh ( msh, dim )
-	{	}
-
-	Cell::Core * deref ( ); //  virtual from CellIterator::Core
-
-	class Positive;
-};
-
-	
-class CellIterator::Over::CellsOfPosMesh::Positive : public virtual CellIterator::Over::CellsOfMesh
-
-// iterates over all cells of a positive mesh (cells of given dimension)
-// the dereference will produce always positive cells
-// should be used only for cells of maximum dimension
+class CellIterator::Over::TwoVerticesOfSeg : public CellIterator::Core
 
 {	public :
 
-	inline Positive ( Mesh::Core * msh, size_t dim )
-	:	CellIterator::Over::CellsOfMesh ( msh, dim )
-	{	}
-	
-	Cell::Core * deref ( ); //  virtual from CellIterator::Core
-};
-	
-	
-class CellIterator::Over::CellsOfNegMesh : public virtual CellIterator::Over::CellsOfMesh
+	Cell::PositiveSegment * seg_p;  // should an iterator keep the segment alive ?
+	short unsigned int passage;
 
-// iterates over all cells of a negative mesh (cells of given dimension)
-// works only for cells of lower dimension, returns positive cells
+	inline TwoVerticesOfSeg ( Cell::PositiveSegment * seg )
+	:	CellIterator::Core (), seg_p { seg } { };
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );
+	// virtual from CellIterator::Core, here execution forbidden
+	// Cell deref ( )  remains pure virtual from CellIterator::Core
+	void advance ( );  // virtual from CellIterator::Core
+	bool in_range ( );  // virtual from CellIterator::Core
+
+	struct NormalOrder  {  class AsTheyAre;  class ForcePositive;
+		struct ReverseEachCell  {  class  AssumeCellsExist;  };    };
+	struct ReverseOrder  {  class AsTheyAre;  class ForcePositive;
+		struct ReverseEachCell  {  class  AssumeCellsExist;  };    };
+	
+};  // end of class CellIterator::Over::TwoVerticesOfSeg
+
+
+class CellIterator::Over::TwoVerticesOfSeg::NormalOrder::AsTheyAre
+: public CellIterator::Over::TwoVerticesOfSeg
+// iterate over the two vertices, first base (negative) then tip (positive)
 
 {	public :
 
-	inline CellsOfNegMesh ( Mesh::Core * msh, size_t dim )
-	:	CellIterator::Over::CellsOfMesh ( msh, dim )
-	{	}
+	// inherited from CellIterator::Over::TwoVerticesOfSeg :
+	// Cell::PositiveSegment * seg_p;
+	// short unsigned int passage;
 
-	Cell::Core * deref ( ); //  virtual from CellIterator::Core
+	inline AsTheyAre ( Cell::PositiveSegment * seg )
+	:	CellIterator::Over::TwoVerticesOfSeg ( seg ) { };
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::TwoVerticesOfSeg, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// bool in_range ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
 
-	class MaxDim;  class Positive;
-};
+};  // end of class CellIterator::Over::TwoVerticesOfSeg::NormalOrder::AsTheyAre
+
+
+class CellIterator::Over::TwoVerticesOfSeg::NormalOrder::ForcePositive
+: public CellIterator::Over::TwoVerticesOfSeg
+// iterate over the two vertices, first base then tip (both positive)
+
+{	public :
+
+	// inherited from CellIterator::Over::TwoVerticesOfSeg :
+	// Cell::PositiveSegment * seg_p;
+	// short unsigned int passage;
+
+	inline ForcePositive ( Cell::PositiveSegment * seg )
+	:	CellIterator::Over::TwoVerticesOfSeg ( seg ) { };
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::TwoVerticesOfSeg, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// bool in_range ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+
+};  // end of class CellIterator::Over::TwoVerticesOfSeg::NormalOrder::ForcePositive
+
+
+class CellIterator::Over::TwoVerticesOfSeg::ReverseOrder::AsTheyAre
+: public CellIterator::Over::TwoVerticesOfSeg
+// iterate over the two vertices, first tip (positive) then base (negative)
+
+{	public :
+
+	// inherited from CellIterator::Over::TwoVerticesOfSeg :
+	// Cell::PositiveSegment * seg_p;
+	// short unsigned int passage;
+	
+	inline AsTheyAre ( Cell::PositiveSegment * seg )
+	:	CellIterator::Over::TwoVerticesOfSeg ( seg ) { };
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::TwoVerticesOfSeg, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// bool in_range ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+
+};  // end of class CellIterator::Over::TwoVerticesOfSeg::ReverseOrder::AsTheyAre
+
+
+class CellIterator::Over::TwoVerticesOfSeg::ReverseOrder::ForcePositive
+: public CellIterator::Over::TwoVerticesOfSeg
+// iterate over the two vertices, first tip then base (both positive)
+
+{	public :
+
+	// inherited from CellIterator::Over::TwoVerticesOfSeg :
+	// Cell::PositiveSegment * seg_p;
+	// short unsigned int passage;
+
+	inline ForcePositive ( Cell::PositiveSegment * seg )
+	:	CellIterator::Over::TwoVerticesOfSeg ( seg ) { };
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::TwoVerticesOfSeg, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// bool in_range ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+
+};  // end of class CellIterator::Over::TwoVerticesOfSeg::ReverseOrder::ForcePositive
+
+
+class CellIterator::Over::TwoVerticesOfSeg::NormalOrder::ReverseEachCell::AssumeCellsExist
+: public CellIterator::Over::TwoVerticesOfSeg
+// iterate over the two vertices, first base (positive) then tip (negative)
+
+{	public :
+
+	// inherited from CellIterator::Over::TwoVerticesOfSeg :
+	// Cell::PositiveSegment * seg_p;
+	// short unsigned int passage;
+
+	inline AssumeCellsExist ( Cell::PositiveSegment * seg )
+	:	CellIterator::Over::TwoVerticesOfSeg ( seg ) { };
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::TwoVerticesOfSeg, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// bool in_range ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+
+};  // end of class CellIterator::Over::TwoVerticesOfSeg
+    //         ::NormalOrder::ReverseEachCell::AssumeCellsExist
+
+
+class CellIterator::Over::TwoVerticesOfSeg::ReverseOrder::ReverseEachCell::AssumeCellsExist
+: public CellIterator::Over::TwoVerticesOfSeg
+// iterate over the two vertices, first tip (negative) then base (positive)
+
+{	public :
+
+	// inherited from CellIterator::Over::TwoVerticesOfSeg :
+	// Cell::PositiveSegment * seg_p;
+	// short unsigned int passage;
+
+	inline AssumeCellsExist ( Cell::PositiveSegment * seg )
+	:	CellIterator::Over::TwoVerticesOfSeg ( seg ) { };
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::TwoVerticesOfSeg, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+	// bool in_range ( )  virtual, defined by CellIterator::Over::TwoVerticesOfSeg
+
+};  // end of class CellIterator::Over::TwoVerticesOfSeg
+    //         ::ReverseOrder::ReverseEachCell::AssumeCellsExist
+
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
+
+
+class CellIterator::Over::CellsOfConnectedOneDimMesh : public CellIterator::Core
+
+{	public :
+
+	Mesh::Connected::OneDim * msh;  // should an iterator keep the mesh alive ?
+	Cell::Core * last_vertex;
+	// positive vertex for iterator over vertices
+	// positive vertex for iterator over segments, forward
+	// negative vertex for iterator over segments, back
+
+	inline CellsOfConnectedOneDimMesh ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Core (), msh { m } { }
+	
+	// void reset ( )  stays pure virtual from CellIterator::Core
+	// void reset ( tag::StartAt , Cell::Core * cll )  stays pure virtual from CellIterator::Core
+	// Cell deref ( )  stays pure virtual from CellIterator::Core
+	// void advance ( )  stays pure virtual from CellIterator::Core
+	// bool in_range ( )  stays pure virtual from CellIterator::Core
+
+	struct NormalOrder  {  class AsTheyAre;  class ForcePositive;
+		struct ReverseEachCell  {  class  AssumeCellsExist;  };    };
+	struct ReverseOrder  {  class AsTheyAre;  class ForcePositive;
+		struct ReverseEachCell  {  class  AssumeCellsExist;  };    };
+	
+};  // end of class CellIterator::Over::CellsOfConnectedOneDimMesh
+
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
+
+
+class CellIterator::Over::VerticesOfConnectedOneDimMesh :
+public CellIterator::Over::CellsOfConnectedOneDimMesh
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	Cell::Positive::Vertex * current_vertex;
+
+	inline VerticesOfConnectedOneDimMesh ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::CellsOfConnectedOneDimMesh ( m ) { }
+	
+	// void reset ( )  stays pure virtual from CellIterator::Core
+	// void reset ( tag::StartAt, Cell::Core * cll )  stays pure virtual from CellIterator::Core
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  stays pure virtual from CellIterator::Core
+	bool in_range ( );  // virtual from CellIterator::Core
+
+	class NormalOrder;  class ReverseOrder;
+	
+};  // end of class CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+
+class CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder
+: public CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Positive::Vertex * current_vertex
+	// inherited from CellIterator::Over::VerticesOfConnectedOneDimMesh
+	
+	inline NormalOrder ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::VerticesOfConnectedOneDimMesh ( m ) { };
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+	// Cell deref ( )  defined by CellIterator::Over::VerticesOfConnectedOneDimMesh
+	void advance ( );  // virtual from CellIterator::Core
+	// bool in_range ( )  virtual, defined by CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::AsTheyAre
+
+
+class CellIterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder
+: public CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Positive::Vertex * current_vertex
+	// inherited from CellIterator::Over::VerticesOfConnectedOneDimMesh
+	
+	inline ReverseOrder ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::VerticesOfConnectedOneDimMesh ( m ) { };
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+	// Cell deref ( )  defined by CellIterator::Over::VerticesOfConnectedOneDimMesh
+	void advance ( );  // virtual from CellIterator::Core
+	// bool in_range ( )  virtual, defined by CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder::AsTheyAre
+
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh :
+public CellIterator::Over::CellsOfConnectedOneDimMesh
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (may be positive or negative)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	Cell::Core * current_segment;
+	
+	inline SegmentsOfConnectedOneDimMesh ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::CellsOfConnectedOneDimMesh ( m ) { }
+	
+	// void reset ( )  stays pure virtual from CellIterator::Core
+	// void reset ( tag::StartAt, Cell::Core * cll )  stays pure virtual from CellIterator::Core
+	// Cell deref ( )  stays pure virtual from CellIterator::Core
+	// void advance ( )  stays pure virtual from CellIterator::Core
+	bool in_range ( );  // virtual from CellIterator::Core
+
+	class NormalOrder;  class ReverseOrder;
+	
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline NormalOrder ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh ( m ) { };
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+	// Cell deref ( )  stays pure virtual from CellIterator::Core
+	void advance ( );  // virtual from CellIterator::Core
+	// bool in_range ( )  virtual, defined by CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+	class AsTheyAre;  class ForcePositive;
+	struct ReverseEachCell  {  class  AssumeCellsExist;  };
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::AsTheyAre
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline AsTheyAre ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder ( m ) { };
+	
+	// void reset ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	// bool in_range ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::AsTheyAre
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::ForcePositive
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline ForcePositive ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder ( m ) { };
+	
+	// void reset ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	// bool in_range ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::ForcePositive
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::ReverseEachCell::AssumeCellsExist
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here positive vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline AssumeCellsExist ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder ( m ) { };
+	
+	// void reset ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder
+	// bool in_range ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh
+    //         ::NormalOrder::ReverseEachCell::AssumeCellsExist
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here negative vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline ReverseOrder ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh ( m ) { };
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+	// Cell deref ( )  stays pure virtual from CellIterator::Core
+	void advance ( );  // virtual from CellIterator::Core
+	// bool in_range ( )  virtual, defined by CellIterator::Over::VerticesOfConnectedOneDimMesh
+
+	class AsTheyAre;  class ForcePositive;
+	struct ReverseEachCell  {  class  AssumeCellsExist;  };
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::AsTheyAre
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here negative vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+	
+	inline AsTheyAre ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder ( m ) { };
+	
+	// void reset ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	// bool in_range ( )  virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	class ForcePositive;
+	struct ReverseEachCell  {  class AssumeCellsExist;  };
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::AsTheyAre
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::ForcePositive
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here negative vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline ForcePositive ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder ( m ) { };
+	
+	// void reset ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	// bool in_range ( )  virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::ForcePositive
+
+
+class CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::ReverseEachCell::AssumeCellsExist
+: public CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+
+{	public :
+
+	// attribute Mesh::Connected::OneDim * msh
+	// attribute Cell::Core * last_vertex (here negative vertex)
+	// inherited from CellIterator::Over::CellsOfConnectedOneDimMesh
+
+	// attribute Cell::Core * current_segment
+	// inherited from CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+	inline AssumeCellsExist ( Mesh::Connected::OneDim * m )
+	:	CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder ( m ) { };
+	
+	// void reset ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder
+	// bool in_range ( )  virtual, defined by CellIterator::Over::SegmentsOfConnectedOneDimMesh
+
+};  // end of class CellIterator::Over::SegmentsOfConnectedOneDimMesh
+    //         ::ReverseOrder::ReverseEachCell::AssumeCellsExist
+
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
+
+
+class CellIterator::Over::CellsOfFuzzyMesh : public CellIterator::Core
+
+{	public :
+
+	std::list<Cell> & list;
+  std::list<Cell>::iterator iter;
+
+	inline CellsOfFuzzyMesh ( Mesh::Fuzzy * msh, const tag::CellsOfDim &, const size_t d )
+	:	CellIterator::Core (), list { msh->cells[d] }
+	{	}  // no need to initialize 'iter', 'reset' will do that
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );
+	// virtual from CellIterator::Core, here execution forbidden
+	// Cell deref ( )  remains pure virtual from CellIterator::Core
+	void advance ( );  // virtual from CellIterator::Core
+	bool in_range ( );  // virtual from CellIterator::Core
+
+	class AsTheyAre;  class ForcePositive;
+	struct ReverseEachCell  {  class AssumeCellsExist;  };
+	
+};  // end of class CellIterator::Over::CellsOfFuzzyMesh
+
+
+class CellIterator::Over::CellsOfFuzzyMesh::AsTheyAre
+: public CellIterator::Over::CellsOfFuzzyMesh
+
+{	public :
+
+	// inherited from CellIterator::Over::CellsOfFuzzyMesh :
+	// std::list<Cell> & list;
+  // std::list<Cell>::iterator iter;
+
+	inline AsTheyAre ( Mesh::Fuzzy * msh, const tag::CellsOfDim &, const size_t d )
+		:	CellIterator::Over::CellsOfFuzzyMesh ( msh, tag::cells_of_dim, d )
+	{	}  // no need to initialize 'iter', 'reset' will do that
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::CellsOfFuzzyMesh, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+	// bool in_range ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+
+};  // end of class CellIterator::Over::CellsOfFuzzyMesh::AsTheyAre
+
+
+class CellIterator::Over::CellsOfFuzzyMesh::ForcePositive
+: public CellIterator::Over::CellsOfFuzzyMesh
+
+{	public :
+
+	// inherited from CellIterator::Over::CellsOfFuzzyMesh :
+	// std::list<Cell> & list;
+  // std::list<Cell>::iterator iter;
+
+	inline ForcePositive ( Mesh::Fuzzy * msh, const tag::CellsOfDim &, const size_t d )
+		:	CellIterator::Over::CellsOfFuzzyMesh ( msh, tag::cells_of_dim, d )
+	{	}  // no need to initialize 'iter', 'reset' will do that
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::CellsOfFuzzyMesh, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// void advance ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+	// bool in_range ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+
+};  // end of class CellIterator::Over::CellsOfFuzzyMesh::ForcePositive
+
+
+class CellIterator::Over::CellsOfFuzzyMesh::ReverseEachCell::AssumeCellsExist
+: public CellIterator::Over::CellsOfFuzzyMesh
+
+{	public :
+
+	// inherited from CellIterator::Over::CellsOfFuzzyMesh :
+	// std::list<Cell> & list;
+  // std::list<Cell>::iterator iter;
+
+	inline AssumeCellsExist ( Mesh::Fuzzy * msh, const tag::CellsOfDim &, const size_t d )
+		:	CellIterator::Over::CellsOfFuzzyMesh ( msh, tag::cells_of_dim, d )
+	{	}  // no need to initialize 'iter', 'reset' will do that
+	
+	// void reset ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	// virtual, defined by CellIterator::Over::CellsOfFuzzyMesh, execution forbidden
+	Cell deref ( );  // virtual from CellIterator::Core
+	// we trust each cell has already a reverse
+	// void advance ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+	// bool in_range ( )  virtual, defined by CellIterator::Over::CellsOfFuzzyMesh
+
+};  // end of class CellIterator::Over::CellsOfFuzzyMesh
+    //                ::ReverseEachCell::AssumeCellsExist
+
+//--------------------------------------------------------------------------------
 
 	
-class CellIterator::Over::CellsOfNegMesh::MaxDim : public virtual CellIterator::Over::CellsOfMesh
+class CellIterator::Adaptor::ForcePositive : public CellIterator::Core
 
-// iterates over all cells of a negative mesh (cells of maximum dimension)
-// the dereference will produce reversed cells, according to the negative character of the mesh
-// works only for cells of maximum dimension
-
-{	public :
-	
-	inline MaxDim ( Mesh::Core * msh, size_t dim )
-	:	CellIterator::Over::CellsOfMesh ( msh, dim )
-	{	}
-
-	Cell::Core * deref ( ); //  virtual from CellIterator::Core
-};
-	
-	
-class CellIterator::Over::CellsOfNegMesh::Positive : public virtual CellIterator::Over::CellsOfMesh
-
-// iterates over all cells of a negative mesh (cells of given dimension)
-// the dereference will produce always positive cells
-// should be used only for cells of maximum dimension
+// modifies the behaviour of another CellIterator
+// forcing the resulting cells to be positive
 
 {	public :
 
-	inline Positive ( Mesh::Core * msh, size_t dim )
-	:	CellIterator::Over::CellsOfMesh ( msh, dim )
-	{	}
+	CellIterator base;
 
-	Cell::Core * deref ( ); //  virtual from CellIterator::Core
-};
+	inline ForcePositive ( CellIterator && b )
+	:	base { b } { };
 
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );
+	// virtual from CellIterator::Core, here execution forbidden
+	// Cell deref ( )  remains pure virtual from CellIterator::Core
+	void advance ( );  // virtual from CellIterator::Core
+	bool in_range ( );  // virtual from CellIterator::Core
 
-class CellIterator::Over::OrderedCells : public virtual CellIterator::Core	
-	
-// iterates over a linearly ordered collection of cells
-// maybe cells of a one-dimensional mesh
-// or segments around a vertex or tetrahedra around a segment etc
+};  // end of class CellIterator::Adaptor::ForcePositive
 
-{	public :
+//-------------------------------------------------------------------------------------------
 
-	Cell::Core * current_cell;
-
-	Cell::Core * deref ( );  // virtual from CellIterator::Core
-
-	// void reset ( Cell::Core * cll )  remains pure virtual from CellIterator::Core
-	// void reset ( )  remains pure virtual from CellIterator::Core
-	// bool in_range ( )  remains pure virtual from CellIterator::Core
-	// void advance ( )  remains pure virtual from CellIterator::Core
-
-	class Open;  class Loop;
-};
-
-	
-class CellIterator::Over::OrderedCells::Open : public virtual CellIterator::Over::OrderedCells
-	
-// iterates over a linearly ordered collection of cells
-// maybe cells of an (open) chain of segments
-// or segments around a vertex on the boundary of a mesh
-// or tetrahedra around a segment on the boundary of a mesh etc
-
-{	public :
-
-	bool in_range ( );  // virtual from CellIterator::Core, through IterOver::OrderedCells
-	
-	// void reset ( Cell::Core * cll )  remains pure virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells
-	// void reset ( )  remains pure virtual from CellIterator::Core, through IterOver::OrderedCells
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// void advance ( )  remains pure virtual from CellIterator::Core, through IterOver::OrderedCells
-
-};
-
-	
-class CellIterator::Over::OrderedCells::Loop : public virtual CellIterator::Over::OrderedCells
-	
-// iterates over a linearly ordered collection of cells
-// maybe cells of a closed chain of segments (e.g. boundary of a triangle)
-// or segments around a vertex inside a mesh
-// or tetrahedra around a segment inside a mesh etc
-
-{	public :
-
-	Cell::Core * first_cell;
-	bool fresh;
-	// used to check whether we are just starting or we have already made a complete loop
-
-	bool in_range ( );  // virtual from CellIterator::Core, through IterOver::OrderedCells
-
-	// void reset ( Cell::Core * cll )  remains pure virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells
-	// void reset ( )  remains pure virtual from CellIterator::Core, through IterOver::OrderedCells
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// void advance ( )  remains pure virtual from CellIterator::Core, through IterOver::OrderedCells
-
-};
-
-	
-class CellIterator::Over::CellsOfOneDimMesh : public virtual CellIterator::Core
-
-// iterates over all cells of a given open one-dimensional mesh (segments or vertices)
-
-{	public :
-
-	Mesh::OneDim::Positive * mesh;
-
-	inline CellsOfOneDimMesh ( Mesh::OneDim::Positive * msh )
-	: mesh { msh }
-	{	msh->order();  }  // we need to order here and in each reset
-
-	inline CellsOfOneDimMesh ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	: mesh { msh }
-	{	}
-
-	inline CellsOfOneDimMesh ( Mesh::OneDim::Positive * msh, const tag::Bizarre & )
-	{	  }
-
-	void order_mesh ( );  // virtual from CellIterator::Core
-			
-	// Cell::Core * deref ( )  remains pure virtual from CellIterator::Core
-	// bool in_range ( )  remains pure virtual from CellIterator::Core
-	// void advance ( )  remains pure virtual from CellIterator::Core
-};
-
-
-class CellIterator::Over::SegsOfChain
-: public virtual CellIterator::Over::CellsOfOneDimMesh,
-	public virtual CellIterator::Over::OrderedCells::Open
-
-// iterates over all segments of a given open one-dimensional mesh
-// not useful, at least not yet
-
-{	public :
-
-	inline SegsOfChain ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh )
-	{	}
-
-	inline SegsOfChain ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh )
-	{	}
-
-	// void reset ( Cell::Core * cll )  remains pure virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells, IterOver::OrderedCells::Open
-	// void reset ( )  remains pure virtual from CellIterator::Core,
-	//    through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Open
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// void advance ( )  remains pure virtual from CellIterator::Core,
-	//   through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Open
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-};
-
-	
-class CellIterator::Over::SegsOfPosChain : public virtual CellIterator::Over::SegsOfChain
-
-// iterates over all segments of a given open one-dimensional mesh
-
-{	public :
-
-	inline SegsOfPosChain ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::SegsOfChain ( msh )
-	{	}
-
-	inline SegsOfPosChain ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll );  // virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::SegsOfChain
-
-	void reset ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//    IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::SegsOfChain
-	
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//    IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::SegsOfChain
-	
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-
-	class Reverse;  class Positive;
-};
-
-
-class CellIterator::Over::SegsOfPosChain::Reverse :
-public virtual CellIterator::Over::SegsOfChain
-
-// iterates over all segments of a given positive one-dimensional mesh, in reverse order
-
-{	public :
-
-	inline Reverse ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::SegsOfChain ( msh )
-	{	}
-
-	inline Reverse ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll );  // virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::SegsOfChain
-
-	void reset ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//    IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::SegsOfChain
-	
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//    IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::SegsOfChain
-	
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-
-	class Positive;
-};
-
-
-class CellIterator::Over::SegsOfPosChain::Positive
-: public virtual CellIterator::Over::SegsOfPosChain
-
-// iterates over all segments of a positive open one-dimensional mesh
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfChain ( msh ),
-		CellIterator::Over::SegsOfPosChain ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfPosChain
-	// void reset ( )  defined by IterOver::SegsOfPosChain
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-	// void advance ( )  defined by IterOver::SegsOfPosChain
-};
-
-
-class CellIterator::Over::SegsOfPosChain::Reverse::Positive
-: public virtual CellIterator::Over::SegsOfPosChain::Reverse
-
-// iterates over all segments of a positive open one-dimensional mesh, in reverse order
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfChain ( msh ),
-		CellIterator::Over::SegsOfPosChain::Reverse ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosChain::Reverse ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfPosChain
-	// void reset ( )  defined by IterOver::SegsOfPosChain
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-	// void advance ( )  defined by IterOver::SegsOfPosChain::Reverse
-};
-
-
-class CellIterator::Over::SegsOfNegChain :
-public virtual CellIterator::Over::SegsOfPosChain::Reverse
-
-// iterates over all segments of a negative open one-dimensional mesh
-
-{	public :
-
-	inline SegsOfNegChain ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfChain ( msh ),
-		CellIterator::Over::SegsOfPosChain::Reverse ( msh )
-	{	}
-
-	inline SegsOfNegChain ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosChain::Reverse ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll ) override;
-	// virtual, overrides definition by IterOver::SegsOfPosChain::Reverse
-	
-	void reset ( ) override;  // virtual, overrides definition by IterOver::SegsOfPosChain::Reverse
-	// the two functions are identical, but the compiler forces me to override both 'reset's
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-	// void advance ( )  defined by IterOver::SegsOfPosChain::Reverse
-
-	class Reverse;  class Positive;
-};
-
-
-class CellIterator::Over::SegsOfNegChain::Reverse
-:	public virtual CellIterator::Over::SegsOfPosChain
-
-// iterates over all segments of a negative open one-dimensional mesh, in reverse order
-
-{	public :
-
-	inline Reverse ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfChain ( msh ),
-		CellIterator::Over::SegsOfPosChain ( msh )
-	{	}
-
-	inline Reverse ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll ) override;
-	// virtual, overrides definition by IterOver::SegsOfPosChain
-
-	void reset ( ) override;  // virtual, overrides definition by IterOver::SegsOfPosChain
-	// the two functions are identical, but the compiler forces me to override both 'reset's
-	
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-	// void advance ( )  defined by IterOver::SegsOfPosChain
-
-	class Positive;
-};
-
-
-class CellIterator::Over::SegsOfNegChain::Positive
-: public virtual CellIterator::Over::SegsOfNegChain
-
-// iterates over all segments of a negative open one-dimensional mesh
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfChain ( msh ),
-		CellIterator::Over::SegsOfPosChain::Reverse ( msh ),
-		CellIterator::Over::SegsOfNegChain ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosChain::Reverse ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfNegChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells and by IterOver::SegsOfNegChain
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfNegChain
-	// void reset ( )  defined by IterOver::SegsOfNegChain
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-	// void advance ( )  defined by IterOver::SegsOfPosChain::Reverse
-};
-
-
-class CellIterator::Over::SegsOfNegChain::Reverse::Positive
-: public virtual CellIterator::Over::SegsOfNegChain::Reverse
-
-// iterates over all segments of a negative open one-dimensional mesh, in reverse order
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfChain ( msh ),
-		CellIterator::Over::SegsOfPosChain ( msh ),
-		CellIterator::Over::SegsOfNegChain::Reverse ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosChain ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfNegChain::Reverse ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells and by SegsOfNegChain::Reverse
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfNegChain::Reverse
-	// void reset ( )  defined by IterOver::SegsOfNegChain::Reverse
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-	// void advance ( )  defined by IterOver::SegsOfPosChain
-};
-
-
-class CellIterator::Over::VerOfChain
-: public virtual CellIterator::Over::CellsOfOneDimMesh,
-	public virtual CellIterator::Over::OrderedCells::Open
-
-// iterates over all vertices of a given open one-dimensional mesh
-
-{	public :
-
-	inline VerOfChain ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh )
-	{	}
-
-	inline VerOfChain ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll );
-	// virtual from CellIterator::Core, through IterOver::OrderedCells, IterOver::OrderedCells::Open
-
-	// void advance ( )  remains pure virtual from CellIterator::Core,
-	    // through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Open
-
-	// void reset ( )  remains pure virtual from CellIterator::Core,
-	//    through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Open
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-};
-
-	
-class CellIterator::Over::VerOfPosChain : public virtual CellIterator::Over::VerOfChain
-	
-// iterates over all vertices of a positive open one-dimensional mesh
-
-{	public :
-
-	inline VerOfPosChain ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::VerOfChain ( msh )
-	{	}
-
-	inline VerOfPosChain ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::VerOfChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Open, CellIterator::Over::VerOfChain
-	
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh,
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Open, IterOver::VerOfChain
-
-	// void reset ( Cell::Core * cll )  defined by CellIterator::Over::VerOfChain
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-
-	class Reverse;
-};
-
-
-class CellIterator::Over::VerOfPosChain::Reverse : public virtual CellIterator::Over::VerOfChain
-
-// iterates over all vertices of a positive open one-dimensional mesh, in reverse order
-
-{	public :
-
-	inline Reverse ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::VerOfChain ( msh )
-	{	}
-
-	inline Reverse ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::VerOfChain ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Open, IterOver::VerOfChain
-	
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh,
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Open, IterOver::VerOfChain
-
-	// void reset ( Cell::Core * cll )  defined by CellIterator::Over::VerOfChain
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Open
-};
-
-
-// no need for class IterOver::VerOfNegChain, just use IterOver::VerOfPosChain::Reverse
-// no need for class IterOver::VerOfNegChain::Reverse, just use IterOver::VerOfPosChain
-
-
-class CellIterator::Over::SegsOfLoop
-: public virtual CellIterator::Over::CellsOfOneDimMesh,
-	public virtual CellIterator::Over::OrderedCells::Loop
-
-// iterates over all segments of a given closed one-dimensional mesh
-// (for instance, the boundary of a triangle)
-// not useful, at least not yet
-
-{	public :
-
-	inline SegsOfLoop ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh )
-	{	}
-
-	inline SegsOfLoop ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll );  // virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells, IterOver::OrderedCells::Loop
-
-	void reset ( );  // virtual from CellIterator::Core,
-	//    through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Loop
-	
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// void advance ( )  remains pure virtual from CellIterator::Core,
-	//   through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Loop
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-};
-
-	
-class CellIterator::Over::SegsOfPosLoop : public virtual CellIterator::Over::SegsOfLoop
-
-// iterates over all segments of a positive closed one-dimensional mesh
-// (for instance, the boundary of a positive triangle)
-
-{	public :
-
-	inline SegsOfPosLoop ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::SegsOfLoop ( msh )
-	{	}
-
-	inline SegsOfPosLoop ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Loop, CellIterator::Over::SegsOfLoop
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfLoop
-	// void reset ( )  defined by IterOver::SegsOfLoop
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-
-	class Reverse;  class Positive;
-};
-
-
-class CellIterator::Over::SegsOfPosLoop::Reverse
-: public virtual CellIterator::Over::SegsOfLoop
-
-// iterates over all segments of a positive closed one-dimensional mesh, in reverse order
-
-{	public :
-
-	inline Reverse ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::SegsOfLoop ( msh )
-	{	}
-
-	inline Reverse ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh, 
-	//    IterOver::OrderedCells, IterOver::OrderedCells::Loop, CellIterator::Over::SegsOfLoop
-	
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfLoop
-	// void reset ( )  defined by IterOver::SegsOfLoop
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-
-	class Positive;
-};
-
-
-class CellIterator::Over::SegsOfPosLoop::Positive : public virtual CellIterator::Over::SegsOfPosLoop
-
-// iterates over all segments of a positive closed one-dimensional mesh
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfLoop ( msh ),
-		CellIterator::Over::SegsOfPosLoop ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfPosLoop
-	// void reset ( )  defined by IterOver::SegsOfPosLoop
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-	// void advance ( )  defined by IterOver::SegsOfPosLoop
-};
-
-
-class CellIterator::Over::SegsOfPosLoop::Reverse::Positive
-: public virtual CellIterator::Over::SegsOfPosLoop::Reverse
-
-// iterates over all segments of a positive closed one-dimensional mesh, in reverse order
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfLoop ( msh ),
-		CellIterator::Over::SegsOfPosLoop::Reverse ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosLoop::Reverse ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfPosLoop
-	// void reset ( )  defined by IterOver::SegsOfPosLoop
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-	// void advance ( )  defined by IterOver::SegsOfPosLoop::Reverse
-};
-
-
-class CellIterator::Over::SegsOfNegLoop
-: public virtual CellIterator::Over::SegsOfPosLoop::Reverse
-
-// iterates over all segments of a negative closed one-dimensional mesh
-// (for instance, the boundary of a negative triangle)
-
-{	public :
-
-	inline SegsOfNegLoop ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfLoop ( msh ),
-		CellIterator::Over::SegsOfPosLoop::Reverse ( msh )
-	{	}
-
-	inline SegsOfNegLoop ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosLoop::Reverse ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll ) override;
-	// virtual, overrides definition by IterOver::SegsOfLoop
-	
-	void reset ( ) override;  // virtual, overrides definition by IterOver::SegsOfLoop
-	// the two functions are identical, but the compiler forces me to override both 'reset's
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-	// void advance ( )  defined by by IterOver::SegsOfPosLoop::Reverse
-
-	class Reverse;  class Positive;
-};
-
-
-class CellIterator::Over::SegsOfNegLoop::Positive
-: public virtual CellIterator::Over::SegsOfNegLoop
-
-// iterates over all segments of a negative open one-dimensional mesh
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfLoop ( msh ),
-		CellIterator::Over::SegsOfPosLoop::Reverse ( msh ),
-		CellIterator::Over::SegsOfNegLoop ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosLoop::Reverse ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfNegLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells and by IterOver::SegsOfNegLoop
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfNegLoop
-	// void reset ( )  defined by IterOver::SegsOfNegLoop
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-	// void advance ( )  defined by IterOver::SegsOfPosLoop::Reverse
-};
-
-
-class CellIterator::Over::SegsOfNegLoop::Reverse
-: public virtual CellIterator::Over::SegsOfPosLoop
-
-// iterates over all segments of a negative closed one-dimensional mesh
-// (for instance, the boundary of a negative triangle)
-
-{	public :
-
-	inline Reverse ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfLoop ( msh ),
-		CellIterator::Over::SegsOfPosLoop ( msh )
-	{	}
-
-	inline Reverse ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll ) override;
-	// virtual, overrides definition by IterOver::SegsOfLoop
-	
-	void reset ( ) override;  // virtual, overrides definition by IterOver::SegsOfLoop
-	// the two functions are identical, but the compiler forces me to override both 'reset's
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells
-
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-	// void advance ( )  defined by by IterOver::SegsOfPosLoop::Reverse
-
-	class Positive;
-};
-
-
-class CellIterator::Over::SegsOfNegLoop::Reverse::Positive
-: public virtual CellIterator::Over::SegsOfNegLoop::Reverse
-
-// iterates over all segments of a negative closed one-dimensional mesh, in reverse order
-// returns positive segments
-
-{	public :
-
-	inline Positive ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ),
-		CellIterator::Over::SegsOfLoop ( msh ),
-		CellIterator::Over::SegsOfPosLoop ( msh ),
-		CellIterator::Over::SegsOfNegLoop::Reverse ( msh )
-	{	}
-
-	inline Positive ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfPosLoop ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::SegsOfNegLoop::Reverse ( msh, tag::do_not_order_mesh )
-	{	}
-
-	Cell::Core * deref ( ) override;
-	// virtual, overrides definition by IterOver::OrderedCells and by SegsOfNegLoop::Reverse
-
-	// void reset ( Cell::Core * cll )  defined by IterOver::SegsOfNegLoop::Reverse
-	// void reset ( )  defined by IterOver::SegsOfNegLoop::Reverse
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-	// void advance ( )  defined by IterOver::SegsOfPosLoop
-};
-
-
-class CellIterator::Over::VerOfLoop
-: public virtual CellIterator::Over::CellsOfOneDimMesh,
-	public virtual CellIterator::Over::OrderedCells::Loop
-
-// iterates over all vertices of a given closed one-dimensional mesh
-// (for instance, the boundary of a triangle)
-
-{	public :
-
-	inline VerOfLoop ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh )
-	{	}
-
-	inline VerOfLoop ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void reset ( Cell::Core * cll );  // virtual from CellIterator::Core,
-	//    through IterOver::OrderedCells, IterOver::OrderedCells::Loop
+//      ITERATORS OVER VERTICES
+//--------------------------------------------------------------------------------
 		
-	void reset ( );  // virtual from CellIterator::Core,
-	//    through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Loop
 
-	// void advance ( )  remains pure virtual from CellIterator::Core,
-	//    through IterOver::CellsOfOneDimMesh, IterOver::OrderedCells, IterOver::OrderedCells::Loop
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-};
+inline CellIterator Mesh::iterator ( const tag::OverVertices & ) const
+{	return this->iterator ( tag::over_vertices, tag::as_they_are );  }
 
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::AsTheyAre & ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else
+	if ( this->dim() == 0 )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order, tag::this_mesh_is_positive                  ) );
+	// else : dim >= 1, all vertices are positive, no need to reverse them
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )     );           }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_vertices, tag::as_they_are, tag::require_order );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::AsTheyAre &, const tag::RequireOrder & ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::require_order, tag::this_mesh_is_positive )           );
+	// else : negative mesh
+	if ( this->dim() == 0 )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order, tag::this_mesh_is_positive                  ) );
+	// else : dim >= 1, all vertices are positive, no need to reverse them
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::reverse_order, tag::this_mesh_is_positive )           );           }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::RequireOrder &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_vertices, tag::as_they_are, tag::require_order );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_vertices, tag::as_they_are, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::AsTheyAre &, const tag::Backwards & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::reverse_order, tag::this_mesh_is_positive )            );
+	// else : negative cell, back to normal order
+	// but reverse cells if mesh is zero-dimensional
+	if ( this->core->get_dim_plus_one() == 1 )  // dimension zero
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::reverse_each_cell,
+			  tag::do_not_bother, tag::this_mesh_is_positive )            );
+	// else : dimension one
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+	  ( tag::over_vertices, tag::as_they_are,
+		  tag::require_order, tag::this_mesh_is_positive )           );    }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::Backwards &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_vertices, tag::as_they_are, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::ForcePositive & ) const
+{	if ( this->dim() == 0 )
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_vertices, tag::force_positive, tag::this_mesh_is_positive ) );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::force_positive,
+			  tag::reverse_order, tag::this_mesh_is_positive ) );                        }
+	// else : dim >= 1, all vertices are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive ) );                     }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::ForcePositive &, const tag::RequireOrder & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->core->get_dim_plus_one() == 1 )  // dimension zero
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_vertices, tag::force_positive, tag::this_mesh_is_positive ) );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::force_positive,
+			  tag::reverse_order, tag::this_mesh_is_positive ) );                        }
+	// else : dimension one, all vertices are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::require_order, tag::this_mesh_is_positive )            );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::reverse_order, tag::this_mesh_is_positive )            );                  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::RequireOrder &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_vertices, tag::force_positive, tag::require_order );  }
+
+
+inline CellIterator Mesh:: iterator
+( const tag::OverVertices &, const tag::ForcePositive &, const tag::Backwards & ) const
+{ assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->dim() == 0 )
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_vertices, tag::force_positive,
+				  tag::reverse_order, tag::this_mesh_is_positive )           );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::force_positive, tag::this_mesh_is_positive ) ); }
+	// else : dim == 1, all vertices are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::reverse_order, tag::this_mesh_is_positive )           );
+	else
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::require_order, tag::this_mesh_is_positive )            );                 }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::Backwards &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_vertices, tag::force_positive, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 0 );  // because reverse_each_cell
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::reverse_each_cell,
+			  tag::do_not_bother, tag::this_mesh_is_positive )            );
+	// else : negative mesh, reverse order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+	  ( tag::over_vertices, tag::as_they_are, tag::reverse_order, tag::this_mesh_is_positive ) );  }
 	
-class CellIterator::Over::VerOfPosLoop : public virtual CellIterator::Over::VerOfLoop
 
-// iterates over all vertices of a given closed one-dimensional mesh
-// (for instance, the boundary of a positive triangle)
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::RequireOrder &      ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 0 );  // because reverse_each_cell
+	return this->iterator ( tag::over_vertices, tag::reverse_each_cell, tag::do_not_bother );  }
+	
 
-{	public :
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::RequireOrder &,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 0 );  // because reverse_each_cell
+	return this->iterator ( tag::over_vertices, tag::reverse_each_cell, tag::do_not_bother );  }
+	
 
-	inline VerOfPosLoop ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::VerOfLoop ( msh )
-	{	}
-
-	inline VerOfPosLoop ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::VerOfLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh,
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Loop, IterOver::VerOfLoop
-
-	// void reset ( Cell::Core * cll )  defined by CellIterator::Over::VerOfLoop
-	// void reset ( )  defined by CellIterator::Over::VerOfLoop
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-
-	class Reverse;
-};
-
-
-class CellIterator::Over::VerOfPosLoop::Reverse : public virtual CellIterator::Over::VerOfLoop
-
-// iterates over all vertices of a given closed one-dimensional mesh
-// (for instance, the boundary of a negative triangle)
-
-{	public :
-
-	inline Reverse ( Mesh::OneDim::Positive * msh )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh ), CellIterator::Over::VerOfLoop ( msh )
-	{	}
-
-	inline Reverse ( Mesh::OneDim::Positive * msh, const tag::DoNotOrderMesh & )
-	:	CellIterator::Over::CellsOfOneDimMesh ( msh, tag::do_not_order_mesh ),
-		CellIterator::Over::VerOfLoop ( msh, tag::do_not_order_mesh )
-	{	}
-
-	void advance ( );  // virtual from CellIterator::Core, through IterOver::CellsOfOneDimMesh,
-	//   IterOver::OrderedCells, IterOver::OrderedCells::Loop, IterOver::VerOfLoop, IterOver::VerOfPosLoop
-
-	// void reset ( Cell::Core * cll )  defined by CellIterator::Over::VerOfLoop
-	// void reset ( )  defined by CellIterator::Over::VerOfLoop
-	// Cell::Core * deref ( )  defined by IterOver::OrderedCells
-	// bool in_range ( )  defined by IterOver::OrderedCells::Loop
-};
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::Backwards &        ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 0 );  // because reverse_each_cell
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order, tag::this_mesh_is_positive                  ) );
+	// else : negative mesh, back to normal order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+	  ( tag::over_vertices, tag::as_they_are, tag::this_mesh_is_positive ) );   }
 
 
-// no need for class IterOver::VerOfNegLoop, just use IterOver::VerOfPosLoop::Reverse
-// no need for class IterOver::VerOfNegLoop::Reverse, just use IterOver::VerOfPosLoop
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::Backwards &,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_vertices, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards      );  }
 
-// ----------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------
 
+//      ITERATORS OVER SEGMENTS
+//--------------------------------------------------------------------------------
+		
 
-inline CellIterator::CellIterator
-( const tag::OverCellsOf &, const Mesh & msh, const tag::OfDimension &, size_t dim )
-
-{	assert ( dim <= msh.dim() );
-	if ( msh.is_positive() )
-		if ( msh.dim() > 1 )
-			core = new CellIterator::Over::CellsOfPosMesh ( msh.core, dim );
-		else
-		{	assert ( msh.dim() == 1 );
-			Mesh::OneDim::Positive * msh1 = (Mesh::OneDim::Positive*) msh.core;
-			msh1->order();
-			if ( dim == 1 )
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::SegsOfPosLoop ( msh1, tag::do_not_order_mesh );
-				else
-					core = new CellIterator::Over::SegsOfPosChain ( msh1, tag::do_not_order_mesh );
-			else
-			{	assert ( dim == 0 );
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::VerOfPosLoop ( msh1, tag::do_not_order_mesh );
-				else
-					core = new CellIterator::Over::VerOfPosChain ( msh1, tag::do_not_order_mesh );  }  }
-	else  // negative mesh
-		if ( msh.dim() > 1 )
-			if ( msh.dim() == dim )
-				core = new CellIterator::Over::CellsOfNegMesh::MaxDim ( msh.core, dim );
-			else  core = new CellIterator::Over::CellsOfNegMesh ( msh.core, dim );
-		else
-		{	assert ( msh.dim() == 1 );
-			Mesh::OneDim::Positive * msh1 = (Mesh::OneDim::Positive*) msh.core;
-			msh1->order();
-			if ( dim == 1 )
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::SegsOfNegLoop ( msh1, tag::do_not_order_mesh );
-				else
-					core = new CellIterator::Over::SegsOfNegChain ( msh1, tag::do_not_order_mesh );
-			else
-			{	assert ( dim == 0 );
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::VerOfPosLoop::Reverse ( msh1, tag::do_not_order_mesh );
-				else
-					core = new CellIterator::Over::VerOfPosChain::Reverse ( msh1, tag::do_not_order_mesh );  }  }
-}
+inline CellIterator Mesh::iterator ( const tag::OverSegments & ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are );  }
 
 
-inline CellIterator::CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-           const tag::OfDimension &, size_t dim, const tag::ForcePositive & )
-
-{	assert ( dim <= msh.dim() );
-	if ( msh.is_positive() )
-		if ( msh.dim() > 1 )
-			if ( msh.dim() == dim )
-				core = new CellIterator::Over::CellsOfPosMesh::Positive ( msh.core, dim );
-			else  core = new CellIterator::Over::CellsOfPosMesh ( msh.core, dim );
-		else
-		{	assert ( msh.dim() == 1 );
-			Mesh::OneDim::Positive * msh1 = (Mesh::OneDim::Positive*) msh.core;
-			msh1->order();
-			if ( dim == 1 )
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::SegsOfPosLoop::Positive ( msh1, tag::do_not_order_mesh );
-				else
-					core = new CellIterator::Over::SegsOfPosChain::Positive ( msh1, tag::do_not_order_mesh );
-			else
-			{	assert ( dim == 0 );
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::VerOfPosLoop ( msh1, tag::do_not_order_mesh );
-				else
-					core = new CellIterator::Over::VerOfPosChain ( msh1, tag::do_not_order_mesh );  }  }
-	else  // negative mesh
-		if ( msh.dim() > 1 )
-			if ( msh.dim() == dim )
-				core = new CellIterator::Over::CellsOfNegMesh::Positive ( msh.core, dim );
-			else  core = new CellIterator::Over::CellsOfNegMesh ( msh.core, dim );
-		else
-		{	assert ( msh.dim() == 1 );
-			Mesh::OneDim::Positive * msh1 = (Mesh::OneDim::Positive*) msh.core;
-			msh1->order();
-			if ( dim == 1 )
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::SegsOfNegLoop::Positive ( msh1, tag::do_not_order_mesh );
-				else  core = new CellIterator::Over::SegsOfNegChain::Positive ( msh1, tag::do_not_order_mesh );
-			else
-			{	assert ( dim == 0 );
-				if ( msh1->first_ver == Cell::ghost )
-					core = new CellIterator::Over::VerOfPosLoop::Reverse ( msh1, tag::do_not_order_mesh );
-				else  core = new CellIterator::Over::VerOfPosChain::Reverse ( msh1, tag::do_not_order_mesh );  }  }
-}
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::AsTheyAre & ) const
+{	assert ( this->dim() >= 1 );
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else
+	if ( this->core->get_dim_plus_one() == 2 )  // dimension one
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order_if_any, tag::this_mesh_is_positive            ) );
+	// else : dim >= 2, all segments are positive, no need to reverse them
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::as_they_are, tag::this_mesh_is_positive ) );   }
 
 
-inline CellIterator::CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-           const tag::OfDimension &, size_t dim, const tag::Reverse & )
-
-{	assert ( dim <= msh.dim() );
-	assert ( msh.dim() == 1 );
-	Mesh::OneDim::Positive * msh1 = (Mesh::OneDim::Positive*) msh.core;
-	msh1->order();
-	if ( msh.is_positive() )
-		if ( dim == 1 )
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::SegsOfPosLoop::Reverse ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::SegsOfPosChain::Reverse ( msh1, tag::do_not_order_mesh );
-		else
-		{	assert ( dim == 0 );
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::VerOfPosLoop::Reverse ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::VerOfPosChain::Reverse ( msh1, tag::do_not_order_mesh );  }
-	else  // negative mesh
-		if ( dim == 1 )
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::SegsOfNegLoop::Reverse ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::SegsOfNegChain::Reverse ( msh1, tag::do_not_order_mesh );
-		else
-		{	assert ( dim == 0 );
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::VerOfPosLoop ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::VerOfPosChain ( msh1, tag::do_not_order_mesh );  }
-}
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are, tag::require_order );  }
 
 
-inline CellIterator::CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-	const tag::OfDimension &, size_t dim, const tag::Reverse &, const tag::ForcePositive & )
-
-{	assert ( dim <= msh.dim() );
-	assert ( msh.dim() == 1 );
-	Mesh::OneDim::Positive * msh1 = (Mesh::OneDim::Positive*) msh.core;
-	msh1->order();
-	if ( msh.is_positive() )
-		if ( dim == 1 )
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::SegsOfPosLoop::Reverse::Positive ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::SegsOfPosChain::Reverse::Positive ( msh1, tag::do_not_order_mesh );
-		else
-		{	assert ( dim == 0 );
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::VerOfPosLoop::Reverse ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::VerOfPosChain::Reverse ( msh1, tag::do_not_order_mesh );  }
-	else  // negative mesh
-		if ( dim == 1 )
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::SegsOfNegLoop::Reverse::Positive ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::SegsOfNegChain::Reverse::Positive ( msh1, tag::do_not_order_mesh );
-		else
-		{	assert ( dim == 0 );
-			if ( msh1->first_ver == Cell::ghost )
-				core = new CellIterator::Over::VerOfPosLoop ( msh1, tag::do_not_order_mesh );
-			else
-				core = new CellIterator::Over::VerOfPosChain ( msh1, tag::do_not_order_mesh );  }
-}
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::AsTheyAre &, const tag::RequireOrder & ) const
+{	assert ( this->dim() == 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+		  ( tag::over_segments, tag::as_they_are, tag::require_order,
+			  tag::this_mesh_is_positive                                ) );
+	// else
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::reverse_each_cell, tag::do_not_bother,
+		  tag::reverse_order, tag::this_mesh_is_positive                  ) );      }
 
 
-inline CellIterator::CellIterator ( const tag::OverCellsOf &, const Mesh & msh,
-	const tag::OfDimension &, size_t dim, const tag::ForcePositive &, const tag::Reverse & )
-:	CellIterator ( tag::over_cells_of, msh, tag::of_dim, dim, tag::reverse, tag::force_positive )
-{	}
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::RequireOrder &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are, tag::require_order );  }
 
 
-inline CellIterator Mesh::iter_over	( const tag::CellsOfDim &, size_t d ) const
-{	return CellIterator ( tag::over_cells_of, *this, tag::of_dim, d );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are, tag::backwards );  }
 
-inline CellIterator Mesh::iter_over
-( const tag::CellsOfDim &, size_t d, const tag::Reverse & ) const
-{	return CellIterator ( tag::over_cells_of, *this, tag::of_dim, d, tag::reverse );  }
 
-inline CellIterator Mesh::iter_over
-( const tag::CellsOfDim &, size_t d, const tag::ForcePositive & ) const
-{	return CellIterator ( tag::over_cells_of, *this, tag::of_dim, d, tag::force_positive );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Backwards & ) const
+{	assert ( this->dim() == 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::as_they_are,
+			  tag::reverse_order, tag::this_mesh_is_positive )            );
+	// else
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::reverse_each_cell, tag::do_not_bother,
+		  tag::require_order, tag::this_mesh_is_positive                  ) ); }
 
-inline CellIterator Mesh::iter_over
-( const tag::CellsOfDim &, size_t d, const tag::ForcePositive &, const tag::Reverse & ) const
-{	return CellIterator ( tag::over_cells_of, *this, tag::of_dim, d, tag::reverse, tag::force_positive );  }
 
-inline CellIterator Mesh::iter_over
-( const tag::CellsOfDim &, size_t d, const tag::Reverse &, const tag::ForcePositive & ) const
-{	return CellIterator ( tag::over_cells_of, *this, tag::of_dim, d, tag::reverse, tag::force_positive );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::Backwards &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are, tag::backwards );  }
 
-inline CellIterator Mesh::iter_over ( const tag::Vertices & ) const
-{	return iter_over ( tag::cells_of_dim, 0 );  }
 
-inline CellIterator Mesh::iter_over ( const tag::Vertices &, const tag::ForcePositive & ) const
-{	return iter_over ( tag::cells_of_dim, 0, tag::force_positive );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::ForcePositive & ) const
+{	assert ( this->dim() >= 1 );
+	if ( this->core->get_dim_plus_one() == 2 )  // dimension one
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_segments, tag::force_positive, tag::this_mesh_is_positive ) );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::force_positive,
+				tag::reverse_order_if_any, tag::this_mesh_is_positive ) );                 }
+	// else : dim >= 2, all segments are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )     );                  }
 
-inline CellIterator Mesh::iter_over ( const tag::Vertices &, const tag::Reverse & ) const
-{	return iter_over ( tag::cells_of_dim, 0, tag::reverse );  }
 
-inline CellIterator Mesh::iter_over
-( const tag::Vertices &, const tag::ForcePositive &, const tag::Reverse & ) const
-{	return iter_over ( tag::cells_of_dim, 0, tag::force_positive, tag::reverse );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::ForcePositive &, const tag::RequireOrder & ) const
+{	assert ( this->dim() == 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::force_positive,
+			  tag::require_order, tag::this_mesh_is_positive ) );
+	else
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::force_positive,
+			  tag::reverse_order, tag::this_mesh_is_positive )            );  }
 
-inline CellIterator Mesh::iter_over
-( const tag::Vertices &, const tag::Reverse &, const tag::ForcePositive & ) const
-{	return iter_over ( tag::cells_of_dim, 0, tag::force_positive, tag::reverse );  }
 
-inline CellIterator Mesh::iter_over ( const tag::Segments & ) const
-{	return iter_over ( tag::cells_of_dim, 1 );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::RequireOrder &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_segments, tag::force_positive, tag::require_order );  }
 
-inline CellIterator Mesh::iter_over ( const tag::Segments &, const tag::ForcePositive & ) const
-{	return iter_over ( tag::cells_of_dim, 1, tag::force_positive );  }
 
-inline CellIterator Mesh::iter_over ( const tag::Segments &, const tag::Reverse & ) const
-{	return iter_over ( tag::cells_of_dim, 1, tag::reverse );  }
+inline CellIterator Mesh:: iterator
+( const tag::OverSegments &, const tag::ForcePositive &, const tag::Backwards & ) const
+{ assert ( this->dim() == 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::force_positive,
+			  tag::reverse_order, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::force_positive,
+		  tag::require_order, tag::this_mesh_is_positive ) );           }
 
-inline CellIterator Mesh::iter_over
-( const tag::Segments &, const tag::ForcePositive &, const tag::Reverse & ) const
-{	return iter_over ( tag::cells_of_dim, 1, tag::force_positive, tag::reverse );  }
 
-inline CellIterator Mesh::iter_over
-( const tag::Segments &, const tag::Reverse &, const tag::ForcePositive & ) const
-{	return iter_over ( tag::cells_of_dim, 1, tag::force_positive, tag::reverse );  }
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::Backwards &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_segments, tag::force_positive, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 1 );  // because reverse_each_cell
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::reverse_each_cell,
+			  tag::do_not_bother, tag::this_mesh_is_positive )            );
+	// else : negative mesh, reverse order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )    );   }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::RequireOrder &      ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 1 );  // because reverse_each_cell
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::require_order, tag::this_mesh_is_positive                  ) );
+	// else : negative mesh, reverse order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::as_they_are,
+		  tag::reverse_order, tag::this_mesh_is_positive )           );           }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::RequireOrder &,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_segments, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::require_order       );  }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::Backwards &      ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 1 );  // because reverse_each_cell
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_segments, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order, tag::this_mesh_is_positive                  ) );
+	// else : negative mesh, back to normal order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::as_they_are,
+		  tag::require_order, tag::this_mesh_is_positive )           );           }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::Backwards &,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_segments, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards      );  }
+
+
+//-------------------------------------------------------------------------------------
+
+//      ITERATORS OVER HIGH DIMENSIONAL CELLS
+//--------------------------------------------------------------------------------
+		
+
+inline CellIterator Mesh::iterator ( const tag::OverCellsOfDim &, const size_t d ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre & ) const
+{	assert ( this->dim() >= d );
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_dim, d, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	if ( this->dim() == d )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order_if_any, tag::this_mesh_is_positive                  ) );
+	// else : dim > d, all cells are positive, no need to reverse them
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_dim, d, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )      );                  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::require_order );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::AsTheyAre &, const tag::RequireOrder & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	assert ( this->dim() >= d );
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+		  ( tag::over_cells_of_dim, d, tag::as_they_are,
+			  tag::require_order, tag::this_mesh_is_positive )           );
+	// else : negative mesh
+	if ( this->dim() == d )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order, tag::this_mesh_is_positive                         ) );
+	// else : dim == 1 > d == 0, all cells are positive, no need to reverse them
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::reverse_order, tag::this_mesh_is_positive )           );                 }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::RequireOrder &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::require_order );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::AsTheyAre &, const tag::Backwards & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	assert ( this->dim() >= d );
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_dim, d, tag::as_they_are,
+			  tag::reverse_order, tag::this_mesh_is_positive )            );
+	// else : negative mesh
+	if ( this->dim() == d )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::require_order, tag::this_mesh_is_positive                         ) );
+	// else : dim == 1 > d == 0, all cells are positive, no need to reverse them
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::require_order, tag::this_mesh_is_positive )           );                }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::Backwards &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive & ) const
+{	assert ( this->dim() >= d );
+	if ( this->dim() == d )
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_cells_of_max_dim, tag::force_positive, tag::this_mesh_is_positive ) );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::force_positive,
+			  tag::reverse_order_if_any, tag::this_mesh_is_positive )    );                      }
+	// else : dim > d, all cells are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_dim, d, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_dim, d, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )     );                          }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::ForcePositive &, const tag::RequireOrder & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	assert ( this->dim() >= d );
+	if ( this->dim() == d )
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_cells_of_max_dim, tag::force_positive,
+				  tag::require_order, tag::this_mesh_is_positive   )         );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::force_positive,
+			  tag::reverse_order, tag::this_mesh_is_positive   )          );  }
+	// else : dim == 1 > d == 0, all cells are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::require_order, tag::this_mesh_is_positive )           );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::reverse_order, tag::this_mesh_is_positive )           );       }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::RequireOrder &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::require_order );  }
+
+
+inline CellIterator Mesh:: iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::ForcePositive &, const tag::Backwards & ) const
+{ assert ( this->dim() <= 1 );  // no order for dim >= 2
+	assert ( this->dim() >= d );
+	if ( this->dim() == d )
+	{	if ( this->is_positive() )
+			return CellIterator ( tag::whose_core_is, this->core->iterator
+				( tag::over_cells_of_max_dim, tag::force_positive,
+				  tag::reverse_order, tag::this_mesh_is_positive   )         );
+		// else : negative mesh
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::force_positive,
+			  tag::require_order, tag::this_mesh_is_positive   )          );  }
+	// else : dim == 1 > d == 0, all cells are positive
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_vertices, tag::as_they_are,
+			  tag::reverse_order, tag::this_mesh_is_positive )           );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_vertices, tag::as_they_are,
+		  tag::require_order, tag::this_mesh_is_positive )           );       }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::Backwards &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == d );  // because reverse_each_cell
+	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::RequireOrder &                       ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == d );  // because reverse_each_cell
+	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+	                        tag::do_not_bother, tag::require_order              );  }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::RequireOrder &,
+  const tag::ReverseEachCell &, const tag::DoNotBother &                 ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == d );  // because reverse_each_cell
+	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+	                        tag::do_not_bother, tag::require_order              );  }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::Backwards &                       ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == d );  // because reverse_each_cell
+	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+	                        tag::do_not_bother, tag::backwards                  );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::Backwards &,
+  const tag::ReverseEachCell &, const tag::DoNotBother &                 ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == d );  // because reverse_each_cell
+	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+	                        tag::do_not_bother, tag::backwards                  );  }
+
+//------------------------------------------------------------------------------------
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::AsTheyAre &                                           ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::RequireOrder &                                        ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::AsTheyAre &, const tag::RequireOrder &                ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::RequireOrder &, const tag::AsTheyAre &                ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::Backwards &                                        ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::AsTheyAre &, const tag::Backwards &                ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::Backwards &, const tag::AsTheyAre &                ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::ForcePositive &                                       ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::ForcePositive &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::RequireOrder &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::require_order );  }
+
+inline CellIterator Mesh:: iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::ForcePositive &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::Backwards &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_dim, d,
+                          tag::reverse_each_cell, tag::do_not_bother );  }
+	
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::ReverseEachCell &, const tag::DoNotBother &, const tag::RequireOrder & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::require_order            );  }
+	
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::RequireOrder &, const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::require_order            );  }
+	
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::ReverseEachCell &, const tag::DoNotBother &, const tag::Backwards & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards                );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::Backwards &, const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards                );  }
+
+
+//------------------------------------------------------------------------------------
+
+//      ITERATORS OVER CELLS OF MAXIMUM DIMENSION
+//------------------------------------------------------------------------------------
+		
+
+inline CellIterator Mesh::iterator ( const tag::OverCellsOfMaxDim & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre & ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::as_they_are, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive                   ) );     }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &, const tag::RequireOrder & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+		  ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order,
+			  tag::this_mesh_is_positive                                        ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+		  tag::reverse_order, tag::this_mesh_is_positive                          ) );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::RequireOrder &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &, const tag::Backwards & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::as_they_are,
+			  tag::reverse_order, tag::this_mesh_is_positive )            );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+		  tag::require_order, tag::this_mesh_is_positive                          ) );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::Backwards &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::ForcePositive & ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::force_positive, tag::this_mesh_is_positive ) );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::force_positive,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )    );                     }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &, const tag::RequireOrder & ) const
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::force_positive,
+			  tag::require_order, tag::this_mesh_is_positive  )          );
+	// else : negative mesh, reverse order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::force_positive,
+		  tag::reverse_order, tag::this_mesh_is_positive  )          );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::RequireOrder &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive,
+                          tag::require_order                               );  }
+
+
+inline CellIterator Mesh:: iterator
+( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &, const tag::Backwards & ) const
+{ assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::force_positive,
+			  tag::reverse_order, tag::this_mesh_is_positive   )         );
+	// else : negative mesh
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::force_positive,
+		  tag::require_order, tag::this_mesh_is_positive   )          );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::Backwards &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive, tag::backwards );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+			  tag::do_not_bother, tag::this_mesh_is_positive      )       );
+	// else : negative mesh, reverse order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::as_they_are,
+		  tag::reverse_order_if_any, tag::this_mesh_is_positive )    );   }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::RequireOrder &      ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() <= 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::require_order, tag::this_mesh_is_positive                          ) );
+	// else : negative mesh, reverse order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::as_they_are,
+		  tag::reverse_order, tag::this_mesh_is_positive )           );                 }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::RequireOrder &,
+  const tag::ReverseEachCell &, const tag::DoNotBother &     ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::require_order              );  }
+	
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::Backwards &           ) const
+// do not bother whether reverse cells exist or not	
+{	assert ( this->dim() == 1 );  // no order for dim >= 2
+	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_max_dim, tag::reverse_each_cell, tag::do_not_bother,
+			  tag::reverse_order, tag::this_mesh_is_positive                          ) );
+	// else : negative mesh, back to normal order
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_max_dim, tag::as_they_are,
+		  tag::require_order, tag::this_mesh_is_positive )           );                  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfMaxDim &, const tag::Backwards &,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards             );  }
+	
+//-----------------------------------------------------------------------------//
+
+
+inline CellIterator Mesh::iterator ( const tag::OverCells &, const tag::OfMaxDim & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::AsTheyAre &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::RequireOrder &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::AsTheyAre &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::Backwards &, const tag::AsTheyAre & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::ForcePositive &, const tag::RequireOrder & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim,
+                          tag::force_positive, tag::require_order );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::RequireOrder &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim,
+                          tag::force_positive, tag::require_order );  }
+
+inline CellIterator Mesh:: iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::ForcePositive &, const tag::Backwards & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::Backwards &, const tag::ForcePositive & ) const
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive, tag::backwards );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &,
+  const tag::ReverseEachCell &, const tag::DoNotBother & ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim,
+                          tag::reverse_each_cell, tag::do_not_bother );  }
+	
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::RequireOrder &                         ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::require_order              );  }
+	
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::RequireOrder &,
+  const tag::ReverseEachCell &, const tag::DoNotBother &                   ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::require_order              );  }
+	
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::ReverseEachCell &,
+  const tag::DoNotBother &, const tag::Backwards &                         ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards             );  }
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfMaxDim &, const tag::Backwards &,
+  const tag::ReverseEachCell &, const tag::DoNotBother &                   ) const
+// do not bother whether reverse cells exist or not	
+{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
+                          tag::do_not_bother, tag::backwards             );  }
+	
+//-----------------------------------------------------------------------------//
 
 
 }  // namespace maniFEM
-	
-#endif
-// ifndef MANIFEM_ITER_H
+
+#endif  // ifndef MANIFEM_ITERATOR_H

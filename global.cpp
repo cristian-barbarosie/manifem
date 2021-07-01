@@ -1,5 +1,5 @@
 
-// global.cpp 2021.04.06
+// global.cpp 2021.06.18
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -25,14 +25,13 @@
 using namespace maniFEM;
 
 
-void Mesh::pretty_constructor
-( const tag::Segment &, const Cell & A, const Cell & B, const tag::DividedIn &, size_t n )
+void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
+                   const tag::DividedIn &, size_t n                      )
+
+// see paragraph 12.2 in the manual
 	
-// see paragraph 11.2 in the manual
-	
-{	// we use the current manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
 	
 	assert ( not A.is_positive() );
 	Cell posA = A.reverse();
@@ -47,55 +46,27 @@ void Mesh::pretty_constructor
 		double frac = double(i)/double(n);
 		space.interpolate ( P, 1.-frac, posA, frac, B );
 		Cell seg ( tag::segment, prev_point, P );
-		seg.add_to (*this);
-		prev_point = P.reverse();                          }
+		seg.add_to_mesh ( *this );
+		prev_point = P.reverse();                         }
 	Cell seg ( tag::segment, prev_point, B );
-	seg.add_to (*this);                                        }
-
-// code below does the same as code above
-// above is pretty, slightly slower - below is ugly, slightly faster
-
-
-Mesh::OneDim::Positive::Positive
-( const tag::Segment &, Cell::Negative::Vertex * A, Cell::Positive::Vertex * B,
-  const tag::DividedIn &, size_t n                                              )
-
-:	Positive()
-
-{	// we use the current manifold
-	Manifold::Core * space = Manifold::working.core;
-	assert ( space );
-	
-	assert ( not A->is_positive() );
-	assert ( A->reverse_p );
-	Cell::Positive::Vertex * posA = ( Cell::Positive::Vertex * ) A->reverse_p;
-	assert ( posA->is_positive() );
-	assert ( B->is_positive() );
-	assert ( A->get_dim() == 0 );
-	assert ( B->get_dim() == 0 );
-	
-	Cell::Negative::Vertex * prev_point = A;
-	for ( size_t i=1; i < n; ++i )
-	{	Cell::Positive::Vertex * P = new Cell::Positive::Vertex;
-		double frac = double(i)/double(n);
-		space->interpolate ( P, 1.-frac, posA, frac, B );
-		Cell::Positive::Segment * seg = new Cell::Positive::Segment ( prev_point, P );
-		seg->add_to (this);
-		prev_point = ( Cell::Negative::Vertex * ) P->build_reverse();                  }
-	Cell::Positive::Segment * seg = new Cell::Positive::Segment ( prev_point, B );
-	seg->add_to (this);                                                                 }
+	seg.add_to_mesh ( *this );
+	Mesh::Connected::OneDim * this_core = tag::Util::assert_cast
+		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
+	// std::cout << A.core->nb_of_wrappers << " " << B.core->nb_of_wrappers << ", ";
+	this_core->first_ver = A;
+	this_core->last_ver = B;
+	// std::cout << A.core->nb_of_wrappers << " " << B.core->nb_of_wrappers << std::endl;
+}
 
 //----------------------------------------------------------------------------------//
 
 
-void Mesh::pretty_constructor
-( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA )
+void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA )
 
-// see paragraph 11.4 in the manual
+// see paragraph 12.4 in the manual
 	
-{	// we use the current manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
 
 	// sides must be split in the same number of segments :
 	size_t N = AB.number_of ( tag::cells_of_dim, 1 );
@@ -113,7 +84,7 @@ void Mesh::pretty_constructor
 	// useful for the next layer of triangles
 	std::list < Cell > ground, ceiling;
 	{ // just a block of code for hiding 'it'
-	CellIterator it = AB.iter_over ( tag::segments );
+		CellIterator it = AB.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ ) ground.push_back ( *it );
 	} // just a block of code for hiding 'it'
 
@@ -136,7 +107,7 @@ void Mesh::pretty_constructor
 		Cell ground_ver = AP.tip();
 		Cell previous_seg ( tag::segment, ground_ver.reverse(), P_CA );
 		Cell tri ( tag::triangle, AP, previous_seg, TA );
-		tri.add_to ( *this );  // 'this' is the mesh we are building
+		tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
 		Cell previous_ver = Q_CA;
 		ceiling.clear();
 		for ( size_t j = i+1; j <= N; j++ ) // "horizontal" movement
@@ -164,7 +135,7 @@ void Mesh::pretty_constructor
 			Cell new_seg ( tag::segment, ground_ver.reverse(), S );
 			Cell horizontal_seg ( tag::segment, S.reverse(), previous_ver );
 		  Cell tri_1 ( tag::triangle, previous_seg.reverse(), new_seg, horizontal_seg );
-		  tri_1.add_to ( *this );
+		  tri_1.add_to_mesh ( *this );
 			it_ground++; assert ( it_ground != ground.end() );
 			Cell ground_seg = *it_ground;
 			if ( j == N ) previous_seg = seg_on_BC;
@@ -172,7 +143,7 @@ void Mesh::pretty_constructor
 			{	ground_ver = ground_seg.tip();
 				previous_seg = Cell ( tag::segment, ground_ver.reverse(), S );  }
 		  Cell tri_2 ( tag::triangle, ground_seg, previous_seg, new_seg.reverse() );
-			tri_2.add_to ( *this );
+			tri_2.add_to_mesh ( *this );
 			previous_ver = S;
 			// add horizontal_seg.reverse() to future ground
 			ceiling.push_back ( horizontal_seg.reverse() );                              	  }
@@ -185,39 +156,20 @@ void Mesh::pretty_constructor
 	assert ( not ground.empty() );
 	Cell AP = *(ground.begin());
 	Cell tri ( tag::triangle, seg_on_BC, TA, AP );
-	tri.add_to ( *this );
+	tri.add_to_mesh ( *this );
 		
-} // end of Mesh::pretty_constructor ( tag::triangle,... )
-
-	
-// code below does the same as code above - inline !
-
-
-Mesh::Positive::Positive
-( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA )
-
-:	Mesh::Core ( tag::of_dimension, 3, tag::minus_one )
-	
-{	Mesh wrapper ( tag::whose_core_is, this );
-	wrapper.pretty_constructor ( tag::triangle, AB, BC, CA );  }
-
+} // end of Mesh::build ( tag::triangle,... )
 
 //----------------------------------------------------------------------------------//
 
 
-void Mesh::pretty_constructor ( const tag::Quadrangle &, const Mesh & south,
-  const Mesh & east, const Mesh & north, const Mesh & west, const tag::WithTriangles & wt )
+void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+                   const Mesh & north, const Mesh & west, bool cut_rectangles_in_half )
 
-// 'wt' defaults to 'tag::not_with_triangles',
-// which means 'cut_rectangles_in_half' defaults to 'false'
-
-// see paragraph 11.3 in the manual
+// see paragraph 12.3 in the manual
 	
-{	bool cut_rectangles_in_half = ( wt == tag::with_triangles );
-
-	// we use the current manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
 
 	// recover corners from the sides
 	Cell SW = south.first_vertex().reverse();
@@ -232,20 +184,20 @@ void Mesh::pretty_constructor ( const tag::Quadrangle &, const Mesh & south,
 	assert ( N_horiz == north.number_of ( tag::segments ) );
 	size_t N_vert = east.number_of ( tag::segments );
 	assert ( N_vert == west.number_of ( tag::segments ) );
-	
+
 	// prepare horizon
 	std::list <Cell> horizon;
 	{ // just a block of code for hiding 'it'
-	CellIterator it = south.iter_over ( tag::segments );
+	CellIterator it = south.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  horizon.push_back ( seg );  }
 	} // just a block of code for hiding 'it'
 
 	// start mesh generation
-	CellIterator it_east = east.iter_over ( tag::vertices );
-	CellIterator it_west = west.iter_over ( tag::vertices, tag::reverse );
-	CellIterator it_south = south.iter_over ( tag::vertices );
-	CellIterator it_north = north.iter_over ( tag::vertices, tag::reverse );
+	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
+	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
 	it_east.reset(); it_east++;
 	it_west.reset(); it_west++;
 	for ( size_t i = 1; i < N_vert; ++i )
@@ -277,11 +229,11 @@ void Mesh::pretty_constructor ( const tag::Quadrangle &, const Mesh & south,
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 				Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
 				Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-				T1.add_to (*this);  // 'this' is the mesh we are building
-				T2.add_to (*this);                                 }
+				T1.add_to_mesh (*this);  // 'this' is the mesh we are building
+				T2.add_to_mesh (*this);                                 }
 			else // with quadrilaterals
 			{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-				Q.add_to (*this);                                 }
+				Q.add_to_mesh (*this);                                 }
 			// 's3' is on the ceiling, we keep it in the 'horizon' list
 			// it will be on the ground when we build the next layer of cells
 			*it = s3.reverse(); // 'it' points into the 'horizon' list
@@ -303,11 +255,11 @@ void Mesh::pretty_constructor ( const tag::Quadrangle &, const Mesh & south,
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
 			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-			T1.add_to (*this);
-			T2.add_to (*this);                                 }
+			T1.add_to_mesh (*this);
+			T2.add_to_mesh (*this);                                 }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-			Q.add_to (*this);                                 }
+			Q.add_to_mesh (*this);                                 }
 		*it = s3.reverse();
 		it_east++;  it_west++;
 		it++;  assert ( it == horizon.end() );
@@ -330,11 +282,11 @@ void Mesh::pretty_constructor ( const tag::Quadrangle &, const Mesh & south,
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
 			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-			T1.add_to (*this);
-			T2.add_to (*this);                                 }
+			T1.add_to_mesh (*this);
+			T2.add_to_mesh (*this);                                 }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-			Q.add_to (*this);                           }
+			Q.add_to_mesh (*this);                           }
 		it++;
 		D = C;
 		s4 = s2.reverse();                                          }
@@ -349,185 +301,14 @@ void Mesh::pretty_constructor ( const tag::Quadrangle &, const Mesh & south,
 	{	Cell BD ( tag::segment, B.reverse(), D );
 		Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );
 		Cell T2 ( tag::triangle, BD, s4, s1 );
-		T1.add_to (*this);
-		T2.add_to (*this);                                 }
+		T1.add_to_mesh (*this);
+		T2.add_to_mesh (*this);                                 }
 	else // with quadrilaterals
 	{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );
-		Q.add_to (*this);                                 }
+		Q.add_to_mesh (*this);                                 }
 	it++;  assert ( it == horizon.end() );
 
-} // end of Mesh::pretty_constructor ( tag::Quadrangle...)
-
-// code below does the same as code above
-// above is pretty, slightly slower - below is ugly, slightly faster
-
-
-void Mesh::Positive::build_rectangle ( const Mesh & south, const Mesh & east,
-  const Mesh & north, const Mesh & west, bool cut_rectangles_in_half )
-
-{	// we use the current manifold
-	Manifold::Core * space = Manifold::working.core;
-	assert ( space );
-	
-	// recover corners from the sides
-	Cell::Positive::Vertex * SW = (Cell::Positive::Vertex*) south.first_vertex().core->reverse_p;
-	assert ( SW == west.last_vertex().core );
-	Cell::Positive::Vertex * SE = (Cell::Positive::Vertex*) east.first_vertex().core->reverse_p;
-	assert ( SE == south.last_vertex().core );
-	Cell::Positive::Vertex * NE = (Cell::Positive::Vertex*) north.first_vertex().core->reverse_p;
-	assert ( NE == east.last_vertex().core );
-	Cell::Positive::Vertex * NW = (Cell::Positive::Vertex*) west.first_vertex().core->reverse_p;
-	assert ( NW == north.last_vertex().core );
-	size_t N_horiz = south.number_of ( tag::segments );
-	assert ( N_horiz == north.number_of ( tag::segments ) );
-	size_t N_vert = east.number_of ( tag::segments );
-	assert ( N_vert == west.number_of ( tag::segments ) );
-
-	// since the boundary is closed, all vertices must have reverse
-	
-	// prepare horizon
-	std::list < Cell::Core * > horizon;
-	{ // just a block of code for hiding 'it'
-	CellIterator it = south.iter_over ( tag::segments );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * seg = (*it).core;  horizon.push_back ( seg );  }
-	} // just a block of code for hiding 'it'
-
-	// start mesh generation
-	CellIterator it_east = east.iter_over ( tag::vertices );
-	CellIterator it_west = west.iter_over ( tag::vertices, tag::reverse );
-	CellIterator it_south = south.iter_over ( tag::vertices );
-	CellIterator it_north = north.iter_over ( tag::vertices, tag::reverse );
-	it_east.reset(); it_east++;
-	it_west.reset(); it_west++;
-	for ( size_t i = 1; i < N_vert; ++i )
-	{	std::list<Cell::Core*>::iterator it = horizon.begin();
-		Cell::Core * seg = *it;
-		Cell::Positive::Vertex * A = (Cell::Positive::Vertex*) seg->base()->reverse_p;
-		Cell::Core * s4 = west.cell_behind ( A, tag::surely_exists );
-		Cell::Positive::Vertex * D = (Cell::Positive::Vertex*) s4->base()->reverse_p;
-		Cell::Positive::Vertex * ver_east = (Cell::Positive::Vertex*) (*it_east).core;
-		Cell::Positive::Vertex * ver_west = (Cell::Positive::Vertex*) (*it_west).core;
-		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
-		alpha = alpha*alpha*alpha;
-		it_south.reset(); it_south++;
-		it_north.reset(); it_north++;
-		for ( size_t j = 1; j < N_horiz; j++ )
-		{	Cell::Core * s1 = *it;  // 'it' points into the 'horizon' list
-			Cell::Positive::Vertex * B = (Cell::Positive::Vertex*) s1->tip();
-			Cell::Positive::Vertex * C = new Cell::Positive::Vertex;
-			C->reverse_p = new Cell::Negative::Vertex ( tag::reverse_of, C );
-			// we could use C->reverse ( tag::build_if_not_exists )
-			// but here we know for a fact that the reverse does not exist
-			Cell::Positive::Vertex * ver_south = (Cell::Positive::Vertex*) (*it_south).core;
-			Cell::Positive::Vertex * ver_north = (Cell::Positive::Vertex*) (*it_north).core;
-			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
-			beta = beta*beta*beta;
-			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
-			space->interpolate ( C, bb*(1-frac_N), ver_south, aa*frac_E,     ver_east,     
-		                         bb*frac_N,     ver_north, aa*(1-frac_E), ver_west );
-			Cell::Positive::Segment * s2 = new Cell::Positive::Segment
-				( (Cell::Negative::Vertex*) B->reverse_p, C );
-			s2->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, s2 );
-			Cell::Positive::Segment * s3 = new Cell::Positive::Segment
-				( (Cell::Negative::Vertex*) C->reverse_p, D );
-			s3->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, s3 );
-			if ( cut_rectangles_in_half )
-			{	Cell::Positive::Segment * BD = new Cell::Positive::Segment
-					( (Cell::Negative::Vertex*) B->reverse_p, D );
-				BD->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, BD );
-				Cell::Positive * T1 = new Cell::Positive ( tag::triangle, BD->reverse_p, s2, s3 );
-				Cell::Positive * T2 = new Cell::Positive ( tag::triangle, BD, s4, s1 );
-				T1->add_to (this);  // 'this' is the mesh we are building
-				T2->add_to (this);                                                                  }
-			else // with quadrilaterals
-			{	Cell::Positive * Q = new Cell::Positive ( tag::rectangle, s1, s2, s3, s4 );
-				Q->add_to (this);                                                             }
-			// 's3' is on the ceiling, we keep it in the 'horizon' list
-			// it will be on the ground when we build the next layer of cells
-			*it = s3->reverse_p; // 'it' points into the 'horizon' list
-			it++;
-			D = C;
-			s4 = s2->reverse_p;
-			it_south++;  it_north++;
-		} // end of for j
-		it_south++;  it_north++;
-		assert ( not it_south.in_range() );
-		assert ( not it_north.in_range() );
-		// last rectangle of this row, east side already exists
-		Cell::Core * s1 = *it;
-		Cell::Positive::Vertex * B = (Cell::Positive::Vertex*) s1->tip();
-		Cell::Core * s2 = east.cell_in_front_of ( B, tag::surely_exists );
-		Cell::Positive::Vertex * C = (Cell::Positive::Vertex*) s2->tip();
-		Cell::Positive::Segment * s3 = new Cell::Positive::Segment
-			( (Cell::Negative::Vertex*) C->reverse_p, D );
-		s3->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, s3 );
-		if ( cut_rectangles_in_half )
-		{	Cell::Positive::Segment * BD = new Cell::Positive::Segment
-				( (Cell::Negative::Vertex*) B->reverse_p, D );
-			BD->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, BD );
-			Cell::Positive * T1 = new Cell::Positive ( tag::triangle, BD->reverse_p, s2, s3 );
-			Cell::Positive * T2 = new Cell::Positive ( tag::triangle, BD, s4, s1 );
-			T1->add_to (this);
-			T2->add_to (this);                                                                  }
-		else // with quadrilaterals
-		{	Cell::Positive * Q = new Cell::Positive ( tag::rectangle, s1, s2, s3, s4 );
-			Q->add_to (this);                                                            }
-		*it = s3->reverse_p;
-		it_east++;  it_west++;
-		it++;  assert ( it == horizon.end() );
-	} // end of for i
-	it_east++;  it_west++;
-	assert ( not it_east.in_range() );
-	assert ( not it_west.in_range() );
-	// last row of rectangles is different, north sides already exist
-	std::list<Cell::Core*>::iterator it = horizon.begin();
-	Cell::Core * s4 = west.cell_in_front_of ( NW, tag::surely_exists );
-	Cell::Positive::Vertex * D = NW;
-	for (size_t j=1; j < N_horiz; j++)
-	{	Cell::Core * s1 = *it;
-		// s1 == south.cell_in_front_of (A);
-	  Cell::Positive::Vertex * B = (Cell::Positive::Vertex*) s1->tip();
-		Cell::Core * s3 = north.cell_behind ( D );
-		Cell::Positive::Vertex * C = (Cell::Positive::Vertex*) s3->base()->reverse_p;
-		Cell::Positive::Segment * s2 = new Cell::Positive::Segment
-			( (Cell::Negative::Vertex*) B->reverse_p, C );
-		s2->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, s2 );
-		if ( cut_rectangles_in_half )
-		{	Cell::Positive::Segment * BD = new Cell::Positive::Segment
-				( (Cell::Negative::Vertex*) B->reverse_p, D );
-			BD->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, BD );
-			Cell::Positive * T1 = new Cell::Positive ( tag::triangle, BD->reverse_p, s2, s3 );
-			Cell::Positive * T2 = new Cell::Positive ( tag::triangle, BD, s4, s1 );
-			T1->add_to (this);
-			T2->add_to (this);                                                                  }
-		else // with quadrilaterals
-		{	Cell::Positive * Q = new Cell::Positive ( tag::rectangle, s1, s2, s3, s4 );
-			Q->add_to (this);                                                             }
-		it++;
-		D = C;
-		s4 = s2->reverse_p;                             }
-	// and the last rectangle of the last row
-	Cell::Core * s1 = *it;
-	Cell::Positive::Vertex * B = (Cell::Positive::Vertex*) s1->tip();
-	Cell::Core * s2 = east.cell_in_front_of (B);
-	Cell::Positive::Vertex * C = (Cell::Positive::Vertex*) s2->tip();
-	assert ( C == NE );
-	Cell::Core * s3 = north.cell_behind ( D );
-	if ( cut_rectangles_in_half )
-	{	Cell::Positive::Segment * BD = new Cell::Positive::Segment
-			( (Cell::Negative::Vertex*) B->reverse_p, D );
-		BD->reverse_p = new Cell::Negative::Segment ( tag::reverse_of, BD );
-		Cell::Positive * T1 = new Cell::Positive ( tag::triangle, BD->reverse_p, s2, s3 );
-		Cell::Positive * T2 = new Cell::Positive ( tag::triangle, BD, s4, s1 );
-		T1->add_to (this);
-		T2->add_to (this);                                                                   }
-	else // with quadrilaterals
-	{	Cell::Positive * Q = new Cell::Positive ( tag::rectangle, s1, s2, s3, s4 );
-		Q->add_to (this);                                                             }
-	it++;  assert ( it == horizon.end() );
-
-}
+} // end of Mesh::build ( tag::Quadrangle...)
 
 //----------------------------------------------------------------------------------//
 
@@ -546,10 +327,11 @@ void Mesh::draw_ps ( std::string file_name )
 	Function x = coord[0],  y = coord[1];
 
 	double xmin, xmax, ymin, ymax, maxside;
-	
+
 	{ // just a block for hiding variables
-	CellIterator it = this->iter_over ( tag::cells_of_dim, 0 );
-	it.reset();  assert( it.in_range() );
+	CellIterator it = this->iterator ( tag::over_vertices );
+	it.reset();
+	assert( it.in_range() );
 	Cell Vfirst = *it;
 	xmin = xmax = x(Vfirst);
 	ymin = ymax = y(Vfirst);	
@@ -590,7 +372,7 @@ void Mesh::draw_ps ( std::string file_name )
 	file_ps << "gsave " << 1.5 / scale_factor << " setlinewidth" << std::endl;
 	
 	{ // just a block for hiding variables
-	CellIterator it = this->iter_over ( tag::cells_of_dim, 1 );
+	CellIterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -627,7 +409,7 @@ void Mesh::draw_ps_3d ( std::string file_name )
 	double xmin, xmax, ymin, ymax, zmin, zmax, maxside;
 	
 	{ // just a block for hiding variables
-	CellIterator it = this->iter_over ( tag::cells_of_dim, 0 );
+	CellIterator it = this->iterator ( tag::over_vertices );
 	it.reset();  assert( it.in_range() );
 	Cell Vfirst = *it;
 	xmin = xmax = x(Vfirst);
@@ -691,7 +473,7 @@ void Mesh::draw_ps_3d ( std::string file_name )
 	file_ps << "gsave " << 1.5 / scale_factor << " setlinewidth" << std::endl;
 	
 	{ // just a block for hiding variables
-	CellIterator it = this->iter_over ( tag::cells_of_dim, 1 );
+	CellIterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -731,7 +513,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 	file_msh << "$Nodes" << std::endl << this->number_of(tag::cells_of_dim,0) << std::endl;
 
 	{ // just to make variables local : it, counter, x, y
-	CellIterator it = this->iter_over ( tag::cells_of_dim, 0 );
+	CellIterator it = this->iterator ( tag::over_vertices );
 	Function x = coord[0], y = coord[1];
 	if (coord.nb_of_components() == 2)
 	{	for ( it.reset() ; it.in_range(); it++ )
@@ -752,7 +534,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 	file_msh << this->number_of ( tag::cells_of_dim, this->dim() ) << std::endl;
 
 	if ( this->dim() == 1 )
-	{	CellIterator it = this->iter_over ( tag::cells_of_dim, 1 );
+	{	CellIterator it = this->iterator ( tag::over_segments );
 		size_t counter = 0;
 		for ( it.reset() ; it.in_range(); it++)
 		{	++counter;
@@ -763,7 +545,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 			Cell B = elem.tip();
 			file_msh << ver_numbering [B.core] << std::endl;    }  }
 	else if ( this->dim() == 2 )
-	{	CellIterator it = this->iter_over ( tag::cells_of_dim, 2 );
+	{	CellIterator it = this->iterator ( tag::over_cells_of_dim, 2 );
 		size_t counter = 0;
 		for ( it.reset() ; it.in_range(); it++)
 		{	++counter;
@@ -773,14 +555,14 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 			else // a quadrilateral
 			{	assert ( elem.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
 				file_msh << counter << " 3 0 ";                            }
-			CellIterator itt = elem.boundary().iter_over ( tag::vertices );
+			CellIterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
 			for ( itt.reset(); itt.in_range(); ++itt )
 			{	Cell p = *itt;
 				file_msh << ver_numbering [p.core] << " ";   }
 			file_msh << std::endl;                                                   }  }
 	else
 	{	assert ( this->dim() == 3);
-		CellIterator it = this->iter_over ( tag::cells_of_dim, 3 );
+		CellIterator it = this->iterator ( tag::over_cells_of_dim, 3 );
 		size_t counter = 0;
 		for ( it.reset() ; it.in_range(); it++)
 		{	++counter;
@@ -793,11 +575,11 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 5 0 ";
-				CellIterator itt = elem.boundary().iter_over ( tag::cells_of_dim, 2 );
+				CellIterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
 				itt.reset();  Cell back = *itt; // square face behind the cube
 				// back is 0321 in gmsh's documentation
 				assert ( back.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				CellIterator itv = back.boundary().iter_over ( tag::vertices, tag::reverse );
+				CellIterator itv = back.boundary().iterator ( tag::over_vertices, tag::backwards );
 				// reverse because we want the vertices ordered as 0, 1, 2, 3
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_03 = back.boundary().cell_in_front_of(ver_0);
@@ -812,8 +594,8 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				Cell front = elem.boundary().cell_in_front_of(seg_47); // square face in front
 				// front is 4567 in gmsh's documentation
 				assert ( front.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				CellIterator itvv = front.boundary().iter_over ( tag::vertices );
-				itvv.reset(ver_4);
+				CellIterator itvv = front.boundary().iterator ( tag::over_vertices, tag::require_order );
+				itvv.reset ( tag::start_at, ver_4 );
 				for ( ; itvv.in_range(); ++itvv )
 				{	Cell p = *itvv;  file_msh << ver_numbering [p.core] << " ";   }                }
 			else
@@ -822,7 +604,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 6 0 ";
-				CellIterator itt = elem.boundary().iter_over ( tag::cells_of_dim, 2 );
+				CellIterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
 				size_t n_tri = 0, n_rect = 0;
 				Cell base ( tag::non_existent );  // temporary non-existent cell
 				for( itt.reset(); itt.in_range(); ++itt )
@@ -833,7 +615,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				assert ( n_tri == 2 );  assert ( n_rect == 3 );
 				// base is 021 in gmsh's documentation
 				assert ( base.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
-				CellIterator itv = base.boundary().iter_over ( tag::vertices, tag::reverse );
+				CellIterator itv = base.boundary().iterator ( tag::over_vertices, tag::backwards );
 				// we set it reverse because we want the vertices ordered as 0, 1, 2
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_02 = base.boundary().cell_in_front_of(ver_0);
@@ -849,8 +631,8 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				Cell roof = elem.boundary().cell_in_front_of(seg_35);
 				// roof is 345 in gmsh's documentation
 				assert ( roof.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
-				CellIterator itvv = roof.boundary().iter_over ( tag::vertices );
-				itvv.reset(ver_3);
+				CellIterator itvv = roof.boundary().iterator ( tag::over_vertices, tag::require_order );
+				itvv.reset ( tag::start_at, ver_3 );
 				for ( ; itvv.in_range(); ++itvv )
 				{	Cell p = *itvv;  file_msh << ver_numbering [p.core] << " ";  }               }
 			file_msh << std::endl;                                                                } }
@@ -869,7 +651,7 @@ void Mesh::export_msh ( std::string f )
 
 {	std::map < Cell::Core *, size_t > numbering;
 
-	CellIterator it = this->iter_over ( tag::cells_of_dim, 0 );
+	CellIterator it = this->iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
 	{	++counter;  Cell p = *it;  numbering [p.core] = counter;  }
@@ -877,26 +659,4 @@ void Mesh::export_msh ( std::string f )
 	this->export_msh ( f, numbering );
 
 } // end of Mesh::export_msh
-
-//----------------------------------------------------------------------------------//
-
-
-void Mesh::join_list ( const std::list<Mesh> & l )
-
-{	// check the dimensions
-	#ifndef NDEBUG
-	std::list<Mesh>::const_iterator it0 = l.begin();
-	assert ( it0 != l.end() );
-	for ( ; it0 != l.end(); it0++ ) assert ( this->dim() == it0->dim() );
-	#endif  // DEBUG
-	// sweep the list of meshes
-	std::list<Mesh>::const_iterator it = l.begin();
-	for ( ; it != l.end(); it++ )
-	{	Mesh m = *it;  // sweep all cells of m
-		// we should implement iterator with tag::cells_of_max_dim, which use cells.back()
-		CellIterator itt = m.iter_over ( tag::cells_of_dim, this->dim() );
-		for ( itt.reset(); itt.in_range(); itt++ )
-		{	Cell cll = *itt;
-			cll.add_to ( *this );  }                                           }  }
-
 

@@ -30,6 +30,7 @@
 #include "assert.h"
 
 #include "mesh.h"
+#include "iterator.h"
 #include "field.h"
 
 
@@ -1375,49 +1376,49 @@ class Function::TakenOnCell
 	inline operator double() const
 	// can be used like in  double x = f(cll)  or  cout << f(cll)
 	{	Function::Scalar * f_scalar =
-			Mesh::assert_cast < Function::Core*, Function::Scalar* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
 		return f_scalar->get_value_on_cell ( cll );                       }
 		
 	inline double operator= ( const double & x )
 	// can be used like in  f(cll) = 2.0
 	{	Function::Scalar * f_scalar =
-			Mesh::assert_cast < Function::Core*, Function::Scalar* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
 		return f_scalar->set_value_on_cell ( cll, x );                  }
 
 	inline double operator+= ( const double & x )
 	// can be used like in  f(cll) += 2.0
 	{	Function::Scalar * f_scalar =
-			Mesh::assert_cast < Function::Core*, Function::Scalar* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
 		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) + x ); }
 
 	inline double operator-= ( const double & x )
 	// can be used like in  f(cll) -= 2.0
 	{	Function::Scalar * f_scalar =
-			Mesh::assert_cast < Function::Core*, Function::Scalar* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
 		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) - x ); }
 
 	inline double operator*= ( const double & x )
 	// can be used like in  f(cll) *= 2.0
 	{	Function::Scalar * f_scalar =
-			Mesh::assert_cast < Function::Core*, Function::Scalar* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
 		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) * x ); }
 
 	inline double operator/= ( const double & x )
 	// can be used like in  f(cll) /= 2.0
 	{	Function::Scalar * f_scalar =
-			Mesh::assert_cast < Function::Core*, Function::Scalar* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
 		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) / x ); }
 
 	inline operator std::vector<double>() const
 	// can be used like in  vector<double> vec = f(cll)
 	{	Function::Vector * f_vect =
-			Mesh::assert_cast < Function::Core*, Function::Vector* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( f );
 	  return f_vect->get_value_on_cell ( cll );                         }
 		
 	inline std::vector<double> operator= ( const std::vector<double> & x )
 	// can be used like in  f(cll) = vec
 	{	Function::Vector * f_vect =
-			Mesh::assert_cast < Function::Core*, Function::Vector* > ( f );
+			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( f );
 		return f_vect->set_value_on_cell ( cll, x );                      }
 
 };  // end of class Function::TakenOnCell	

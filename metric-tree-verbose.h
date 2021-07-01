@@ -1,11 +1,16 @@
 
-// metric-tree-verbose.h 2020.02.15
+// metric-tree-verbose.h 2021.06.18
 
-// this verbose version draws a PS file
+// this verbose version draws a PS file, shown in paragraph 12.10 in the manual of maniFEM
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+
 // for normal use, #include "metric-tree.h"
 
 //   This is MetricTree, a tiny C++ library for hierarchical organization
 //   of a cloud of points in a metric space.
+
+//   Copyright 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   https://github.com/cristian-barbarosie/MetricTree
 
 //   MetricTree is free software: you can redistribute it and/or modify it
 //   under the terms of the GNU Lesser General Public License as published
@@ -20,9 +25,6 @@
 //   You should have received a copy of the GNU Lesser General Public License
 //   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
-//   Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
-//   https://github.com/cristian-barbarosie/MetricTree
-
 
 // a cloud, i.e. a set of points in a metric space, organized as a tree
 // similar to m-tree, just not balanced
@@ -34,7 +36,7 @@
 
 // the tree is not balanced (just like a quad-tree isn't)
 
-// each node has a 'rank' associated (an integer, possibly zero, possibly negative)
+// each node has a 'rank' associated to it (an integer, possibly zero, possibly negative)
 // the rank has no special meaning except that
 //   the children of a node N have rank one unit less
 //   the children of a node N are no farther than dist[rank[N]] from N
@@ -57,8 +59,7 @@
 
 // we prefer to work with squared distance (thus avoiding computing square roots)
 
-// see paragraph 10.16 in the manual of maniFEM
-// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+// see paragraph 12.10 in the manual of maniFEM
 
 
 #include <iostream>
@@ -316,7 +317,7 @@ inline void MetricTree<Point,SqDist>::Node::raw_adopt
 	nod->rank = this->rank - 1;
 	this->children.push_front ( nod );
 	nod->parent = this;
-  nod->loc_in_parents_list = this->children.begin();  }
+	nod->loc_in_parents_list = this->children.begin();  }
 
 //-----------------------------------------------------------------------------------------------//
 
@@ -324,7 +325,7 @@ template < typename Point, typename SqDist >
 inline void MetricTree<Point,SqDist>::promote_children_of
 ( typename MetricTree<Point,SqDist>::Node * nod )
 
-// 'nod' is in the process of being removed from the cloud so it rank is irrelevant
+// 'nod' is in the process of being removed from the cloud so its rank is irrelevant
 // and not necessarily correctly related to the rank of its children
 // (children may have been promoted in the process)
 
@@ -426,7 +427,7 @@ void MetricTree<Point,SqDist>::Node::remove_from
 		if ( this->children.empty() )  {  delete this;  return;  }
 		p->promote ( cloud );  // register new rank !
 		cloud->register_rank ( p->rank );
-	  cloud->promote_children_of ( this );                               }                      }
+		cloud->promote_children_of ( this );                               }                      }
 
 //-----------------------------------------------------------------------------------------------//
 

@@ -12,6 +12,27 @@ using namespace maniFEM;
 using namespace std;
 
 
+void update_info_connected_one_dim ( const Mesh msh, const Cell start, const Cell stop )
+
+// 'start' and 'stop' are positive vertices (may be one and the same)
+
+{	assert ( start.dim() == 0 );
+	assert ( stop.dim() == 0 );
+	assert ( start.is_positive() );
+	assert ( stop.is_positive() );
+
+	Mesh::Connected::OneDim * msh_core = tag::Util::assert_cast
+		< Mesh::Core*, Mesh::Connected::OneDim* > ( msh.core );
+	msh_core->first_ver = start.reverse();
+	msh_core->last_ver = stop;
+	// now we can use an iterator
+
+	CellIterator it = msh.iterator ( tag::over_segments, tag::require_order );
+	size_t n = 0;
+	for ( it.reset(); it.in_range(); it++ ) n++;
+	msh_core->nb_of_segs = n;                                                   }
+
+
 int main ()
 
 {	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
@@ -49,19 +70,24 @@ int main ()
 	Cell OCD ( tag::triangle, OC, CD, OD.reverse() );
 	Cell ODE ( tag::triangle, OD, DE, OE.reverse() );
 	Cell OEA ( tag::triangle, OE, EA, OA.reverse() );
-	Mesh ponta ( tag::of_dimension, 2, tag::greater_than_one );
-	OAB.add_to ( ponta );
-	OBC.add_to ( ponta );
-	OCD.add_to ( ponta );
-	ODE.add_to ( ponta );
-	OEA.add_to ( ponta );
+	Mesh ponta ( tag::whose_core_is,
+	       new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
+	       tag::freshly_created, tag::is_positive                                      );
+	OAB.add_to_mesh ( ponta );
+	OBC.add_to_mesh ( ponta );
+	OCD.add_to_mesh ( ponta );
+	ODE.add_to_mesh ( ponta );
+	OEA.add_to_mesh ( ponta );
 
-	Mesh small_circle ( tag::of_dimension_one );
-	AB.add_to ( small_circle );
-	BC.add_to ( small_circle );
-	CD.add_to ( small_circle );
-	DE.add_to ( small_circle );
-	EA.add_to ( small_circle );
+	Mesh small_circle ( tag::whose_core_is,
+         new Mesh::Connected::OneDim ( tag::with, 5, tag::segments, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                               );
+	AB.add_to_mesh ( small_circle );
+	BC.add_to_mesh ( small_circle );
+	CD.add_to_mesh ( small_circle );
+	DE.add_to_mesh ( small_circle );
+	EA.add_to_mesh ( small_circle );
+	update_info_connected_one_dim ( small_circle, A, A );
 
 	Cell V ( tag::vertex );  x(V) = 1.;  y(V) = 0.;  z(V) = 1.;
 	cone_manif.implicit ( z == 1. );

@@ -15,11 +15,6 @@ int main ()
 	Function alpha_beta = torus.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function alpha = alpha_beta[0], beta = alpha_beta[1];
 
-	const double big_radius = 3, small_radius = 1;
-	Function x = ( big_radius + small_radius * cos(beta) ) * cos(alpha),
-	         y = ( big_radius + small_radius * cos(beta) ) * sin(alpha),
-	         z = small_radius * sin(beta);
-
 	const double pi = 4.*atan(1.);
 	Cell A ( tag::vertex );  alpha(A) = 0.;       beta(A) = 0.;
 	Cell B ( tag::vertex );  alpha(B) = 0.;       beta(B) = 1.9*pi;
@@ -31,8 +26,12 @@ int main ()
 	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 19 );
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 39 );
 
-	torus.set_as_working_manifold();
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
+
+	const double big_radius = 3, small_radius = 1;
+	Function x = ( big_radius + small_radius * cos(beta) ) * cos(alpha),
+	         y = ( big_radius + small_radius * cos(beta) ) * sin(alpha),
+	         z = small_radius * sin(beta);
 
 	torus.set_coordinates ( x && y && z );
 

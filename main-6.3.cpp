@@ -1,7 +1,7 @@
 
-// example presented in paragraph 6.2 of the manual
+// example presented in paragraph 6.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// rudimentary use of finite elements
+// rudimentary use of finite elements, 1D integrals
 
 #include "maniFEM.h"
 #include "math.h"
@@ -52,6 +52,8 @@ int main ()
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
+	FiniteElement fe_bdry ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ_bdry = fe_bdry.set_integrator ( tag::Gauss, tag::seg_3 );
 
 	// there will be a more elegant and efficient way of producing the numbering
 	std::map < Cell::Core *, size_t > numbering;
@@ -96,7 +98,26 @@ int main ()
 		}  }
 	} // just a block of code 
 
-	// impose Dirichlet boundary conditions  u = xy
+	Function heat_source = y*y;
+	// impose Neumann boundary conditions du/dn = 1.
+	{ // just a block of code for hiding 'it'
+	CellIterator it = DA.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+		fe_bdry.dock_on ( seg );
+		Cell V = seg.base().reverse();
+		assert ( V.is_positive() );
+		size_t i = numbering[V.core]-1;
+		Function psiV = fe_bdry.basis_function(V);
+		vector_b[i] += fe_bdry.integrate ( heat_source * psiV );
+		Cell W = seg.tip();
+		assert ( W.is_positive() );
+		size_t j = numbering[W.core]-1;
+		Function psiW = fe_bdry.basis_function(W);
+		vector_b[j] += fe_bdry.integrate ( heat_source * psiW );   }
+	} // just a block of code 
+	
+	// impose Dirichlet boundary conditions  u = 0
 	{ // just a block of code for hiding 'it'
 	CellIterator it = AB.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
@@ -108,21 +129,15 @@ int main ()
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P.core]-1;
-		impose_value_of_unknown ( matrix_A, vector_b, i, y(P) );  }
+		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it'
 	CellIterator it = CD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P.core]-1;
-		impose_value_of_unknown ( matrix_A, vector_b, i, x(P) );  }
-	} { // just a block of code for hiding 'it'
-	CellIterator it = DA.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell P = *it;
-		size_t i = numbering[P.core]-1;
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} // just a block of code 
-	
+
 //	for ( size_t i = 0; i < size_matrix; i++ )
 //	{	std::cout << i << " ";
 //		for ( size_t j = 0; j < size_matrix; j++ )
@@ -143,7 +158,7 @@ int main ()
 	cg.compute ( matrix_A );
 	vector_sol = cg.solve ( vector_b );
 
-	ABCD.export_msh ("square-Dirichlet.msh", numbering );
+	ABCD.export_msh ("square-Neumann.msh", numbering );
 	{ // just a block of code for hiding variables
 	ofstream solution_file ("square-Dirichlet.msh", fstream::app );
 	solution_file << "$NodeData" << endl;
@@ -162,7 +177,7 @@ int main ()
 		solution_file << i << " " << vector_sol[i-1] << std::endl;   }
 	} // just a block of code
 
-	std::cout << "produced file square-Dirichlet.msh" << std::endl;
+	std::cout << "produced file square-Neumann.msh" << std::endl;
 
 	return 0;
 }

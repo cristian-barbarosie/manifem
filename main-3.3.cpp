@@ -6,7 +6,6 @@
 #include "maniFEM.h"
 using namespace maniFEM;
 
-
 int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );

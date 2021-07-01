@@ -17,10 +17,10 @@ int main ()
 	
 	Cell A ( tag::vertex );  t(A) = 0.;
 	Cell B ( tag::vertex );  t(B) = 1.9*pi;
-	Mesh circle ( tag::segment, A.reverse(), B, tag::divided_in, 19 );
+	Mesh incomplete_circle ( tag::segment, A.reverse(), B, tag::divided_in, 19 );
 
-	Cell BA ( tag::segment, B.reverse(), A );
-	BA.add_to ( circle );
+	Mesh small_piece ( tag::segment, B.reverse(), A, tag::divided_in, 1 );
+	Mesh circle ( tag::join, incomplete_circle, small_piece );
 
 	Function x = cos(t), y = sin(t);
 	circle_manif.set_coordinates ( x && y );

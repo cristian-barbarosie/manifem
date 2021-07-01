@@ -63,8 +63,8 @@ int main ()
 	                tag::stop_at, C, tag::desired_length, seg_size         );
 
 	Mesh circles ( tag::join, circle_1, circle_2.reverse() );
-	AV.reverse().add_to ( circles );  VB.reverse().add_to ( circles );
-	CW.reverse().add_to ( circles );  WD.reverse().add_to ( circles );
+	AV.reverse().add_to_mesh ( circles );  VB.reverse().add_to_mesh ( circles );
+	CW.reverse().add_to_mesh ( circles );  WD.reverse().add_to_mesh ( circles );
 
 	cyl_manif.set_as_working_manifold();
 	tau = { 0., 1., 0. };
@@ -72,8 +72,8 @@ int main ()
 	           tag::start_at, V, tag::towards, tau,
 	           tag::desired_length, seg_size );
 
-	OAV.add_to ( cone );  OVB.add_to ( cone );
-	OCW.add_to ( cone );  OWD.add_to ( cone );
+	OAV.add_to_mesh ( cone );  OVB.add_to_mesh ( cone );
+	OCW.add_to_mesh ( cone );  OWD.add_to_mesh ( cone );
 
 	cone.export_msh ("napkin.msh");
 	cout << "produced file napkin.msh" << endl;

@@ -1,5 +1,5 @@
 
-// function.cpp 2021.05.10
+// function.cpp 2021.06.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -85,15 +85,15 @@ double Function::Constant::get_value_on_cell ( Cell::Core * cll ) const
 
 double Function::Step::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar, through Function::ArithmeticExpression
-{	Function::Scalar * arg_scalar = Mesh::assert_cast
+{	Function::Scalar * arg_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( this->arg.core );
 	double arg_v = arg_scalar->get_value_on_cell(cll);
 	for ( size_t i = 0; i < this->cuts.size(); i++ )
 		if ( arg_v < cuts[i] )
-		{	Function::Scalar * val_i_scalar = Mesh::assert_cast
+		{	Function::Scalar * val_i_scalar = tag::Util::assert_cast
 				< Function::Core*, Function::Scalar* > ( this->values[i].core );
 			return val_i_scalar->get_value_on_cell(cll);                        }
-	Function::Scalar * val_scalar = Mesh::assert_cast
+	Function::Scalar * val_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->values.back().core );
 	return val_scalar->get_value_on_cell(cll);                                }
 	
@@ -102,7 +102,7 @@ double Function::Sum::get_value_on_cell ( Cell::Core * cll ) const
 { std::forward_list<Function>::const_iterator it = this->terms.begin();
 	double sum = 0.;
 	for ( ; it != this->terms.end(); it++ )
-	{	Function::Scalar * term_scalar = Mesh::assert_cast
+	{	Function::Scalar * term_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( it->core );
 		sum += term_scalar->get_value_on_cell ( cll );       }
 	return sum;                                                           }
@@ -112,32 +112,32 @@ double Function::Product::get_value_on_cell ( Cell::Core * cll ) const
 { std::forward_list<Function>::const_iterator it = this->factors.begin();
 	double prod = 1.;
 	for ( ; it != this->factors.end(); it++ )
-	{	Function::Scalar * fact_scalar = Mesh::assert_cast
+	{	Function::Scalar * fact_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( it->core );
 		prod *= fact_scalar->get_value_on_cell ( cll );        }
 	return prod;                                               }
 	
 double Function::Power::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar, through Function::ArithmeticExpression
-{	Function::Scalar * base_scalar = Mesh::assert_cast
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	return std::pow ( base_scalar->get_value_on_cell(cll), this->exponent );  }
 	
 double Function::Sin::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar, through Function::ArithmeticExpression
-{	Function::Scalar * base_scalar = Mesh::assert_cast
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	return std::sin ( base_scalar->get_value_on_cell(cll) );      }
 	
 double Function::Sqrt::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar, through Function::ArithmeticExpression
-{	Function::Scalar * base_scalar = Mesh::assert_cast
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	return std::sqrt ( base_scalar->get_value_on_cell(cll) );      }
 	
 double Function::Cos::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar, through Function::ArithmeticExpression
-{	Function::Scalar * base_scalar = Mesh::assert_cast
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	return std::cos ( base_scalar->get_value_on_cell(cll) );      }
 	
@@ -146,7 +146,7 @@ std::vector<double> Function::Aggregate::get_value_on_cell ( Cell::Core * cll ) 
 { size_t n = this->nb_of_components();
 	std::vector<double> result ( n );
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Scalar * comp_scalar = Mesh::assert_cast
+	{	Function::Scalar * comp_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( this->components[i].core );
 		result[i] = comp_scalar->get_value_on_cell ( cll );                      }
 	return result;                                                                }
@@ -170,7 +170,7 @@ std::vector<double> Function::Immersion::get_value_on_cell ( Cell::Core * cll ) 
 
 double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Vector
-{	Function::Scalar * base_scalar = Mesh::assert_cast
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	// we assume here that cll lives in master coordinates
 	return base_scalar->get_value_on_cell(cll);                   }
@@ -190,7 +190,7 @@ std::vector<double> Function::Aggregate::set_value_on_cell
 { size_t n = this->nb_of_components();
 	assert ( n == x.size() );
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Scalar * comp_scalar = Mesh::assert_cast
+	{	Function::Scalar * comp_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( this->components[i].core );
 		comp_scalar->set_value_on_cell ( cll, x[i] );               	         }
 	return x;     		                                                         }
@@ -287,7 +287,7 @@ std::string Function::Diffeomorphism::OneDim::repr ( const Function::From & from
 
 Function maniFEM::operator+ ( const Function & f, const Function & g )
 
-{	// both should be scalar, we call assert_cast just for the assert
+{	// both should be scalar
 	assert ( dynamic_cast < Function::Scalar* > ( f.core ) );
 	assert ( dynamic_cast < Function::Scalar* > ( g.core ) );
 
@@ -319,7 +319,7 @@ Function maniFEM::operator+ ( const Function & f, const Function & g )
 
 Function maniFEM::operator* ( const Function & f, const Function & g )
 
-{	// both should be scalar, we call assert_cast just for the assert
+{	// both should be scalar
 	assert ( dynamic_cast < Function::Scalar* > ( f.core ) );
 	assert ( dynamic_cast < Function::Scalar* > ( g.core ) );
 	
@@ -560,8 +560,14 @@ Function Function::Composition::deriv ( Function x ) const
 // in both cases, we compose the result just before return
 // since the calling code may differentiate the result again
 	
-{	Function::Map * transf_c = Mesh::assert_cast
-		< Function::Core*, Function::Map* > ( this->transf.core );
+{	Function::Map * transf_c = dynamic_cast < Function::Map* > ( this->transf.core );
+	assert ( transf_c );
+	// in the above we must use dynamic_cast
+	// below, with -DNDEBUG, assert_cast calls a static_cast which does not compile
+	// classes Function::Core and Function::Map are not directly related
+	// perhaps we should have used virtual inheritance ?
+	// Function::Map * transf_c = tag::Util::assert_cast
+	// 	< Function::Core*, Function::Map* > ( this->transf.core );
 
 	// we have a map, which may be a Function::Diffeomorphism
 	// or a Function::Immersion
@@ -588,7 +594,8 @@ Function Function::Composition::deriv ( Function x ) const
 	else  //  not a Diffeomorphism, but an Immersion
 		
 	{	assert ( dynamic_cast < Function::Immersion* > ( this->transf.core ) );
-		std::map<Function,Function>::const_iterator it = transf_c->jacobian.find(x); // DEBUG mode only !!
+		std::map<Function,Function>::const_iterator
+			it = transf_c->jacobian.find(x); // DEBUG mode only !! [?]
 		assert ( it != transf_c->jacobian.end() );  // x must be a master coordinate
 		return Function ( this->base.deriv(x), tag::composed_with, this->transf );   }
 	

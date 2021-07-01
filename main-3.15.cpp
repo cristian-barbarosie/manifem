@@ -27,7 +27,7 @@ int main ()
                 tag::desired_length, 0.1                               );
 
 	nut.set_as_working_manifold();
-	std::vector < double > N { 0., 0., -1. };
+	std::vector < double > N { 0., 0., 1. };
 	Mesh bumpy ( tag::progressive, tag::boundary, circle,
                tag::start_at, S, tag::towards, N,
                tag::desired_length, 0.1                 );

@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.04.17
+// finite-elem.cpp 2021.06.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -39,7 +39,7 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 // http://www.cs.rpi.edu/~flaherje/pdf/fea6.pdf  ../fea6.pdf
 // E.B. Becker, G.F. Carey, J.T. Oden, Finite Elements, an introduction, vol 1
 
-{ FiniteElement::WithMaster * fe_core = Mesh::assert_cast
+{ FiniteElement::WithMaster * fe_core = tag::Util::assert_cast
 		< FiniteElement::Core*, FiniteElement::WithMaster* > ( fe.core );
 	Manifold master_manifold = fe_core->master_manif;
 	switch ( q )
@@ -350,11 +350,17 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 // assumes the finite element is already docked on a cell
 // thus, fe_core->transf is well defined
 
-{	FiniteElement::WithMaster * fe_core = Mesh::assert_cast
+{	FiniteElement::WithMaster * fe_core = tag::Util::assert_cast
 		< FiniteElement::Core*, FiniteElement::WithMaster* > ( fe.core );
 	assert ( fe_core->transf.core );
-	Function::Map * tran = Mesh::assert_cast
-		< Function::Core*, Function::Map* > ( fe_core->transf.core );
+	Function::Map * tran = dynamic_cast < Function::Map* > ( fe_core->transf.core );
+	assert ( tran );
+	// in the above we must use dynamic_cast
+	// below, with -DNDEBUG, assert_cast calls a static_cast which does not compile
+	// classes Function::Core and Function::Map are not directly related
+	// perhaps we should have used virtual inheritance ?
+	// Function::Map * tran = tag::Util::assert_cast
+	// 	< Function::Core*, Function::Map* > ( fe_core->transf.core );
 
 	size_t geom_dim = tran->geom_coords.nb_of_components();
 	assert ( geom_dim == tran->back_geom_coords.nb_of_components() );
@@ -371,7 +377,7 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 		res += w * f(Gauss_point) * tran->det(Gauss_point);
 		it_weight++;                                   }
 	assert ( it_weight == this->weights.end() );
-	return res;                                                            }
+	return res;                                                                        }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -416,7 +422,7 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
 
 {	assert ( cll.dim() == 2 );
 	this->docked_on = cll;
-	CellIterator it = cll.boundary().iter_over ( tag::vertices );
+	CellIterator it = cll.boundary().iterator ( tag::over_vertices, tag::require_order );
 	it.reset();  assert ( it.in_range() );  Cell P = *it;
 	it++;  assert ( it.in_range() );  Cell Q = *it;
 	it++;  assert ( it.in_range() );  Cell R = *it;
@@ -480,7 +486,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 
 {	assert ( cll.dim() == 2 );
 	this->docked_on = cll;
-	CellIterator it = cll.boundary().iter_over ( tag::vertices );
+	CellIterator it = cll.boundary().iterator ( tag::over_vertices, tag::require_order );
 	it.reset();  assert ( it.in_range() );  Cell P = *it;
 	it++;  assert ( it.in_range() );  Cell Q = *it;
 	it++;  assert ( it.in_range() );  Cell R = *it;
@@ -490,9 +496,6 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 	Function xi_eta = this->master_manif.coordinates();
 	assert ( xi_eta.nb_of_components() == 2 );
 	Function xi = xi_eta[0], eta = xi_eta[1];
-
-	Function::name[xi.core] = "xi";
-	Function::name[eta.core] = "eta";
 
 	Function psiP = (1.-xi)*(1.-eta), psiQ = (1.+xi)*(1.-eta),
 		psiR = (1.+xi)*(1.+eta), psiS = (1.-xi)*(1.+eta);

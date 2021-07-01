@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.04.10
+// manifold.cpp 2021.06.12
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -162,7 +162,7 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	assert ( coord_vector );
 	size_t n = coord.nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Scalar * coord_i = Mesh::assert_cast
+	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
 			( P, s * coord_i->get_value_on_cell(A) +
@@ -206,7 +206,7 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	assert ( coord_vector );
 	size_t n = coord.nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Scalar * coord_i = Mesh::assert_cast
+	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
 			( P, s * coord_i->get_value_on_cell(A) +
@@ -257,7 +257,7 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	assert ( coord_vector );
 	size_t n = coord.nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Scalar * coord_i = Mesh::assert_cast
+	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
 			( P, s * coord_i->get_value_on_cell(A) +
@@ -296,21 +296,23 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
 		double v = 0.;
-		size_t m = points.size();  // m== coefs.size()
+		size_t m = points.size();
+		assert ( m == coefs.size() );
 		for ( size_t j = 0; j < m; j++ )
 			v += coefs[j] * coord_scalar->get_value_on_cell ( points[j] );
 		coord_scalar->set_value_on_cell ( P, v );
 		return;                                            } 
 	Function::Vector * coord_vector = dynamic_cast < Function::Vector * > ( coord.core );
 	assert ( coord_vector );
-	size_t n = coord.nb_of_components(), m = points.size();  // m== coefs.size()
+	size_t n = coord.nb_of_components(), m = points.size();
+	assert ( m == coefs.size() );
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Scalar * coord_i = Mesh::assert_cast
+	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		double v = 0.;
 		for ( size_t j = 0; j < m; j++ )
 			v += coefs[j] * coord_i->get_value_on_cell ( points[j] );
-		coord_i->set_value_on_cell ( P, v );                         }                       }
+		coord_i->set_value_on_cell ( P, v );                                             }      }
 
 
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
@@ -400,7 +402,8 @@ void Manifold::Implicit::OneEquation::project ( Cell::Positive::Vertex * P_c ) c
 	assert ( lev_func.nb_of_components() == 1 );
 	const Function & grad_lev = this->grad_lev_func;
 	assert ( grad_lev.nb_of_components() == n );
-	const Cell P ( tag::whose_core_is, P_c );  // temporary wrapper for P_c
+	const Cell P ( tag::whose_core_is, P_c, tag::previously_existing, tag::surely_not_null );
+	// do we really need a temporary wrapper for P_c ? !!
 	for ( short int k = 0; k < Manifold::Implicit::steps_for_Newton; k++ )
 	// we move doubles around a lot
 	// how to do it faster ?
@@ -415,7 +418,7 @@ void Manifold::Implicit::OneEquation::project ( Cell::Positive::Vertex * P_c ) c
 		double coef = lev_at_P / norm2;
 		for ( size_t i = 0; i < n; i++ )
 			coord_at_P[i] -= coef * grad_lev_at_P[i];
-		coord ( P ) = coord_at_P;                               }                    }
+		coord ( P ) = coord_at_P;                            }                                   }
 
 
 void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) const
@@ -434,7 +437,8 @@ void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) 
 	assert ( lev_func_2.nb_of_components() == 1 );
 	const Function & grad_lev_2 = this->grad_lev_func_2;
 	assert ( grad_lev_2.nb_of_components() == n );
-	const Cell P ( tag::whose_core_is, P_c );  // temporary wrapper for P_c
+	const Cell P ( tag::whose_core_is, P_c, tag::previously_existing, tag::surely_not_null );
+	// do we really need a temporary wrapper for P_c ? !!
 	for ( short int k = 0; k < Manifold::Implicit::steps_for_Newton; k++ )
 	// we move doubles around a lot
 	// how to do it faster ?
@@ -456,17 +460,17 @@ void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) 
 		double l2 = (   a12 * lev_1_at_P - a11 * lev_2_at_P ) / det;
 		for ( size_t i = 0; i < n; i++ )
 			coord_at_P[i] += l1 * grad_lev_1_at_P[i] + l2 * grad_lev_2_at_P[i];
-		coord ( P ) = coord_at_P;                                               }   }
+		coord ( P ) = coord_at_P;                                               }                }
 
 
 void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 
-{	std::map< Function::Core *, Function::Core * >::const_iterator it;
+{	std::map< Function, Function >::const_iterator it;
 	for ( it = this->equations.begin(); it != this->equations.end(); it++ )
-	{	Function::Scalar * coord_scalar = Mesh::assert_cast
-			< Function::Core*, Function::Scalar* > ( it->first );
-		Function::Scalar * expr_scalar = Mesh::assert_cast
-			< Function::Core*, Function::Scalar* > ( it->second );
+	{	Function::Scalar * coord_scalar = tag::Util::assert_cast
+			< Function::Core*, Function::Scalar* > ( it->first.core );
+		Function::Scalar * expr_scalar = tag::Util::assert_cast
+			< Function::Core*, Function::Scalar* > ( it->second.core );
 		coord_scalar->set_value_on_cell ( P_c, expr_scalar->get_value_on_cell(P_c) );  }  }
 
 

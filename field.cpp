@@ -28,8 +28,8 @@ size_t Field::Scalar::nb_of_components ( )  // virtual from Field::Core
 
 
 size_t Field::Block::nb_of_components ( )  // virtual from Field::Corex
-{	return Mesh::diff ( this->max_index_p1, this->min_index );  }
-// Mesh::diff  provides a safe way to substract two size_t numbers
+{	return tag::Util::assert_diff ( this->max_index_p1, this->min_index );  }
+// tag::Util::assert_diff  provides a safe way to substract two size_t numbers
 
 Field::Scalar * Field::Scalar::component ( size_t i )  // virtual from Field::Core
 {	assert ( i == 0 );

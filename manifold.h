@@ -1,5 +1,5 @@
 
-// manifold.h 2021.04.17
+// manifold.h 2021.06.18
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -405,7 +405,7 @@ class Manifold::Euclid : public Manifold::Core
 
 	class SqDist;
 	// a callable object returning the square of the distance between two points
-	// used for MetricTree, see paragraph 10.15 in the manual
+	// used for MetricTree, see paragraph 12.10 in the manual
 
 };  // end of class Manifold::Euclid
 
@@ -414,7 +414,7 @@ class Manifold::Euclid : public Manifold::Core
 class Manifold::Euclid::SqDist
 
 // a callable object returning the square of the distance between two points
-// used for MetricTree, see paragraph 10.15 in the manual
+// used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
 
 {	public :
 
@@ -639,7 +639,7 @@ class Manifold::Parametric : public Manifold::Core
 
 	Manifold surrounding_space;
 
-	std::map < Function::Core *, Function::Core * > equations;
+	std::map < Function, Function > equations;
 
 	inline Parametric ( )	:	Manifold::Core(), surrounding_space ( tag::non_existent ) { }
 
@@ -712,7 +712,9 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
 	assert ( m_euclid );
-	this->equations [ f_eq.lhs.core ] = f_eq.rhs.core;                         }
+	assert ( this->equations.find ( f_eq.lhs ) == this->equations.end() );
+	this->equations.insert ( std::pair ( f_eq.lhs, f_eq.rhs ) );               }
+//	this->equations [ f_eq.lhs ] = f_eq.rhs;
 
 inline Manifold::Parametric::Parametric
 ( const Manifold & m, const Function::Equality & f_eq_1, const Function::Equality & f_eq_2 )
@@ -720,8 +722,12 @@ inline Manifold::Parametric::Parametric
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
 	assert ( m_euclid );
-	this->equations [ f_eq_1.lhs.core ] = f_eq_1.rhs.core;
-	this->equations [ f_eq_2.lhs.core ] = f_eq_2.rhs.core;                         }
+	assert ( this->equations.find ( f_eq_1.lhs ) == this->equations.end() );
+	this->equations.insert ( std::pair ( f_eq_1.lhs, f_eq_1.rhs ) );
+	assert ( this->equations.find ( f_eq_2.lhs ) == this->equations.end() );
+	this->equations.insert ( std::pair ( f_eq_2.lhs, f_eq_2.rhs ) );           }
+//	this->equations [ f_eq_1.lhs ] = f_eq_1.rhs;
+//	this->equations [ f_eq_2.lhs ] = f_eq_2.rhs;
 
 inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Equality & f_eq_1,
   const Function::Equality & f_eq_2, const Function::Equality & f_eq_3 )
@@ -729,9 +735,15 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
 	assert ( m_euclid );
-	this->equations [ f_eq_1.lhs.core ] = f_eq_1.rhs.core;
-	this->equations [ f_eq_2.lhs.core ] = f_eq_2.rhs.core;
-	this->equations [ f_eq_3.lhs.core ] = f_eq_3.rhs.core;                         }
+	assert ( this->equations.find ( f_eq_1.lhs ) == this->equations.end() );
+	this->equations.insert ( std::pair ( f_eq_1.lhs, f_eq_1.rhs ) );
+	assert ( this->equations.find ( f_eq_2.lhs ) == this->equations.end() );
+	this->equations.insert ( std::pair ( f_eq_2.lhs, f_eq_2.rhs ) );
+	assert ( this->equations.find ( f_eq_3.lhs ) == this->equations.end() );
+	this->equations.insert ( std::pair ( f_eq_3.lhs, f_eq_3.rhs ) );            }
+//	this->equations [ f_eq_1.lhs ] = f_eq_1.rhs;
+//	this->equations [ f_eq_2.lhs ] = f_eq_2.rhs;
+//	this->equations [ f_eq_3.lhs ] = f_eq_3.rhs;
 
 
 inline void Cell::project () const

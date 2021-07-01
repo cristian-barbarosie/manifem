@@ -35,24 +35,26 @@ int main () {
 	Mesh west  ( tag::segment, NW.reverse(), SW, tag::divided_in, 10 );
 
 	// and now the rectangle :
-	Mesh rect_mesh ( tag::pretty, tag::rectangle, south, east, north, west );
+	Mesh rect_mesh ( tag::rectangle, south, east, north, west );
 	 
 	// We may want to visualize the resulting mesh.
 	// Here is one way to export the mesh in the "msh" format :
 	rect_mesh.export_msh ("rectangle.msh");
 	// rect_mesh.draw_ps ("rectangle.eps");
 	
-	// let's define two symbolic functions
-	Function f = x*x + 1./(5.+y), g = x*y;
+	// Let's define a symbolic function to integrate
+	Function f = x*x+1/(5+y), g = x*y;
 
-	// and compute their integral on the rectangle, using Gauss quadrature with 9 points :
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	fe.set_integrator ( tag::Gauss, tag::quad_9 );
-	// cout << "integral of " << f.repr() << " = " << fe.integrate ( f, tag::over, rect_mesh ) << endl;
-	// cout << "integral of " << g.repr() << " = " << fe.integrate ( g, tag::over, rect_mesh ) << endl;
-
-	// the above code does not work yet, but we are very close to getting it right ;-)
+	// and compute its integral on the rectangle, using Gauss quadrature with 9 points :
+	// auto & integ = Integrator::gauss ("Q9");
+	//	Cell::celula_especial = & NW;
+	// cout << "integral of " << f.repr() << " = " << f.integrate ( rect_mesh, integ ) << endl;
+	// cout << "integral of " << g.repr() << " = " << g.integrate ( rect_mesh, integ ) << endl;
 	
+	// new points, segments and rectangles are created by these calls
+	// the fields 'x', 'y' and 'z' are interpolated in the new vertices
+	// by using the information stored in the function xyz
+
 	// abstract variational formulation :
 	// auto & uu = FunctionOnMesh::unknown ( u, "Lagrange degree one");
 	// The values of 'uu' are related to the field 'u'.
