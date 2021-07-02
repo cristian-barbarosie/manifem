@@ -1998,6 +1998,7 @@ class CellIterator::AroundCell::OfCodimTwo
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
 
+
 class CellIterator::AroundCell::OfCodimTwo::OverSegments
 : public CellIterator::AroundCell::OfCodimTwo::Ordered
 
@@ -2088,46 +2089,6 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 	class AsTheyAre;  class ForcePositive;  class ReverseEachCell;
 
 };  // end of class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
-
-
-class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
-: public CellIterator::AroundCell::OfCodimTwo::OverSegments
-
-// when cll->dim == msh->dim - 2, there is a linear order
-// e.g. we rotate around a vertex in a 2D mesh
-// or we rotate around a segment in a 3D mesh
-// here we follow this order
-
-// the dimension of the cells to be returned is a different matter
-// here we return squares around a vertex or cubes around a segment
-
-{	public :
-
-	// attributes inherited from CellIterator::AroundCell :
-	// Mesh::Connected::OneDim * msh_p
-	// Cell::Positive * center
-	
-	// attributes inherited from CellIterator::AroundCell::OfCodimTwo::Ordered :
-	// Cell::Core * current_segment { nullptr }  -- word "segment" is misleading here
-	// Cell::Core * current_vertex { nullptr }  -- word "vertex" is misleading here
-	
-	// attribute inherited from CellIterator::AroundCell::OfCodimTwo::OverSegments :
-	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
-
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
-	
-	void reset ( );  // virtual from CellIterator::Core
-	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
-
-	// Cell deref ( )  stays pure virtual from CellIterator::Core
-
-	void advance ( );  // virtual from CellIterator::Core
-	
-	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
-	
-};  // end of class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
-
-//-----------------------------------------------------------------------------------------
 
 
 class CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder
@@ -2273,7 +2234,7 @@ inline CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::Reverse
 
 
 class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
-: public CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
+	: public CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 
 {	public :
 
@@ -2293,22 +2254,18 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
 	// msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
-	
+	// void reset ( )  -- virtual
+	// void reset ( const tag::StartAt &, Cell::Core * cll )  -- virtual
+	//    both defined by CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
+
 	Cell deref ( );  // virtual from CellIterator::Core
 
-	// void advance ( )  virtual from CellIterator::Core, defined by
-	//   CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
-
+	// void advance ( )  -- virtual,
+	//    defined by CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
+	
 	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
-
-};  // end of class CellIterator::AroundCell::OfCodimTwo
-    //                   ::OverSegments::NormalOrder::AsTheyAre
-
-//-----------------------------------------------------------------------------------------
-
+	
+};  // end of class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
 
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------

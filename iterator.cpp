@@ -2095,7 +2095,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
 						 tag::previously_existing, tag::surely_not_null );
 	Cell cen ( tag::whose_core_is, this->center,
 						 tag::previously_existing, tag::surely_not_null );
-	Cell ver = tcs.boundary.cell_behind ( cen, tag::surely_exists );
+	Cell ver = tcs.boundary().cell_behind ( cen, tag::surely_exists );
 	this->current_vertex = ver.core;                                 }	
 
 // the above could get simpler and faster by using a method like
