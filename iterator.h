@@ -1,5 +1,5 @@
 
-// iterator.h 2021.06.30
+// iterator.h 2021.07.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2085,9 +2085,47 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 	
 	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
 	
-	class AssumeCellsExist;  class BuildReverseCells;
+	class AsTheyAre;  class ForcePositive;  class ReverseEachCell;
 
 };  // end of class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
+
+
+class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
+: public CellIterator::AroundCell::OfCodimTwo::OverSegments
+
+// when cll->dim == msh->dim - 2, there is a linear order
+// e.g. we rotate around a vertex in a 2D mesh
+// or we rotate around a segment in a 3D mesh
+// here we follow this order
+
+// the dimension of the cells to be returned is a different matter
+// here we return squares around a vertex or cubes around a segment
+
+{	public :
+
+	// attributes inherited from CellIterator::AroundCell :
+	// Mesh::Connected::OneDim * msh_p
+	// Cell::Positive * center
+	
+	// attributes inherited from CellIterator::AroundCell::OfCodimTwo::Ordered :
+	// Cell::Core * current_segment { nullptr }  -- word "segment" is misleading here
+	// Cell::Core * current_vertex { nullptr }  -- word "vertex" is misleading here
+	
+	// attribute inherited from CellIterator::AroundCell::OfCodimTwo::OverSegments :
+	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
+
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	
+	void reset ( );  // virtual from CellIterator::Core
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+
+	// Cell deref ( )  stays pure virtual from CellIterator::Core
+
+	void advance ( );  // virtual from CellIterator::Core
+	
+	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
+	
+};  // end of class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
 
 //-----------------------------------------------------------------------------------------
 
@@ -2127,7 +2165,7 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder
 	
 	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
 
-	class AssumeCellsExist;  class BuildReverseCells;
+	class AsTheyAre;  class ForcePositive;  class ReverseEachCell;
 
 };  // end of class CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder
 
@@ -2209,11 +2247,6 @@ inline CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::NormalOr
 	// now we rotate backwards until we meet the boundary or close the loop
 	tag::local_functions::iterator_h::rotate_backwards_for_seg ( this );
 	assert ( this->first_segment );                                                   }
-
-// the above could get simpler and faster by using a method like
-// inline Cell::Core * Mesh::Core::cell_behind_ptr
-// ( const Cell::Core * face, const tag::MayNotExist & ) const
-// which is not difficult to implement
 	
 
 inline CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::ReverseOrder
@@ -2234,11 +2267,6 @@ inline CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::Reverse
 	// now we rotate backwards until we meet the boundary or close the loop
 	tag::local_functions::iterator_h::rotate_forward_for_seg ( this );
 	assert ( this->first_segment );                                                    }
-
-// the above could get simpler and faster by using a method like
-// inline Cell::Core * Mesh::Core::cell_behind_ptr
-// ( const Cell::Core * face, const tag::MayNotExist & ) const
-// which is not difficult to implement
 	
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
@@ -2260,60 +2288,27 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
 	// attribute inherited from CellIterator::AroundCell::OfCodimTwo::OverSegments :
 	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c );
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	:	CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder ( msh, c )
+	// msh_p { msh }, center { c }
+	{ }
 	
 	// void reset ( )  virtual
 	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
 	//   both defined by CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 	
-	// Cell deref ( )  stays pure virtual from CellIterator::Core
+	Cell deref ( );  // virtual from CellIterator::Core
 
 	// void advance ( )  virtual from CellIterator::Core, defined by
 	//   CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 
 	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
 
-	class AsTheyAre;  class ForcePositive;  class ReverseEachCell;
-
 };  // end of class CellIterator::AroundCell::OfCodimTwo
-    //                   ::OverSegments::NormalOrder::AssumeCellsExist
+    //                   ::OverSegments::NormalOrder::AsTheyAre
 
 //-----------------------------------------------------------------------------------------
 
-
-class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::BuildReverseCells
-: public CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
-
-{	public :
-
-	// attributes inherited from CellIterator::AroundCell :
-	// Mesh::Connected::OneDim * msh_p
-	// Cell::Positive * center
-	
-	// attributes inherited from CellIterator::AroundCell::OfCodimTwo::Ordered :
-	// Cell::Core * current_segment { nullptr }  -- word "segment" is misleading here
-	// Cell::Core * current_vertex { nullptr }  -- word "vertex" is misleading here
-	
-	// attribute inherited from CellIterator::AroundCell::OfCodimTwo::OverSegments :
-	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
-
-	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * c );
-	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
-	
-	// Cell deref ( )  stays pure virtual from CellIterator::Core
-
-	// void advance ( )  virtual from CellIterator::Core, defined by
-	//   CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
-
-	// bool in_range ( )  virtual, defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
-
-	class AsTheyAre;  class ForcePositive;  class ReverseEachCell;
-
-};  // end of class CellIterator::AroundCell::OfCodimTwo
-    //                   ::OverSegments::NormalOrder::BuildReverseCells
 
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------

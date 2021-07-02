@@ -1840,6 +1840,7 @@ Cell CellIterator::Over::CellsOfFuzzyMesh::ForcePositive::deref ( )
 
 
 void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset ( )
+// virtual from CellIterator::Core
 
 {	this->current_vertex = this->first_vertex;
 	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
@@ -1852,6 +1853,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset ( )
 
 
 void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset ( )
+// virtual from CellIterator::Core
 
 {	this->current_vertex = this->first_vertex;
 	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
@@ -1865,6 +1867,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset ( )
 
 void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset
 ( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
 
 { // closed loop or open chain ?
 	// in other words : central cell is interior or on the boundary ?
@@ -1888,6 +1891,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset
 
 void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset
 ( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
 
 { // closed loop or open chain ?
 	// in other words : central cell is interior or on the boundary ?
@@ -1948,6 +1952,7 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 	NormalOrder::BuildReverseCells::ReverseEachCell::deref ( )
 // virtual from CellIterator::Core
+
 {	assert ( this->current_vertex );
 	if ( not this->current_vertex->reverse_attr.exists() )
 	//	this->current_vertex->reverse_attr =
@@ -1999,6 +2004,7 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 	ReverseOrder::BuildReverseCells::ReverseEachCell::deref ( )
 // virtual from CellIterator::Core
+
 {	assert ( this->current_vertex );
 	if ( not this->current_vertex->reverse_attr.exists() )
 	//	this->current_vertex->reverse_attr =
@@ -2013,6 +2019,7 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 
 void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::advance ( )
 // virtual from CellIterator::Core
+
 {	Cell this_center ( tag::whose_core_is, this->center,
 	                   tag::previously_existing, tag::surely_not_null );
 	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
@@ -2031,7 +2038,6 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::advance ( 
 
 void CellIterator::AroundCell::OfCodimTwo
          ::OverVertices::ReverseOrder::AssumeCellsExist::advance ( )
-
 // virtual from CellIterator::Core
 
 {	Cell this_center ( tag::whose_core_is, this->center,
@@ -2052,7 +2058,6 @@ void CellIterator::AroundCell::OfCodimTwo
 
 void CellIterator::AroundCell::OfCodimTwo
          ::OverVertices::ReverseOrder::BuildReverseCells::advance ( )
-
 // virtual from CellIterator::Core
 
 {	Cell this_center ( tag::whose_core_is, this->center,
@@ -2082,32 +2087,16 @@ bool CellIterator::AroundCell::OfCodimTwo::OverVertices::in_range ( )
 
 
 void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
-
 // virtual from CellIterator::Core
 
-// we don't know whether we are in the interior or on the boundary of the mesh
-// so we must search for the first_ver, rotating backwards
-	
-{	assert ( this->msh_p );
-	assert ( cen );
-	assert ( cen->get_dim() + 3 == this->msh_p->get_dim_plus_one() );
-	this->current_vertex = nullptr;
-	if ( cen->is_positive() ) this->center = cen;
-	else this->center = cen->reverse_attr.core;
-	assert ( this->center );
-	assert ( this->center->is_positive() );
-	Cell::Positive * pos_cen = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive* > ( this->center );
-
-	this->current_segment = find_first_seg ( pos_cen, this->msh_p );
+{	this->current_segment = this->first_segment;
 	assert ( this->current_segment );
-
-	this->current_vertex = nullptr;
-	// this is useless if the iterator is fresh (current_vertex is initialized as nullptr)
-	// but the user may want to reset a previously used iterator
-
-	// now we rotate backwards until we meet the boundary
-	rotate_backwards_for_seg ( this );                                  }
+	Cell tcs ( tag::whose_core_is, this->current_segment,
+						 tag::previously_existing, tag::surely_not_null );
+	Cell cen ( tag::whose_core_is, this->center,
+						 tag::previously_existing, tag::surely_not_null );
+	Cell ver = tcs.boundary.cell_behind ( cen, tag::surely_exists );
+	this->current_vertex = ver.core;                                 }	
 
 // the above could get simpler and faster by using a method like
 // inline Cell::Core * Mesh::Core::cell_behind_ptr
@@ -2115,112 +2104,20 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
 // which is not difficult to implement
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
-
+void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance ( )
 // virtual from CellIterator::Core
-
-// we know (due to tag::inner) that we are not on the boundary of the mesh
-// so any cell "above" the center will do (as initial segment)
-// it's like a closed loop
-	
-{	assert ( this->msh_p );
-	assert ( cen );
-	assert ( cen->get_dim() + 3 == this->msh_p->get_dim_plus_one() );
-	if ( cen->is_positive() ) this->center = cen;
-	else this->center = cen->reverse_attr.core;
-	assert ( this->center );
-	assert ( this->center->is_positive() );
-	Cell::Positive * pos_cen = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive* > ( this->center );
-
-	this->current_segment = find_first_seg ( pos_cen, this->msh_p );
-	assert ( this->current_segment );
-
-	this->current_vertex = nullptr;
-	// this is useless if the iterator is fresh (current_vertex is initialized as nullptr)
-	// but the user may want to reset a previously used iterator
-
-	Cell this_center ( tag::whose_core_is, this->center,
+{	Cell this_center ( tag::whose_core_is, this->center,
 	                   tag::previously_existing, tag::surely_not_null );
-	this->last_vertex = this->current_segment->boundary().cell_in_front_of
-		( this_center, tag::surely_exists ).reverse().core;                    }
-
-// the above could get simpler and faster by using a method like
-// inline Cell::Core * Mesh::Core::cell_behind_ptr
-// ( const Cell::Core * face, const tag::MayNotExist & ) const
-// which is not difficult to implement
-
-
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::reset
-( const tag::Center &, Cell::Core * const cen )
-
-// virtual from CellIterator::Core
-
-// we don't know whether we are in the interior or on the boundary of the mesh
-// so we must search for the first_ver, rotating forward
-	
-{	assert ( this->msh_p );
-	assert ( cen );
-	assert ( cen->get_dim() + 3 == this->msh_p->get_dim_plus_one() );
-	this->current_vertex = nullptr;
-	if ( cen->is_positive() ) this->center = cen;
-	else this->center = cen->reverse_attr.core;
-	assert ( this->center );
-	assert ( this->center->is_positive() );
-	Cell::Positive * pos_cen = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive* > ( this->center );
-
-	this->current_segment = find_first_seg ( pos_cen, this->msh_p );
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
 	assert ( this->current_segment );
+	Cell new_ver = this->current_segment->boundary().cell_behind
+		( this_center, tag::surely_exists );
+	this->current_vertex = new_ver.core;
+	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;        }
+	// if we are near the boundary, current_segment may be nullptr
+	// the calling program must check this using the 'in_range' method
 
-	this->current_vertex = nullptr;
-	// this is useless if the iterator is fresh (current_vertex is initialized as nullptr)
-	// but the user may want to reset a previously used iterator
-
-	// now we rotate backwards until we meet the boundary
-	rotate_forward_for_seg ( this );                                   }
-
-// the above could get simpler and faster by using a method like
-// inline Cell::Core * Mesh::Core::cell_behind_ptr
-// ( const Cell::Core * face, const tag::MayNotExist & ) const
-// which is not difficult to implement
-
-
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::reset
-( const tag::Center &, Cell::Core * const cen, const tag::Inner & )
-
-// virtual from CellIterator::Core
-
-// we know (due to tag::inner) that we are not on the boundary of the mesh
-// so any cell "above" the center will do (as initial segment)
-// it's like a closed loop
-	
-{	assert ( this->msh_p );
-	assert ( cen );
-	assert ( cen->get_dim() + 3 == this->msh_p->get_dim_plus_one() );
-	if ( cen->is_positive() ) this->center = cen;
-	else this->center = cen->reverse_attr.core;
-	assert ( this->center );
-	assert ( this->center->is_positive() );
-	Cell::Positive * pos_cen = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive* > ( this->center );
-
-	this->current_segment = find_first_seg ( pos_cen, this->msh_p );
-	assert ( this->current_segment );
-
-	this->current_vertex = nullptr;
-	// this is useless if the iterator is fresh (current_vertex is initialized as nullptr)
-	// but the user may want to reset a previously used iterator
-
-	Cell this_center ( tag::whose_core_is, this->center,
-	                   tag::previously_existing, tag::surely_not_null );
-	this->last_vertex = this->current_segment->boundary().cell_behind
-		( this_center, tag::surely_exists ).reverse().core;                    }
-
-// the above could get simpler and faster by using a method like
-// inline Cell::Core * Mesh::Core::cell_behind_ptr
-// ( const Cell::Core * face, const tag::MayNotExist & ) const
-// which is not difficult to implement
+// the above could get simpler and faster by avoiding the use of wrappers
 
 
 bool CellIterator::AroundCell::OfCodimTwo::OverSegments::in_range ( )
