@@ -1,5 +1,5 @@
 
-// iterator.cpp 2021.06.30
+// iterator.cpp 2021.07.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2084,8 +2084,6 @@ bool CellIterator::AroundCell::OfCodimTwo::OverVertices::in_range ( )
 
 
 
-
-
 void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
 // virtual from CellIterator::Core
 
@@ -2104,8 +2102,15 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
 // which is not difficult to implement
 
 
+void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+{assert(false);}
+
+
 void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance ( )
 // virtual from CellIterator::Core
+
 {	Cell this_center ( tag::whose_core_is, this->center,
 	                   tag::previously_existing, tag::surely_not_null );
 	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
@@ -2118,6 +2123,14 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance ( 
 	// the calling program must check this using the 'in_range' method
 
 // the above could get simpler and faster by avoiding the use of wrappers
+
+
+Cell CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre::deref ( )
+// virtual from CellIterator::Core
+
+{ return Cell ( tag::whose_core_is, this->current_segment,
+                tag::previously_existing, tag::surely_not_null );  }
+	
 
 
 bool CellIterator::AroundCell::OfCodimTwo::OverSegments::in_range ( )

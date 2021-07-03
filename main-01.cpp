@@ -44,48 +44,24 @@ int main () {
 	Cell PQBA ( tag::rectangle, PQ, BQ.reverse(), AB.reverse(), PA.reverse() );
 	PQBA.reverse().add_to_mesh ( rect_mesh );
 
-	std::cout << "main CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre"	 << std::endl;
+	std::cout << "main CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre"	 << std::endl;
 
 	{  // just a block of code for hiding 'it'
 
 	std::cout << "--------------------------------------------------------" << std::endl;	
 
 	Cell::Positive * SW_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( SW.core );
-  CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre
+  CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
 		it ( rect_mesh.core, SW_core );
 
 	std::cout << "around SW :" << std::endl;
 	Cell SP = west.cell_in_front_of ( RS.tip() );
 	for ( it.reset ( ); it.in_range(); it.advance() )
 	{	Cell seg = it.deref();
-		std::cout << "[("  << x(seg.base().reverse()) << "," << y(seg.base().reverse()) << ") -> (" << x(seg.tip()) << "," << y(seg.tip()) << ")]" << std::endl << std::flush;  }
-
-	} {  // just a block of code for hiding 'it'
-
-	std::cout << "--------------------------------------------------------" << std::endl;	
-
-	Cell::Positive * Q_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( Q.core );
-  CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre
-		it ( rect_mesh.core, Q_core );
-
-	std::cout << "around Q :" << std::endl;
-	Cell QQ = south.cell_in_front_of ( Q );
-	for ( it.reset ( ); it.in_range(); it.advance() )
-	{	Cell seg = it.deref();
-		std::cout << "[("  << x(seg.base().reverse()) << "," << y(seg.base().reverse()) << ") -> (" << x(seg.tip()) << "," << y(seg.tip()) << ")]" << std::endl << std::flush;  }
-
-	} {  // just a block of code for hiding 'it'
-
-	std::cout << "--------------------------------------------------------" << std::endl;	
-
-	Cell::Positive * R_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( R.core );
-  CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre
-		it ( rect_mesh.core, R_core );
-
-	std::cout << "around R :" << std::endl;
-	for ( it.reset ( ); it.in_range(); it.advance() )
-	{	Cell seg = it.deref();
-		std::cout << "[("  << x(seg.base().reverse()) << "," << y(seg.base().reverse()) << ") -> (" << x(seg.tip()) << "," << y(seg.tip()) << ")]" << std::endl << std::flush;  }
+//		std::cout << "[("  << x(seg.base().reverse()) << "," << y(seg.base().reverse()) << ") -> (" << x(seg.tip()) << "," << y(seg.tip()) << ")]" << std::endl << std::flush;
+		std::cout << "*";
+	}
+	std::cout << std::endl;
 
 	}  // just a block of code for hiding 'it'
 
