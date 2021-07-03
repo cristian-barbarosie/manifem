@@ -2088,12 +2088,15 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
 // virtual from CellIterator::Core
 
 {	this->current_segment = this->first_segment;
+	assert ( this->center->is_positive() );
 	assert ( this->current_segment );
 	Cell tcs ( tag::whose_core_is, this->current_segment,
 						 tag::previously_existing, tag::surely_not_null );
 	Cell cen ( tag::whose_core_is, this->center,
 						 tag::previously_existing, tag::surely_not_null );
 	Cell ver = tcs.boundary().cell_behind ( cen, tag::surely_exists );
+	std::cout << "CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset()," << std::endl;
+	std::cout << "first_seg " << this->first_segment << ", current_seg " << this->current_segment << std::endl;
 	this->current_vertex = ver.core;                                 }	
 
 // the above could get simpler and faster by using a method like
@@ -2113,14 +2116,18 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance ( 
 
 {	Cell this_center ( tag::whose_core_is, this->center,
 	                   tag::previously_existing, tag::surely_not_null );
+	std::cout << "CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance" << std::endl;
 	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
 	assert ( this->current_segment );
 	Cell new_ver = this->current_segment->boundary().cell_behind
 		( this_center, tag::surely_exists );
 	this->current_vertex = new_ver.core;
-	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;        }
-	// if we are near the boundary, current_segment may be nullptr
-	// the calling program must check this using the 'in_range' method
+	//	Cell new_ver ( tag::whose_core_is, this->current_vertex,
+  //               tag::previously_existing, tag::surely_not_null );
+	if ( this->current_vertex == this->last_vertex )
+		this->current_segment = nullptr;
+	else
+		this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;     }
 
 // the above could get simpler and faster by avoiding the use of wrappers
 
@@ -2130,16 +2137,15 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre:
 
 { return Cell ( tag::whose_core_is, this->current_segment,
                 tag::previously_existing, tag::surely_not_null );  }
-	
 
 
 bool CellIterator::AroundCell::OfCodimTwo::OverSegments::in_range ( )
 // virtual from CellIterator::Core
 
-{	if ( this->current_segment ) return this->current_segment == this->first_segment;
-	return false;                                                                      }
+{	std::cout << "CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::in_range" << std::endl;
+	return this->current_segment;  }
 
-	// for an open chain, first_segment stays nullptr
+	// for an open chain, last_vertex stays nullptr
 	// for a closed loop, it is used as stopping criterion
 
 //-----------------------------------------------------------------------------------------

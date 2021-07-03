@@ -1,5 +1,5 @@
 
-// iterator.h 2021.07.02
+// iterator.h 2021.07.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2030,6 +2030,7 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments
 	// Cell::Core * current_vertex { nullptr }  -- word "vertex" is misleading here
 
 	Cell::Core * first_segment { nullptr };  // word "segment" is misleading here
+	Cell::Core * last_vertex { nullptr };  // word "vertex" is misleading here
 
 	inline OverSegments ( Mesh::Core * msh, Cell::Positive * c )
 	:	CellIterator::AroundCell::OfCodimTwo::Ordered ( msh, c )  // msh_p { msh }, center { c }
@@ -2151,8 +2152,9 @@ inline void rotate_backwards_for_seg ( CellIterator::AroundCell::OfCodimTwo::Ove
 	                tag::previously_existing, tag::surely_not_null );
 		Cell new_seg = m.cell_in_front_of ( vertex, tag::may_not_exist );
 		if ( not new_seg.exists() ) return;  // we have hit the boundary
+		        // that->last_vertex remains nullptr
 		if ( vertex_p->reverse_attr.core == vertex_stop )  // completed loop
-			return;
+		{	that->last_vertex = vertex_stop;  return; }
 		that->first_segment = new_seg.core;                                         }           }
 
 // the above could get simpler and faster by using a method like
@@ -2207,7 +2209,7 @@ inline CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::NormalOr
 
 	// now we rotate backwards until we meet the boundary or close the loop
 	tag::local_functions::iterator_h::rotate_backwards_for_seg ( this );
-	assert ( this->first_segment );                                                   }
+	assert ( this->first_segment );                                                              }
 	
 
 inline CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::ReverseOrder
@@ -2227,8 +2229,8 @@ inline CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::Reverse
 
 	// now we rotate backwards until we meet the boundary or close the loop
 	tag::local_functions::iterator_h::rotate_forward_for_seg ( this );
-	assert ( this->first_segment );                                                    }
-	
+	assert ( this->first_segment );                                                              }
+ 	
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
 

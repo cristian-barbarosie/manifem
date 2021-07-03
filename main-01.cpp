@@ -36,6 +36,9 @@ int main () {
 	Cell QR = square.boundary().cell_in_front_of ( Q );
 	Cell R = QR.tip();
 	Cell RS = square.boundary().cell_in_front_of ( R );
+	Cell S = RS.tip();
+	Cell SP = west.cell_in_front_of ( S );
+	assert ( SP == west.cell_behind ( SW ) );
 	Cell A ( tag::vertex );  x(A) = 0.;  y(A) = -0.1;
 	Cell B ( tag::vertex );  x(B) = 0.1; y(B) = -0.1;
 	Cell PA ( tag::segment, SW.reverse(), A );
@@ -54,14 +57,63 @@ int main () {
   CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
 		it ( rect_mesh.core, SW_core );
 
-	std::cout << "around SW :" << std::endl;
-	Cell SP = west.cell_in_front_of ( RS.tip() );
-	for ( it.reset ( ); it.in_range(); it.advance() )
-	{	Cell seg = it.deref();
-//		std::cout << "[("  << x(seg.base().reverse()) << "," << y(seg.base().reverse()) << ") -> (" << x(seg.tip()) << "," << y(seg.tip()) << ")]" << std::endl << std::flush;
-		std::cout << "*";
+	std::cout << "around SW (=P) :" << std::endl;
+	for ( it.reset(); it.in_range(); it.advance() )
+	{	Cell sq = it.deref();
+		double xx = 0., yy = 0.;
+		int counter = 0;
+		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell P = *itt;
+			xx += x(P);  yy += y (P);
+			counter++;   }
+		assert ( counter == 4 );
+		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
 	}
-	std::cout << std::endl;
+	
+  } {  // just a block of code for hiding 'it'
+
+	std::cout << "--------------------------------------------------------" << std::endl;	
+
+	Cell::Positive * Q_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( Q.core );
+  CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
+		it ( rect_mesh.core,Q_core );
+
+	std::cout << "around Q :" << std::endl;
+	for ( it.reset(); it.in_range(); it.advance() )
+	{	Cell sq = it.deref();
+		double xx = 0., yy = 0.;
+		int counter = 0;
+		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell P = *itt;
+			xx += x(P);  yy += y (P);
+			counter++;   }
+		assert ( counter == 4 );
+		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
+	}
+	
+	} {  // just a block of code for hiding 'it'
+
+	std::cout << "--------------------------------------------------------" << std::endl;	
+
+	Cell::Positive * R_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( R.core );
+  CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
+		it ( rect_mesh.core, R_core );
+
+	std::cout << "around R :" << std::endl;
+	for ( it.reset(); it.in_range(); it.advance() )
+	{	Cell sq = it.deref();
+		double xx = 0., yy = 0.;
+		int counter = 0;
+		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell P = *itt;
+			xx += x(P);  yy += y (P);
+			counter++;   }
+		assert ( counter == 4 );
+		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
+	}
 
 	}  // just a block of code for hiding 'it'
 
