@@ -2032,9 +2032,6 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments
 	:	CellIterator::AroundCell::OfCodimTwo::Ordered ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 
-	// why on earth cannot I declare here the first version of reset
-	// and leave the second version pure virtual (to be declared later) ??!!
-
 	void reset ( );  // virtual from CellIterator::Core
 	
 	// void reset ( const tag::StartAt &, Cell::Core * cll )
