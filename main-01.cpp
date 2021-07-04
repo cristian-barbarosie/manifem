@@ -47,7 +47,7 @@ int main () {
 	Cell PQBA ( tag::rectangle, PQ, BQ.reverse(), AB.reverse(), PA.reverse() );
 	PQBA.reverse().add_to_mesh ( rect_mesh );
 
-	std::cout << "main CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre"	 << std::endl;
+	std::cout << "main CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre"	 << std::endl;
 
 	{  // just a block of code for hiding 'it'
 
@@ -69,51 +69,7 @@ int main () {
 			counter++;   }
 		assert ( counter == 4 );
 		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
-	}
-	
-  } {  // just a block of code for hiding 'it'
-
-	std::cout << "--------------------------------------------------------" << std::endl;	
-
-	Cell::Positive * Q_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( Q.core );
-  CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
-		it ( rect_mesh.core,Q_core );
-
-	std::cout << "around Q :" << std::endl;
-	for ( it.reset(); it.in_range(); it.advance() )
-	{	Cell sq = it.deref();
-		double xx = 0., yy = 0.;
-		int counter = 0;
-		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
-		for ( itt.reset(); itt.in_range(); itt++ )
-		{	Cell P = *itt;
-			xx += x(P);  yy += y (P);
-			counter++;   }
-		assert ( counter == 4 );
-		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
-	}
-	
-	} {  // just a block of code for hiding 'it'
-
-	std::cout << "--------------------------------------------------------" << std::endl;	
-
-	Cell::Positive * R_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( R.core );
-  CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre
-		it ( rect_mesh.core, R_core );
-
-	std::cout << "around R :" << std::endl;
-	for ( it.reset(); it.in_range(); it.advance() )
-	{	Cell sq = it.deref();
-		double xx = 0., yy = 0.;
-		int counter = 0;
-		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
-		for ( itt.reset(); itt.in_range(); itt++ )
-		{	Cell P = *itt;
-			xx += x(P);  yy += y (P);
-			counter++;   }
-		assert ( counter == 4 );
-		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
-	}
+	}	
 
 	}  // just a block of code for hiding 'it'
 
