@@ -2084,7 +2084,7 @@ bool CellIterator::AroundCell::OfCodimTwo::OverVertices::in_range ( )
 
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset ( )
+void CellIterator::AroundCell::OfCodimTwo::OverSegments::reset ( )
 // virtual from CellIterator::Core
 
 {	this->current_segment = this->first_segment;
@@ -2113,19 +2113,6 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset
 		this->last_vertex = cll.boundary().cell_in_front_of
 			( this_center, tag::surely_exists ). reverse ( tag::surely_exists ). core;  }
 	assert ( this->current_segment );                                                       }
-
-// the above could get simpler and faster by using a method like
-// inline Cell::Core * Mesh::Core::cell_behind_ptr
-// ( const Cell::Core * face, const tag::MayNotExist & ) const
-// which is not difficult to implement
-
-
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::reset ( )
-// virtual from CellIterator::Core
-
-{	this->current_segment = this->first_segment;
-	assert ( this->center->is_positive() );
-	assert ( this->current_segment );             }	
 
 // the above could get simpler and faster by using a method like
 // inline Cell::Core * Mesh::Core::cell_behind_ptr

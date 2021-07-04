@@ -2035,9 +2035,10 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments
 	// why on earth cannot I declare here the first version of reset
 	// and leave the second version pure virtual (to be declared later) ??!!
 
-	// void reset ( )
+	void reset ( );  // virtual from CellIterator::Core
+	
 	// void reset ( const tag::StartAt &, Cell::Core * cll )
-	//      both stay pure virtual from CellIterator::Core
+	//      stays pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 	// void advance ( )  stays pure virtual from CellIterator::Core
@@ -2078,11 +2079,9 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 
 	inline NormalOrder ( Mesh::Core * msh, Cell::Positive * c );
 	
-	// why on earth cannot I inherit the first version of reset
-	// from CellIterator::AroundCell::OfCodimTwo::OverSegments
-	// and declare here only the second version ??!!
+	// void reset ( )  -- virtual,
+	//    defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
 
-	void reset ( );  // virtual from CellIterator::Core
 	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
@@ -2124,11 +2123,9 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder
 
 	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * c );
 	
-	// why on earth cannot I inherit the first version of reset
-	// from CellIterator::AroundCell::OfCodimTwo::OverSegments
-	// and declare here only the second version ??!!
+	// void reset ( )  -- virtual,
+	//    defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
 
-	void reset ( );  // virtual from CellIterator::Core
 	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
