@@ -325,7 +325,7 @@ class CellIterator
 // which may be positive or negative (tag::force_positive overrides this)
 // for lower dimension, returns positive cells
 
-// or, iterates over all cells above a given cell
+// or, iterates over all cells around a given cell
 
 // see paragraph 9.5 in the manual
 	
@@ -362,7 +362,8 @@ class CellIterator
 		class SegmentsOfConnectedOneDimMesh;
 		class CellsOfFuzzyMesh;
 		class SegmentsAboveVertex;           };
-	class AroundCell;
+	struct Around  {  class OneCell;  struct OneVertex { struct OfAnyCodim
+	       {  class OverSegments;  class OverHDCells; };  };  };
 	struct Adaptor  {  class ForcePositive;  };
 
 };  // end of class CellIterator

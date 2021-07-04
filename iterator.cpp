@@ -1839,7 +1839,7 @@ Cell CellIterator::Over::CellsOfFuzzyMesh::ForcePositive::deref ( )
 //-----------------------------------------------------------------------------------------
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset ( )
+void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::reset ( )
 // virtual from CellIterator::Core
 
 {	this->current_vertex = this->first_vertex;
@@ -1852,7 +1852,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset ( )
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset ( )
+void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::reset ( )
 // virtual from CellIterator::Core
 
 {	this->current_vertex = this->first_vertex;
@@ -1865,7 +1865,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset ( )
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset
+void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::reset
 ( const tag::StartAt &, Cell::Core * cll )
 // virtual from CellIterator::Core
 
@@ -1889,7 +1889,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::reset
 }
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset
+void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::reset
 ( const tag::StartAt &, Cell::Core * cll )
 // virtual from CellIterator::Core
 
@@ -1913,35 +1913,35 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::ReverseOrder::reset
 }
 	
 
-Cell CellIterator::AroundCell::OfCodimTwo
+Cell CellIterator::Around::OneCell::OfCodimTwo
          ::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre::deref ( )
 // virtual from CellIterator::Core
 {	return Cell ( tag::whose_core_is, this->current_vertex,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo
+Cell CellIterator::Around::OneCell::OfCodimTwo
          ::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre::deref ( )
 // virtual from CellIterator::Core
 {	return Cell ( tag::whose_core_is, this->current_vertex,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
-Cell CellIterator::AroundCell
+Cell CellIterator::Around::OneCell
          ::OfCodimTwo::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive::deref ( )
 // virtual from CellIterator::Core
 {	assert ( this->current_vertex );
 	return this->current_vertex->get_positive();  }
 
 
-Cell CellIterator::AroundCell
+Cell CellIterator::Around::OneCell
          ::OfCodimTwo::OverVertices::NormalOrder::BuildReverseCells::ForcePositive::deref ( )
 // virtual from CellIterator::Core
 {	assert ( this->current_vertex );
 	return this->current_vertex->get_positive();  }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
+Cell CellIterator::Around::OneCell::OfCodimTwo::OverVertices::
 	NormalOrder::AssumeCellsExist::ReverseEachCell::deref ( )
 // virtual from CellIterator::Core
 {	assert ( this->current_vertex );
@@ -1949,7 +1949,7 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 	return this->current_vertex->reverse_attr;              }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
+Cell CellIterator::Around::OneCell::OfCodimTwo::OverVertices::
 	NormalOrder::BuildReverseCells::ReverseEachCell::deref ( )
 // virtual from CellIterator::Core
 
@@ -1965,35 +1965,35 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 	return this->current_vertex->reverse_attr;              }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo
+Cell CellIterator::Around::OneCell::OfCodimTwo
          ::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre::deref ( )
 // virtual from CellIterator::Core
 {	return Cell ( tag::whose_core_is, this->current_vertex,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo
+Cell CellIterator::Around::OneCell::OfCodimTwo
          ::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre::deref ( )
 // virtual from CellIterator::Core
 {	return Cell ( tag::whose_core_is, this->current_vertex,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
-Cell CellIterator::AroundCell
+Cell CellIterator::Around::OneCell
          ::OfCodimTwo::OverVertices::ReverseOrder::AssumeCellsExist::ForcePositive::deref ( )
 // virtual from CellIterator::Core
 {	assert ( this->current_vertex );
 	return this->current_vertex->get_positive();  }
 
 
-Cell CellIterator::AroundCell
+Cell CellIterator::Around::OneCell
          ::OfCodimTwo::OverVertices::ReverseOrder::BuildReverseCells::ForcePositive::deref ( )
 // virtual from CellIterator::Core
 {	assert ( this->current_vertex );
 	return this->current_vertex->get_positive();  }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
+Cell CellIterator::Around::OneCell::OfCodimTwo::OverVertices::
 	ReverseOrder::AssumeCellsExist::ReverseEachCell::deref ( )
 // virtual from CellIterator::Core
 {	assert ( this->current_vertex );
@@ -2001,7 +2001,7 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 	return this->current_vertex->reverse_attr;              }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
+Cell CellIterator::Around::OneCell::OfCodimTwo::OverVertices::
 	ReverseOrder::BuildReverseCells::ReverseEachCell::deref ( )
 // virtual from CellIterator::Core
 
@@ -2017,7 +2017,7 @@ Cell CellIterator::AroundCell::OfCodimTwo::OverVertices::
 	return this->current_vertex->reverse_attr;              }
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::advance ( )
+void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::advance ( )
 // virtual from CellIterator::Core
 
 {	Cell this_center ( tag::whose_core_is, this->center,
@@ -2036,7 +2036,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverVertices::NormalOrder::advance ( 
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-void CellIterator::AroundCell::OfCodimTwo
+void CellIterator::Around::OneCell::OfCodimTwo
          ::OverVertices::ReverseOrder::AssumeCellsExist::advance ( )
 // virtual from CellIterator::Core
 
@@ -2056,7 +2056,7 @@ void CellIterator::AroundCell::OfCodimTwo
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-void CellIterator::AroundCell::OfCodimTwo
+void CellIterator::Around::OneCell::OfCodimTwo
          ::OverVertices::ReverseOrder::BuildReverseCells::advance ( )
 // virtual from CellIterator::Core
 
@@ -2076,7 +2076,7 @@ void CellIterator::AroundCell::OfCodimTwo
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-bool CellIterator::AroundCell::OfCodimTwo::OverVertices::in_range ( )
+bool CellIterator::Around::OneCell::OfCodimTwo::OverVertices::in_range ( )
 // virtual from CellIterator::Core
 {	return this->current_vertex;   }
 
@@ -2084,7 +2084,7 @@ bool CellIterator::AroundCell::OfCodimTwo::OverVertices::in_range ( )
 
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::reset ( )
+void CellIterator::Around::OneCell::OfCodimTwo::OverSegments::reset ( )
 // virtual from CellIterator::Core
 
 {	this->current_segment = this->first_segment;
@@ -2097,7 +2097,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::reset ( )
 // which is not difficult to implement
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset
+void CellIterator::Around::OneCell::OfCodimTwo::OverSegments::NormalOrder::reset
 ( const tag::StartAt &, Cell::Core * cll_p )  // virtual from CellIterator::Core
 
 {	assert ( this->center->is_positive() );
@@ -2120,7 +2120,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::reset
 // which is not difficult to implement
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::reset
+void CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::reset
 ( const tag::StartAt &, Cell::Core * cll_p )  // virtual from CellIterator::Core
 
 {	assert ( this->center->is_positive() );
@@ -2143,7 +2143,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::reset
 // which is not difficult to implement
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance ( )
+void CellIterator::Around::OneCell::OfCodimTwo::OverSegments::NormalOrder::advance ( )
 // virtual from CellIterator::Core
 
 {	Cell this_center ( tag::whose_core_is, this->center,
@@ -2160,7 +2160,7 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::advance ( 
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::advance ( )
+void CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::advance ( )
 // virtual from CellIterator::Core
 
 {	Cell this_center ( tag::whose_core_is, this->center,
@@ -2177,21 +2177,21 @@ void CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::advance (
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-Cell CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre::deref ( )
+Cell CellIterator::Around::OneCell::OfCodimTwo::OverSegments::NormalOrder::AsTheyAre::deref ( )
 // virtual from CellIterator::Core
 
 { return Cell ( tag::whose_core_is, this->current_segment,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
-Cell CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre::deref ( )
+Cell CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre::deref ( )
 // virtual from CellIterator::Core
 
 { return Cell ( tag::whose_core_is, this->current_segment,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
-bool CellIterator::AroundCell::OfCodimTwo::OverSegments::in_range ( )
+bool CellIterator::Around::OneCell::OfCodimTwo::OverSegments::in_range ( )
 // virtual from CellIterator::Core
 
 {	return this->current_segment;  }

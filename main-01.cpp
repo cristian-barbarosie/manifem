@@ -47,14 +47,14 @@ int main () {
 	Cell PQBA ( tag::rectangle, PQ, BQ.reverse(), AB.reverse(), PA.reverse() );
 	PQBA.reverse().add_to_mesh ( rect_mesh );
 
-	std::cout << "main CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre"	 << std::endl;
+	std::cout << "main CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre"	 << std::endl;
 
 	{  // just a block of code for hiding 'it'
 
 	std::cout << "--------------------------------------------------------" << std::endl;	
 
 	Cell::Positive * SW_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( SW.core );
-  CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre
+  CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre
 		it ( rect_mesh.core, SW_core );
 
 	std::cout << "around SW (=P) :" << std::endl;
@@ -76,7 +76,7 @@ int main () {
 	std::cout << "--------------------------------------------------------" << std::endl;	
 
 	Cell::Positive * Q_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( Q.core );
-  CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre
+  CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre
 		it ( rect_mesh.core, Q_core );
 
 	std::cout << "around Q :" << std::endl;
@@ -98,7 +98,7 @@ int main () {
 	std::cout << "--------------------------------------------------------" << std::endl;	
 
 	Cell::Positive * R_core = tag::Util::assert_cast < Cell::Core*, Cell::Positive* > ( R.core );
-  CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre
+  CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsTheyAre
 		it ( rect_mesh.core, R_core );
 
 	std::cout << "around R :" << std::endl;
