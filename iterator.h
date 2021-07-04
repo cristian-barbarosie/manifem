@@ -1,5 +1,5 @@
 
-// iterator.h 2021.07.03
+// iterator.h 2021.07.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2031,11 +2031,13 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments
 	inline OverSegments ( Mesh::Core * msh, Cell::Positive * c )
 	:	CellIterator::AroundCell::OfCodimTwo::Ordered ( msh, c )  // msh_p { msh }, center { c }
 	{ }
-	
-	void reset ( );  // virtual from CellIterator::Core
 
+	// why on earth cannot I declare here the first version of reset
+	// and leave the second version pure virtual (to be declared later) ??!!
+
+	// void reset ( )
 	// void reset ( const tag::StartAt &, Cell::Core * cll )
-	//      stays pure virtual from CellIterator::Core
+	//      both stay pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 	// void advance ( )  stays pure virtual from CellIterator::Core
@@ -2076,9 +2078,11 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::NormalOrder
 
 	inline NormalOrder ( Mesh::Core * msh, Cell::Positive * c );
 	
-	// void reset ( )  -- virtual,
-	//    defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
+	// why on earth cannot I inherit the first version of reset
+	// from CellIterator::AroundCell::OfCodimTwo::OverSegments
+	// and declare here only the second version ??!!
 
+	void reset ( );  // virtual from CellIterator::Core
 	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
@@ -2120,9 +2124,11 @@ class CellIterator::AroundCell::OfCodimTwo::OverSegments::ReverseOrder
 
 	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * c );
 	
-	// void reset ( )  -- virtual,
-	//    defined by CellIterator::AroundCell::OfCodimTwo::OverSegments
+	// why on earth cannot I inherit the first version of reset
+	// from CellIterator::AroundCell::OfCodimTwo::OverSegments
+	// and declare here only the second version ??!!
 
+	void reset ( );  // virtual from CellIterator::Core
 	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
