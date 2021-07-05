@@ -2397,140 +2397,140 @@ class tag::Util::MeshCore
 
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &,
-	  const tag::Around &, Cell::Core * const, const tag::ThisMeshIsPositive & ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &          ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &          ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   ) = 0;
 
 	// we are still in class Mesh::Core
 
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & ) = 0;
+	  Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &            ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &            ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &       ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t,
 	  const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &              ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         ) = 0;
 
 	// we are still in class Mesh::Core
 
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &,
 	  const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   ) = 0;
 
 	#ifndef NDEBUG
@@ -2774,139 +2774,139 @@ class Mesh::ZeroDim : public Mesh::Core
 
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &          );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &          );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 
 	// we are still in class Mesh::ZeroDim
 
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &            );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &            );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &       );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t,
 	  const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         );
 
 	// we are still in class Mesh::ZeroDim
 
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &               );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &               );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 
 	#ifndef NDEBUG
@@ -3209,139 +3209,139 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &,
-	  const tag::Around &, Cell::Core * const, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &          );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &          );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 
 	// we are still in class Mesh::Connected::OneDim
 
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &            );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &            );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &       );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t,
 	  const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         );
 
 	// we are still in class Mesh::Connected::OneDim
 
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &               );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &               );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 	
 	#ifndef NDEBUG
@@ -3754,139 +3754,139 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &,
-	  const tag::Around &, Cell::Core * const, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Around &,
-	  const Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &          );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &          );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 
 	// we are still in class Mesh::Fuzzy
 
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::Around &,
-	  const Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & );
+	  Cell::Core *, const tag::ForcePositive &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &            );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &            );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &       );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t,
 	  const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfDim &, const size_t, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         );
 
 	// we are still in class Mesh::Fuzzy
 
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive & );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
-	  const tag::Around &, const Cell::Core *,
+	  const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &, const tag::DoNotBother &,
-	  const tag::Around &, const Cell::Core *, const tag::ThisMeshIsPositive &               );
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &               );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        );
 	CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
-	  const tag::DoNotBother &, const tag::Around &, const Cell::Core *,
+	  const tag::DoNotBother &, const tag::Around &, Cell::Core *,
 	  const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   );
 	
 	#ifndef NDEBUG

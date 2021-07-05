@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.06.24
+// progressive.cpp 2021.07.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -35,7 +35,6 @@ namespace maniFEM { namespace tag
 {	struct OrthogonalTo { };  static const OrthogonalTo orthogonal_to;
 	struct StartWithNonExistentMesh { };
 	static const StartWithNonExistentMesh start_with_non_existent_mesh;
-	struct Around { };  static const Around around;
 	struct AtPoint { };  static const AtPoint at_point ;                 }  }
 
 using namespace maniFEM;
