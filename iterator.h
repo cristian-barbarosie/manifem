@@ -947,7 +947,7 @@ class CellIterator::Around::OneCell : public CellIterator::Core
 	Mesh::Core * msh_p;  // should an iterator keep the mesh alive ?
 	Cell::Positive * center;  // center->dim <= msh->dim - 2
 
-	inline OneCell ( Mesh::Core * msh, Cell::Positive * c )
+	inline OneCell ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Core (), msh_p { msh }, center { c } { }
 
 	// void reset ( )  stays pure virtual from CellIterator::Core
@@ -992,7 +992,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::Ordered
 	
 	Cell::Core * current_segment { nullptr };  // word "segment" is misleading here
 
-	inline Ordered ( Mesh::Core * msh, Cell::Positive * c )
+	inline Ordered ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
@@ -1039,7 +1039,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices
 	Cell::Core * first_vertex { nullptr };  // word "vertex" is misleading here
 	Cell::Core * last_segment { nullptr };  // word "segment" is misleading here
 
-	inline OverVertices ( Mesh::Core * msh, Cell::Positive * c )
+	inline OverVertices ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::Ordered ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
@@ -1088,7 +1088,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
 	// we recognize a closed loop if  last_segment == msh.cell_behind ( first_vertex )
 	// another possible criterion :  last_segment == nullptr  ==>  open chain
 
-	inline NormalOrder ( Mesh::Core * msh, Cell::Positive * c )
+	inline NormalOrder ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::OverVertices ( msh, c )
 	// msh_p { msh }, center { c }
 	{ }
@@ -1137,7 +1137,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
 	// we recognize a closed loop if  last_segment == msh.cell_in_front_of ( first_vertex )
 	// another possible criterion :  last_segment == nullptr  ==>  open chain
 
-	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * c );
+	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * const c );
 	
 	void reset ( );  // virtual from CellIterator::Core
 	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
@@ -1173,7 +1173,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::Assu
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AssumeCellsExist ( Mesh::Core * msh, Cell::Positive * c );
+	inline AssumeCellsExist ( Mesh::Core * msh, Cell::Positive * const c );
 	
 	// void reset ( )  virtual
 	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
@@ -1211,7 +1211,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::Buil
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * c );
+	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * const c );
 	
 	// void reset ( )  virtual
 	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
@@ -1424,7 +1424,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1464,7 +1464,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * c )
+	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1504,7 +1504,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * c )
+	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1544,7 +1544,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1584,7 +1584,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * c )
+	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1624,7 +1624,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * c )
+	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1664,7 +1664,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::Ass
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AssumeCellsExist ( Mesh::Core * msh, Cell::Positive * c )
+	inline AssumeCellsExist ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder ( msh, c )
 	// msh_p { msh }, center { c }
 	{ }
@@ -1704,7 +1704,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::Bui
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * c )
+	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder ( msh, c )
 	// msh_p { msh }, center { c }
 	{ }
@@ -1773,7 +1773,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1813,7 +1813,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * c )
+	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1853,7 +1853,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * c )
+	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1893,7 +1893,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -1933,7 +1933,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * c )
+	inline ForcePositive ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells ( msh,c )  // msh_p { msh }, center { c }
 	{ }
@@ -1973,7 +1973,7 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// Cell::Core * first_vertex { nullptr }  -- word "vertex" is misleading here
 	// Cell::Core * last_segment { nullptr }  -- word "segment" is misleading here
 
-	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * c )
+	inline ReverseEachCell ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
@@ -2028,7 +2028,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverSegments
 	Cell::Core * first_segment { nullptr };  // word "segment" is misleading here
 	Cell::Core * last_vertex { nullptr };  // word "vertex" is misleading here
 
-	inline OverSegments ( Mesh::Core * msh, Cell::Positive * c )
+	inline OverSegments ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::Ordered ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 
@@ -2074,7 +2074,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverSegments::NormalOrder
 	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
 	// Cell::Core * last_vertex { nullptr }  -- word "vertex" is misleading here
 
-	inline NormalOrder ( Mesh::Core * msh, Cell::Positive * c );
+	inline NormalOrder ( Mesh::Core * msh, Cell::Positive * const c );
 	
 	// void reset ( )  -- virtual,
 	//    defined by CellIterator::Around::OneCell::OfCodimTwo::OverSegments
@@ -2118,7 +2118,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder
 	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
 	// Cell::Core * last_vertex { nullptr }  -- word "vertex" is misleading here
 
-	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * c );
+	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * const c );
 	
 	// void reset ( )  -- virtual,
 	//    defined by CellIterator::Around::OneCell::OfCodimTwo::OverSegments
@@ -2256,7 +2256,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverSegments::NormalOrder::AsTh
 	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
 	// Cell::Core * last_vertex { nullptr }  -- word "vertex" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::OverSegments::NormalOrder ( msh, c )
 	// msh_p { msh }, center { c }
 	{ }
@@ -2295,7 +2295,7 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsT
 	// Cell::Core * first_segment { nullptr }  -- word "segment" is misleading here
 	// Cell::Core * last_vertex { nullptr }  -- word "vertex" is misleading here
 
-	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * c )
+	inline AsTheyAre ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder ( msh, c )
 	// msh_p { msh }, center { c }
 	{ }
@@ -2334,7 +2334,7 @@ class CellIterator::Around::OneCell::OfAnyCodim
 	size_t dim;  // dimension of cells to be returned
 	// center->dim < dim <= msh->dim
 
-	inline OfAnyCodim ( Mesh::Core * msh, size_t d, Cell::Positive * c )
+	inline OfAnyCodim ( Mesh::Core * msh, size_t d, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell ( msh, c ), dim { d }  // msh_p { msh }, center { c }
 	{ }
 	
@@ -2379,7 +2379,7 @@ class CellIterator::Around::OneVertex::OfAnyCodim::OverSegments
 
 	maptype_segs::iterator it;;
 	
-	inline OverSegments ( Mesh::Core * msh, Cell::Positive * c )
+	inline OverSegments ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfAnyCodim ( msh, c->get_dim() + 1, c )
 	// msh_p { msh }, center { c }, dim { c->get_dim() + 1 }
 	{ }
@@ -2426,7 +2426,7 @@ class CellIterator::Around::OneCell::OfAnyCodim::OverHDCells
 
 	maptype::iterator it;;
 	
-	inline OverHDCells ( Mesh::Core * msh, Cell::Positive * c )
+	inline OverHDCells ( Mesh::Core * msh, Cell::Positive * const c )
 	:	CellIterator::Around::OneCell::OfAnyCodim ( msh, c->get_dim() + 1, c )
 	// msh_p { msh }, center { c }, dim { c->get_dim() + 1 }
 	{ }
