@@ -3519,6 +3519,90 @@ inline CellIterator Mesh::iterator
 //		  tag::this_mesh_is_positive                                           ) );  }
 
 
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::Around &, const Cell & c                              ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::AsTheyAre &, const tag::Around &, const Cell & c      ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+	const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+  const tag::Around &, const Cell & c                              ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+  const tag::DoNotBuildCells &, const tag::Around &, const Cell & c ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::do_not_build_cells, tag::around, c     );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCells &, const tag::OfDimension &, const size_t d,
+	const tag::AsTheyAre &, const tag::DoNotBuildCells &,
+  const tag::Around &, const Cell & c                              ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::do_not_build_cells, tag::around, c     );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::Around &, const Cell & c ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
+  const tag::Around &, const Cell & c                                 ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d,
+	const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+  const tag::Around &, const Cell & cll                ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_dim, d, tag::as_they_are, tag::build_cells_if_necessary,
+			  tag::around, cll.core, tag::this_mesh_is_positive                          ) );
+	// else
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_dim, d, tag::reverse_each_cell, tag::build_cells_if_necessary,
+		  tag::around, cll.core, tag::this_mesh_is_positive                                ) );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim &, const size_t d, const tag::DoNotBuildCells &,
+  const tag::Around &, const Cell & c                                       ) const
+{	return this->iterator ( tag::over_cells_of_dim, d, tag::as_they_are,
+                          tag::do_not_build_cells, tag::around, c     );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverCellsOfDim, const size_t d,
+  const tag::AsTheyAre &, const tag::DoNotBuildCells &,
+  const tag::Around &, const Cell & cll                ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+			( tag::over_cells_of_dim, d, tag::as_they_are, tag::do_not_build_cells,
+			  tag::around, cll.core, tag::this_mesh_is_positive                    ) );
+	// else
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_cells_of_dim, d, tag::reverse_each_cell, tag::do_not_build_cells,
+		  tag::around, cll.core, tag::this_mesh_is_positive                          ) );  }
+
 
 
 }  // namespace maniFEM
