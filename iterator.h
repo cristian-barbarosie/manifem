@@ -3140,7 +3140,7 @@ inline CellIterator Mesh::iterator
   const tag::RequireOrder &, const tag::ForcePositive & ) const
 {	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::require_order );  }
 
-inline CellIterator Mesh:: iterator
+inline CellIterator Mesh::iterator
 ( const tag::OverCells &, const tag::OfDimension &, const size_t d,
   const tag::ForcePositive &, const tag::Backwards & ) const
 {	return this->iterator ( tag::over_cells_of_dim, d, tag::force_positive, tag::backwards );  }
@@ -3465,24 +3465,59 @@ inline CellIterator Mesh::iterator
 
 
 inline CellIterator Mesh::iterator
-( const tag::OverSegments &, const tag::Around &, const Cell & cll) const
-{	return this->iterator ( tag::over_segments, tag::around, c, tag::as_they_are );  }
+( const tag::OverSegments &, const tag::Around &, const Cell & c ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
 
 
 inline CellIterator Mesh::iterator
-( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &, const Cell & cll ) const
+( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &, const Cell & c ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are,
+                          tag::build_cells_if_necessary, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+  const tag::Around &, const Cell & cll                                           ) const
 {	if ( this->is_positive() )
 		return CellIterator ( tag::whose_core_is, this->core->iterator
-		    ( tag::over_vertices, tag::as_they_are, tag::around, cll.core, tag::this_mesh_is_positive ) );
+		  ( tag::over_segments, tag::as_they_are, tag::build_cells_if_necessary,
+	      tag::around, cll.core, tag::this_mesh_is_positive                   ) );
 	// else
-	if ( this->dim() == 0 )
-		return CellIterator ( tag::whose_core_is, this->core->iterator
-			( tag::over_vertices, tag::reverse_each_cell, tag::do_not_build_cells,
-			  tag::reverse_order, tag::this_mesh_is_positive                  ) );
-	// else : dim >= 1, all vertices are positive, no need to reverse them
 	return CellIterator ( tag::whose_core_is, this->core->iterator
-		( tag::over_vertices, tag::as_they_are,
-		  tag::reverse_order_if_any, tag::this_mesh_is_positive )     );           }
+		( tag::over_segments, tag::reverse_each_cell, tag::build_cells_if_necessary,
+		  tag::around, cll.core, tag::reverse_order_if_any, tag::this_mesh_is_positive ) );  }
+// or, equivalently :
+//	return CellIterator ( tag::whose_core_is, this->core->iterator
+//		( tag::over_segments, tag::as_they_are, tag::build_cells_if_necessary,
+//		  tag::reverse_order_if_any, tag::around, cll.core->reverse_attr.core,
+//		  tag::this_mesh_is_positive                                           ) );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::DoNotBuildCells &,
+  const tag::Around &, const Cell & c                     ) const
+{	return this->iterator ( tag::over_segments, tag::as_they_are,
+                          tag::do_not_build_cells, tag::around, c );  }
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverSegments &, const tag::AsTheyAre &, const tag::DoNotBuildCells &,
+  const tag::Around &, const Cell & cll                                           ) const
+{	if ( this->is_positive() )
+		return CellIterator ( tag::whose_core_is, this->core->iterator
+		  ( tag::over_segments, tag::as_they_are, tag::build_cells_if_necessary,
+	      tag::around, cll.core, tag::this_mesh_is_positive                   ) );
+	// else
+	return CellIterator ( tag::whose_core_is, this->core->iterator
+		( tag::over_segments, tag::reverse_each_cell, tag::do_not_build_cells,
+		  tag::around, cll.core, tag::reverse_order_if_any, tag::this_mesh_is_positive ) );  }
+// or, equivalently :
+//	return CellIterator ( tag::whose_core_is, this->core->iterator
+//		( tag::over_segments, tag::as_they_are, tag::do_not_build_cells,
+//		  tag::reverse_order_if_any, tag::around, cll.core->reverse_attr.core,
+//		  tag::this_mesh_is_positive                                           ) );  }
+
 
 
 
