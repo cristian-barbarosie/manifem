@@ -52,21 +52,42 @@ int main () {
 	std::cout << "--------------------------------------------------------" << std::endl;	
 
 	CellIterator it = rect_mesh.iterator 
-		( tag::over_cells_of_dim, 2, tag::as_they_are, tag::around, SW );
+		( tag::over_segments, tag::around, SW );
 
-	std::cout << "around SW (=P) :" << std::endl;
+	std::cout << "segments around SW (=P)" << std::endl;
 	for ( it.reset(); it.in_range(); it++ )
-	{	Cell sq = *it;
-		double xx = 0., yy = 0.;
-		int counter = 0;
-		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
-		for ( itt.reset(); itt.in_range(); itt++ )
-		{	Cell P = *itt;
-			xx += x(P);  yy += y (P);
-			counter++;   }
-		assert ( counter == 4 );
-		std::cout << "(" << xx/counter << "," << yy/counter << ")" << std::endl;
+	{	Cell seg = *it;
+		std::cout << "[(" << x(seg.base().reverse()) << ","  << y(seg.base().reverse())
+							<< "),(" << x(seg.tip()) << ","  << y(seg.tip()) << ")]" << std::endl;
+	}
+	
+	} {  // just a block of code for hiding 'it'
+
+	std::cout << "--------------------------------------------------------" << std::endl;	
+
+	CellIterator it = rect_mesh.iterator 
+		( tag::over_segments, tag::around, Q );
+
+	std::cout << "segments around Q" << std::endl;
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+		std::cout << "[(" << x(seg.base().reverse()) << ","  << y(seg.base().reverse())
+							<< "),(" << x(seg.tip()) << ","  << y(seg.tip()) << ")]" << std::endl;
 	}	
+
+	} {  // just a block of code for hiding 'it'
+
+	std::cout << "--------------------------------------------------------" << std::endl;	
+
+	CellIterator it = rect_mesh.iterator 
+		( tag::over_segments, tag::around, R );
+
+	std::cout << "segments around R" << std::endl;
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+		std::cout << "[(" << x(seg.base().reverse()) << ","  << y(seg.base().reverse())
+							<< "),(" << x(seg.tip()) << ","  << y(seg.tip()) << ")]" << std::endl;
+	}
 
 	}  // just a block of code for hiding 'it'
 

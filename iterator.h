@@ -1392,7 +1392,6 @@ inline CellIterator::Around::OneCell::OfCodimTwo
 	{	Cell::Positive * tfv = tag::Util::assert_cast
 			< Cell::Core*, Cell::Positive* > ( this->first_vertex );
 		tfv->reverse_attr.core = tfv->build_reverse ( tag::one_dummy_wrapper );  }
-	std::cout << "constructor ::OverVertices::NormalOrder::BuildReverseCells " << this->last_segment << std::endl;
 	
 	assert ( this->first_vertex->reverse_attr.core );
 	this->first_vertex = this->first_vertex->reverse_attr.core;                   }
