@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.06.19
+// mesh.cpp 2021.07.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -405,7 +405,7 @@ Mesh Cell::Negative::Segment::boundary ( )  // virtual from Cell::Core
 	return Mesh ( tag::whose_core_is,
 	              new Mesh::ZeroDim ( tag::boundary_of, tag::positive, tag::segment,
                                     rev_seg, tag::one_dummy_wrapper                ),
-	              tag::freshly_created, tag::is_negative, tag::do_not_bother            );  }
+	              tag::freshly_created, tag::is_negative, tag::do_not_build_cells      );  }
 
 Mesh Cell::Positive::HighDim::boundary ( )  // virtual from Cell::Core
 {	return this->boundary_attr;  }

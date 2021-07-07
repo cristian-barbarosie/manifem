@@ -51,13 +51,12 @@ int main () {
 
 	std::cout << "--------------------------------------------------------" << std::endl;	
 
-  CellIterator::Core * it = rect_mesh.core->iterator
-		( tag::over_cells_of_dim, 2, tag::around, SW.core,
-		  tag::as_they_are, tag::this_mesh_is_positive    );
+	CellIterator it = rect_mesh.iterator 
+		( tag::over_cells_of_dim, 2, tag::as_they_are, tag::around, SW );
 
 	std::cout << "around SW (=P) :" << std::endl;
-	for ( it->reset(); it->in_range(); it->advance() )
-	{	Cell sq = it->deref();
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell sq = *it;
 		double xx = 0., yy = 0.;
 		int counter = 0;
 		CellIterator itt = sq.boundary().iterator ( tag::over_vertices, tag::require_order );
