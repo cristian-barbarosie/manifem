@@ -2375,7 +2375,8 @@ class tag::Util::MeshCore
 	// we are still in class Mesh::Core
 
 	virtual CellIterator::Core * iterator
-	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & ) = 0;
+	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
+	  const tag::ThisMeshIsPositive &                        ) = 0;
 	virtual CellIterator::Core * iterator
 	( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
 	  const tag::RequireOrder &, const tag::ThisMeshIsPositive & ) = 0;
