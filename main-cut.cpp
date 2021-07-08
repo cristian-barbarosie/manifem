@@ -1,5 +1,6 @@
 
 #include "maniFEM.h"
+#include <set>
 #include <fstream>
 
 using namespace maniFEM;
@@ -71,7 +72,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	// empty mesh, it will be returned after adding segments to it
 
 	// we run over all segments of 'ambient' mesh
-	// looking for opposite signs of psi
+	// looking for those where psi changes sign
 
 	{ // just a block of code for hiding 'it'
 	CellIterator it = ambient.iterator ( tag::over_segments );
@@ -94,8 +95,35 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	} // just a block of code for hiding 'it'
 
 	// at this moment we have a mesh 'interf' but it is highly disconnected
+	// if you want to see it, uncomment next line
+	// return interf;
+	
 	// in order to close the curve,
-	// we must add some segments where psi does not change sign
+	// we must add some other segments, although psi does not change sign
+
+	// we look for segments where 'interf' is disconnected
+	// we keep a list (set) of problematic squares
+
+	std::set < Cell > set_of_squares;
+	{ // just a block of code for hiding 'it'
+	CellIterator it = interf.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+		Cell A = seg.base().reverse();
+		Cell B = seg.tip();
+		if ( interf.cell_behind(A).exists() and interf.cell_in_front_of(B).exists() )
+			continue;  // not problematic
+		// now, 'interf' is disconnected at this 'seg' - we keep both neighbour squares
+		Cell sq = ambient.cell_behind ( seg );
+		if ( sq.exists() ) set_of_squares.add ( sq );
+		sq = ambient.cell_in_front_of ( seg );
+		if ( sq.exists() ) set_of_squares.add ( sq );                                  }
+	} // just a block of code for hiding 'it'
+
+	std::cout << "we found " << set_of_squares.size() << " problematic squares" << std::endl;
+	
+
+	
 
 	return interf;                                                       }
 

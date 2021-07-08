@@ -1,5 +1,5 @@
 
-// global.cpp 2021.07.07
+// global.cpp 2021.07.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -395,8 +395,7 @@ void Mesh::draw_ps ( std::string file_name )
 
 
 //  method below uses some postscript macros for (very) rudimentary 3d drawings
-//  available at https://github.com/cristian-barbarosie/attic/blob/main/3d.ps
-//  you should include them at the beginning of the postscript file
+//  available at https://github.com/cristian-barbarosie/manifem/blob/main/3d.ps
 
 void Mesh::draw_ps_3d ( std::string file_name )
 	
