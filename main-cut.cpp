@@ -8,7 +8,100 @@ using namespace maniFEM;
 bool opposite_signs ( double a, double b )
 {	return ( ( a >= 0. ) and ( b < 0. ) ) or ( ( a < 0. ) and ( b >= 0. ) );  }
 
+void special_draw ( Mesh & square, Mesh & cut, std::string f );
 
+Mesh build_interface ( Mesh ambient, Function psi );
+
+
+
+int main ()
+	
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function x = xy[0],  y = xy[1];
+
+	Cell A ( tag::vertex );  x(A) = -1.;  y(A) = 0.;
+	Cell B ( tag::vertex );  x(B) =  1.;  y(B) = 0.;
+	Cell C ( tag::vertex );  x(C) =  1.;  y(C) = 1.;
+	Cell D ( tag::vertex );  x(D) = -1.;  y(D) = 1.;
+
+	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 24 );
+	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 12 );
+	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 24 );
+	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
+
+	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
+
+	double radius = 0.35;
+	Function psi = 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius );
+
+	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
+
+	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y
+	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y
+
+	Mesh cut = build_interface ( rect_mesh, psi );
+	// just finds the segments where the level line  psi == 0  passes
+
+	// improve_angles ( rect_mesh, psi, cut );
+	// splits some rectangles in two triangles
+	
+	special_draw ( rect_mesh, cut, "square-cut.eps" );
+
+	std::cout << "reached end" << std::endl;
+	
+} // end of main
+	
+//-----------------------------------------------------------------------------------//
+
+
+Mesh build_interface ( Mesh ambient, Function psi )
+
+{	// we use the current manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0],  y = coord[1];
+
+	Function psi_x = psi.deriv(x), psi_y = psi.deriv(y);
+
+	Mesh interf ( tag::fuzzy, tag::of_dimension, 1 );
+	// empty mesh, it will be returned after adding segments to it
+
+	// we run over all segments of 'ambient' mesh
+	// looking for opposite signs of psi
+
+	{ // just a block of code for hiding 'it'
+	CellIterator it = ambient.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+		Cell A = seg.base().reverse();
+		Cell B = seg.tip();
+		if ( not opposite_signs ( psi(A), psi(B) ) ) continue;
+		// now psi takes opposite signs on the extremities of 'seg'
+		// we want to add 'seg' to 'interf'
+		// but we must choose between 'seg' and 'seg.reverse()'
+		// we choose the orientation such that the gradient of psi
+		// points to the right hand side
+		double dx = x(B) - x(A);
+		double dy = y(B) - y(A);
+		double gx = psi_x(A);
+		double gy = psi_y(A);
+		if ( gx*dy > gy*dx ) seg.add_to_mesh ( interf );
+		else seg.reverse().add_to_mesh ( interf );                    }
+	} // just a block of code for hiding 'it'
+
+	// at this moment we have a mesh 'interf' but it is highly disconnected
+	// in order to close the curve,
+	// we must add some segments where psi does not change sign
+
+	return interf;                                                       }
+
+//-----------------------------------------------------------------------------------//
+
+	
 void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
 {	// we use the current manifold
@@ -58,7 +151,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	file_ps << scale_factor << " " << scale_factor << " scale" << std::endl << std::endl;
 	
 	{ // just a block of code for hiding 'it'
-	file_ps << "gsave 0.004 setlinewidth" << std::endl;
+	file_ps << "gsave 0.004 setlinewidth 0.5 setgray" << std::endl;
 	CellIterator it = square.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++)
 	{	Cell seg = *it;
@@ -79,6 +172,12 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	} // just a block of code for hiding 'it'
 #endif
 
+	std::ifstream file_arrows ("arrows.ps");
+	while ( true )
+	{	std::string line;  // this way 'line' remains local
+		if ( getline ( file_arrows, line ) ) file_ps << line + '\n';
+		else break;                                               }
+
 	{ // just a block of code for hiding 'it'
 	file_ps << "0.8 0 0 setrgbcolor 0.007 setlinewidth" << std::endl;
 	CellIterator it = cut.iterator ( tag::over_segments );
@@ -87,7 +186,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 		Cell base = seg.base().reverse();
 		Cell tip  = seg.tip();
 		file_ps << x(base) << " " << y(base) << " moveto" << std::endl;
-		file_ps << x(tip) << " " << y(tip) << " lineto stroke" << std::endl;  }		
+		file_ps << x(tip) << " " << y(tip) << " Lineto^ stroke" << std::endl;  }		
 	} // just a block of code for hiding 'it'
 	
 	file_ps << "grestore" << std::endl;
@@ -104,38 +203,3 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
 
 
-int main ()
-	
-{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
-	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy[0],  y = xy[1];
-
-	Cell A ( tag::vertex );  x(A) = -1.;  y(A) = 0.;
-	Cell B ( tag::vertex );  x(B) =  1.;  y(B) = 0.;
-	Cell C ( tag::vertex );  x(C) =  1.;  y(C) = 1.;
-	Cell D ( tag::vertex );  x(D) = -1.;  y(D) = 1.;
-
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 24 );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 12 );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 24 );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
-
-	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
-
-	double radius = 0.35;
-	Function psi = 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius );
-	Function psi_x = psi.deriv(x), psi_y = psi.deriv(y);
-
-	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
-
-	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y
-	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y
-
-	Mesh cut ( tag::fuzzy, tag::of_dimension, 1 );  // empty mesh
-	
-	special_draw ( rect_mesh, cut, "square-cut.eps" );
-
-	std::cout << "reached end" << std::endl;
-	
-} // end of main
-	
