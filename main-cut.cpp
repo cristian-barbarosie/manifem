@@ -99,7 +99,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	// return interf;
 	
 	// in order to close the curve,
-	// we must add some other segments, although psi does not change sign
+	// we must add some other segments, although psi does not change sign there
 
 	// we look for segments where 'interf' is disconnected
 	// we keep a list (set) of problematic squares
@@ -111,20 +111,38 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	{	Cell seg = *it;
 		Cell A = seg.base().reverse();
 		Cell B = seg.tip();
-		if ( interf.cell_behind(A).exists() and interf.cell_in_front_of(B).exists() )
+		if ( interf.cell_behind(A,tag::may_not_exist).exists()
+	       and interf.cell_in_front_of(B,tag::may_not_exist).exists() )
 			continue;  // not problematic
 		// now, 'interf' is disconnected at this 'seg' - we keep both neighbour squares
-		Cell sq = ambient.cell_behind ( seg );
-		if ( sq.exists() ) set_of_squares.add ( sq );
-		sq = ambient.cell_in_front_of ( seg );
-		if ( sq.exists() ) set_of_squares.add ( sq );                                  }
+		Cell sq = ambient.cell_behind ( seg, tag::may_not_exist );
+		if ( sq.exists() ) set_of_squares.insert ( sq );
+		sq = ambient.cell_in_front_of ( seg, tag::may_not_exist );
+		if ( sq.exists() ) set_of_squares.insert ( sq );                                }
 	} // just a block of code for hiding 'it'
 
-	std::cout << "we found " << set_of_squares.size() << " problematic squares" << std::endl;
+	std::cout << "we found " << set_of_squares.size() << " squares, ";
 	
+	while ( true )
+	{	std::forward_list<Cell> to_eliminate;
+		std::set<Cell>::iterator it_set;
+		for ( it_set = set_of_squares.begin(); it_set != set_of_squares.end(); it_set++ )
+		{	Cell sq = *it_set;
+			bool elim = false;
+			CellIterator it = sq.boundary().iterator ( tag::over_vertices );
+			for ( it.reset(); it.in_range(); it++ )
+			{	Cell P = *it;
+				elim = elim or P.belongs_to ( interf ); }
+			if ( elim )
+			{	to_eliminate.push_front ( sq );  continue;  }                           }
+		std::forward_list<Cell>::iterator it_list;
+		//  can we use a list of iterators over set_of_squares ?
+		for ( it_list = to_eliminate.begin(); it_list != to eliminate.end(); it_list++ )
+		{	Cell sq = *it_set;  set_of_squares.erase ( sq );  }
+		break;                                                                           }
 
+	std::cout << "but only " << set_of_squares.size() << " are problematic" << std::endl;
 	
-
 	return interf;                                                       }
 
 //-----------------------------------------------------------------------------------//
