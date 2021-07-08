@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.07
+// mesh.h 2021.07.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3387,10 +3387,6 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 		nb_of_segs { n }, first_ver ( tag::non_existent ), last_ver ( tag::non_existent )
 	{	}
 
-	OneDim ( const tag::Segment &, const Cell & A, const Cell & B,
-	         const tag::DividedIn &, const size_t n, const tag::OneDummyWrapper & );
-	// defined in global.cpp
-
 	virtual ~OneDim ();
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
@@ -4778,7 +4774,7 @@ inline Mesh::Mesh ( const tag::Fuzzy &, const tag::OfDimension &, const size_t d
 // by default, ispos = tag::is_positive, so may be called with only three arguments
 :	Mesh ( tag::whose_core_is,
 	 	     new Mesh::Fuzzy ( tag::of_dimension, d+1, tag::minus_one, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                      )
+	       tag::freshly_created, tag::is_positive                                             )
 {	}
 
 

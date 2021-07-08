@@ -1,0 +1,355 @@
+% these procedures have been posted in comp.lang.postscript
+% by Bill Lee, bill@leeweyr.sccsi.com, on Apr 19 1995
+% subject: arc with arrow head
+% changes by Cristian Barbarosie in 2018 cristian.barbarosie@gmail.com
+
+
+%* _____________________________ Arrows ____________________________________ 
+
+%* Procedure to draw the path for an arrow head. Note: the arrowhead will be 
+%* added to the current path. The arrowhead will also be drawn and filled. 
+%* 
+%* Usage: Linewidth deltaX deltaY ArrowHead 
+%* 
+%* where: LineWidth is the width in points of the arrow head lines 
+%* 
+%* deltaX and deltaY define the direction that the arrow points 
+%* 
+%* Note: If Linewidth is zero, a value of 1 will be substituted 
+%*
+/rArrowHead { 
+exch atan matrix currentmatrix exch rotate exch 
+dup 0 eq 
+{ pop 1 } if 
+dup scale 
+-7 2 rlineto 
+1 -2 rlineto 
+-1 -2 rlineto 
+7 2 rlineto 
+currentpoint 
+gsave 
+newpath moveto 
+-7 2 rlineto 
+1 -2 rlineto 
+-1 -2 rlineto 
+closepath 
+fill 
+grestore 
+setmatrix 
+} def 
+
+%* Procedure to draw the path for an arrow head. Note: the arrowhead will be 
+%* added to the current path. The arrowhead will also be drawn and filled. 
+%* 
+%* Usage: Linewidth PreviousX PreviousY ArrowHead 
+%* 
+%* where: LineWidth is the width in points of the arrow head lines 
+%* 
+%* PreviousX and PreviousY along with the currentpoint 
+%* define the direction that the arrow points 
+%* 
+%* Note: If Linewidth is zero, a value of 1 will be substituted 
+%*
+/ArrowHead { 
+currentpoint 
+4 2 roll exch 4 -1 roll exch 
+sub 3 1 roll sub
+rArrowHead
+} def 
+
+%* _____________________________ RLineto^ ____________________________________ 
+%* Procedure to add a relative line to the current path and then add the 
+%* path for an arrow on its end. 
+%* 
+%* Usage: x y RLineto^ 
+%* 
+%* where: x and y are the offsets from the current point 
+%* 
+/RLineto^ { 
+currentlinewidth currentpoint 5 3 roll 
+rlineto 
+ArrowHead 
+} def 
+
+%* _____________________________ Lineto^ ____________________________________ 
+%* Procedure to add a line to the current path and then add the 
+%* path for an arrow on its end. 
+%* 
+%* Usage: x y Lineto^ 
+%* 
+%* where: x and y are the new points for the path 
+%* 
+/Lineto^ { 
+currentlinewidth currentpoint 5 3 roll 
+lineto 
+ArrowHead 
+} def 
+
+%* _____________________________ Arc^ ____________________________________ 
+%* Procedure to add an arc to the current path and then add the 
+%* path for arrow on its end. 
+%* 
+%* Usage: x y r ang1 ang2 Arc^ 
+%* 
+%* where: x, y, ang1, ang2, and r are the normal parameters 
+%* for drawing an arc. 
+%* 
+/Arc^ { 
+5 copy arc 
+exch pop 2 sub 
+dup cos 2 index mul 4 index add 
+exch sin 2 index mul 3 index add 
+currentlinewidth 3 1 roll 
+ArrowHead pop pop pop 
+} def 
+
+%* _____________________________ Arcn^ ____________________________________ 
+%* Procedure to add an arc to the current path and then add the 
+%* path for arrow on its end. 
+%* 
+%* Usage: x y r ang1 ang2 Arcn^ 
+%* 
+%* where: x, y, ang1, ang2, and r are the normal parameters 
+%* for drawing an arcn. 
+%* 
+/Arcn^ { 
+5 copy arcn 
+exch pop 2 add 
+dup cos 2 index mul 4 index add 
+exch sin 2 index mul 3 index add 
+currentlinewidth 3 1 roll 
+ArrowHead pop pop pop 
+} def 
+
+% _______________________________________________________ 
+%
+%   procedures for projecting 3d objects into the plane
+% _______________________________________________________ 
+
+/A11 1 def /A12 0 def /A13 0 def
+/A21 0 def /A22 -1 def /A23 0 def
+/A31 0 def /A32 0 def /A33 1 def
+
+/sq2 0.5 sqrt def
+/seta 0.285 def
+
+/rotxy
+{	% rodamos com n graus no plano xy
+	dup cos /c exch def
+	sin /s exch def
+	% A11 = c A11 - s A21
+	% A12 = c A12 - s A22
+	% A13 = c A13 - s A23
+	% A21 = s A11 + c A21
+	% A22 = s A12 + c A22
+	% A23 = s A13 + c A23
+	/nA11 c A11 mul s A21 mul sub def
+	/nA12 c A12 mul s A22 mul sub def
+	/nA13 c A13 mul s A23 mul sub def
+	/A21 s A11 mul c A21 mul add def
+	/A22 s A12 mul c A22 mul add def
+	/A23 s A13 mul c A23 mul add def
+	/A11 nA11 def  /A12 nA12 def  /A13 nA13 def  } def
+
+/rotxz
+{	% rodamos com n graus no plano xz
+	dup cos /c exch def
+	sin /s exch def
+	% A11 = c A11 - s A31
+	% A12 = c A12 - s A32
+	% A13 = c A13 - s A33
+	% A31 = s A11 + c A31
+	% A32 = s A12 + c A32
+	% A33 = s A13 + c A33
+	/nA11 c A11 mul s A31 mul sub def
+	/nA12 c A12 mul s A32 mul sub def
+	/nA13 c A13 mul s A33 mul sub def
+	/A31 s A11 mul c A31 mul add def
+	/A32 s A12 mul c A32 mul add def
+	/A33 s A13 mul c A33 mul add def
+	/A11 nA11 def  /A12 nA12 def  /A13 nA13 def  } def
+
+/rotyz
+{	% rodamos com n graus no plano yz
+	dup cos /c exch def
+	sin /s exch def
+	% A21 = c A21 - s A31
+	% A22 = c A22 - s A32
+	% A23 = c A23 - s A33
+	% A31 = s A21 + c A31
+	% A32 = s A22 + c A32
+	% A33 = s A23 + c A33
+	/nA21 c A21 mul s A31 mul sub def
+	/nA22 c A22 mul s A32 mul sub def
+	/nA23 c A23 mul s A33 mul sub def
+	/A31 s A21 mul c A31 mul add def
+	/A32 s A22 mul c A32 mul add def
+	/A33 s A23 mul c A33 mul add def
+	/A21 nA21 def  /A22 nA22 def  /A23 nA23 def  } def
+
+/proj
+{	% primeiro rodamos o boneco
+	% depois projectamos eliminando simplesmente a segunda coordenada
+	/z exch def  /y exch def  /x exch def
+	A11 x mul A12 y mul add A13 z mul add
+	A31 x mul A32 y mul add A33 z mul add   } def
+
+% para desenhar um circulo, fazemos oito curvas Bezier
+% recebemos o centro e um vector ortogonal ao plano do circulo
+% cuja norma e' igual ao raio do circulo
+
+% queremos oito vectores ortogonais a ( x y z )
+% observamos que ( y -x 0 ) ( z 0 -x ) ( 0 z -y ) sao ortogonais a ( x y z )
+% mas nao sao ortogonais entre si e alguns podem ser nulos
+% se tivermos dois desses tres vectores, v e w, fazemos a soma e a diferenca
+% entao v+u e v-u sao ortogonais entre si e tambem sao ortogonais a ( x y z )
+% temos entao tres candidatos a pares v+u, v-u
+% escolhemos o par que tiver min(|v+u|,|v-u|) maior
+
+/constroi_2_vec   % x y z sao usados como macros, nao na pilha !
+{	% v = ( y -x 0 )   w = ( z 0 -x )
+	/r1 0 def
+	/a1x y def /a1y x -1 mul def  /a1z 0 def
+	a1x a1y a1z normalizar 0 eq not {
+	/a1z exch def  /a1y exch def  /a1x exch def
+	/c1x z def /c1y 0 def  /c1z x -1 mul def
+	c1x c1y c1z normalizar 0 eq not {
+	/c1z exch def  /c1y exch def  /c1x exch def
+	/ra a1x c1x add dup mul a1y c1y add dup mul add a1z c1z add dup mul add def  % |v+w|
+	/rb a1x c1x sub dup mul a1y c1y sub dup mul add a1z c1z sub dup mul add def  % |v-w|
+	ra rb lt { ra } { rb } ifelse /r1 exch def } if } if
+	% v = ( -y x 0 )   w = ( 0 z -y )
+	/r2 0 def
+	/a2x y -1 mul def /a2y x def  /a2z 0 def
+	a2x a2y a2z normalizar 0 eq not {
+	/a2z exch def  /a2y exch def  /a2x exch def
+	/c2x 0 def /c2y z def  /c2z y -1 mul def
+	c2x c2y c2z normalizar 0 eq not {
+	/c2z exch def  /c2y exch def  /c2x exch def
+	/ra a2x c2x add dup mul a2y c2y add dup mul add a2z c2z add dup mul add def  % |v+w|
+	/rb a2x c2x sub dup mul a2y c2y sub dup mul add a2z c2z sub dup mul add def  % |v-w|
+	ra rb lt { ra } { rb } ifelse /r2 exch def } if } if
+	% v = ( z 0 -x )   w = ( 0 z -y )
+	/r3 0 def
+	/a3x z def /a3y 0 def  /a3z x -1 mul def
+	a3x a3y a3z normalizar 0 eq not {
+	/a3z exch def  /a3y exch def  /a3x exch def
+	/c3x 0 def /c3y z def  /c3z y -1 mul def
+	c3x c3y c3z normalizar 0 eq not {
+	/c3z exch def  /c3y exch def  /c3x exch def
+	/ra a3x c3x add dup mul a3y c3y add dup mul add a3z c3z add dup mul add def  % |v+w|
+	/rb a3x c3x sub dup mul a3y c3y sub dup mul add a3z c3z sub dup mul add def  % |v-w|
+	ra rb lt { ra } { rb } ifelse /r3 exch def } if } if
+	r1 r2 gt
+	{	r1 r3 gt
+		{	% r1 is max
+			% v = ( y -x 0 )   w = ( z 0 -x )
+			/ax a1x def  /cx c1x def
+			/ay a1y def  /cy c1y def
+			/az a1z def  /cz c1z def          }
+		{	% r3 is max
+			% v = ( -z 0 x )   w = ( 0 z -y )
+			/ax a3x def  /cx c3x def
+			/ay a3y def  /cy c3y def
+			/az a3z def  /cz c3z def     } ifelse  }
+	{	r2 r3 gt
+		{	% r2 is max
+			% v = ( -y x 0 )   w = ( 0 z -y )
+			/ax a2x def  /cx c2x def
+			/ay a2y def  /cy c2y def
+			/az a2z def  /cz c2z def          }
+		{	% r3 is max
+			% v = ( -z 0 x )   w = ( 0 z -y )
+			/ax a3x def  /cx c3x def
+			/ay a3y def  /cy c3y def
+			/az a3z def  /cz c3z def     } ifelse  }
+	ifelse
+	/bx ax cx add def
+	/by ay cy add def
+	/bz az cz add def
+	bx by bz normalizar pop
+	/bz exch def /by exch def /bx exch def
+	/dx cx ax sub def
+	/dy cy ay sub def
+	/dz cz az sub def
+	dx dy dz normalizar pop
+	/dz exch def /dy exch def /dx exch def                    }
+def
+
+/normalizar  % r e' usado como macro, nao na pilha !
+{	/zz exch def  /yy exch def  /xx exch def
+	/norm xx xx mul yy yy mul add zz zz mul add sqrt def
+	norm 0 eq not
+	{	xx norm div r mul   yy norm div r mul   zz norm div r mul  } if
+	norm
+}	def
+% deixa tres numeros na pilha
+
+/circulo
+{	/z exch def  /y exch def  /x exch def
+	/center_z exch def  /center_y exch def  /center_x exch def
+	/r x x mul y y mul add z z mul add sqrt def
+	constroi_2_vec  % precisa de x y z r
+	center_x ax add   center_y ay add   center_z az add   proj  moveto
+	center_x ax add cx seta mul add
+	center_y ay add cy seta mul add
+	center_z az add cz seta mul add   proj
+	center_x bx add dx seta mul sub
+	center_y by add dy seta mul sub
+	center_z bz add dz seta mul sub   proj
+	center_x bx add   center_y by add   center_z bz add   proj  curveto
+	center_x bx add dx seta mul add
+	center_y by add dy seta mul add
+	center_z bz add dz seta mul add   proj
+	center_x cx add ax seta mul add
+	center_y cy add ay seta mul add
+	center_z cz add az seta mul add   proj
+	center_x cx add   center_y cy add   center_z cz add   proj  curveto
+	center_x cx add ax seta mul sub
+	center_y cy add ay seta mul sub
+	center_z cz add az seta mul sub   proj
+	center_x dx add bx seta mul add
+	center_y dy add by seta mul add
+	center_z dz add bz seta mul add   proj
+	center_x dx add   center_y dy add   center_z dz add   proj  curveto
+	center_x dx add bx seta mul sub
+	center_y dy add by seta mul sub
+	center_z dz add bz seta mul sub   proj
+	center_x ax sub cx seta mul add
+	center_y ay sub cy seta mul add
+	center_z az sub cz seta mul add   proj
+	center_x ax sub   center_y ay sub   center_z az sub   proj  curveto
+	% semi-circle
+	center_x ax sub cx seta mul sub
+	center_y ay sub cy seta mul sub
+	center_z az sub cz seta mul sub   proj
+	center_x bx sub dx seta mul add
+	center_y by sub dy seta mul add
+	center_z bz sub dz seta mul add   proj
+	center_x bx sub   center_y by sub   center_z bz sub   proj  curveto
+	center_x bx sub dx seta mul sub
+	center_y by sub dy seta mul sub
+	center_z bz sub dz seta mul sub   proj
+	center_x cx sub ax seta mul sub
+	center_y cy sub ay seta mul sub
+	center_z cz sub az seta mul sub   proj
+	center_x cx sub   center_y cy sub   center_z cz sub   proj  curveto
+	center_x cx sub ax seta mul add
+	center_y cy sub ay seta mul add
+	center_z cz sub az seta mul add   proj
+	center_x dx sub bx seta mul sub
+	center_y dy sub by seta mul sub
+	center_z dz sub bz seta mul sub   proj
+	center_x dx sub   center_y dy sub   center_z dz sub   proj  curveto
+	center_x dx sub bx seta mul add
+	center_y dy sub by seta mul add
+	center_z dz sub bz seta mul add   proj
+	center_x ax add cx seta mul sub
+	center_y ay add cy seta mul sub
+	center_z az add cz seta mul sub   proj
+	center_x ax add   center_y ay add   center_z az add   proj  curveto
+} def
+
+%____________________________________________________________________________ 
+%____________________________________________________________________________ 
+

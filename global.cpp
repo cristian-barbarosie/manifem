@@ -396,6 +396,7 @@ void Mesh::draw_ps ( std::string file_name )
 
 //  method below uses some postscript macros for (very) rudimentary 3d drawings
 //  available at https://github.com/cristian-barbarosie/attic/blob/main/3d.ps
+//  you should include them at the beginning of the postscript file
 
 void Mesh::draw_ps_3d ( std::string file_name )
 	

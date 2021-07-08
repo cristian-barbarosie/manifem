@@ -1,5 +1,6 @@
 
 #include "maniFEM.h"
+#include <fstream>
 
 using namespace maniFEM;
 
@@ -10,23 +11,24 @@ bool opposite_signs ( double a, double b )
 
 void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
-{	assert ( Mesh::environment != NULL );
-	NumericField &coord = * ( Mesh::environment->coord_field );
-
-	assert (coord.size() == 2);
+{	// we use the current manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
 	// we split 'coord' into its components
-	OneDimField &x = coord[0], &y = coord[1];
+	Function x = coord[0],  y = coord[1];
 
 	double xmin, xmax, ymin, ymax, maxside;
 	
 	{ // just a block for hiding variables
-		CellIterator it = square.iter_over ( tag::cells, tag::of_dim, 0, tag::not_oriented );
+	CellIterator it = square.iterator ( tag::over_vertices );
 	it.reset(); assert ( it.in_range() );
-	Cell & Vfirst = *it;
+	Cell Vfirst = *it;
 	xmin = xmax = x(Vfirst);
 	ymin = ymax = y(Vfirst);	
 	for ( it++; it.in_range(); it++ )
-	{ Cell & V = *it; 
+	{ Cell V = *it; 
 		double xV = x(V), yV = y(V);
 		if ( xV < xmin ) xmin = xV;
 	  if ( xV > xmax ) xmax = xV;
@@ -55,36 +57,38 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	file_ps << translation_x << " " << translation_y << " translate" << std::endl;
 	file_ps << scale_factor << " " << scale_factor << " scale" << std::endl << std::endl;
 	
+	{ // just a block of code for hiding 'it'
 	file_ps << "gsave 0.004 setlinewidth" << std::endl;
-	std::list<Cell*>::iterator it = square.cells[1]->begin(),
-		e = square.cells[1]->end();
-	for ( ; it != e; it++)
-	{
-		Cell & seg = *(*it);
-		Cell & base = seg.base().reverse();
-		Cell & tip  = seg.tip();
+	CellIterator it = square.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++)
+	{	Cell seg = *it;
+		Cell base = seg.base().reverse();
+		Cell tip  = seg.tip();
 		file_ps << x(base) << " " << y(base) << " moveto" << std::endl;
-		file_ps << x(tip) << " " << y(tip) << " lineto stroke" << std::endl;
-	}
+		file_ps << x(tip) << " " << y(tip) << " lineto stroke" << std::endl;  }
+	} // just a block of code for hiding 'it'
 	
 #ifndef NDEBUG
+	{ // just a block of code for hiding 'it'
+	CellIterator it = square.iterator ( tag::over_vertices );
 	file_ps << "/Courier findfont 0.2 scalefont setfont" << std::endl;
-	it = square.cells[0]->begin();
-	e = square.cells[0]->end();
-	for ( ; it != e; it++)
-	{	Cell & p = *(*it);
-		if ( p.name() == "" ) continue;
-		file_ps << x(p) << " " << y(p) << " moveto (" << p.name() << ") show" << std::endl;  }
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell p = *it;
+		if ( p.core->name == "" ) continue;
+		file_ps << x(p) << " " << y(p) << " moveto (" << p.core->name << ") show" << std::endl;  }
+	} // just a block of code for hiding 'it'
 #endif
 
+	{ // just a block of code for hiding 'it'
 	file_ps << "0.8 0 0 setrgbcolor 0.007 setlinewidth" << std::endl;
-	CellIterator itt = cut.iter_over ( tag::segments, tag::along );
-	for ( itt.reset(); itt.in_range(); itt++ )
-	{	Cell & seg = *itt;
-		Cell & base = seg.base().reverse();
-		Cell & tip  = seg.tip();
+	CellIterator it = cut.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+		Cell base = seg.base().reverse();
+		Cell tip  = seg.tip();
 		file_ps << x(base) << " " << y(base) << " moveto" << std::endl;
 		file_ps << x(tip) << " " << y(tip) << " lineto stroke" << std::endl;  }		
+	} // just a block of code for hiding 'it'
 	
 	file_ps << "grestore" << std::endl;
 	file_ps << "grestore" << std::endl;
@@ -94,7 +98,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
 	if ( ! file_ps.good() )
 	{	std::cerr << "error writing postscript file" << std::endl;
-		exit (1);                                    }
+		exit (1);                                                  }
 
 } // end of special_draw
 
@@ -102,7 +106,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
 int main ()
 	
-{	Manifold RR2 ( tag::Euclid, tag::of_dim, 3 );
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
 
@@ -120,12 +124,17 @@ int main ()
 
 	double radius = 0.35;
 	Function psi = 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius );
+	Function psi_x = psi.deriv(x), psi_y = psi.deriv(y);
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y
+
+	Mesh cut ( tag::fuzzy, tag::of_dimension, 1 );  // empty mesh
 	
+	special_draw ( rect_mesh, cut, "square-cut.eps" );
+
 	std::cout << "reached end" << std::endl;
 	
 } // end of main
