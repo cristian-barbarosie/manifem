@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.08
+// mesh.h 2021.07.09
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -505,6 +505,7 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 		  const tag::NotOriented & no = tag::not_oriented ) const;
 	inline bool belongs_to ( const Mesh & msh, const tag::Oriented & ) const;
 	inline bool belongs_to ( const Mesh & msh, const tag::NotOriented & ) const;
+	inline bool belongs_to ( const Mesh & msh ) const;
 
 	// method 'glue_on_bdry_of' is intensively used when building a mesh
 	// it glues 'this' cell to the boundary of 'cll'
@@ -5068,7 +5069,15 @@ inline bool Cell::belongs_to ( const Mesh & msh, const tag::NotOriented & ) cons
 
 {	if ( this->dim() == msh.dim() )
 		return this->core->belongs_to ( msh.core, tag::same_dim, tag::not_oriented );
-	// this->dim() < msh.dim()
+	// else --
+	assert ( this->dim() < msh.dim() );
+	return this->core->belongs_to ( msh.core, tag::cell_has_low_dim, tag::not_oriented );  }
+
+
+inline bool Cell::belongs_to ( const Mesh & msh ) const
+
+{	assert ( this->dim() < msh.dim() );
+	// when the dimensions are equal, we require a more specific call
 	return this->core->belongs_to ( msh.core, tag::cell_has_low_dim, tag::not_oriented );  }
 
 //-----------------------------------------------------------------------------//
@@ -5641,3 +5650,5 @@ inline bool tag::Util::Core::dispose_query ( )
 }  // namespace maniFEM
 
 #endif  // ifndef MANIFEM_MESH_H
+
+//23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789

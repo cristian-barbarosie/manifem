@@ -33,8 +33,8 @@ int main ()
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
-	double radius = 0.35;
-	Function psi = 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius );
+	double radius = 0.37;
+	Function psi = - 0.5 * ( ( x*x + (y-0.15)*(y-0.15) ) / radius - radius );
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -49,10 +49,110 @@ int main ()
 	
 	special_draw ( rect_mesh, cut, "square-cut.eps" );
 
-	std::cout << "reached end" << std::endl;
+	std::cout << "produced file square-cut.eps" << std::endl;
 	
 } // end of main
 	
+//-----------------------------------------------------------------------------------//
+
+
+bool join_two_opposite_segs
+( Mesh ambient, Mesh interf, Function psi,
+  Cell square, Cell seg1, Cell seg2       )
+
+{
+	return true;
+}
+	
+//-----------------------------------------------------------------------------------//
+
+
+bool join_two_parallel_segs
+( Mesh ambient, Mesh interf, Function psi,
+  Cell square, Cell seg1, Cell seg2       )
+
+// tries to "solve" the problem of a square having two disconnected segments of 'interf'
+// returns true is square "solved"
+	
+{
+	assert ( seg1.belongs_to ( square.boundary(), tag::oriented ) );
+	assert ( seg2.reverse().belongs_to ( square.boundary(), tag::oriented ) );
+	assert ( seg1.belongs_to ( interf, tag::oriented ) );
+	assert ( seg2.belongs_to ( interf, tag::oriented ) );
+	
+	if ( not ambient.cell_in_front_of ( seg1, tag::may_not_exist ). exists() )
+	// 'seg1' is on the boundary of 'ambient' - we may want to eliminate it
+	{	if ( not interf.cell_in_front_of ( seg2.tip(), tag::may_not_exist). exists() )
+		{	if ( std::abs ( psi ( seg1.base().reverse() ) ) >
+			     std::abs ( psi ( seg1.tip() ) )              )
+			{	seg1.remove_from_mesh ( interf );
+				square.boundary().cell_in_front_of(seg1.tip()).reverse()
+					.add_to_mesh ( interf );
+				return true;                                                 } 
+			else  // abs(psi) the other way around
+				if ( interf.cell_behind ( seg2.base().reverse(), tag::may_not_exist ). exists() )
+				{	seg1.remove_from_mesh ( interf );
+					seg2.remove_from_mesh ( interf );
+					square.boundary().cell_in_front_of ( seg2.base().reverse() )
+						.add_to_mesh ( interf );
+					return true;                                                  }                 }
+		if ( not interf.cell_behind ( seg2.base().reverse(), tag::may_not_exist). exists() )
+		{	if ( std::abs ( psi ( seg1.base().reverse() ) ) <
+			     std::abs ( psi ( seg1.tip() ) )              )
+			{	seg1.remove_from_mesh ( interf );
+				square.boundary().cell_behind(seg1.base().reverse()).reverse()
+					.add_to_mesh ( interf );
+				return true;                                                   }
+			else  // abs(psi) the other way around
+				if ( interf.cell_in_front_of ( seg2.tip(), tag::may_not_exist ). exists() )
+				{	seg1.remove_from_mesh ( interf );
+					seg2.remove_from_mesh ( interf );
+					square.boundary().cell_in_front_of ( seg1.tip() )
+						.add_to_mesh ( interf );
+					return true;                                                  }                 }
+	}
+	
+	if ( not ambient.cell_behind ( seg2, tag::may_not_exist ). exists() )
+	// 'seg2' is on the boundary of 'ambient' - we may want to eliminate it
+	{	std::cout << " ** 1 ** " << std::endl;
+		if ( not interf.cell_in_front_of ( seg1.tip(), tag::may_not_exist). exists() )
+		{	if ( std::abs ( psi ( seg2.base().reverse() ) ) >
+			     std::abs ( psi ( seg1.tip() ) )              )
+			{	std::cout << " ** 2 ** " << std::endl;
+				seg2.remove_from_mesh ( interf );
+				square.boundary().cell_behind(seg2.tip())
+					.add_to_mesh ( interf );
+				return true;                                                 } 
+			else  // abs(psi) the other way around
+				if ( interf.cell_behind ( seg1.base().reverse(), tag::may_not_exist ). exists() )
+				{	std::cout << " ** 3 ** " << std::endl;
+					seg1.remove_from_mesh ( interf );
+					seg2.remove_from_mesh ( interf );
+					square.boundary().cell_in_front_of ( seg1.base().reverse() )
+						.add_to_mesh ( interf );
+					return true;                                                  }                 }
+		if ( not interf.cell_behind ( seg1.base().reverse(), tag::may_not_exist). exists() )
+		{	if ( std::abs ( psi ( seg2.base().reverse() ) ) <
+			     std::abs ( psi ( seg2.tip() ) )              )
+			{	std::cout << " ** 4 ** " << std::endl;
+				seg2.remove_from_mesh ( interf );
+				square.boundary().cell_in_front_of(seg2.base().reverse())
+					.add_to_mesh ( interf );
+				return true;                                                   }
+			else  // abs(psi) the other way around
+				if ( interf.cell_in_front_of ( seg1.tip(), tag::may_not_exist ). exists() )
+				{	std::cout << " ** 5 ** " << std::endl;
+					seg1.remove_from_mesh ( interf );
+					seg2.remove_from_mesh ( interf );
+					square.boundary().cell_in_front_of ( seg2.tip() )
+						.add_to_mesh ( interf );
+					return true;                                                  }                 }
+	}
+	
+	
+	return true;
+}
+
 //-----------------------------------------------------------------------------------//
 
 
@@ -74,6 +174,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	// we run over all segments of 'ambient' mesh
 	// looking for those where psi changes sign
 
+	int counter = 0;
 	{ // just a block of code for hiding 'it'
 	CellIterator it = ambient.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
@@ -86,6 +187,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		// but we must choose between 'seg' and 'seg.reverse()'
 		// we choose the orientation such that the gradient of psi
 		// points to the right hand side
+		counter ++;
 		double dx = x(B) - x(A);
 		double dy = y(B) - y(A);
 		double gx = psi_x(A);
@@ -97,6 +199,8 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	// at this moment we have a mesh 'interf' but it is highly disconnected
 	// if you want to see it, uncomment next line
 	// return interf;
+
+	// eliminar segmentos na fronteira de 'ambient' !!
 	
 	// in order to close the curve,
 	// we must add some other segments, although psi does not change sign there
@@ -121,7 +225,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		if ( sq.exists() ) set_of_squares.insert ( sq );                                }
 	} // just a block of code for hiding 'it'
 
-	std::cout << "we found " << set_of_squares.size() << " squares, ";
+	std::cout << "found " << set_of_squares.size() << " squares, ";
 	
 	while ( true )
 	{	std::forward_list<Cell> to_eliminate;
@@ -129,20 +233,58 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		for ( it_set = set_of_squares.begin(); it_set != set_of_squares.end(); it_set++ )
 		{	Cell sq = *it_set;
 			bool elim = false;
-			CellIterator it = sq.boundary().iterator ( tag::over_vertices );
-			for ( it.reset(); it.in_range(); it++ )
-			{	Cell P = *it;
-				elim = elim or P.belongs_to ( interf ); }
+			CellIterator it_ver = sq.boundary().iterator ( tag::over_vertices );
+			for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+			{	Cell P = *it_ver;
+				elim = elim or not P.belongs_to ( interf ); }
 			if ( elim )
 			{	to_eliminate.push_front ( sq );  continue;  }                           }
 		std::forward_list<Cell>::iterator it_list;
 		//  can we use a list of iterators over set_of_squares ?
-		for ( it_list = to_eliminate.begin(); it_list != to eliminate.end(); it_list++ )
-		{	Cell sq = *it_set;  set_of_squares.erase ( sq );  }
-		break;                                                                           }
+		for ( it_list = to_eliminate.begin(); it_list != to_eliminate.end(); it_list++ )
+		{	Cell sq = *it_list;  set_of_squares.erase ( sq );  }
+		to_eliminate.clear();
+		for ( it_set = set_of_squares.begin(); it_set != set_of_squares.end(); it_set++ )
+		{	Cell sq = *it_set;
+			CellIterator it_seg = sq.boundary().iterator ( tag::over_segments );
+			int found = 0;
+			Cell seg1 ( tag::non_existent );
+			for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+			{	seg1 = *it_seg;
+				if ( seg1.belongs_to ( interf, tag::oriented ) )
+				{	found = 1;  break;  }
+				if ( seg1.reverse().belongs_to ( interf, tag::oriented ) )
+				{	found = -1;  break;  }                                    }
+			assert ( found != 0 );
+			Cell seg2 = sq.boundary().cell_in_front_of ( seg1.tip() );
+			seg2 = sq.boundary().cell_in_front_of ( seg2.tip() );
+			assert ( seg2.belongs_to ( interf, tag::oriented ) or
+			         seg2.reverse().belongs_to ( interf, tag::oriented ) );
+			if ( seg1.reverse().belongs_to ( interf, tag::oriented ) and
+			     seg2.reverse().belongs_to ( interf, tag::oriented )     )
+				if ( join_two_opposite_segs
+				     ( ambient, interf, psi, sq, seg1.reverse(), seg2.reverse() ) )
+					to_eliminate.push_front ( sq );
+			if ( seg1.belongs_to ( interf, tag::oriented ) and
+			     seg2.belongs_to ( interf, tag::oriented )     )
+				if ( join_two_opposite_segs ( ambient, interf, psi, sq, seg1, seg2 ) )
+					to_eliminate.push_front ( sq );
+			if ( seg1.belongs_to ( interf, tag::oriented ) and
+			     seg2.reverse().belongs_to ( interf, tag::oriented ) )
+				if ( join_two_parallel_segs ( ambient, interf, psi, sq, seg1, seg2.reverse() ) )
+					to_eliminate.push_front ( sq );
+			if ( seg1.reverse().belongs_to ( interf, tag::oriented ) and
+			     seg2.belongs_to ( interf, tag::oriented           )     )
+				if ( join_two_parallel_segs
+				     ( ambient, interf, psi, sq, seg2, seg1.reverse() ) )
+					to_eliminate.push_front ( sq );                                     }
+		//  can we use a list of iterators over set_of_squares ?
+		for ( it_list = to_eliminate.begin(); it_list != to_eliminate.end(); it_list++ )
+		{	Cell sq = *it_list;  set_of_squares.erase ( sq );  }
+		if ( set_of_squares.size() == 0 ) break;                                          }
 
 	std::cout << "but only " << set_of_squares.size() << " are problematic" << std::endl;
-	
+
 	return interf;                                                       }
 
 //-----------------------------------------------------------------------------------//
