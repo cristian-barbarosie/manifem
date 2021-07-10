@@ -54,7 +54,7 @@ int main ()
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y
 
-	compare_values_of comp_psi ( psi );
+	compare_values_of comp_psi ( -abs(psi) );
 	std::multiset < Cell, compare_values_of > m ( comp_psi );
 
 	CellIterator it = rect_mesh.iterator ( tag::over_vertices );

@@ -1,5 +1,5 @@
 
-// function.h 2021.04.18
+// function.h 2021.07.10
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1260,6 +1260,10 @@ inline Function Function::deriv ( const Function & x ) const  // derivative with
 
 
 namespace tag  {  struct Threshold { };  static const Threshold threshold;  }
+
+inline Function abs ( const Function & f )
+{	return Function ( tag::whose_core_is, new Function::Step
+      ( -f, tag::iff, f, tag::less_than, 0., f, tag::otherwise ) );  }
 
 inline Function sign_of ( const Function & f )
 {	return Function ( tag::whose_core_is, new Function::Step
