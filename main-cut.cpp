@@ -14,6 +14,18 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f );
 Mesh build_interface ( Mesh ambient, Function psi );
 
 
+//-----------------------------------------------------------------------------------//
+
+class compare_values_of
+
+{ public :
+	Function f;
+	inline compare_values_of ( const Function ff ) : f { ff } { }
+	inline bool operator() ( Cell A, Cell B ) const
+	{	return this->f(A) < this->f(B);  }   };
+
+//-----------------------------------------------------------------------------------//
+
 
 int main ()
 	
@@ -42,6 +54,17 @@ int main ()
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y
 
+	compare_values_of comp_psi ( psi );
+	std::multiset < Cell, compare_values_of > m ( comp_psi );
+
+	CellIterator it = rect_mesh.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ ) m.insert ( *it );
+	std::multiset<Cell,compare_values_of>::iterator itt;
+	for ( itt = m.begin(); itt != m.end(); itt++ )
+		std::cout << psi(*itt) << std::endl;
+
+	exit ( 0 );
+
 	Mesh cut = build_interface ( rect_mesh, psi );
 	// just finds the segments where the level line  psi == 0  passes
 
@@ -55,6 +78,7 @@ int main ()
 } // end of main
 	
 //-----------------------------------------------------------------------------------//
+
 
 
 bool join_two_opposite_segs
