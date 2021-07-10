@@ -48,7 +48,7 @@ int main ()
 
 	double radius = 0.41;
 	// std::cout << "radius = ";  std::cin >> radius;
-	Function psi = y - 0.2*x*x + 0.1;
+	Function psi = 0.5*x*x + (y-0.35)*(y-0.35) - 0.15 ;
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -446,8 +446,6 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		if ( sq.exists() ) set_of_squares.insert ( sq );                                }
 	} // just a block of code for hiding 'it'
 
-	std::cout << "found " << set_of_squares.size() << std::endl;
-
 	while ( set_of_squares.size() )  // while there are squares to "solve"
 
 	{	std::forward_list<Cell> list_of_squares;
@@ -478,9 +476,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	{	Cell seg = *it;
 		if ( ( not ambient.cell_in_front_of ( seg, tag::may_not_exist ) .exists() )
 		     or ( not ambient.cell_behind ( seg, tag::may_not_exist ) .exists()     ) )
-		{	assert ( ( not interf.cell_in_front_of ( seg.tip(), tag::may_not_exist ) .exists() )
-			  or ( not interf.cell_behind ( seg.base().reverse(), tag::may_not_exist ) .exists() ) );
-			list_of_segs.push_front ( seg );                                                }  }
+			list_of_segs.push_front ( seg );                                                }
 	std::forward_list<Cell>::iterator it_list;
 	for ( it_list = list_of_segs.begin(); it_list != list_of_segs.end(); it_list++ )
 		(*it_list).remove_from_mesh ( interf );
