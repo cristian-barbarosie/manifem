@@ -6,24 +6,14 @@
 using namespace maniFEM;
 
 
-bool opposite_signs ( double a, double b )
+inline bool opposite_signs ( double a, double b )
 {	return ( ( a >= 0. ) and ( b < 0. ) ) or ( ( a < 0. ) and ( b >= 0. ) );  }
 
 void special_draw ( Mesh & square, Mesh & cut, std::string f );
 
 Mesh build_interface ( Mesh ambient, Function psi );
 
-
-//-----------------------------------------------------------------------------------//
-
-
-class compare_values_of
-
-{ public :
-	Function f;
-	inline compare_values_of ( const Function ff ) : f { ff } { }
-	inline bool operator() ( Cell A, Cell B ) const
-	{	return this->f(A) < this->f(B);  }                          };
+void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi );
 
 //-----------------------------------------------------------------------------------//
 
@@ -55,17 +45,12 @@ int main ()
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y
 	// x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y
 
-	compare_values_of comp_psi ( -abs(psi) );
-	std::multiset < Cell, compare_values_of > m ( comp_psi );
-
-//	CellIterator it = rect_mesh.iterator ( tag::over_vertices );
-//	for ( it.reset(); it.in_range(); it++ ) m.insert ( *it );
-//	std::multiset<Cell,compare_values_of>::iterator itt;
-//	for ( itt = m.begin(); itt != m.end(); itt++ )
-//		std::cout << psi(*itt) << std::endl;
-
 	Mesh cut = build_interface ( rect_mesh, psi );
-	// just finds the segments where the level line  psi == 0  passes
+	// finds the segments where the level line  psi == 0  passes
+	// ensures connectedness
+
+	improve_interf_90 ( rect_mesh, cut, psi );
+	// reverts some of the angles
 
 	// improve_angles ( rect_mesh, psi, cut );
 	// splits some rectangles in two triangles
@@ -553,7 +538,49 @@ Mesh build_interface ( Mesh ambient, Function psi )
 
 //-----------------------------------------------------------------------------------//
 
+
+class compare_values_of
+
+{ public :
+	Function f;
+	inline compare_values_of ( const Function ff ) : f { ff } { }
+	inline bool operator() ( Cell A, Cell B ) const
+	{	return this->f ( A ) < this->f ( B );  }                     };
+
+//-----------------------------------------------------------------------------------//
+
+
+void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
+
+{	// we build a multi-set of vertices, ordered according to the values of psi
+	// more precisely, the first ones will be those where the absolute value of psi is large
+	// that's why we provide -abs(psi) as criterion for comparison
+
+	compare_values_of comp_psi ( -abs(psi) );
+	std::multiset < Cell, compare_values_of > ms ( comp_psi );
+
+	CellIterator it_ver = interf.iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ ) ms.insert ( *it_ver );
+
+	std::multiset<Cell,compare_values_of>::iterator it;
+	for ( it = ms.begin(); it != ms.end(); it++ )
+	{	Cell A = *it_ver;
+		Cell prev_seg = interf.cell_behind ( A, tag::may_not_exist );
+		if ( not prev_seg.exists() ) // we are at the boundary
+		{	Cell AB = interf.cell_in_front_of ( A, tag::surely_exists );
+			Cell AEFB = ambient.cell_in_front_of ( AB );
+			Cell ABDC = ambient.cell_behind ( AB );
+			Cell CA = ABDC.boundary().cell_behind ( A );
+			Cell A = CA.tip(), C = CA.base().reverse();
+			Cell B = AB.tip();
+			if ( abs ( psi ( CA.base().reverse() ) ) < abs ( psi ( A ) ) )
+				{	Cell BD = ABDC.boundary().cell_in_front_of ( B );
+					if ( BD.belongs_to ( interf, tag::oriented ) )
+}
 	
+//-----------------------------------------------------------------------------------//
+
+
 void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
 {	// we use the current manifold
