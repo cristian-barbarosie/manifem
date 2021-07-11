@@ -36,7 +36,7 @@ int main ()
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
-	double radius = 0.45;
+	double radius = 0.4;
 	// std::cout << "radius = ";  std::cin >> radius;
 	Function psi = 0.5 * ( ( x*x + (y-0.7)*(y-0.7) ) / radius - radius );
 
@@ -545,7 +545,7 @@ class compare_values_of
 	Function f;
 	inline compare_values_of ( const Function ff ) : f { ff } { }
 	inline bool operator() ( Cell A, Cell B ) const
-	{	return this->f ( A ) < this->f ( B );  }                     };
+	{	return this->f ( A ) > this->f ( B );  }                     };
 
 //-----------------------------------------------------------------------------------//
 
@@ -556,35 +556,24 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 	// more precisely, the first ones will be those where the absolute value of psi is large
 	// that's why we provide -abs(psi) as criterion for comparison
 
-	compare_values_of comp_psi ( -abs(psi) );
+	compare_values_of comp_psi ( abs(psi) );
 	std::multiset < Cell, compare_values_of > ms ( comp_psi );
 
 	CellIterator it_ver = interf.iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ ) ms.insert ( *it_ver );
 
-	std::cout << "----------------------------" << std::endl;
 	std::multiset<Cell,compare_values_of>::iterator it_ms = ms.begin();
-	for ( int i = 0; i < 20; i++ )
-	{ std::cout << psi(*it_ms) << std::endl; it_ms++;	 }
-	std::cout << "----------------------------" << std::endl;
-	it_ms = ms.begin();
-	//	for ( int i = 0; i < 10; i++ )
-	//	{ std::cout << psi(*it_ms) << std::endl; it_ms = ms.erase ( it_ms );	 }
-	std::cout << "----------------------------" << std::endl;
-	for ( int i = 0; i < 10; i++ )
-	{ std::cout << psi(*it_ms) << std::endl; it_ms++;	 }
-	std::cout << "----------------------------" << std::endl;
-
-	it_ms = ms.begin();
 	while ( it_ms != ms.end() )
+
 	{	Cell A = *it_ms;
-		if ( not A.belongs_to ( interf ) )
-		// the interface has moved away from A in the meanwhile
-		{	it_ms = ms.erase ( it_ms );  continue;  }
+		assert ( A.belongs_to ( interf ) );
+		
+		// suppose the interface has moved away from A in the meanwhile :
+		// {	it_ms = ms.erase ( it_ms );  continue;  }
+
 		Cell prev_seg = interf.cell_behind ( A, tag::may_not_exist );
 		if ( not prev_seg.exists() ) // we are at the boundary
 		{	Cell AB = interf.cell_in_front_of ( A, tag::surely_exists );
-			Cell AEFB = ambient.cell_in_front_of ( AB );
 			Cell ABDC = ambient.cell_behind ( AB );
 			Cell CA = ABDC.boundary().cell_behind ( A );
 			assert ( A == CA.tip() );
@@ -594,43 +583,111 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 			if ( BD.belongs_to ( interf, tag::oriented ) )
 			if ( ( abs ( psi ( C ) ) < abs ( psi ( A ) ) ) and
 			     ( abs ( psi ( C ) ) < abs ( psi ( B ) ) )     )
-				// we give up A and B and insert C
-				{	AB.remove_from_mesh ( interf );
-					BD.remove_from_mesh ( interf );
-					Cell D = BD.tip();
-					Cell DC = ABDC.boundary().cell_in_front_of ( D );
-					assert ( DC.tip() == C );
-					DC.reverse().add_to_mesh ( interf );
-					ms.insert ( C );
-					it_ms = ms.erase ( it_ms );
-					continue;                                           }
+			// we give up A and B and insert C
+			{	AB.remove_from_mesh ( interf );
+				BD.remove_from_mesh ( interf );
+				std::cout << "improve_interf_90 a" << std::endl;
+				Cell D = BD.tip();
+				Cell DC = ABDC.boundary().cell_in_front_of ( D );
+				assert ( DC.tip() == C );
+				DC.reverse().add_to_mesh ( interf );
+				ms.insert ( C );
+				it_ms = ms.erase ( it_ms );
+				continue;                                           }
+			Cell AEFB = ambient.cell_in_front_of ( AB );
+			Cell FB = AEFB.boundary().cell_behind ( B );
+			Cell F = FB.base().reverse();
+			Cell EF = AEFB.boundary().cell_behind ( F );
+			assert ( EF.tip() == F );
+			Cell E = EF.base().reverse();
+			if ( FB.reverse().belongs_to ( interf, tag::oriented ) )
+			if ( ( abs ( psi ( E ) ) < abs ( psi ( A ) ) ) and
+			     ( abs ( psi ( E ) ) < abs ( psi ( B ) ) )     )
+			// we give up A and B and insert E
+			{	AB.remove_from_mesh ( interf );
+				FB.reverse().remove_from_mesh ( interf );
+				std::cout << "improve_interf_90 b" << std::endl;
+				EF.add_to_mesh ( interf );
+				ms.insert ( E );
+				it_ms = ms.erase ( it_ms );
+				continue;                                           }
 		}  // end of if
+
 		Cell next_seg = interf.cell_in_front_of ( A, tag::may_not_exist );
 		if ( not next_seg.exists() ) // we are at the boundary
 		{	Cell BA = interf.cell_behind ( A, tag::surely_exists );
-
-			
-			Cell AEFB = ambient.cell_in_front_of ( AB );
-			Cell ABDC = ambient.cell_behind ( AB );
-			Cell CA = ABDC.boundary().cell_behind ( A );
-			assert ( A == CA.tip() );
-			Cell C = CA.base().reverse();
-			Cell B = AB.tip();
- 			Cell BD = ABDC.boundary().cell_in_front_of ( B );
-			if ( BD.belongs_to ( interf, tag::oriented ) )
+			Cell B = BA.base().reverse();
+			Cell BACD = ambient.cell_behind ( BA );
+			Cell DB = BACD.boundary().cell_behind ( B );
+			Cell D = DB.base().reverse();
+			Cell CD = BACD.boundary().cell_behind ( D );
+			assert ( CD.tip() == D );
+			Cell C = CD.base().reverse();
+			if ( DB.belongs_to ( interf, tag::oriented ) )
 			if ( ( abs ( psi ( C ) ) < abs ( psi ( A ) ) ) and
 			     ( abs ( psi ( C ) ) < abs ( psi ( B ) ) )     )
-				// we give up A and B and insert C
-				{	AB.remove_from_mesh ( interf );
-					BD.remove_from_mesh ( interf );
-					Cell D = BD.tip();
-					Cell DC = ABDC.boundary().cell_in_front_of ( D );
-					assert ( DC.tip() == C );
-					DC.reverse().add_to_mesh ( interf );
-					ms.insert ( C );
-					it_ms = ms.erase ( it_ms );
-					continue;                                           }
+			// we give up A and B and insert C
+			{	BA.remove_from_mesh ( interf );
+				DB.remove_from_mesh ( interf );
+				std::cout << "improve_interf_90 c" << std::endl;
+				CD.reverse().add_to_mesh ( interf );
+				ms.insert ( C );
+				it_ms = ms.erase ( it_ms );
+				continue;                                           }
+			Cell ABFE = ambient.cell_in_front_of ( BA );
+			Cell BF = ABFE.boundary().cell_in_front_of ( B );
+			Cell F = BF.tip();
+			Cell FE = ABFE.boundary().cell_in_front_of ( F );
+			assert ( FE.base() == F.reverse() );
+			Cell E = FE.tip();
+			if ( BF.reverse().belongs_to ( interf, tag::oriented ) )
+			if ( ( abs ( psi ( E ) ) < abs ( psi ( A ) ) ) and
+			     ( abs ( psi ( E ) ) < abs ( psi ( B ) ) )     )
+			// we give up A and B and insert E
+			{	BA.remove_from_mesh ( interf );
+				BF.reverse().remove_from_mesh ( interf );
+				std::cout << "improve_interf_90 d" << std::endl;
+				FE.add_to_mesh ( interf );
+				ms.insert ( E );
+				it_ms = ms.erase ( it_ms );
+				continue;                                           }
 		}  // end of if
+		Cell sq1 = ambient.cell_in_front_of ( next_seg ),
+		     sq2 = ambient.cell_behind ( next_seg ),
+		     sq3 = ambient.cell_in_front_of ( prev_seg ),
+		     sq4 = ambient.cell_behind ( prev_seg );
+		assert ( ( sq1 != sq2 ) and ( sq1 != sq4 ) and ( sq2 != sq3 ) and ( sq3 != sq4 ) );
+		if ( sq1 == sq3 )  // 'interf' turns right at A
+		{	Cell B = next_seg.tip();
+			Cell CB = sq1.boundary().cell_behind(B);
+			Cell C = CB.base().reverse();
+			if ( abs ( psi ( C ) ) < abs ( psi ( A ) ) )
+			{	prev_seg.remove_from_mesh ( interf );
+				next_seg.remove_from_mesh ( interf );
+				std::cout << "improve_interf_90 e" << std::endl;
+				Cell DC = sq1.boundary().cell_behind ( C );
+				DC.add_to_mesh ( interf );
+				CB.add_to_mesh ( interf );
+				ms.insert ( C );              
+				it_ms = ms.erase ( it_ms );
+				continue;                                           }
+		}  // end of if  sq1 == sq3
+		if ( sq2 == sq4 )  // 'interf' turns left at A
+		{	Cell B = next_seg.tip();
+			Cell BC = sq2.boundary().cell_in_front_of ( B );
+			Cell C = BC.tip();
+			if ( abs ( psi ( C ) ) < abs ( psi ( A ) ) )
+			{	prev_seg.remove_from_mesh ( interf );
+				next_seg.remove_from_mesh ( interf );
+				std::cout << "improve_interf_90 f" << std::endl;
+				Cell CD = sq2.boundary().cell_in_front_of ( C ); return;
+				CD.reverse().add_to_mesh ( interf );
+				BC.reverse().add_to_mesh ( interf );
+				ms.insert ( C );
+				it_ms = ms.erase ( it_ms );
+				continue;                                           }
+		}  // end of if  sq1 == sq3
+				
 		it_ms++;
 	} // end of while
 }
