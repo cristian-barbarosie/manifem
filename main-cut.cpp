@@ -46,9 +46,9 @@ int main ()
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
-	double radius = 0.41;
+	double radius = 0.45;
 	// std::cout << "radius = ";  std::cin >> radius;
-	Function psi = 0.5*x*x + (y-0.35)*(y-0.35) - 0.15 ;
+	Function psi = 0.5 * ( ( x*x + (y-0.7)*(y-0.7) ) / radius - radius );
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -81,8 +81,8 @@ int main ()
 
 void join_two_opposite_segs_pos
 ( Cell square, Cell seg1, Cell seg2, Mesh & ambient, Mesh & interf,
-  const Function psi, const Function dpsi_dx, const Function dpsi_dy,
-  std::set<Cell> & set_of_squares                                    )
+  const Function dpsi_dx, const Function dpsi_dy,
+  std::set<Cell> & set_of_squares                                  )
 
 {	assert ( seg1.belongs_to ( square.boundary(), tag::oriented ) );
 	assert ( seg2.belongs_to ( square.boundary(), tag::oriented ) );
@@ -142,8 +142,8 @@ void join_two_opposite_segs_pos
 
 void join_two_opposite_segs_neg
 ( Cell square, Cell seg1, Cell seg2, Mesh & ambient, Mesh & interf,
-  const Function psi, const Function dpsi_dx, const Function dpsi_dy,
-  std::set<Cell> & set_of_squares                                    )
+  const Function dpsi_dx, const Function dpsi_dy,
+  std::set<Cell> & set_of_squares                                  )
 
 {	assert ( seg1.reverse().belongs_to ( square.boundary(), tag::oriented ) );
 	assert ( seg2.reverse().belongs_to ( square.boundary(), tag::oriented ) );
@@ -203,8 +203,8 @@ void join_two_opposite_segs_neg
 
 void join_two_parallel_segs
 ( Cell square, Cell seg1, Cell seg2, Mesh & ambient, Mesh & interf,
-  const Function psi, const Function dpsi_dx, const Function dpsi_dy,
-  std::set<Cell> & set_of_squares                                    )
+  const Function dpsi_dx, const Function dpsi_dy,
+  std::set<Cell> & set_of_squares                                   )
 
 // tries to "solve" the problem of a square having two disconnected segments of 'interf'
 // returns true is square "solved" (will be eliminated by the calling functions)
@@ -332,8 +332,8 @@ void join_two_parallel_segs
 
 
 void try_to_solve_square ( Cell sq, Mesh & ambient, Mesh & interf,
-													 const Function psi, const Function psi_x, const Function psi_y,
-													 std::set<Cell> & set_of_squares                                 )
+													 const Function psi_x, const Function psi_y,
+													 std::set<Cell> & set_of_squares            )
 			
 { CellIterator it_seg = sq.boundary().iterator ( tag::over_segments );
 	int found = 0;
@@ -358,25 +358,90 @@ void try_to_solve_square ( Cell sq, Mesh & ambient, Mesh & interf,
 	if ( seg1.reverse().belongs_to ( interf, tag::oriented ) and
 			 seg2.reverse().belongs_to ( interf, tag::oriented )     )
 		if ( found == 1 ) join_two_opposite_segs_pos
-			( sq, seg1.reverse(), seg2.reverse(), ambient, interf, psi, psi_x, psi_y, set_of_squares );
+			( sq, seg1.reverse(), seg2.reverse(), ambient, interf, psi_x, psi_y, set_of_squares );
 		else join_two_opposite_segs_neg
-			( sq, seg1.reverse(), seg2.reverse(), ambient, interf, psi, psi_x, psi_y, set_of_squares );
+			( sq, seg1.reverse(), seg2.reverse(), ambient, interf, psi_x, psi_y, set_of_squares );
 	else if ( seg1.belongs_to ( interf, tag::oriented ) and
 	          seg2.belongs_to ( interf, tag::oriented )     )
 		if ( found == 1 ) join_two_opposite_segs_pos
-			( sq, seg1, seg2, ambient, interf, psi, psi_x, psi_y, set_of_squares );
+			( sq, seg1, seg2, ambient, interf, psi_x, psi_y, set_of_squares );
 		else join_two_opposite_segs_neg
-			( sq, seg1, seg2, ambient, interf, psi, psi_x, psi_y, set_of_squares );
+			( sq, seg1, seg2, ambient, interf, psi_x, psi_y, set_of_squares );
 	else if ( seg1.belongs_to ( interf, tag::oriented ) and
             seg2.reverse().belongs_to ( interf, tag::oriented ) )
 		join_two_parallel_segs
-			( sq, seg1, seg2.reverse(), ambient, interf, psi, psi_x, psi_y, set_of_squares );
+			( sq, seg1, seg2.reverse(), ambient, interf, psi_x, psi_y, set_of_squares );
 	else if ( seg1.reverse().belongs_to ( interf, tag::oriented ) and
             seg2.belongs_to ( interf, tag::oriented )               )
 		join_two_parallel_segs
-			( sq, seg2, seg1.reverse(), ambient, interf, psi, psi_x, psi_y, set_of_squares );
+			( sq, seg2, seg1.reverse(), ambient, interf, psi_x, psi_y, set_of_squares );
 
-}  // end of try_to_solve_square
+}  // end of  try_to_solve_square
+
+//-----------------------------------------------------------------------------------//
+
+inline void conditional_add
+( Cell seg, Mesh interf, const Function & psi_x, const Function & psi_y )
+
+// add a segment to the interface
+// in rare cases, we must eliminate some segment already in the interface
+// for the new segment to fit in
+	
+{	if ( seg.tip().belongs_to ( interf ) )
+	{	Cell other = interf.cell_behind ( seg.tip(), tag::may_not_exist );
+		if ( other.exists() )
+		{	// we use the current manifold
+			Manifold space = Manifold::working;
+			assert ( space.exists() );
+			Function coord = space.coordinates();
+			assert ( coord.nb_of_components() == 2 );
+			// we split 'coord' into its components
+			Function x = coord[0],  y = coord[1];
+			double seg_x = x ( seg.tip() ) - x ( seg.base().reverse() ),
+			       seg_y = y ( seg.tip() ) - y ( seg.base().reverse() ),
+			       other_x = x ( other.tip() ) - x ( other.base().reverse() ),
+			       other_y = y ( other.tip() ) - y ( other.base().reverse() ),
+			       psi_x_seg = psi_x ( seg.tip() ),
+			       psi_y_seg = psi_y ( seg.tip() ),
+			       psi_x_other = psi_x ( other.tip() ),
+			       psi_y_other = psi_y ( other.tip() );
+			double norm_seg = std::sqrt ( seg_x*seg_x + seg_y*seg_y ),
+			       norm_other = std::sqrt ( other_x*other_x + other_y*other_y );
+			if ( ( psi_x_seg * seg_y - psi_y_seg * seg_x ) / norm_seg <
+					 ( psi_x_other * other_y - psi_y_other * other_x ) / norm_other )
+				return;  // do not add new segment, keep old one 'other'
+			// else -- remove old segment for the new one to fit in
+			other.remove_from_mesh ( interf );                                    }  }
+
+	if ( seg.base().belongs_to ( interf ) )
+	{	Cell other = interf.cell_in_front_of ( seg.base().reverse(), tag::may_not_exist );
+		if ( other.exists() )
+		{	// we use the current manifold
+			Manifold space = Manifold::working;
+			assert ( space.exists() );
+			Function coord = space.coordinates();
+			assert ( coord.nb_of_components() == 2 );
+			// we split 'coord' into its components
+			Function x = coord[0],  y = coord[1];
+			double seg_x = x ( seg.tip() ) - x ( seg.base().reverse() ),
+			       seg_y = y ( seg.tip() ) - y ( seg.base().reverse() ),
+			       other_x = x ( other.tip() ) - x ( other.base().reverse() ),
+			       other_y = y ( other.tip() ) - y ( other.base().reverse() ),
+			       psi_x_seg = psi_x ( seg.base().reverse() ),
+			       psi_y_seg = psi_y ( seg.base().reverse() ),
+			       psi_x_other = psi_x ( other.base().reverse() ),
+			       psi_y_other = psi_y ( other.base().reverse() );
+			double norm_seg = std::sqrt ( seg_x*seg_x + seg_y*seg_y ),
+			       norm_other = std::sqrt ( other_x*other_x + other_y*other_y );
+			if ( ( psi_x_seg * seg_y - psi_y_seg * seg_x ) / norm_seg <
+					 ( psi_x_other * other_y - psi_y_other * other_x ) / norm_other )
+				return;  // do not add new segment, keep old one 'other'
+			// else -- remove old segment for the new one to fit in
+			other.remove_from_mesh ( interf );                                    }  }
+	
+	seg.add_to_mesh ( interf );
+	
+}  // end of  conditional_add 
 
 //-----------------------------------------------------------------------------------//
 
@@ -415,8 +480,8 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		double dy = y(B) - y(A);
 		double gx = psi_x(A);
 		double gy = psi_y(A);
-		if ( gx*dy > gy*dx ) seg.add_to_mesh ( interf );
-		else seg.reverse().add_to_mesh ( interf );                    }
+		if ( gx*dy > gy*dx ) conditional_add ( seg, interf, psi_x, psi_y );
+		else conditional_add ( seg.reverse(), interf, psi_x, psi_y );       }
 	} // just a block of code for hiding 'it'
 
 	// at this moment we have a mesh 'interf' but it is highly disconnected
@@ -464,7 +529,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		set_of_squares.clear();
 		std::forward_list<Cell>::iterator it_list;
 		for ( it_list = list_of_squares.begin(); it_list != list_of_squares.end(); it_list++ )
-			try_to_solve_square ( *it_list, ambient, interf, psi, psi_x, psi_y, set_of_squares );  }
+			try_to_solve_square ( *it_list, ambient, interf, psi_x, psi_y, set_of_squares );  }
 		// if not solved, *it will somehow appear later
 		// if solved, one or two new squares will be added to set_of_squares
 		
