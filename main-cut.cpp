@@ -562,20 +562,77 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 	CellIterator it_ver = interf.iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ ) ms.insert ( *it_ver );
 
-	std::multiset<Cell,compare_values_of>::iterator it;
-	for ( it = ms.begin(); it != ms.end(); it++ )
-	{	Cell A = *it_ver;
+	std::cout << "----------------------------" << std::endl;
+	std::multiset<Cell,compare_values_of>::iterator it_ms = ms.begin();
+	for ( int i = 0; i < 20; i++ )
+	{ std::cout << psi(*it_ms) << std::endl; it_ms++;	 }
+	std::cout << "----------------------------" << std::endl;
+	it_ms = ms.begin();
+	//	for ( int i = 0; i < 10; i++ )
+	//	{ std::cout << psi(*it_ms) << std::endl; it_ms = ms.erase ( it_ms );	 }
+	std::cout << "----------------------------" << std::endl;
+	for ( int i = 0; i < 10; i++ )
+	{ std::cout << psi(*it_ms) << std::endl; it_ms++;	 }
+	std::cout << "----------------------------" << std::endl;
+
+	it_ms = ms.begin();
+	while ( it_ms != ms.end() )
+	{	Cell A = *it_ms;
+		if ( not A.belongs_to ( interf ) )
+		// the interface has moved away from A in the meanwhile
+		{	it_ms = ms.erase ( it_ms );  continue;  }
 		Cell prev_seg = interf.cell_behind ( A, tag::may_not_exist );
 		if ( not prev_seg.exists() ) // we are at the boundary
 		{	Cell AB = interf.cell_in_front_of ( A, tag::surely_exists );
 			Cell AEFB = ambient.cell_in_front_of ( AB );
 			Cell ABDC = ambient.cell_behind ( AB );
 			Cell CA = ABDC.boundary().cell_behind ( A );
-			Cell A = CA.tip(), C = CA.base().reverse();
+			assert ( A == CA.tip() );
+			Cell C = CA.base().reverse();
 			Cell B = AB.tip();
-			if ( abs ( psi ( CA.base().reverse() ) ) < abs ( psi ( A ) ) )
-				{	Cell BD = ABDC.boundary().cell_in_front_of ( B );
-					if ( BD.belongs_to ( interf, tag::oriented ) )
+ 			Cell BD = ABDC.boundary().cell_in_front_of ( B );
+			if ( BD.belongs_to ( interf, tag::oriented ) )
+			if ( ( abs ( psi ( C ) ) < abs ( psi ( A ) ) ) and
+			     ( abs ( psi ( C ) ) < abs ( psi ( B ) ) )     )
+				// we give up A and B and insert C
+				{	AB.remove_from_mesh ( interf );
+					BD.remove_from_mesh ( interf );
+					Cell D = BD.tip();
+					Cell DC = ABDC.boundary().cell_in_front_of ( D );
+					assert ( DC.tip() == C );
+					DC.reverse().add_to_mesh ( interf );
+					ms.insert ( C );
+					it_ms = ms.erase ( it_ms );
+					continue;                                           }
+		}  // end of if
+		Cell next_seg = interf.cell_in_front_of ( A, tag::may_not_exist );
+		if ( not next_seg.exists() ) // we are at the boundary
+		{	Cell BA = interf.cell_behind ( A, tag::surely_exists );
+
+			
+			Cell AEFB = ambient.cell_in_front_of ( AB );
+			Cell ABDC = ambient.cell_behind ( AB );
+			Cell CA = ABDC.boundary().cell_behind ( A );
+			assert ( A == CA.tip() );
+			Cell C = CA.base().reverse();
+			Cell B = AB.tip();
+ 			Cell BD = ABDC.boundary().cell_in_front_of ( B );
+			if ( BD.belongs_to ( interf, tag::oriented ) )
+			if ( ( abs ( psi ( C ) ) < abs ( psi ( A ) ) ) and
+			     ( abs ( psi ( C ) ) < abs ( psi ( B ) ) )     )
+				// we give up A and B and insert C
+				{	AB.remove_from_mesh ( interf );
+					BD.remove_from_mesh ( interf );
+					Cell D = BD.tip();
+					Cell DC = ABDC.boundary().cell_in_front_of ( D );
+					assert ( DC.tip() == C );
+					DC.reverse().add_to_mesh ( interf );
+					ms.insert ( C );
+					it_ms = ms.erase ( it_ms );
+					continue;                                           }
+		}  // end of if
+		it_ms++;
+	} // end of while
 }
 	
 //-----------------------------------------------------------------------------------//
