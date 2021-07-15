@@ -21,14 +21,11 @@ manifem-exe-%: iterator.o field.o finite-elem.o function.o global.o manifold.o m
 manifem-exe-12.10: main-12.10.o
 	$(CC) -o $@ -std=c++17 $^
 
+manifem-exe-test-%: iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o test-%.o progressive.o
+	$(CC) -o $@ -std=c++17 $^
+
 run-%: manifem-exe-%
 	./$<
-
-run-test: test
-	./$<
-
-test: test.o function.o mesh.o field.o global.o iterator.o manifold.o
-	$(CC) -o $@ -std=c++17 $^
 
 clean:
 	rm *.o manifem-exe-*
