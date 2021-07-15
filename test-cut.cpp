@@ -539,7 +539,10 @@ class compare_values_of
 
 { public :
 	Function f;
+
 	inline compare_values_of ( const Function ff ) : f { ff } { }
+
+	// we want large values of f first, so we define an inverted 'less-than' relation
 	inline bool operator() ( Cell A, Cell B ) const
 	{	return this->f ( A ) > this->f ( B );  }                     };
 
@@ -550,7 +553,6 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 
 {	// we build a multi-set of vertices, ordered according to the values of psi
 	// more precisely, the first ones will be those where the absolute value of psi is large
-	// that's why we provide -abs(psi) as criterion for comparison
 
 	compare_values_of comp_psi ( abs(psi) );
 	std::multiset < Cell, compare_values_of > ms ( comp_psi );
@@ -600,8 +602,9 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 			{	AB.remove_from_mesh ( interf );
 				FB.reverse().remove_from_mesh ( interf );
 				EF.add_to_mesh ( interf );
-				ms.insert ( E );                                  }
-			continue;                                                }
+				ms.insert ( E );
+				continue;                                                }
+			continue;                                                    }
 		// end of if
 
 		Cell next_seg = interf.cell_in_front_of ( A, tag::may_not_exist );
@@ -636,8 +639,9 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 			{	BA.remove_from_mesh ( interf );
 				BF.reverse().remove_from_mesh ( interf );
 				FE.add_to_mesh ( interf );
-				ms.insert ( E );                                  }
-			continue;                                                }
+				ms.insert ( E );
+				continue;                                                }
+			continue;                                                    }
 		// end of if
 
 		Cell sq1 = ambient.cell_in_front_of ( next_seg ),
@@ -660,8 +664,9 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 				{	DC.reverse().remove_from_mesh ( interf );  cd_ok = false;  }
 				if ( bc_ok ) CB.add_to_mesh ( interf );
 				if ( cd_ok ) DC.add_to_mesh ( interf );
-				ms.insert ( C );                                  }              
-			continue;                                                }
+				ms.insert ( C );
+				continue;                                                }
+			continue;                                                        }
 		// end of if  sq1 == sq3
 
 		if ( sq2 == sq4 )  // 'interf' turns left at A
@@ -679,9 +684,10 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 				{	CD.remove_from_mesh ( interf );  cd_ok = false;  }
 				if ( bc_ok ) BC.reverse().add_to_mesh ( interf );
 				if ( cd_ok ) CD.reverse().add_to_mesh ( interf );
-				ms.insert ( C );                                  }              
-			continue;                                                }
-		// end of if  sq1 == sq3
+				ms.insert ( C );
+				continue;                                                }
+			continue;                                                        }
+		// end of if  sq2 == sq4
 	} // end of while
 
 }  // end of  improve_interf_90
