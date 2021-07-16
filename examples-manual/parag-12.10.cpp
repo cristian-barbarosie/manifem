@@ -97,10 +97,10 @@ int main ()
 
 	cloud.remove ( cloud.root );
 
-	std::cout << "arrows not drawn, see comments in main-9.15.cpp" << std::endl;
+	std::cout << "arrows not drawn, see comments in examples-manual/parag-12.10.cpp" << std::endl;
 	// in order to get arrows, go to 'draw_arrows' in metric-tree-verbose.h and
-	// replace 'lineto' by 'Lineto^', then 'make run-9.15',
-	// then copy the definitions of 'ArrowHead' and 'Lineto^' from 3d.ps into metric-tree.eps
+	// replace 'lineto' by 'Lineto^', then 'make run-12.10',
+	// then copy the definitions of 'ArrowHead' and 'Lineto^' from arrows.ps into metric-tree.eps
 
 	std::cout << "produced file metric-tree.eps" << std::endl;
 }
