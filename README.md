@@ -14,7 +14,7 @@ ManiFEM is just a collection of C++ classes. It has no user-friendly interface n
 The user should have some understanding of programming and of C++. 
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
 
-In its current version, release 21.06, maniFEM works well for mesh generation. 
+In its current version, release 21.07, maniFEM works well for mesh generation. 
 Quotient manifolds (section 7 in the manual) and anisotropic Riemann metrics (paragraph 3.24 in the manual) are not yet implemented. 
 Variational formulations (section 5 in the manual) are not yet implemented. 
 Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now. 
@@ -25,11 +25,11 @@ A component of maniFEM, [MetricTree](https://github.com/cristian-barbarosie/Metr
 ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com), [Sérgio Lopes](mailto:slopes@adm.isel.pt)
 and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com); see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
 
-To learn maniFEM, you should read the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.06).
+To learn maniFEM, you should read the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.07).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
-and download `src-only.tar.gz` (latest code might be unstable; the releases are stable).
-Copy all files from `src-only.tar.gz` to some directory in your computer.
+and download all files to some directory in your computer.
+Latest code might be unstable; the releases are stable.
 To check which version of maniFEM is installed in your computer, see at the beginning of the file `maniFEM.h`.
 You can then run the examples in the manual : just `make run-1.1` for the example in paragraph 1.1, 
 `make run-2.5` for the example in paragraph 2.5, and so on.
