@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.09
+// mesh.h 2021.07.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -5422,6 +5422,7 @@ inline Cell::PositiveHighDim::PositiveHighDim
 	( tag::whose_boundary_is,
 	  Mesh ( tag::whose_core_is,
 	         new Mesh::Connected::OneDim ( tag::with, 3, tag::segments,
+//         new Mesh::Fuzzy ( tag::of_dimension, 2, tag::minus_one,
 	                                       tag::one_dummy_wrapper       ),
 	         tag::freshly_created                                         ),
 	  tag::one_dummy_wrapper                                                )
@@ -5456,6 +5457,7 @@ inline Cell::PositiveHighDim::PositiveHighDim
 	( tag::whose_boundary_is,
 	  Mesh ( tag::whose_core_is,
 	         new Mesh::Connected::OneDim ( tag::with, 4, tag::segments,
+//         new Mesh::Fuzzy ( tag::of_dimension, 2, tag::minus_one,
 	                                       tag::one_dummy_wrapper       ),
 	         tag::freshly_created                                         ),
 	  tag::one_dummy_wrapper                                                )

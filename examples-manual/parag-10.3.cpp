@@ -1,4 +1,9 @@
 
+// example presented in paragraph 10.3 of the manual
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+// in a mesh of squares, cuts some of the squares in two triangles
+
+
 #include "maniFEM.h"
 #include <fstream>
 #include <iostream>
@@ -11,7 +16,7 @@ int main ( )
 
 {	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
 	Function xyz = RR3.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xyz[0],  y = xyz[1], z= xyz[2] ;
+	Function x = xyz[0], y = xyz[1], z = xyz[2] ;
 	
 	Cell A ( tag::vertex ); x(A) = 0. ; y(A) = 0.; z(A) = 0. ;
 	Cell B ( tag::vertex ); x(B) = 1. ; y(B) = 0.; z(B) = 0. ;
@@ -23,31 +28,26 @@ int main ( )
 	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 20);
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 20);
 	
-//	Mesh border ( tag::join, AB)
-
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA) ;
 	
 	Function Psi = (x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) - 0.09 ;
 
-	std::map < Cell::Core *, size_t > numbering;
-	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
-	size_t counter = 0;
-	for ( it.reset() ; it.in_range(); it++ )
-	{	Cell p = *it;  ++counter;  numbering [p.core] = counter;  }
-	} // just a block of code 
+	//	std::map < Cell::Core *, size_t > numbering;
+	//	{ // just a block of code for hiding 'it' and 'counter'
+	//	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	//	size_t counter = 0;
+	//	for ( it.reset() ; it.in_range(); it++ )
+	//	{	Cell p = *it;  ++counter;  numbering [p.core] = counter;  }
+	//	} // just a block of code 
 
-	ABCD.export_msh ("square.msh", numbering);
-	std::cout << "produced file square.msh" << std::endl;
+	//	{ // just a block of code for hiding 'it' and 'counter'
+	//	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	//	for ( it.reset() ; it.in_range(); it++ )
+	//	{	Cell p = *it;  z(p) = Psi(p) ;  }
+	//	} // just a block of code 
 	
-	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
-	for ( it.reset() ; it.in_range(); it++ )
-	{	Cell p = *it;  z(p) = Psi(p) ;  }
-	} // just a block of code 
-	
-	ABCD.export_msh ("psi.msh", numbering);
-	std::cout << "produced file psi.msh" << std::endl;
+	//	ABCD.export_msh ("psi.msh", numbering);
+	//	std::cout << "produced file psi.msh" << std::endl;
 	
 //	{ // just a block of code for hiding variables
 //	ofstream solution_file ("square.msh", fstream::app );
@@ -102,7 +102,7 @@ int main ( )
 		}
 		assert (acerta == 2);
 		double porcent;
-		if (guarda_aresta[1]==guarda_aresta[0]+2) // arestas opostas
+		if (guarda_aresta[1]==guarda_aresta[0]+2) // opposite sides
 		{
 			porcent= (alpha[0]+beta[1])/2;
 		}
@@ -138,12 +138,12 @@ int main ( )
 				acerta = itt -> first;
 			}
 		}
-		abs_Psi.erase(acerta);
+		abs_Psi.erase ( acerta );
 		assert ( abs_Psi.size() == 2);
-		cout << "este quadrado sera cortado"<< " " ;
-		for ( map<int,double>::iterator itt = abs_Psi.begin(); itt != abs_Psi.end(); itt++)
-			cout << itt->first << " " ;
-		cout << endl;
+		//		cout << "this square will be cut in two halves"<< " " ;
+		//		for ( map<int,double>::iterator itt = abs_Psi.begin(); itt != abs_Psi.end(); itt++)
+		//			cout << itt->first << " " ;
+		//		cout << endl;
 		map<int,double>::iterator itt = abs_Psi.begin(); 
 
 
@@ -153,19 +153,19 @@ int main ( )
 		Cell PQ = square.boundary().cell_in_front_of(P);
 		Cell Q = PQ.tip();
 		if ( itt->first == 0 ) 
-		{	// corte na diagonal PR
+		{	// cut along diagonal PR
 			list_of_squares.push_back(square);
 			list_of_vertices.push_back(P);
 		}
 		else
 		{	assert ( itt-> first == 1 );
-			// corte na diagonal QS
+			// cut along diagonal QS
 			list_of_squares.push_back(square);
 			list_of_vertices.push_back(Q);
 		}
 	}
-	cout << "two lists, of lengths " << list_of_squares.size() << " "
-	     << list_of_vertices.size() << endl;
+	//	cout << "two lists, of lengths " << list_of_squares.size() << " "
+	//	     << list_of_vertices.size() << endl;
 	for ( list<Cell>::iterator it1 = list_of_squares.begin(),
         it2 = list_of_vertices.begin(); it1 != list_of_squares.end(); it1++, it2++ )
 	{	assert ( it2 != list_of_vertices.end() );
@@ -185,11 +185,10 @@ int main ( )
 		PQR.add_to_mesh ( ABCD );
 		Cell RSP ( tag::triangle, RS, SP, PR );
 		RSP.add_to_mesh ( ABCD );                            }
+	} // just a block of code 
 ////////////////////////////////////////////////////////////////
 
 	
-	ABCD.export_msh ("psi.msh", numbering);
-	std::cout << "produced file psi.msh" << std::endl << flush;
-	} // just a block of code 
-	cout << "acabou" << endl; 
+	ABCD.export_msh ( "cut-squares.msh" );
+	std::cout << "produced file cut-squares.msh" << std::endl;
 }
