@@ -1,5 +1,5 @@
 
-// metric-tree-verbose.h 2021.06.18
+// metric-tree-verbose.h 2021.07.16
 
 // this verbose version draws a PS file, shown in paragraph 12.10 in the manual of maniFEM
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
@@ -60,6 +60,7 @@
 // we prefer to work with squared distance (thus avoiding computing square roots)
 
 // see paragraph 12.10 in the manual of maniFEM
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 
 
 #include <iostream>
