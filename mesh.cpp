@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.07.06
+// mesh.cpp 2021.07.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2348,18 +2348,61 @@ void Cell::Negative::HighDim::remove_from_bdry ( Mesh::Core * msh )
 //-----------------------------------------------------------------------------//
 
 
-std::list<Cell>::iterator Mesh::Core::add_to_my_cells
+std::list<Cell>::iterator Mesh::ZeroDim::add_to_my_cells
 (	Cell::Core * const cll, const size_t d )
-// virtual, here returns garbage, overriden by Mesh::Fuzzy and later by Mesh::STSI
+// virtual from Mesh::Core, here execution forbidden
 
 // called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
 	
-{	return static_cast < std::list<Cell>::iterator > ( nullptr );  }
+{	assert ( d == 0 );  assert ( false );
+	return static_cast < std::list<Cell>::iterator > ( nullptr );     }
+
+
+std::list<Cell>::iterator Mesh::ZeroDim::add_to_my_cells
+(	Cell::Core * const cll, const size_t d, const tag::DoNotBother & )
+// virtual from Mesh::Core, here execution forbidden
+
+// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
+	
+{	assert ( d == 0 );  assert ( false );
+	return static_cast < std::list<Cell>::iterator > ( nullptr );     }
+
+
+std::list<Cell>::iterator Mesh::Connected::OneDim::add_to_my_cells
+(	Cell::Core * const cll, const size_t d )
+// virtual from Mesh::Core, here returns garbage
+// updates nb_of_segs, first_ver, last_ver
+
+// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
+	
+{	assert ( d <= 1 );
+	if ( d == 1 )
+	{	// we cannot add a segment to a closed loop :
+		assert ( this->last_ver != this->first_ver.reverse() );
+		assert ( ( cll->base().reverse() == this->last_ver ) or
+	           ( cll->tip() == this->first_ver.reverse() )    );
+		this->nb_of_segs++;
+		if ( cll->base().reverse() == this->last_ver )
+			this->last_ver = cll->tip();
+		else  // cll->tip() == this->first_ver.reverse()
+			this->first_ver = cll->base();                           }
+	return static_cast < std::list<Cell>::iterator > ( nullptr );     }
+
+
+std::list<Cell>::iterator Mesh::Connected::OneDim::add_to_my_cells
+(	Cell::Core * const cll, const size_t d, const tag::DoNotBother & )
+// virtual from Mesh::Core, here returns garbage
+// do not bother with nb_of_segs, first_ver, last_ver
+
+// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
+	
+{	assert ( d <= 1 );
+	return static_cast < std::list<Cell>::iterator > ( nullptr );  }
 
 
 std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 (	Cell::Core * cll, const size_t d )
-// virtual from Cell::Core, overriden here, later overriden again by Mesh::STSI
+// virtual from Mesh::Core, later overriden Mesh::STSI
 
 // called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
 
@@ -2368,31 +2411,108 @@ std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 {	assert ( d == cll->get_dim() );
 	assert ( d < this->get_dim_plus_one() );
 	std::list <Cell> & mcd = this->cells[d];
-	mcd.push_front ( Cell ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null ) );
-	return mcd.begin();                                                            }
+	mcd.push_front ( Cell ( tag::whose_core_is, cll,
+                          tag::previously_existing, tag::surely_not_null ) );
+	return mcd.begin();                                                          }
+
+
+std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
+(	Cell::Core * cll, const size_t d, const tag::DoNotBother & )
+// virtual from Mesh::Core
+// tag::do_not_bother makes no difference here, the body is the same as above
+
+// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
+
+// add a cell to 'this->cells[d]' list, return iterator into that list
+		
+{	assert ( d == cll->get_dim() );
+	assert ( d < this->get_dim_plus_one() );
+	std::list <Cell> & mcd = this->cells[d];
+	mcd.push_front ( Cell ( tag::whose_core_is, cll,
+                          tag::previously_existing, tag::surely_not_null ) );
+	return mcd.begin();                                                          }
 
 
 std::list<Cell>::iterator Mesh::STSI::add_to_my_cells
 (	Cell::Core * cll, const size_t d )
-// virtual from Cell::Core, overriden here a second time
+// virtual from Mesh::Core, defined by Mesh::Fuzzy, here overriden
 
 // called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
 
 // add a cell to 'this->cells[d]' list, return iterator into that list
 	
-{	return Mesh::Fuzzy::add_to_my_cells ( cll, d );  }
+{	return Mesh::Fuzzy::add_to_my_cells ( cll, d );  }  // will change
 
 
-void Mesh::Core::remove_from_my_cells
-(	Cell::Core *, const size_t, std::list<Cell>::iterator )
-// virtual, here does nothing, overriden by Mesh::Fuzzy and later by Mesh::STSI	
+void Mesh::ZeroDim::remove_from_my_cells
+(	Cell::Core * cll, const size_t d, std::list<Cell>::iterator )
+// virtual from Mesh::Core, here execution forbidden
+
 // called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
-{	}
+
+{	assert ( d == 0 );  assert ( false );  }
+
+
+void Mesh::ZeroDim::remove_from_my_cells
+(	Cell::Core * cll, const size_t d, std::list<Cell>::iterator, const tag::DoNotBother & )
+// virtual from Mesh::Core, here execution forbidden
+
+// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
+
+{	assert ( d == 0 );  assert ( false );  }
+
+
+void Mesh::Connected::OneDim::remove_from_my_cells
+(	Cell::Core * cll, const size_t d, std::list<Cell>::iterator )
+// virtual from Mesh::Core, here updates nb_of_segs, first_ver, last_ver
+
+// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
+
+{	assert ( d <= 1 );
+	if ( d == 1 )
+	{	assert ( this->nb_of_segs >= 2 );
+		this->nb_of_segs--;
+		// if we remove a segment from a closed loop, it will become open chain :
+		if ( this->last_ver == this->first_ver.reverse() )
+		{	this->last_ver = cll->base().reverse();
+			this->first_ver = cll->tip().reverse();  }
+		else  // open chain
+		{	assert ( ( cll->base() == this->first_ver ) or
+			         ( cll->tip() == this->last_ver )        );
+			if ( cll->base() == this->first_ver )
+				this->first_ver = cll->tip().reverse();
+			else  // cll->tip() == this->last_ver
+				this->last_ver = cll->base().reverse();            }  }  }
+
+
+void Mesh::Connected::OneDim::remove_from_my_cells
+(	Cell::Core * cll, const size_t d, std::list<Cell>::iterator, const tag::DoNotBother & )
+// virtual from Mesh::Core, here does nothing
+// do not bother with nb_of_segs, first_ver, last_ver
+
+// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
+
+{	assert ( d <= 1 );  }
 
 
 void Mesh::Fuzzy::remove_from_my_cells
 (	Cell::Core * cll, const size_t d, std::list<Cell>::iterator it )
-// virtual from Cell::Core, overriden here, later overriden again by Mesh::STSI
+// virtual from Cell::Core, later overriden by Mesh::STSI
+
+// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
+
+// remove a cell from 'this->cells[d]' list using the provided iterator
+
+{	assert ( d == cll->get_dim() );
+	assert ( d < this->get_dim_plus_one() );
+	assert ( it != this->cells[d].end() );
+	this->cells[d].erase(it);                  }
+
+
+void Mesh::Fuzzy::remove_from_my_cells
+(	Cell::Core * cll, const size_t d, std::list<Cell>::iterator it, const tag::DoNotBother & )
+// virtual from Cell::Core
+// tag::do_not_bother makes no difference here, the body is the same as above
 
 // called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
 

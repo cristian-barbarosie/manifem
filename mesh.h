@@ -33,8 +33,8 @@
 
 namespace maniFEM {
 
-// tags are used to distinguish between different versions of the same function
-// or method or constructor
+// tags are used to distinguish between different versions of the same
+// function or method or constructor
 // they create a sort of spoken language ...
 	
 namespace tag {  // see paragraph 11.3 in the manual
@@ -64,6 +64,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Fuzzy { };  static const Fuzzy fuzzy;
 	struct MayNotExist { };  static const MayNotExist may_not_exist;
 	struct DoNotBuildCells { };  static const DoNotBuildCells do_not_build_cells;
+	struct DoNotBother { };  static const DoNotBother do_not_bother;
 	struct SurelyExists { };  static const SurelyExists surely_exists;
 	struct CellsSurelyExist { };  static const CellsSurelyExist cells_surely_exist;
 	struct OfDimension { };  static const OfDimension of_dim;
@@ -2285,11 +2286,13 @@ class tag::Util::MeshCore
 
 	virtual Mesh::Core * build_deep_copy ( ) = 0;
 	
-	virtual std::list<Cell>::iterator add_to_my_cells ( Cell::Core * const, const size_t );
-	// returns garbage; overriden by Mesh::Fuzzy and later by Mesh::STSI
+	virtual std::list<Cell>::iterator add_to_my_cells ( Cell::Core * const, const size_t ) = 0;
+	virtual std::list<Cell>::iterator add_to_my_cells
+		( Cell::Core * const, const size_t, const tag::DoNotBother & ) = 0;
 
-	virtual void remove_from_my_cells ( Cell::Core * const, const size_t, std::list<Cell>::iterator );
-	// does nothing; overriden by Mesh::Fuzzy and later by Mesh::STSI
+	virtual void remove_from_my_cells ( Cell::Core * const, const size_t, std::list<Cell>::iterator ) = 0;
+	virtual void remove_from_my_cells
+		( Cell::Core * const, const size_t, std::list<Cell>::iterator, const tag::DoNotBother & ) = 0;
 		
 	// iterators defined in iterator.cpp
 	// we are still in class Mesh::Core
@@ -2819,8 +2822,15 @@ class Mesh::ZeroDim : public Mesh::Core
 
 	// we are still in class Mesh::ZeroDim
 	
-	// add_to_my_cells ( Cell::Core *, size_t )  defined by Cell::Core, returns garbage
-	// remove_from_my_cells defined by Cell::Core, does nothing
+	std::list<Cell>::iterator add_to_my_cells ( Cell::Core * const, const size_t );
+	std::list<Cell>::iterator add_to_my_cells
+		( Cell::Core * const, const size_t, const tag::DoNotBother & );
+	// virtual from Cell::Core, here execution forbidden
+
+	void remove_from_my_cells ( Cell::Core * const, const size_t, std::list<Cell>::iterator );
+	void remove_from_my_cells
+		( Cell::Core * const, const size_t, std::list<Cell>::iterator, const tag::DoNotBother & );
+	// virtual from Cell::Core, here execution forbidden
 	
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 
@@ -3312,7 +3322,7 @@ class Mesh::NotZeroDim : public Mesh::Core
 
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	// size_t get_dim_plus_one ( )  stay pure virtual from Mesh::Core
+	// size_t get_dim_plus_one ( )  stays pure virtual from Mesh::Core
 
 	// four versions of number_of  stay pure virtual from Mesh::Core
 
@@ -3343,8 +3353,8 @@ class Mesh::NotZeroDim : public Mesh::Core
 
 	Mesh::Core * build_deep_copy ( );  // virtual from Mesh::Core, execution forbidden for now
 
-	// add_to_my_cells ( Cell::Core *, size_t )  defined by Cell::Core, returns garbage
-	// remove_from_my_cells defined by Cell::Core, does nothing
+	// two versions of add_to_my_cells  stay pure virtual from Cell::Core
+	// two versions of remove_from_my_cells  stay pure virtual from Cell::Core
 
 	// iterators stay pure virtual from Mesh::Core
 
@@ -3412,9 +3422,20 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 
 	// Mesh::Core * build_deep_copy ( )  defined by Mesh::NotZeroDim, execution forbidden for now
 
-	// add_to_my_cells ( Cell::Core *, size_t )  defined by Cell::Core, returns garbage
-	// remove_from_my_cells defined by Cell::Core, does nothing
+	std::list<Cell>::iterator add_to_my_cells ( Cell::Core * const, const size_t );
+	// virtual from Cell::Core, here returns garbage, updates nb_of_segs, first_ver, last_ver
 
+	std::list<Cell>::iterator add_to_my_cells
+		( Cell::Core * const, const size_t, const tag::DoNotBother & );
+	// virtual from Cell::Core, here returns garbage
+
+	void remove_from_my_cells ( Cell::Core * const, const size_t, std::list<Cell>::iterator );
+	// virtual from Cell::Core, here only updates nb_of_segs, first_ver, last_ver
+	
+	void remove_from_my_cells
+		( Cell::Core * const, const size_t, std::list<Cell>::iterator, const tag::DoNotBother & );
+	// virtual from Cell::Core, here does nothing
+	
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 	
 	CellIterator::Core * iterator
@@ -4120,14 +4141,16 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 	// Mesh::Core * build_deep_copy ( )  defined by Mesh::NotZeroDim, execution forbidden for now
 
 	// add a cell to 'this->cells[d]' list, return iterator into that list
-	virtual std::list<Cell>::iterator add_to_my_cells
-	( Cell::Core * const cll, const size_t d ) override;
-	// virtual from Cell::Core, here overriden, later overriden again by Mesh::STSI
+	std::list<Cell>::iterator add_to_my_cells ( Cell::Core * const cll, const size_t d );
+	std::list<Cell>::iterator add_to_my_cells
+		( Cell::Core * const cll, const size_t d, const tag::DoNotBother & );
+	// virtual from Cell::Core, later overriden by Mesh::STSI
 	
 	// remove a cell from 'this->cells[d]' list using the provided iterator
-	virtual void remove_from_my_cells
-	( Cell::Core * const, const size_t d, std::list<Cell>::iterator );
-	// virtual from Cell::Core, here overriden, later overriden again by Mesh::STSI
+	void remove_from_my_cells ( Cell::Core * const, const size_t d, std::list<Cell>::iterator );
+	void remove_from_my_cells
+		( Cell::Core * const, const size_t d, std::list<Cell>::iterator, const tag::DoNotBother & );
+	// virtual from Cell::Core, later overriden by Mesh::STSI
 	
 	// we are still in class Mesh::Fuzzy
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
@@ -4658,12 +4681,12 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// add a cell to 'this->cells[d]' list, return iterator into that list
 	virtual std::list<Cell>::iterator add_to_my_cells
 	( Cell::Core * const cll, const size_t d ) override;
-	// virtual from Cell::Core, overriden by Mesh::Fuzzy, here overriden again
+	// virtual from Cell::Core, defined by Mesh::Fuzzy, here overriden
 
 	// remove a cell from 'this->cells[d]' list using the provided iterator
 	virtual void remove_from_my_cells
 	( Cell::Core * const, const size_t d, std::list<Cell>::iterator );
-	// virtual from Cell::Core, overriden by Mesh::Fuzzy, here overriden again
+	// virtual from Cell::Core, defined by Mesh::Fuzzy, here overriden
 
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 
