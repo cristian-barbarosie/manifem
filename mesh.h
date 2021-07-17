@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.16
+// mesh.h 2021.07.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -520,7 +520,9 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	// if 'msh' is the boundary of some cell, methods 'glue_on_bdry_of'
 	// and 'cut_from_bdry_of' (see above) should be used instead
 	inline void add_to_mesh ( Mesh & msh );
+	inline void add_to_mesh ( Mesh & msh, const tag::DoNotBother & );
 	inline void remove_from_mesh ( Mesh & msh );
+	inline void remove_from_mesh ( Mesh & msh, const tag::DoNotBother & );
 
 	// we are still in class Cell
 
@@ -1480,11 +1482,17 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	// It glues 'this' cell to the boundary of 'cll'.
 	inline void glue_on_bdry_of ( Cell::Core * cll )
 	{	cll->glue_on_my_bdry ( this );   }
+	inline void glue_on_bdry_of ( Cell::Core * cll, const tag::DoNotBother & )
+	{	cll->glue_on_my_bdry ( this, tag::do_not_bother );   }
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 
 	// Method 'cut_from_bdry_of' does the reverse : cuts 'this' cell from
 	// the boundary of 'cll'. Used mainly in remeshing.
 	inline void cut_from_bdry_of ( Cell::Core * cll )
 	{	cll->cut_from_my_bdry ( this );   }
+	inline void cut_from_bdry_of ( Cell::Core * cll, const tag::DoNotBother & )
+	{	cll->cut_from_my_bdry ( this, tag::do_not_bother );   }
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 	
 	// the two methods below are only relevant for vertices
 	// so we forbid execution for now and then override them in Cell::***tive::Vertex
@@ -1493,12 +1501,20 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 
 	// the five methods below are not relevant for vertices
   virtual void add_to_mesh ( Mesh::Core * msh ) = 0;
+  virtual void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & ) = 0;
 	virtual void remove_from_mesh ( Mesh::Core * msh ) = 0;
+	virtual void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & ) = 0;
   virtual void add_to_bdry ( Mesh::Core * msh ) = 0;
+  virtual void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & ) = 0;
 	virtual void remove_from_bdry ( Mesh::Core * msh ) = 0;
+	virtual void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & ) = 0;
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 
 	virtual void glue_on_my_bdry ( Cell::Core * ) = 0;
+	virtual void glue_on_my_bdry ( Cell::Core *, const tag::DoNotBother & ) = 0;
 	virtual void cut_from_my_bdry ( Cell::Core * ) = 0;
+	virtual void cut_from_my_bdry ( Cell::Core *, const tag::DoNotBother & ) = 0;
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 	// we feel that 'glue_on_bdry_of' and 'cut_from_bdry_of' are more readable
 	// so we suggest to use those (see above)
 
@@ -1699,13 +1715,19 @@ class Cell::PositiveVertex : public Cell::Positive
 	void add_to_seg ( Cell::Positive::Segment * seg ) override;
 	void remove_from_seg ( Cell::Positive::Segment * seg ) override;
 
-	// the seven methods below are virtual from Cell::Core, here execution forbidden
+	// the twelve methods below are virtual from Cell::Core, here execution forbidden
 	void add_to_mesh ( Mesh::Core * msh );
+	void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
 	void remove_from_mesh ( Mesh::Core * msh );
+	void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
   void add_to_bdry ( Mesh::Core * msh );
+  void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
 	void remove_from_bdry ( Mesh::Core * msh );
+	void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
 	void glue_on_my_bdry ( Cell::Core * );
+	void glue_on_my_bdry ( Cell::Core *, const tag::DoNotBother & );
 	void cut_from_my_bdry ( Cell::Core * );
+	void cut_from_my_bdry ( Cell::Core *, const tag::DoNotBother & );
 
 	// method below is virtual from Cell::Core
 	void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry );
@@ -1766,11 +1788,15 @@ class Cell::NegativeVertex : public Cell::Negative
 	void add_to_seg ( Cell::Positive::Segment * seg ) override;
 	void remove_from_seg ( Cell::Positive::Segment * seg ) override;
 
-	// the five methods below are virtual from Cell::Core, here execution forbidden
+	// the eight methods below are virtual from Cell::Core, here execution forbidden
 	void add_to_mesh ( Mesh::Core * msh );
+	void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
 	void remove_from_mesh ( Mesh::Core * msh );
+	void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
   void add_to_bdry ( Mesh::Core * msh );
+  void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
 	void remove_from_bdry ( Mesh::Core * msh );
+	void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
 
 	// glue_on_my_bdry  and  cut_from_my_bdry  defined by Cell:Negative
 	// compute_sign  defined by Cell::Negative, execution forbidden
@@ -1830,7 +1856,8 @@ class Cell::PositiveNotVertex : public Cell::Positive
 	// belongs_to (with tag::same_dim, tag::not_oriented )  defined by Cell::Core
 
 	// add_to_seg and remove_from seg defined by Cell::Core, execution forbidden
-	// add_to_mesh, remove_from_mesh, add_to_bdry, remove_from_bdry stay pure virtual from Cell::Core
+	// add_to_mesh, remove_from_mesh, add_to_bdry, remove_from_bdry
+	//   stay pure virtual from Cell::Core
 
 	inline void glue_common ( Cell::Core * face );
 	inline void cut_common ( Cell::Core * face );
@@ -1942,15 +1969,22 @@ class Cell::PositiveSegment : public Cell::Positive::NotVertex
 
 	// add_to_seg and remove_from seg defined by Cell::Core, execution forbidden
 
-	void add_to_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-  void add_to_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
-
-	void glue_on_my_bdry ( Cell::Core * ); // virtual from Cell::Core
-	void cut_from_my_bdry ( Cell::Core * ); // virtual from Cell::Core
+	// the twelve methods below are virtual from Cell::Core
+	void add_to_mesh ( Mesh::Core * msh );
+	void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_mesh ( Mesh::Core * msh );
+	void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+  void add_to_bdry ( Mesh::Core * msh );
+  void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_bdry ( Mesh::Core * msh );
+	void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	void glue_on_my_bdry ( Cell::Core * );
+	void glue_on_my_bdry ( Cell::Core *, const tag::DoNotBother & );
+	void cut_from_my_bdry ( Cell::Core * );
+	void cut_from_my_bdry ( Cell::Core *, const tag::DoNotBother & );
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim	
 	// we feel that 'glue_on_bdry_of' and 'cut_from_bdry_of' are more readable
-	// so we suggest to use those
+	// so we suggest to use those (see class Cell::Core)
 
 	// glue_common and cut_common  defined by Cell::Positive::NotVertex (inline)
 	// compute_sign  defined by Cell::Positive::NotVertex
@@ -2009,10 +2043,16 @@ class Cell::NegativeSegment : public Cell::Negative::NotVertex
 
 	// add_to_seg and remove_from seg defined by Cell::Core, execution forbidden
 
-	void add_to_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-  void add_to_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
+	// the eight methods below are virtual from Cell::Core
+	void add_to_mesh ( Mesh::Core * msh );
+	void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_mesh ( Mesh::Core * msh );
+	void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+  void add_to_bdry ( Mesh::Core * msh );
+  void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_bdry ( Mesh::Core * msh );
+	void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim	
 
 	// glue_on_my_bdry and cut_from_my_bdry  defined by Cell:Negative
 	// compute_sign  defined by Cell::Negative, execution forbidden
@@ -2096,13 +2136,20 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 
 	// add_to_seg and remove_from seg defined by Cell::Core, execution forbidden
 
-	void add_to_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-  void add_to_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
-
-	void glue_on_my_bdry ( Cell::Core * ); // virtual from Cell::Core
-	void cut_from_my_bdry ( Cell::Core * ); // virtual from Cell::Core
+	// the twelve methods below are virtual from Cell::Core
+	void add_to_mesh ( Mesh::Core * msh );
+	void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_mesh ( Mesh::Core * msh );
+	void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+  void add_to_bdry ( Mesh::Core * msh );
+  void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_bdry ( Mesh::Core * msh );
+	void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	void glue_on_my_bdry ( Cell::Core * );
+	void glue_on_my_bdry ( Cell::Core *, const tag::DoNotBother & );
+	void cut_from_my_bdry ( Cell::Core * );
+	void cut_from_my_bdry ( Cell::Core *, const tag::DoNotBother & );
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim	
 	// we feel that 'glue_on_bdry_of' and 'cut_from_bdry_of' are more readable
 	// so we suggest to use those (see class Cell::Core)
 
@@ -2168,10 +2215,16 @@ class Cell::NegativeHighDim : public Cell::Negative::NotVertex
 
 	// add_to_seg and remove_from seg defined by Cell::Core, execution forbidden
 
-	void add_to_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_mesh ( Mesh::Core * msh );  // virtual from Cell::Core
-  void add_to_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
-	void remove_from_bdry ( Mesh::Core * msh );  // virtual from Cell::Core
+	// the eight methods below are virtual from Cell::Core
+	void add_to_mesh ( Mesh::Core * msh );
+	void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_mesh ( Mesh::Core * msh );
+	void remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & );
+  void add_to_bdry ( Mesh::Core * msh );
+  void add_to_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	void remove_from_bdry ( Mesh::Core * msh );
+	void remove_from_bdry ( Mesh::Core * msh, const tag::DoNotBother & );
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim	
 
 	// glue_on_my_bdry  and  cut_from_my_bdry  defined by Cell:Negative
 	// compute_sign  defined by Cell::Negative, execution forbidden
@@ -5460,12 +5513,11 @@ inline Cell::PositiveHighDim::PositiveHighDim
 	assert ( BC.tip() == CA.base().reverse() );
 	assert ( CA.tip() == AB.base().reverse() );
 	// no need for glue_on_bdry_of : 'this' cell has just been created, it has no meshes above
-	// we call a add_to_mesh instead of add_to_bdry
-	// add_to_mesh will call methods as if the mesh were not a boundary
+	// we call add_to_mesh instead (as if the mesh were not a boundary)
 	assert  ( this->boundary().is_positive() );
-	AB.core->add_to_mesh ( this->boundary().core );
-	BC.core->add_to_mesh ( this->boundary().core );
-	CA.core->add_to_mesh ( this->boundary().core );
+	AB.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	BC.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	CA.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
 	Mesh::Connected::OneDim * bdry = tag::Util::assert_cast
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->boundary().core );
 	bdry->first_ver = AB.base();  // negative
@@ -5498,13 +5550,12 @@ inline Cell::PositiveHighDim::PositiveHighDim
 	assert ( CD.tip() == DA.base().reverse() );
 	assert ( DA.tip() == AB.base().reverse() );
 	// no need for glue_on_bdry_of : 'this' cell has just been created, it has no meshes above
-	// we call a add_to_mesh instead of add_to_bdry
-	// add_to_mesh will call methods as if the mesh were not a boundary
+	// we call add_to_mesh instead (as if the mesh were not a boundary)
 	assert  ( this->boundary().is_positive() );
-	AB.core->add_to_mesh ( this->boundary().core );
-	BC.core->add_to_mesh ( this->boundary().core );
-	CD.core->add_to_mesh ( this->boundary().core );
-	DA.core->add_to_mesh ( this->boundary().core );
+	AB.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	BC.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	CD.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	DA.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
 	Mesh::Connected::OneDim * bdry = tag::Util::assert_cast
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->boundary().core );
 	bdry->first_ver = AB.base();  // negative
@@ -5539,14 +5590,13 @@ inline Cell::PositiveHighDim::PositiveHighDim
 	assert ( DE.tip() == EA.base().reverse() );
 	assert ( EA.tip() == AB.base().reverse() );
 	// no need for glue_on_bdry_of : 'this' cell has just been created, it has no meshes above
-	// we call a add_to_mesh instead of add_to_bdry
-	// add_to_mesh will call methods as if the mesh were not a boundary
+	// we call add_to_mesh instead (as if the mesh were not a boundary)
 	assert  ( this->boundary().is_positive() );
-	AB.core->add_to_mesh ( this->boundary().core );
-	BC.core->add_to_mesh ( this->boundary().core );
-	CD.core->add_to_mesh ( this->boundary().core );
-	DE.core->add_to_mesh ( this->boundary().core );
-	EA.core->add_to_mesh ( this->boundary().core );
+	AB.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	BC.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	CD.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	DE.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	EA.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
 	Mesh::Connected::OneDim * bdry = tag::Util::assert_cast
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->boundary().core );
 	bdry->first_ver = AB.base();  // negative
@@ -5584,15 +5634,14 @@ inline Cell::PositiveHighDim::PositiveHighDim
 	assert ( EF.tip() == FA.base().reverse() );
 	assert ( FA.tip() == AB.base().reverse() );
 	// no need for glue_on_bdry_of : 'this' cell has just been created, it has no meshes above
-	// we call a simpler version of add_to_bdry, by providing tag::freshly_created
-	// add_to_bdry will call methods as if the mesh were not a boundary
+	// we call add_to_mesh instead (as if the mesh were not a boundary)
 	assert  ( this->boundary().is_positive() );
-	AB.core->add_to_mesh ( this->boundary().core );
-	BC.core->add_to_mesh ( this->boundary().core );
-	CD.core->add_to_mesh ( this->boundary().core );
-	DE.core->add_to_mesh ( this->boundary().core );
-	EF.core->add_to_mesh ( this->boundary().core );
-	FA.core->add_to_mesh ( this->boundary().core );
+	AB.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	BC.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	CD.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	DE.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	EF.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
+	FA.core->add_to_mesh ( this->boundary().core, tag::do_not_bother );
 	Mesh::Connected::OneDim * bdry = tag::Util::assert_cast
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->boundary().core );
 	bdry->first_ver = AB.base();  // negative
