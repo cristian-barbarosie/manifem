@@ -5,15 +5,18 @@
 
 using namespace maniFEM;
 
+int global_counter = 0;
 
 inline bool opposite_signs ( double a, double b )
-{	return ( ( a >= 0. ) and ( b < 0. ) ) or ( ( a < 0. ) and ( b >= 0. ) );  }
+{	return ( ( a >= 0. ) and ( b <= 0. ) ) or ( ( a <= 0. ) and ( b >= 0. ) );  }
 
 void special_draw ( Mesh & square, Mesh & cut, std::string f );
 
 Mesh build_interface ( Mesh ambient, Function psi );
 
 void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi );
+
+void improve_interf_135 ( Mesh ambient, Mesh interf, Function psi );
 
 //-----------------------------------------------------------------------------------//
 
@@ -29,14 +32,14 @@ int main ()
 	Cell C ( tag::vertex );  x(C) =  1.;  y(C) = 1.;
 	Cell D ( tag::vertex );  x(D) = -1.;  y(D) = 1.;
 
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 24 );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 12 );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 24 );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
+	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 30 );
+	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 15 );
+	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 30 );
+	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 15 );
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
-	// double radius = 0.4;
+	double radius = 0.4;
 	// std::cout << "radius = ";  std::cin >> radius;
 	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y;
 
@@ -49,10 +52,10 @@ int main ()
 	// finds the segments where the level line  psi == 0  passes
 	// ensures connectedness
 
-	improve_interf_90 ( rect_mesh, cut, psi );
+	// improve_interf_90 ( rect_mesh, cut, psi );
 	// reverts some of the angles
 
-	// improve_angles ( rect_mesh, psi, cut );
+	// improve_interf_135 ( rect_mesh, cut, psi );
 	// splits some rectangles in two triangles
 	
 	special_draw ( rect_mesh, cut, "square-cut.eps" );
@@ -372,17 +375,20 @@ inline void conditional_add
 // in rare cases, we must eliminate some segment already in the interface
 // for the new segment to fit in
 	
-{	if ( seg.tip().belongs_to ( interf ) )
-	{	Cell other = interf.cell_behind ( seg.tip(), tag::may_not_exist );
+{	// we use the current manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0],  y = coord[1];
+	
+	if ( seg.tip().belongs_to ( interf ) )
+	{	global_counter++;  std::cout << global_counter << " tip ";
+		std::cout << "(" << x(seg.tip()) << "," << y(seg.tip()) << ")" << std::endl;
+		Cell other = interf.cell_behind ( seg.tip(), tag::may_not_exist );
 		if ( other.exists() )
-		{	// we use the current manifold
-			Manifold space = Manifold::working;
-			assert ( space.exists() );
-			Function coord = space.coordinates();
-			assert ( coord.nb_of_components() == 2 );
-			// we split 'coord' into its components
-			Function x = coord[0],  y = coord[1];
-			double seg_x = x ( seg.tip() ) - x ( seg.base().reverse() ),
+		{	double seg_x = x ( seg.tip() ) - x ( seg.base().reverse() ),
 			       seg_y = y ( seg.tip() ) - y ( seg.base().reverse() ),
 			       other_x = x ( other.tip() ) - x ( other.base().reverse() ),
 			       other_y = y ( other.tip() ) - y ( other.base().reverse() ),
@@ -397,16 +403,16 @@ inline void conditional_add
 			other.remove_from_mesh ( interf );                                    }  }
 
 	if ( seg.base().belongs_to ( interf ) )
-	{	Cell other = interf.cell_in_front_of ( seg.base().reverse(), tag::may_not_exist );
+	{	global_counter++;  std::cout << global_counter << " base ";
+		std::cout << "(" << x(seg.base().reverse()) << ","
+							<< y(seg.base().reverse()) << ")" << std::endl;
+		Cell other = interf.cell_in_front_of ( seg.base().reverse(), tag::may_not_exist );
+		assert ( other.exists() );
+		other.remove_from_mesh ( interf );
+		seg.add_to_mesh ( interf );
+		global_counter = -10;  return;
 		if ( other.exists() )
-		{	// we use the current manifold
-			Manifold space = Manifold::working;
-			assert ( space.exists() );
-			Function coord = space.coordinates();
-			assert ( coord.nb_of_components() == 2 );
-			// we split 'coord' into its components
-			Function x = coord[0],  y = coord[1];
-			double seg_x = x ( seg.tip() ) - x ( seg.base().reverse() ),
+		{	double seg_x = x ( seg.tip() ) - x ( seg.base().reverse() ),
 			       seg_y = y ( seg.tip() ) - y ( seg.base().reverse() ),
 			       other_x = x ( other.tip() ) - x ( other.base().reverse() ),
 			       other_y = y ( other.tip() ) - y ( other.base().reverse() ),
@@ -462,12 +468,14 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		double gx = psi_x(A);
 		double gy = psi_y(A);
 		if ( gx*dy > gy*dx ) conditional_add ( seg, interf, psi_x, psi_y );
-		else conditional_add ( seg.reverse(), interf, psi_x, psi_y );       }
+		else conditional_add ( seg.reverse(), interf, psi_x, psi_y );
+		if ( global_counter == -10 ) return interf;
+	}
 	} // just a block of code for hiding 'it'
 
 	// at this moment we have a mesh 'interf' but it is highly disconnected
 	// if you want to see it, uncomment next line
-	// return interf;
+	return interf;
 
 	// in order to close the curve,
 	// we must add some other segments, although psi does not change sign there
@@ -551,7 +559,9 @@ class compare_values_of
 
 void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 
-{	// we build a multi-set of vertices, ordered according to the values of psi
+{	std::cout << "improve_interf_90" << std::endl;
+	
+	// we build a multi-set of vertices, ordered according to the values of psi
 	// more precisely, the first ones will be those where the absolute value of psi is large
 
 	compare_values_of comp_psi ( abs(psi) );
@@ -570,10 +580,11 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 
 		Cell prev_seg = interf.cell_behind ( A, tag::may_not_exist );
 		if ( not prev_seg.exists() )  // we are at the boundary
-		{	Cell AB = interf.cell_in_front_of ( A, tag::surely_exists );
+		{	std::cout << "we are at the boundary, not prev_seg.exists() " << std::endl;
+			Cell AB = interf.cell_in_front_of ( A, tag::surely_exists );
 			Cell ABDC = ambient.cell_behind ( AB );
 			Cell CA = ABDC.boundary().cell_behind ( A );
-			assert ( A == CA.tip() );
+			assert ( not ambient.cell_in_front_of ( CA, tag::may_not_exist ) .exists() );
 			Cell C = CA.base().reverse();
 			Cell B = AB.tip();
  			Cell BD = ABDC.boundary().cell_in_front_of ( B );
@@ -609,7 +620,8 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 
 		Cell next_seg = interf.cell_in_front_of ( A, tag::may_not_exist );
 		if ( not next_seg.exists() )  // we are at the boundary
-		{	Cell BA = interf.cell_behind ( A, tag::surely_exists );
+		{	std::cout << "we are at the boundary, not next_seg.exists()" << std::endl;
+			Cell BA = interf.cell_behind ( A, tag::surely_exists );
 			Cell B = BA.base().reverse();
 			Cell BACD = ambient.cell_behind ( BA );
 			Cell DB = BACD.boundary().cell_behind ( B );
@@ -650,47 +662,134 @@ void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi )
 		     sq4 = ambient.cell_behind ( prev_seg );
 	  assert ( ( sq1 != sq2 ) and ( sq1 != sq4 ) and ( sq2 != sq3 ) and ( sq3 != sq4 ) );
 		if ( sq1 == sq3 )  // 'interf' turns right at A
-		{	Cell B = next_seg.tip();
+		{	std::cout << "interf turns right" << std::endl;
+			Cell B = next_seg.tip();
 			Cell CB = sq1.boundary().cell_behind ( B );
 			Cell C = CB.base().reverse();
+			Cell DC = sq1.boundary().cell_behind ( C );
+			Cell D = DC.base().reverse();
+			assert ( D == prev_seg.base().reverse() );
 			if ( abs ( psi ( C ) ) < abs ( psi ( A ) ) )
 			{	prev_seg.remove_from_mesh ( interf );
 				next_seg.remove_from_mesh ( interf );
 				bool bc_ok = true, cd_ok = true;
 				if ( CB.reverse().belongs_to ( interf, tag::oriented ) )
 				{	CB.reverse().remove_from_mesh ( interf );  bc_ok = false;  }
-				Cell DC = sq1.boundary().cell_behind ( C );
+				else if ( not interf.cell_in_front_of ( B, tag::may_not_exist ) .exists() )
+				{	assert ( not ambient.cell_in_front_of ( CB, tag::may_not_exist ) .exists() );
+					bc_ok = false;  }
 				if ( DC.reverse().belongs_to ( interf, tag::oriented ) )
 				{	DC.reverse().remove_from_mesh ( interf );  cd_ok = false;  }
+				else if ( not interf.cell_behind ( D, tag::may_not_exist ) .exists() )
+				{	assert ( not ambient.cell_in_front_of ( DC, tag::may_not_exist ) .exists() );
+					cd_ok = false;  }
 				if ( bc_ok ) CB.add_to_mesh ( interf );
 				if ( cd_ok ) DC.add_to_mesh ( interf );
-				ms.insert ( C );
-				continue;                                                }
+				ms.insert ( C );                                         }
 			continue;                                                        }
 		// end of if  sq1 == sq3
 
 		if ( sq2 == sq4 )  // 'interf' turns left at A
-		{	Cell B = next_seg.tip();
+		{	std::cout << "interf turns left" << std::endl;
+			Cell B = next_seg.tip();
 			Cell BC = sq2.boundary().cell_in_front_of ( B );
 			Cell C = BC.tip();
+			Cell CD = sq2.boundary().cell_in_front_of ( C );
+			Cell D = CD.tip();
+			assert ( D == prev_seg.base().reverse() );
 			if ( abs ( psi ( C ) ) < abs ( psi ( A ) ) )
 			{	prev_seg.remove_from_mesh ( interf );
 				next_seg.remove_from_mesh ( interf );
 				bool bc_ok = true, cd_ok = true;
 				if ( BC.belongs_to ( interf, tag::oriented ) )
 				{	BC.remove_from_mesh ( interf );  bc_ok = false;  }
-				Cell CD = sq2.boundary().cell_in_front_of ( C );
+				else if ( not interf.cell_in_front_of ( B, tag::may_not_exist ) .exists() )
+				{	assert ( not ambient.cell_in_front_of ( BC, tag::may_not_exist ) .exists() );
+					bc_ok = false;  }
 				if ( CD.belongs_to ( interf, tag::oriented ) )
 				{	CD.remove_from_mesh ( interf );  cd_ok = false;  }
+				else if ( not interf.cell_behind ( D, tag::may_not_exist ) .exists() )
+				{	assert ( not ambient.cell_in_front_of ( CD, tag::may_not_exist ) .exists() );
+					cd_ok = false;  }
 				if ( bc_ok ) BC.reverse().add_to_mesh ( interf );
 				if ( cd_ok ) CD.reverse().add_to_mesh ( interf );
 				ms.insert ( C );
 				continue;                                                }
 			continue;                                                        }
 		// end of if  sq2 == sq4
-	} // end of while
+	} // end of for it_ms
 
 }  // end of  improve_interf_90
+
+//-----------------------------------------------------------------------------------//
+
+
+void improve_interf_135 ( Mesh ambient, Mesh interf, Function psi )
+
+{	std::cout << "improve_interf_135" << std::endl;
+	
+	// we build a multi-set of vertices, ordered according to the values of psi
+	// more precisely, the first ones will be those where the absolute value of psi is large
+
+	compare_values_of comp_psi ( abs(psi) );
+	std::multiset < Cell, compare_values_of > ms ( comp_psi );
+
+	CellIterator it_ver = interf.iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ ) ms.insert ( *it_ver );
+
+	std::multiset<Cell,compare_values_of>::iterator it_ms;
+	for ( it_ms = ms.begin(); it_ms != ms.end(); it_ms++ )
+
+	{	Cell A = *it_ms;
+		
+		Cell prev_seg = interf.cell_behind ( A, tag::may_not_exist );
+		if ( not prev_seg.exists() )  // we are at the boundary
+		{	std::cout << "we are at the boundary, not prev_seg.exists(), ";
+			Cell AB = interf.cell_in_front_of ( A, tag::surely_exists );
+			if ( psi ( A ) > 0. )
+			{	Cell ABDC = ambient.cell_behind ( AB );
+				std::cout << "psi ( A ) > 0." << std::endl;
+				Cell CA = ABDC.boundary().cell_behind ( A );
+				assert ( not ambient.cell_in_front_of ( CA, tag::may_not_exist ) .exists() );
+				Cell C = CA.base().reverse();
+				if ( - psi ( C ) > psi ( A ) ) continue;
+				Cell B = AB.tip();
+				Cell BD = ABDC.boundary().cell_in_front_of ( B );
+				Cell D = BD.tip();
+				Cell DC = ABDC.boundary().cell_in_front_of ( D );
+				assert ( DC.tip() == C );
+				ABDC.remove_from_mesh ( ambient );
+				AB.remove_from_mesh ( interf );
+				Cell BC ( tag::segment, B.reverse(), C );
+				Cell ABC ( tag::triangle, AB, BC, CA );
+				Cell BDC ( tag::triangle, BD, DC, BC.reverse() );
+				ABC.add_to_mesh ( ambient );
+				BDC.add_to_mesh ( ambient );
+				BC.reverse().add_to_mesh ( interf );          }
+			else  // psi ( A ) <= 0
+			{ Cell ACDB = ambient.cell_in_front_of ( AB );
+				std::cout << "psi ( A ) <= 0." << std::endl;
+				Cell AC = ACDB.boundary().cell_in_front_of ( A );
+				assert ( not ambient.cell_in_front_of ( AC, tag::may_not_exist ) .exists() );
+				Cell C = AC.tip();
+				if ( psi ( C ) > - psi ( A ) ) continue;
+				Cell B = AB.tip();
+				Cell DB = ACDB.boundary().cell_behind ( B );
+				Cell D = DB.base().reverse();
+				Cell CD = ACDB.boundary().cell_in_front_of ( C );
+				assert ( CD.tip() == D );
+				ACDB.remove_from_mesh ( ambient );
+				AB.remove_from_mesh ( interf );
+				Cell BC ( tag::segment, B.reverse(), C );
+				Cell ACB ( tag::triangle, AC, BC.reverse(), AB.reverse() );
+				Cell BCD ( tag::triangle, BC, CD, DB );
+				ACB.add_to_mesh ( ambient );
+				BCD.add_to_mesh ( ambient );
+				BC.reverse().add_to_mesh ( interf );                           }
+		}
+
+	}  // end of for it_ms
+}  // end of  improve_interf_135
 	
 //-----------------------------------------------------------------------------------//
 
@@ -730,7 +829,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	
 	std::ofstream file_ps (f);
 	file_ps << "%!PS-Adobe-3.0 EPSF-3.0" << std::endl;
-	file_ps << "%%Title:                     malha" << std::endl;
+	file_ps << "%%Title:                " << f << std::endl;
 	file_ps << "%%BoundingBox:  " << -border*scale_factor << " " << -border*scale_factor << " "
 					<< scale_factor*(xmax+border) + translation_x << "   "
 					<< scale_factor*(ymax+border) + translation_y << std::endl;
@@ -772,7 +871,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 		else break;                                               }
 
 	{ // just a block of code for hiding 'it'
-	file_ps << "0.8 0 0 setrgbcolor 0.007 setlinewidth" << std::endl;
+	file_ps << "0.8 0 0 setrgbcolor 0.005 setlinewidth" << std::endl;
 	CellIterator it = cut.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;
