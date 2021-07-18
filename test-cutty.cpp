@@ -14,9 +14,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f );
 
 Mesh build_interface ( Mesh ambient, Function psi );
 
-void improve_interf_90 ( Mesh ambient, Mesh interf, Function psi );
-
-void improve_interf_135 ( Mesh ambient, Mesh interf, Function psi );
+bool on_boundary ( Cell A, Mesh msh );
 
 //-----------------------------------------------------------------------------------//
 
@@ -32,16 +30,16 @@ int main ()
 	Cell C ( tag::vertex );  x(C) =  1.;  y(C) = 1.;
 	Cell D ( tag::vertex );  x(D) = -1.;  y(D) = 1.;
 
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 20 );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 10 );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 20 );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 10 );
+	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 40 );
+	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 20 );
+	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 40 );
+	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 20 );
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
 	double radius = 0.4;
 	// std::cout << "radius = ";  std::cin >> radius;
-	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y;
+	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y;
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -73,8 +71,21 @@ class compare_values_of
 	Function f;
 	inline compare_values_of ( const Function ff ) : f { ff } { }
 	inline bool operator() ( Cell A, Cell B ) const
-	{	return this->f ( A ) < this->f ( B );  }                     };
+	{	return this->f ( A ) > this->f ( B );  }                     };
 
+//-----------------------------------------------------------------------------------//
+
+
+bool on_boundary ( Cell A, Mesh msh )
+
+{	assert ( A.dim() == 0 );
+	assert ( A.is_positive() );
+
+	CellIterator it = msh.iterator ( tag::over_segments, tag::around, A );
+	it.reset();
+	assert ( it.in_range() );
+	return not msh.cell_behind ( *it, tag::may_not_exist ) .exists();         }
+	
 //-----------------------------------------------------------------------------------//
 
 
@@ -111,20 +122,25 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	Mesh interf ( tag::fuzzy, tag::of_dimension, 1 );
 	// empty mesh, it will be returned after adding segments to it
 
-	std::set < Cell > useful;
+	std::set < Cell > set_useful, set_needed;
+	std::forward_list < Cell > list_useful;
 	std::multiset<Cell,compare_values_of>::iterator it_ms;
 
 	for ( it_ms = ms.begin(); it_ms != ms.end(); it_ms++ )
-		useful.insert ( *it_ms );
+	{	Cell A = * it_ms;
+		if ( set_useful.find ( A ) == set_useful.end() )
+		{	set_useful.insert ( A );
+			list_useful.push_front ( A );                   }  }
 
-	std::cout << "at the beginning, we have " << useful.size() << " vertices" << std::endl;
+	std::cout << "at the beginning, we have " << set_useful.size() << " vertices" << std::endl;
 	int counter = 0;
 	
-	for ( it_ms = ms.begin(); it_ms != ms.end(); it_ms++ )
+	std::forward_list<Cell>::iterator it_list;
+	for ( it_list = list_useful.begin(); it_list != list_useful.end(); it_list++ )
 	
 	{	// this process begins with values of psi close to zero
-		Cell A = *it_ms;
-		if ( useful.find(A) == useful.end() ) continue;
+		Cell A = *it_list;
+		if ( set_useful.find ( A ) == set_useful.end() ) continue;
 		
 		double xA = x(A), yA = y(A);
 		double gx = psi_x(A), gy = psi_y(A);
@@ -137,53 +153,89 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			CellIterator it_ver = cll.boundary().iterator ( tag::over_vertices );
 			for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 			{	Cell B = *it_ver;
-				if ( useful.find(B) == useful.end() ) continue;
+				if ( set_useful.find(B) == set_useful.end() ) continue;
+				if ( B == A ) continue;
 				double dx = x(B) - xA, dy = y(B) - yA;
 				if ( dx*gy > dy*gx ) set_of_neigh_1.insert ( B );
-				if ( dx*gy < dy*gx ) set_of_neigh_2.insert ( B );      }     }
-		counter ++;
-		std::cout << "counter " << counter << std::endl;
-		if ( counter == 3 ) return interf;
-		std::set<Cell>::iterator it_neigh = set_of_neigh_1.begin();
-		if ( it_neigh != set_of_neigh_1.end() )
-		{	Cell Bmin = *it_neigh;
-			double psi_min = std::abs ( psi ( Bmin ) );
-			for ( it_neigh++; it_neigh != set_of_neigh_1.end(); it_neigh++ )
+			  else set_of_neigh_2.insert ( B );                 }     }
+		std::set<Cell>::iterator it_neigh;
+		int found = 0;
+		Cell B_found ( tag::non_existent );
+		for ( it_neigh = set_of_neigh_1.begin(); it_neigh != set_of_neigh_1.end(); it_neigh++ )
+		{	Cell B = *it_neigh;
+			if ( set_needed.find ( B ) != set_needed.end() )
+			{	found++; B_found = B;  }                        }
+		assert ( ( found == 0 ) or ( found == 1 ) );
+		if ( found )
+		{	for ( it_neigh = set_of_neigh_1.begin(); it_neigh != set_of_neigh_1.end(); it_neigh++ )
 			{	Cell B = *it_neigh;
-				double g = std::abs ( psi ( B ) );
-				if ( g < psi_min ) { psi_min = g; Bmin = B;  }     }
-			for ( it_neigh = set_of_neigh_1.begin(); it_neigh != set_of_neigh_1.end(); it_neigh++ )
+				if ( B == B_found ) continue;
+				set_useful.erase ( B );        }  }
+		else  // not found
+		{	it_neigh = set_of_neigh_1.begin();
+			if ( it_neigh != set_of_neigh_1.end() )
+			{	Cell Bmin = *it_neigh;
+				double psi_min = std::abs ( psi ( Bmin ) );
+				for ( it_neigh++; it_neigh != set_of_neigh_1.end(); it_neigh++ )
+				{	Cell B = *it_neigh;
+					double g = std::abs ( psi ( B ) );
+					if ( g < psi_min ) { psi_min = g; Bmin = B;  }     }
+				for ( it_neigh = set_of_neigh_1.begin(); it_neigh != set_of_neigh_1.end(); it_neigh++ )
+				{	Cell B = *it_neigh;
+					if ( B != Bmin )
+					if ( B != Bmin ) set_useful.erase ( B );  }
+				if ( on_boundary ( A, ambient ) and on_boundary ( Bmin, ambient ) )
+					set_useful.erase ( Bmin );
+				else
+				{	Cell AB ( tag::segment, A.reverse(), Bmin );
+					set_needed.insert ( Bmin );                  }           }  }
+		found = 0;
+		B_found = Cell ( tag::non_existent );
+		for ( it_neigh = set_of_neigh_2.begin(); it_neigh != set_of_neigh_2.end(); it_neigh++ )
+		{	Cell B = *it_neigh;
+			if ( set_needed.find ( B ) != set_needed.end() )
+			{	found++; B_found = B;  }                        }
+		assert ( ( found == 0 ) or ( found == 1 ) );
+		if ( found )
+		{	for ( it_neigh = set_of_neigh_2.begin(); it_neigh != set_of_neigh_2.end(); it_neigh++ )
 			{	Cell B = *it_neigh;
-				if ( B != Bmin ) useful.erase ( B );  }
-			std::cout << "before constructor AB" << std::endl;
-			Cell AB ( tag::segment, A.reverse(), Bmin );
-			Cell AB_copy ( tag::segment, A.reverse(), Bmin );
-			std::cout << "after constructor AB" << std::endl;
-			if ( counter == 2 ) AB.add_to_mesh ( interf );                            }
-	  it_neigh = set_of_neigh_2.begin();
-		if ( it_neigh != set_of_neigh_2.end() )
-		{	Cell Bmin = *it_neigh;
-			double psi_min = std::abs ( psi ( Bmin ) );
-			for ( it_neigh++; it_neigh != set_of_neigh_2.end(); it_neigh++ )
-			{	Cell B = *it_neigh;
-				double g = std::abs ( psi ( B ) );
-				if ( g < psi_min ) { psi_min = g; Bmin = B;  }     }
-			for ( it_neigh = set_of_neigh_2.begin(); it_neigh != set_of_neigh_2.end(); it_neigh++ )
-			{	Cell B = *it_neigh;
-				if ( B != Bmin ) useful.erase ( B );  }
-			std::cout << "before constructor BA" << std::endl;
-			Cell BA ( tag::segment, Bmin.reverse(), A );
-			std::cout << "after constructor BA" << std::endl;
-			if ( counter == 2 ) BA.add_to_mesh ( interf );                            }
+				if ( B == B_found ) continue;
+				set_useful.erase ( B );        }  }
+		else  // not found
+		{	it_neigh = set_of_neigh_2.begin();
+			if ( it_neigh != set_of_neigh_2.end() )
+			{	Cell Bmin = *it_neigh;
+				double psi_min = std::abs ( psi ( Bmin ) );
+				for ( it_neigh++; it_neigh != set_of_neigh_2.end(); it_neigh++ )
+				{	Cell B = *it_neigh;
+					double g = std::abs ( psi ( B ) );
+					if ( g < psi_min ) { psi_min = g; Bmin = B;  }     }
+				for ( it_neigh = set_of_neigh_2.begin(); it_neigh != set_of_neigh_2.end(); it_neigh++ )
+				{	Cell B = *it_neigh;
+					if ( B!= Bmin )
+					if ( B != Bmin ) set_useful.erase ( B );  }
+				if ( on_boundary ( A, ambient ) and on_boundary ( Bmin, ambient ) )
+					set_useful.erase ( Bmin );
+				else
+				{	Cell BA ( tag::segment, Bmin.reverse(), A );
+					set_needed.insert ( Bmin );                  }           }   }
 
-	}  // end of for it_ms
+	}  // end of for it_list
 		
-	std::cout << "in the end, we have " << useful.size() << " vertices" << std::endl;
+	std::cout << "in the end, we have " << set_useful.size() << " vertices" << std::endl << std::flush;
 	
-	std::set<Cell>::iterator it_useful;
-	for ( it_useful = useful.begin(); it_useful != useful.end(); it_useful++ )
+	for ( it_list = list_useful.begin(); it_list != list_useful.end(); it_list++ )
+	{	Cell A = *it_list;
+		if ( set_useful.find ( A ) == set_useful.end() ) continue;
+		std::cout << x(A) << " " << y(A) << " moveto ";
+		std::cout << x(A) << " " << y(A) << " 0.016 0 360 arc fill" << std::endl;  }
 
-	{	Cell A = *it_useful;
+	exit ( 0 );
+	return interf;
+	
+	for ( it_list = list_useful.begin(); it_list != list_useful.end(); it_list++ )
+
+	{	Cell A = *it_list;
 		
 		double xA = x(A), yA = y(A);
 		double gx = psi_x(A), gy = psi_y(A);
@@ -197,7 +249,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			CellIterator it_ver = cll.boundary().iterator ( tag::over_vertices );
 			for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 			{	Cell B = *it_ver;
-				if ( useful.find(B) == useful.end() ) continue;
+				if ( set_useful.find(B) == set_useful.end() ) continue;
 				set_of_neigh.insert ( B );                       }                   }
 		std::set<Cell>::iterator it_neigh;
 		for ( it_neigh = set_of_neigh.begin(); it_neigh != set_of_neigh.end(); it_neigh++ )
@@ -205,12 +257,11 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			double dx = x(B) - xA, dy = y(B) - yA;
 			if ( dx*gy > dy*gx ) found_pos++;
 			if ( dx*gy < dy*gx ) found_neg++;      }
-		std::cout << found_pos << " " << found_neg << std::endl;
+		std::cout << found_pos << " " << found_neg << std::endl << std::flush;
 
 	}  // end of for it_useful
 
-
-return interf;
+	return interf;
 
 }  // end of  build_interface
 
