@@ -1249,9 +1249,10 @@ inline Cell::Core * find_first_seg ( Cell::Positive * const pos_cen, Mesh::Core 
 		if ( mce == nullptr ) continue;
 		#ifndef NDEBUG
 		// a boundary has no boundary, so it will appear exactly twice, with opposite orientations
-		Cell::field_to_meshes f = it->second;
-		assert ( f.counter_pos == 1 );
-		assert ( f.counter_neg == 1 );
+		// do we accept only 11 here, or is 20 02 acceptable too ?
+		// Cell::field_to_meshes f = it->second;
+		// assert ( f.counter_pos == 1 );
+		// assert ( f.counter_neg == 1 );
 		#endif
 		// does mce belong to msh ? note that mce->dim == msh->dim and mce->is_positive
 		Cell::Positive::NotVertex * mce_nv = tag::Util::assert_cast

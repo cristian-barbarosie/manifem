@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.07.16
+// mesh.cpp 2021.07.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1449,7 +1449,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
 	link_face_to_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
 
-} // end of make_deep_connections_1d_rev with tag::mesh_is_not_bdry
+} // end of make_deep_connections_1d_rev with tag::mesh_is_bdry
 
 
 inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
