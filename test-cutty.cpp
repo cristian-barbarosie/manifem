@@ -50,12 +50,8 @@ int main ()
 	// builds a set of vertices next to the level line  psi == 0
 	// then builds a one-dimensional mesh
 
-	// improve_interf_90 ( rect_mesh, cut, psi );
-	// reverts some of the angles
+	Manifold level = RR2.implicit ( psi == 0. );
 
-	// improve_interf_135 ( rect_mesh, cut, psi );
-	// splits some rectangles in two triangles
-	
 	special_draw ( rect_mesh, cut, "square-cut.eps" );
 
 	std::cout << "produced file square-cut.eps" << std::endl;
