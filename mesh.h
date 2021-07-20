@@ -1499,7 +1499,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
   virtual void add_to_seg ( Cell::PositiveSegment * seg );
 	virtual void remove_from_seg ( Cell::PositiveSegment * seg );
 
-	// the five methods below are not relevant for vertices
+	// the eight methods below are not relevant for vertices
   virtual void add_to_mesh ( Mesh::Core * msh ) = 0;
   virtual void add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & ) = 0;
 	virtual void remove_from_mesh ( Mesh::Core * msh ) = 0;
@@ -1586,15 +1586,23 @@ class Cell::Positive : public Cell::Core
 
 	virtual Cell::Negative * build_reverse ( const tag::OneDummyWrapper & ) = 0;
 
-	// two versionos of glue_on_my_bdry and of cut_from_my_bdry
-	// stay pure virtual from Cell:Core
-	
 	bool belongs_to  // cell has dimension lower than the mesh, virtual from Cell::Core
 	( Mesh::Core *, const tag::CellHasLowDim &,
 	  const tag::NotOriented & no = tag::not_oriented ) const;
 	// belongs_to (with tag::same_dim, tag::oriented )  stays pure virtual from Cell::Core
 	// belongs_to (with tag::same_dim, tag::not_oriented )  defined by Cell::Core
 
+	// two versions of glue_on_bdry_of and two of cut_from_bdry_of defined inline by Cell::Core
+
+	// add_to_seg and remove_from_seg defined by Cell::Core (execution forbidden)
+	// overridden later by Cell::Positive::Vertex
+
+	// (two versions of each) add_to_mesh, remove_from_mesh, add_to_bdry, remove_from_bdry
+	// stay pure virtual from Cell:Core
+
+	// two versions of glue_on_my_bdry and two of cut_from_my_bdry
+	// stay pure virtual from Cell:Core
+	
 	// compute_sign  stays pure virtual from Cell::Core
 	
 	#ifndef NDEBUG
@@ -1647,8 +1655,20 @@ class Cell::Negative : public Cell::Core
 	// belongs_to (with tag::same_dim, tag::oriented )  stays pure virtual from Cell::Core
 	// belongs_to (with tag::same_dim, tag::not_oriented )  defined by Cell::Core
 
-	void glue_on_my_bdry ( Cell::Core * ); // virtual from Cell::Core
-	void cut_from_my_bdry ( Cell::Core * ); // virtual from Cell::Core
+	// two versions of glue_on_bdry_of and two of cut_from_bdry_of defined inline by Cell::Core
+
+	// add_to_seg and remove_from_seg defined by Cell::Core (execution forbidden)
+	// overridden later by Cell::Negative::Vertex
+
+	// (two versions of each) add_to_mesh, remove_from_mesh, add_to_bdry, remove_from_bdry
+	// stay pure virtual from Cell:Core
+
+	// four methods below are virtual from Cell::Core
+	void glue_on_my_bdry ( Cell::Core * );
+	void glue_on_my_bdry ( Cell::Core *, const tag::DoNotBother & );
+	void cut_from_my_bdry ( Cell::Core * );
+	void cut_from_my_bdry ( Cell::Core *, const tag::DoNotBother & );
+	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 	// we feel that 'glue_on_bdry_of' and 'cut_from_bdry_of' are more readable
 	// so we suggest to use those
 

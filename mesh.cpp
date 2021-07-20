@@ -792,7 +792,25 @@ void Cell::Positive::Vertex::glue_on_my_bdry ( Cell::Core * )
 	exit ( 1 );                                               }
 
 
+void Cell::Positive::Vertex::glue_on_my_bdry ( Cell::Core *, const tag::DoNotBother & )
+// virtual from Cell::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Vertices have no boundary." << std::endl;
+	exit ( 1 );                                               }
+
+
 void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver )
+// virtual from Cell::Core
+
+{	assert ( ver->get_dim() == 0 );
+	ver->add_to_seg ( this );
+	// 'add_to_seg' is virtual, so the computer will choose the right version
+	// (Cell::Positive::Vertex::add_to_seg or Cell::Negative::Vertex::add_to_seg)
+	this->glue_common ( ver );       }
+	
+
+void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver, const tag::DoNotBother & )
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
@@ -812,12 +830,30 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
 	this->glue_common ( face );                         }
 
 
+void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face, const tag::DoNotBother & )
+// virtual from Cell::Core
+
+{	assert ( this->get_dim() == face->get_dim() + 1 );
+	assert ( this->boundary().is_positive() );
+	face->add_to_bdry ( this->boundary().core, tag::do_not_bother );
+	// 'add_to_bdry' is virtual, so the computer will choose the right version
+	this->glue_common ( face );                                      }
+
+
 void Cell::Negative::glue_on_my_bdry ( Cell::Core * cll )
 // virtual from Cell::Core
 
 {	assert ( cll->reverse_attr.exists() );
 	assert ( this->reverse_attr.exists() );
 	this->reverse_attr.core->glue_on_my_bdry ( cll->reverse_attr.core );  }
+
+
+void Cell::Negative::glue_on_my_bdry ( Cell::Core * cll, const tag::DoNotBother & )
+// virtual from Cell::Core
+
+{	assert ( cll->reverse_attr.exists() );
+	assert ( this->reverse_attr.exists() );
+	this->reverse_attr.core->glue_on_my_bdry ( cll->reverse_attr.core, tag::do_not_bother );  }
 
 
 void Cell::Positive::Vertex::cut_from_my_bdry ( Cell::Core * )
@@ -828,7 +864,25 @@ void Cell::Positive::Vertex::cut_from_my_bdry ( Cell::Core * )
 	exit ( 1 );                                               }
 
 
+void Cell::Positive::Vertex::cut_from_my_bdry ( Cell::Core *, const tag::DoNotBother & )
+// virtual from Cell::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Vertices have no boundary." << std::endl;
+	exit ( 1 );                                               }
+
+
 void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver )
+// virtual from Cell::Core
+
+{	assert ( ver->get_dim() == 0 );
+	ver->remove_from_seg ( this );
+	// 'remove_from_seg' is virtual, so the computer will choose the right version
+	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
+	this->cut_common ( ver );       }
+	
+
+void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver, const tag::DoNotBother & )
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
@@ -848,12 +902,30 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face )
 	this->cut_common ( face );                            }
 
 
+void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face, const tag::DoNotBother & )
+// virtual from Cell::Core
+
+{	assert ( this->get_dim() == face->get_dim() + 1 );
+	assert ( this->boundary_attr.is_positive() );
+	face->remove_from_bdry ( this->boundary_attr.core, tag::do_not_bother );
+	// 'remove_from' is virtual, so the computer will choose the right version
+	this->cut_common ( face );                            }
+
+
 void Cell::Negative::cut_from_my_bdry ( Cell::Core * cll )
 // virtual from Cell::Core
 
 {	assert ( cll->reverse_attr.exists() );
 	assert ( this->reverse_attr.exists() );
 	this->reverse_attr.core->cut_from_my_bdry ( cll->reverse_attr.core );  }
+
+
+void Cell::Negative::cut_from_my_bdry ( Cell::Core * cll, const tag::DoNotBother & )
+// virtual from Cell::Core
+
+{	assert ( cll->reverse_attr.exists() );
+	assert ( this->reverse_attr.exists() );
+	this->reverse_attr.core->cut_from_my_bdry ( cll->reverse_attr.core, tag::do_not_bother );  }
 
 //-----------------------------------------------------------------------------//
 
