@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.17
+// mesh.h 2021.07.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1586,6 +1586,9 @@ class Cell::Positive : public Cell::Core
 
 	virtual Cell::Negative * build_reverse ( const tag::OneDummyWrapper & ) = 0;
 
+	// two versionos of glue_on_my_bdry and of cut_from_my_bdry
+	// stay pure virtual from Cell:Core
+	
 	bool belongs_to  // cell has dimension lower than the mesh, virtual from Cell::Core
 	( Mesh::Core *, const tag::CellHasLowDim &,
 	  const tag::NotOriented & no = tag::not_oriented ) const;
@@ -5349,6 +5352,26 @@ inline void Cell::add_to_mesh ( Mesh & msh )
 // for negative Meshes, the core points towards the reverse, positive, Mesh::Core
 
 
+inline void Cell::add_to_mesh ( Mesh & msh, const tag::DoNotBother & )
+
+// add 'this' cell to the mesh 'msh' by calling the virtual method add_to_mesh
+// if 'msh' is the boundary of a cell, use instead 'glue_on_bdry_of'
+
+// tag::do_not_bother means : for Mesh::Connected::***,
+// do not check for connectivity/openness/closedeness
+// do not try to update first_vertex, last_vertex
+
+{	assert ( this->exists() );
+	assert ( msh.exists() );
+	assert ( this->dim() == msh.dim() );
+	assert ( this->dim() > 0 );
+	if ( msh.is_positive() )  this->core->add_to_mesh ( msh.core, tag::do_not_bother );
+	else
+	{	assert( this->core->reverse_attr.exists() );
+		this->core->reverse_attr.core->add_to_mesh ( msh.core, tag::do_not_bother );  }   }
+// for negative Meshes, the core points towards the reverse, positive, Mesh::Core
+
+
 inline void Cell::remove_from_mesh ( Mesh & msh )
 
 // remove 'this' cell from the mesh 'msh' by calling the virtual method remove_from_mesh
@@ -5363,6 +5386,24 @@ inline void Cell::remove_from_mesh ( Mesh & msh )
 		this->core->reverse_attr.core->remove_from_mesh ( msh.core );  }   }
 // for negative Meshes, the core points towards the reverse, positive, Mesh::Core
 
+
+inline void Cell::remove_from_mesh ( Mesh & msh, const tag::DoNotBother & )
+
+// remove 'this' cell from the mesh 'msh' by calling the virtual method remove_from_mesh
+// if 'msh' is the boundary of a cell, 'cut_from_bdry_of' should be used instead
+
+// tag::do_not_bother means : for Mesh::Connected::***,
+// do not check for connectivity/openness/closedeness
+// do not try to update first_vertex, last_vertex
+
+{	assert ( this->exists() );
+	assert ( this->dim() == msh.dim() );
+	assert ( this->dim() > 0 );
+	if ( msh.is_positive() )  this->core->remove_from_mesh ( msh.core, tag::do_not_bother );
+	else
+	{	assert( this->core->reverse_attr.exists() );
+		this->core->reverse_attr.core->remove_from_mesh ( msh.core, tag::do_not_bother );  }   }
+// for negative Meshes, the core points towards the reverse, positive, Mesh::Core
 
 //-----------------------------------------------------------------------------//
 
