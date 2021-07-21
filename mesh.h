@@ -2344,21 +2344,53 @@ class tag::Util::MeshCore
 	  const tag::MayNotExist &                                                ) const;
 
 	virtual void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & ) = 0;
-	virtual void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void add_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & ) = 0;
+	virtual void add_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void remove_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & ) = 0;
+	virtual void remove_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void add_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & ) = 0;
+	virtual void add_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void remove_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & ) = 0;
+	virtual void remove_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void add_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & ) = 0;
+	virtual void add_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void remove_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & ) = 0;
+	virtual void remove_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void add_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & ) = 0;
+	virtual void add_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
+	virtual void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & ) = 0;
+	virtual void remove_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & ) = 0;
 	virtual void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & ) = 0;
+	virtual void remove_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) = 0;
 
 	virtual Mesh::Core * build_deep_copy ( ) = 0;
 	
@@ -2876,23 +2908,55 @@ class Mesh::ZeroDim : public Mesh::Core
 
 	// cell_in_front_of  and  cell_behind  defined by Mesh::Core, execution forbidden
 
-	// the sixteen methods below are virtual from Mesh::Core, here execution forbidden
+	// the thirty-two methods below are virtual from Mesh::Core, here execution forbidden
 	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
-	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
-	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
-	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
-	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
-	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
-	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
-	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void add_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void add_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
+	void remove_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void remove_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
+	void add_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	void add_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
+	void remove_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	void remove_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
+	void add_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	void add_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
+	void remove_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	void remove_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void add_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	void add_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void remove_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	void remove_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
 	
 	Mesh::Core * build_deep_copy ( );  // virtual from Mesh::Core, here execution forbidden
 
@@ -3408,24 +3472,56 @@ class Mesh::NotZeroDim : public Mesh::Core
 	// cell_in_front_of and cell_behind ( tag::seen_from )
 	// defined by Mesh::Core, execution forbidden
 
-	// the sixteen methods below are virtual from Mesh::Core
+	// the thirty-two methods below are virtual from Mesh::Core
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
-	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
-	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
-	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
-	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
-	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
-	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
-	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void add_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void add_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
+	void remove_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void remove_pos_seg
+		( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
+	void add_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	void add_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
+	void remove_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	void remove_neg_seg
+		( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
+	void add_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	void add_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
+	void remove_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	void remove_pos_hd_cell
+		( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void add_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	void add_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void remove_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & );
 	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	void remove_neg_hd_cell
+		( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
 
 	Mesh::Core * build_deep_copy ( );  // virtual from Mesh::Core, execution forbidden for now
 
@@ -3493,7 +3589,7 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 	// cell_in_front_of and cell_behind ( tag::seen_from )
 	// defined by Mesh::Core, execution forbidden
 
-	// sixteen methods add_*** and remove_***  defined by Mesh::NotZeroDim
+	// thirty-two methods add_*** and remove_***  defined by Mesh::NotZeroDim
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 
 	// Mesh::Core * build_deep_copy ( )  defined by Mesh::NotZeroDim, execution forbidden for now
@@ -4211,7 +4307,7 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 	
 	// cell_in_front_of  and  cell_behind  defined by Mesh::Core, execution forbidden
 
-	// sixteen methods add_*** and remove_***  defined by Mesh::NotZeroDim
+	// thirty-two methods add_*** and remove_***  defined by Mesh::NotZeroDim
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 
 	// Mesh::Core * build_deep_copy ( )  defined by Mesh::NotZeroDim, execution forbidden for now
