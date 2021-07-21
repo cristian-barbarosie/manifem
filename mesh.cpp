@@ -1069,6 +1069,44 @@ inline void add_link_same_dim  // hidden in anonymous namespace
 } // end of add_link_same_dim
 
 
+inline void add_link_same_dim  // hidden in anonymous namespace
+(	Cell::Positive::NotVertex * const cll, Mesh::Core * const msh, const tag::DoNotBother & )
+
+// This function "makes the link" between a cell and a mesh.
+// This "link" asserts that the cell belongs to the mesh.
+// Here the dimensions are equal and the cell is positive.
+
+// this function updates cll->meshes_same_dim
+// also, calls the virtual method msh->add_to_my_cells
+// which, for fuzzy and stsi meshes, updates msh->cells
+// returning an iterator within msh->cells
+// for other kinds of meshes, returns garbage
+
+{	assert ( cll );  assert ( msh );
+	size_t cll_dim = cll->get_dim();
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+////////////////////////////////////////////////////////////////////////////////////////
+	// inspired in item 24 of the book : Scott Meyers, Effective STL                    //
+	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;               //
+	maptype & cmd = cll->meshes_same_dim;                                               //
+	maptype::iterator lb = cmd.lower_bound(msh);                                        //
+	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(msh,lb->first) ) );                //
+	cmd.emplace_hint ( lb, std::piecewise_construct,                                    //
+	   std::forward_as_tuple(msh),                                                      // 
+	   std::forward_as_tuple(1,msh->add_to_my_cells(cll,cll_dim,tag::do_not_bother)) ); //
+/////////  code below is conceptually equivalent to the above  //////////////////>//////
+//	assert ( cll->meshes_same_dim.find(msh) == cll->meshes_same_dim.end() );   //
+//	msh->cells[cll->dim].push_front(o_cll);                                    //
+//	Cell::field_to_meshes field;                                               //
+//	field.counter_pos = cp;                                                    //
+//	field.counter_neg = cn;                                                    //
+//	field.where = msh->cells[cll->dim]->begin();                               //
+//	cll->meshes_same_dim[msh] = field;                                         //
+/////////////////////////////////////////////////////////////////////////////////
+
+} // end of add_link_same_dim with tag::do_not_bother
+
+
 inline void add_link_same_dim_rev  // hidden in anonymous namespace
 (	Cell::Core * const o_cll, Cell::Positive::NotVertex * const cll, Mesh::Core * const msh )
 
@@ -1104,7 +1142,46 @@ inline void add_link_same_dim_rev  // hidden in anonymous namespace
 //	cll->meshes_same_dim[msh] = field;                                         //
 /////////////////////////////////////////////////////////////////////////////////
 
-} // end of add_link_same_dim
+} // end of add_link_same_dim_rev
+
+
+inline void add_link_same_dim_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_cll, Cell::Positive::NotVertex * const cll,
+  Mesh::Core * const msh, const tag::DoNotBother &                )
+
+// This function "makes the link" between a cell and a mesh.
+// This "link" asserts that the cell belongs to the mesh.
+// Here the dimensions are equal and the cell is negative.
+
+// this function updates cll->meshes_same_dim
+// also, calls the virtual method msh->add_to_my_cells
+// which, for fuzzy and stsi meshes, updates msh->cells
+// returning an iterator within msh->cells
+// for other kinds of meshes, returns garbage
+
+{	assert ( cll );  assert ( o_cll );  assert ( msh );
+	assert ( ! o_cll->is_positive() );
+	size_t cll_dim = cll->get_dim();
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+////////////////////////////////////////////////////////////////////////////////////////////
+	// inspired in item 24 of the book : Scott Meyers, Effective STL                        //
+	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;                   //
+	maptype & cmd = cll->meshes_same_dim;                                                   //
+	maptype::iterator lb = cmd.lower_bound(msh);                                            //
+	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(msh,lb->first) ) );                    //
+	cmd.emplace_hint ( lb, std::piecewise_construct,                                        //
+	    std::forward_as_tuple(msh),                                                         // 
+	    std::forward_as_tuple(-1,msh->add_to_my_cells(o_cll,cll_dim,tag::do_not_bother)) ); //
+/////////  code below is conceptually equivalent to the above  /////////////////////////////
+//	assert ( cll->meshes_same_dim.find(msh) == cll->meshes_same_dim.end() );   //
+//	msh->cells[cll->dim].push_front(o_cll);                                    //
+//	Cell::field_to_meshes_same_dim field;                                      //
+//	field.sign = -1;                                                           //
+//	field.where = msh->cells[cll->dim]->begin();                               //
+//	cll->meshes_same_dim[msh] = field;                                         //
+/////////////////////////////////////////////////////////////////////////////////
+
+} // end of add_link_same_dim_rev with tag::do_not_bother
 
 
 inline void add_link  // hidden in anonymous namespace
@@ -1159,7 +1236,7 @@ inline void add_link  // hidden in anonymous namespace
 
 inline void link_face_to_msh  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * cll,
-	Mesh::Core * const msh, const short int cp, const short int cn )
+  Mesh::Core * const msh, const short int cp, const short int cn )
 // just a block of code for make_deep_connections
 
 {	assert ( face );  assert ( cll );
@@ -1179,7 +1256,7 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 
 inline void link_face_to_higher  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * const pmce,
-	const short int cp, const short int cn                           )
+  const short int cp, const short int cn                           )
 // just a block of code for make_deep_connections
 
 {	assert ( face );  assert ( pmce );
@@ -1211,10 +1288,6 @@ inline void link_face_to_higher  // hidden in anonymous namespace
 			add_link ( face_p, map_iter->first,
 			           cp*mis.counter_pos + cn*mis.counter_neg,
 			           cn*mis.counter_pos + cp*mis.counter_neg );                              }  }  }
-
-//	Mesh::add_link ( lower_cell_tri.obj, lower_cell_tri.obj, msh
-//	         cell_counter_pos*mesh_counter_pos + cell_counter_neg*mesh_counter_neg,
-//	         cell_counter_pos*mesh_counter_neg + cell_counter_neg*mesh_counter_pos  );
 
 
 inline void compute_cp_cn  // hidden in anonymous namespace
@@ -1283,6 +1356,244 @@ inline void make_deep_connections_1d  // hidden in anonymous namespace
 } // end of make_deep_connections_1d with tag::mesh_is_not_bdry
 
 
+inline void make_deep_connections_1d  // hidden in anonymous namespace
+(	Cell::Positive::Segment * const seg, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &        )
+
+// make far connections when adding a positive segment
+// see paragraph 11.9 in the manual
+
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+	
+{	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg );  assert ( seg->get_dim() == 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// freshly created cell (pretending it is not a boundary)
+
+	add_link_same_dim ( seg, msh, tag::do_not_bother );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 0, 1 );
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 1, 0 );
+
+} // end of make_deep_connections_1d with tag::mesh_is_not_bdry, tag::do_not_bother
+
+
+inline void make_deep_connections_1d  // hidden in anonymous namespace
+(	Cell::Positive::Segment * const seg, Mesh::Core * const msh, const tag::MeshIsBdry & )
+
+// make far connections when adding a positive cell
+// see paragraph 11.9 in the manual
+	
+{	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg );
+	assert ( seg->get_dim() == 1 );
+
+	add_link_same_dim ( seg, msh );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	link_face_to_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 0, 1 );
+	link_face_to_higher ( Ap, pmce, 0, 1 );
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 1, 0 );
+	link_face_to_higher ( Bp, pmce, 1, 0 );
+
+} // end of make_deep_connections_1d with tag::mesh_is_bdry
+
+
+inline void make_deep_connections_1d  // hidden in anonymous namespace
+(	Cell::Positive::Segment * const seg, Mesh::Core * const msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &           )
+
+// make far connections when adding a positive cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg );
+	assert ( seg->get_dim() == 1 );
+
+	add_link_same_dim ( seg, msh, tag::do_not_bother );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	link_face_to_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 0, 1 );
+	link_face_to_higher ( Ap, pmce, 0, 1 );
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 1, 0 );
+	link_face_to_higher ( Bp, pmce, 1, 0 );
+
+} // end of make_deep_connections_1d with tag::mesh_is_bdry, tag::do_not_bother
+
+
+inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_seg, Cell::Positive::Segment * const seg,
+  Mesh::Core * const msh, const tag::MeshIsNotBdry &             )
+
+// make far connections when adding a negative cell
+// see paragraph 11.9 in the manual
+	
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// freshly created cell (pretending it is not a boundary)
+
+	add_link_same_dim_rev ( o_seg, seg, msh );
+	
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+
+} // end of make_deep_connections_1d_rev with tag::mesh_is_not_bdry
+
+
+inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_seg, Cell::Positive::Segment * const seg, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &                                  )
+
+// make far connections when adding a negative cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// freshly created cell (pretending it is not a boundary)
+
+	add_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
+	
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+
+} // end of make_deep_connections_1d_rev with tag::mesh_is_not_bdry, tag::do_not_bother
+
+
+inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * o_seg, Cell::Positive::Segment * seg,
+  Mesh::Core * msh, const tag::MeshIsBdry &          )
+
+// make far connections when adding a negative cell
+// see paragraph 11.9 in the manual
+	
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+
+	add_link_same_dim_rev ( o_seg, seg, msh );
+	
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	link_face_to_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	link_face_to_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	link_face_to_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
+
+} // end of make_deep_connections_1d_rev with tag::mesh_is_bdry
+
+
+inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * o_seg, Cell::Positive::Segment * seg, Mesh::Core * msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &                   )
+
+// make far connections when adding a negative cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+
+	add_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
+	
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	link_face_to_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	link_face_to_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	link_face_to_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
+
+} // end of make_deep_connections_1d_rev with tag::mesh_is_bdry, tag::do_not_bother
+
+
 inline void make_deep_connections_hd  // hidden in anonymous namespace
 (	Cell::Positive::HighDim * const cll, Mesh::Core * const msh, const tag::MeshIsNotBdry & )
 
@@ -1326,38 +1637,50 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 } // end of make_deep_connections_hd with tag::mesh_is_not_bdry
 
 
-inline void make_deep_connections_1d  // hidden in anonymous namespace
-(	Cell::Positive::Segment * const seg, Mesh::Core * const msh, const tag::MeshIsBdry & )
+inline void make_deep_connections_hd  // hidden in anonymous namespace
+(	Cell::Positive::HighDim * const cll, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &        )
 
 // make far connections when adding a positive cell
 // see paragraph 11.9 in the manual
 	
-{	assert ( msh->get_dim_plus_one() == 2 );
-	assert ( seg );
-	assert ( seg->get_dim() == 1 );
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
 
-	add_link_same_dim ( seg, msh );
+{	assert ( cll );
+	assert ( msh->get_dim_plus_one() > 1 );
+	// make_deep_connections_0d deals with the case of a vertex cll
+	// make_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	assert ( cll );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// freshly created cell (pretending it is not a boundary)
 
-	// for all meshes strictly above msh
-	Cell::Core * mce = msh->cell_enclosed;
-	assert ( mce );
-	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	link_face_to_higher ( seg, pmce, 1, 0 );
+	add_link_same_dim ( cll, msh, tag::do_not_bother );
 
-	Cell A = seg->base_attr.reverse ( tag::surely_exists );
-	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 0, 1 );
-	link_face_to_higher ( Ap, pmce, 0, 1 );
-	Cell B = seg->tip_attr;
-	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 1, 0 );
-	link_face_to_higher ( Bp, pmce, 1, 0 );
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			link_face_to_msh ( fface, cll, msh, cp, cn );   }     }
 
-} // end of make_deep_connections_1d with tag::mesh_is_bdry
+} // end of make_deep_connections_hd with tag::mesh_is_not_bdry, tag::do_not_bother
 
 
 inline void make_deep_connections_hd  // hidden in anonymous namespace
@@ -1411,39 +1734,63 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 } // end of make_deep_connections_hd with tag::mesh_is_bdry
 
 
-inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
-(	Cell::Core * const o_seg, Cell::Positive::Segment * const seg,
-	Mesh::Core * const msh, const tag::MeshIsNotBdry &             )
+inline void make_deep_connections_hd  // hidden in anonymous namespace
+(	Cell::Positive::HighDim * const cll, Mesh::Core * const msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &           )
 
-// make far connections when adding a negative cell
+// make far connections when adding a positive cell
 // see paragraph 11.9 in the manual
 	
-{	assert ( seg != o_seg );
-	assert ( seg );  assert ( o_seg );
-	assert ( msh->get_dim_plus_one() == 2 );
-	assert ( seg->get_dim() == 1 );
-	assert ( o_seg->get_dim() == 1 );
-	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
-	// however, we sometimes call this method on the boundary of a
-	// freshly created cell (pretending it is not a boundary)
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
 
-	add_link_same_dim_rev ( o_seg, seg, msh );
+{	assert ( cll );
+	assert ( msh->get_dim_plus_one() > 2 );
+	// make_deep_connections_0d deals with the case of a vertex cll
+	// make_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+
+	add_link_same_dim ( cll, msh, tag::do_not_bother );
 	
-	Cell A = seg->base_attr.reverse ( tag::surely_exists );
-	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
-	Cell B = seg->tip_attr;
-	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	link_face_to_higher ( cll, pmce, 1, 0 );
 
-} // end of make_deep_connections_1d_rev with tag::mesh_is_not_bdry
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  link_face_to_msh ( face, cll, msh, cp, cn );
+	  link_face_to_higher ( face, pmce, cp, cn );                                    }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh' and
+			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			link_face_to_msh ( fface, cll, msh, cp, cn );
+			link_face_to_higher ( fface, pmce, cp, cn );            }  }
+
+} // end of make_deep_connections_hd with tag::mesh_is_bdry, tag::do_not_bother
 
 
 inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 (	Cell::Core * const o_cll, Cell::Positive::HighDim * const cll,
-	Mesh::Core * const msh, const tag::MeshIsNotBdry &             )
+  Mesh::Core * const msh, const tag::MeshIsNotBdry &             )
 
 // make far connections when adding a negative cell
 // see paragraph 11.9 in the manual
@@ -1487,46 +1834,55 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 } // end of make_deep_connections_hd_rev with tag::mesh_is_not_bdry
 
 
-inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
-(	Cell::Core * o_seg, Cell::Positive::Segment * seg,
-	Mesh::Core * msh, const tag::MeshIsBdry &          )
+inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_cll, Cell::Positive::HighDim * const cll, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &                                  )
 
 // make far connections when adding a negative cell
 // see paragraph 11.9 in the manual
 	
-{	assert ( seg != o_seg );
-	assert ( seg );  assert ( o_seg );
-	assert ( msh->get_dim_plus_one() == 2 );
-	assert ( seg->get_dim() == 1 );
-	assert ( o_seg->get_dim() == 1 );
+{	assert ( cll != o_cll );
+	assert ( cll );  assert ( o_cll );  assert ( msh );
+	assert ( msh->get_dim_plus_one() > 2 );
+	// make_deep_connections_0d deals with the case of a vertex cll
+	// make_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// freshly created cell (pretending it is not a boundary)
 
-	add_link_same_dim_rev ( o_seg, seg, msh );
+	add_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
 	
-	// for all meshes strictly above msh
-	Cell::Core * mce = msh->cell_enclosed;
-	assert ( mce );
-	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	link_face_to_higher ( seg, pmce, 1, 0 );
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+		// we switch the two counters
+	  link_face_to_msh ( face, cll, msh, cn, cp );                                   }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			// we switch the two counters
+			link_face_to_msh ( fface, cll, msh, cn, cp );   }       }
 
-	Cell A = seg->base_attr.reverse ( tag::surely_exists );
-	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
-	link_face_to_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
-	Cell B = seg->tip_attr;
-	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
-	link_face_to_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
-
-} // end of make_deep_connections_1d_rev with tag::mesh_is_bdry
+} // end of make_deep_connections_hd_rev with tag::mesh_is_not_bdry, tag::do_not_bother
 
 
 inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 (	Cell::Core * o_cll, Cell::Positive::HighDim * cll,
-	Mesh::Core * msh, const tag::MeshIsBdry &          )
+  Mesh::Core * msh, const tag::MeshIsBdry &          )
 
 // make far connections when adding a negative cell
 // see paragraph 11.9 in the manual
@@ -1575,6 +1931,61 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 			link_face_to_higher ( fface, pmce, cn, cp );    }  }
 
 } // end of make_deep_connections_hd_rev with tag::mesh_is_bdry
+
+
+inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
+(	Cell::Core * o_cll, Cell::Positive::HighDim * cll, Mesh::Core * msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother                      )
+
+// make far connections when adding a negative cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( cll );  assert ( o_cll );  assert ( msh );
+	assert ( cll != o_cll );
+	assert ( msh->get_dim_plus_one() > 1 );
+	// make_deep_connections_0d deals with the case of a vertex cll
+	// make_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+
+	add_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
+	
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	link_face_to_higher ( cll, pmce, 0, 1 );  // we switch the two counters
+
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  link_face_to_msh ( face, cll, msh, cn, cp );  // we switch the two counters
+	  link_face_to_higher ( face, pmce, cn, cp );                                    }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh' and
+			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			link_face_to_msh ( fface, cll, msh, cn, cp );  // we switch the two counters
+			link_face_to_higher ( fface, pmce, cn, cp );    }  }
+
+} // end of make_deep_connections_hd_rev with tag::mesh_is_bdry, tag::do_not_bother
 
 
 inline void remove_link_zero_dim  // hidden in anonymous namespace
@@ -1639,6 +2050,34 @@ inline void remove_link_same_dim  // hidden in anonymous namespace
 } // end of remove_link_same_dim
 
 
+inline void remove_link_same_dim  // hidden in anonymous namespace
+(	Cell::Positive::NotVertex * cll, Mesh::Core * msh, const tag::DoNotBother & )
+
+// this function "removes the link" between a cell and a mesh
+// this "link" asserts that the cell belongs to the mesh
+// here the dimensions are equal and the cell is positive
+
+// this function updates cll->meshes_same_dim
+// also, calls the virtual method msh->remove_from_my_cells
+// which, for fuzzy and stsi meshes, updates msh->cells
+// removing cll with the aid of the iterator provided
+// for other kinds of meshes, does nothing
+
+{	assert ( cll );  assert ( msh );
+	assert ( cll->is_positive() ); // assert ( msh->is_positive() );
+	size_t cll_dim = cll->get_dim();
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	typedef std::map <Mesh::Core*, Cell::field_to_meshes_same_dim> maptype;
+	maptype & cmd = cll->meshes_same_dim;
+	maptype::iterator cmdfm = cmd.find(msh);
+	assert ( cmdfm != cmd.end() );
+	assert ( cmdfm->second.sign == 1 );
+	msh->remove_from_my_cells ( cll, cll_dim, cmdfm->second.where, tag::do_not_bother );
+	cmd.erase ( cmdfm );
+
+} // end of remove_link_same_dim with tag::do_not_bother
+
+
 inline void remove_link_same_dim_rev  // hidden in anonymous namespace
 (	Cell::Core * o_cll, Cell::Positive::NotVertex * cll, Mesh::Core * msh )
 
@@ -1665,6 +2104,35 @@ inline void remove_link_same_dim_rev  // hidden in anonymous namespace
 	cmd.erase ( cmdfm );
 
 } // end of remove_link_same_dim
+
+
+inline void remove_link_same_dim_rev  // hidden in anonymous namespace
+(	Cell::Core * o_cll, Cell::Positive::NotVertex * cll, Mesh::Core * msh,
+  const tag::DoNotBother &                                              )
+
+// this function "removes the link" between a cell and a mesh
+// this "link" asserts that the cell belongs to the mesh
+// here the dimensions are equal and the cell is negative
+
+// this function updates cll->meshes_same_dim
+// also, calls the virtual method msh->remove_from_my_cells
+// which, for fuzzy and stsi meshes, updates msh->cells
+// removing cll with the aid of the iterator provided
+// for other kinds of meshes, does nothing
+
+{	assert ( cll );  assert ( msh );
+	assert ( cll->is_positive() ); // assert ( msh->is_positive() );
+	size_t cll_dim = cll->get_dim();
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	typedef std::map <Mesh::Core*, Cell::field_to_meshes_same_dim> maptype;
+	maptype & cmd = cll->meshes_same_dim;
+	maptype::iterator cmdfm = cmd.find(msh);
+	assert ( cmdfm != cmd.end() );
+	assert ( cmdfm->second.sign == -1 );
+	msh->remove_from_my_cells ( o_cll, cll_dim, cmdfm->second.where, tag::do_not_bother );
+	cmd.erase ( cmdfm );
+
+} // end of remove_link_same_dim with tag::do_not_bother
 
 
 inline void remove_link  // hidden in anonymous namespace
@@ -1707,7 +2175,7 @@ inline void remove_link  // hidden in anonymous namespace
 
 inline void unlink_face_from_msh  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * cll,
-	Mesh::Core * const msh, const short int cp, const short int cn )
+  Mesh::Core * const msh, const short int cp, const short int cn )
 // just a block of code for make_deep_connections
 
 {	assert ( face );  assert ( cll );
@@ -1729,7 +2197,7 @@ inline void unlink_face_from_msh  // hidden in anonymous namespace
 
 inline void unlink_face_from_higher  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * const pmce,
-	const short int cp, const short int cn                          )
+  const short int cp, const short int cn                          )
 // just a block of code for make_deep_connections
 
 {	assert ( face );  assert ( pmce );
@@ -1811,6 +2279,244 @@ inline void break_deep_connections_1d  // hidden in anonymous namespace
 } // end of break_deep_connections_1d with tag::mesh_is_not_bdry
 
 
+inline void break_deep_connections_1d  // hidden in anonymous namespace
+(	Cell::Positive::Segment * const seg, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &        )
+
+// break far connections when removing a positive segment
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg );  assert ( seg->get_dim() == 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// cell being destroyed (pretending it is not a boundary)
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1 );
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
+
+	remove_link_same_dim ( seg, msh, tag::do_not_bother );
+
+} // end of break_deep_connections_1d with tag::mesh_is_not_bdry, tag::do_not_bother
+
+
+inline void break_deep_connections_1d  // hidden in anonymous namespace
+(	Cell::Positive::Segment * const seg, Mesh::Core * const msh, const tag::MeshIsBdry & )
+
+// break far connections when removing a positive segment
+// see paragraph 11.9 in the manual
+	
+{	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg );
+	assert ( seg->get_dim() == 1 );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	unlink_face_from_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1 );
+	unlink_face_from_higher ( Ap, pmce, 0, 1 );
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
+	unlink_face_from_higher ( Bp, pmce, 1, 0 );
+
+	remove_link_same_dim ( seg, msh );
+
+} // end of break_deep_connections_1d with tag::mesh_is_bdry
+
+
+inline void break_deep_connections_1d  // hidden in anonymous namespace
+(	Cell::Positive::Segment * const seg, Mesh::Core * const msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &           )
+
+// break far connections when removing a positive segment
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg );
+	assert ( seg->get_dim() == 1 );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	unlink_face_from_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1 );
+	unlink_face_from_higher ( Ap, pmce, 0, 1 );
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
+	unlink_face_from_higher ( Bp, pmce, 1, 0 );
+
+	remove_link_same_dim ( seg, msh, tag::do_not_bother );
+
+} // end of break_deep_connections_1d with tag::mesh_is_bdry, tag::do_not_bother
+
+
+inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_seg, Cell::Positive::Segment * const seg,
+  Mesh::Core * const msh, const tag::MeshIsNotBdry &               )
+
+// break far connections when removing a negative cell
+// see paragraph 11.9 in the manual
+	
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// cell being destroyed (pretending it is not a boundary)
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+
+	remove_link_same_dim_rev ( o_seg, seg, msh );
+	
+} // end of break_deep_connections_1d_rev with tag::mesh_is_not_bdry
+
+
+inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_seg, Cell::Positive::Segment * const seg, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &                                  )
+
+// break far connections when removing a negative cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// cell being destroyed (pretending it is not a boundary)
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+
+	remove_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
+	
+} // end of break_deep_connections_1d_rev with tag::mesh_is_not_bdry, tag::do_not_bother
+
+
+inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * o_seg, Cell::Positive::Segment * seg,
+  Mesh::Core * msh, const tag::MeshIsBdry &             )
+
+// break far connections when removing a negative cell
+// see paragraph 11.9 in the manual
+	
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	unlink_face_from_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	unlink_face_from_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	unlink_face_from_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
+
+	remove_link_same_dim_rev ( o_seg, seg, msh );
+	
+} // end of break_deep_connections_1d_rev with tag::mesh_is_not_bdry
+
+
+inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
+(	Cell::Core * o_seg, Cell::Positive::Segment * seg, Mesh::Core * msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &                   )
+
+// break far connections when removing a negative cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( seg != o_seg );
+	assert ( seg );  assert ( o_seg );
+	assert ( msh->get_dim_plus_one() == 2 );
+	assert ( seg->get_dim() == 1 );
+	assert ( o_seg->get_dim() == 1 );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	unlink_face_from_higher ( seg, pmce, 1, 0 );
+
+	Cell A = seg->base_attr.reverse ( tag::surely_exists );
+	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	unlink_face_from_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
+	Cell B = seg->tip_attr;
+	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	unlink_face_from_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
+
+	remove_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
+	
+} // end of break_deep_connections_1d_rev with tag::mesh_is_not_bdry, tag::do_not_bother
+
+
 inline void break_deep_connections_hd  // hidden in anonymous namespace
 (	Cell::Positive::HighDim * const cll, Mesh::Core * const msh, const tag::MeshIsNotBdry & )
 
@@ -1854,38 +2560,50 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 } // end of break_deep_connections_hd with tag::mesh_is_not_bdry
 
 
-inline void break_deep_connections_1d  // hidden in anonymous namespace
-(	Cell::Positive::Segment * const seg, Mesh::Core * const msh, const tag::MeshIsBdry & )
+inline void break_deep_connections_hd  // hidden in anonymous namespace
+(	Cell::Positive::HighDim * const cll, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &        )
 
-// break far connections when removing a positive segment
+// break far connections when removing a positive cell
 // see paragraph 11.9 in the manual
 	
-{	assert ( msh->get_dim_plus_one() == 2 );
-	assert ( seg );
-	assert ( seg->get_dim() == 1 );
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
 
-	// for all meshes strictly above msh
-	Cell::Core * mce = msh->cell_enclosed;
-	assert ( mce );
-	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 1, 0 );
+{	assert ( cll );
+	assert ( msh->get_dim_plus_one() > 1 );
+	// break_deep_connections_0d deals with the case of a vertex cll
+	// break_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	assert ( cll );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// cell being destroyed (pretending it is not a boundary)
 
-	Cell A = seg->base_attr.reverse ( tag::surely_exists );
-	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 0, 1 );
-	unlink_face_from_higher ( Ap, pmce, 0, 1 );
-	Cell B = seg->tip_attr;
-	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
-	unlink_face_from_higher ( Bp, pmce, 1, 0 );
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );                                   }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			unlink_face_from_msh ( fface, cll, msh, cp, cn );   }     }
 
-	remove_link_same_dim ( seg, msh );
+	remove_link_same_dim ( cll, msh, tag::do_not_bother );
 
-} // end of break_deep_connections_1d with tag::mesh_is_bdry
+} // end of break_deep_connections_hd with tag::mesh_is_not_bdry, tag::do_not_bother
 
 
 inline void break_deep_connections_hd  // hidden in anonymous namespace
@@ -1939,39 +2657,63 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 } // end of break_deep_connections_hd with tag::mesh_is_bdry
 
 
-inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
-(	Cell::Core * const o_seg, Cell::Positive::Segment * const seg,
-	Mesh::Core * const msh, const tag::MeshIsNotBdry &               )
+inline void break_deep_connections_hd  // hidden in anonymous namespace
+(	Cell::Positive::HighDim * const cll, Mesh::Core * const msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &           )
 
-// break far connections when removing a negative cell
+// break far connections when removing a positive cell
 // see paragraph 11.9 in the manual
 	
-{	assert ( seg != o_seg );
-	assert ( seg );  assert ( o_seg );
-	assert ( msh->get_dim_plus_one() == 2 );
-	assert ( seg->get_dim() == 1 );
-	assert ( o_seg->get_dim() == 1 );
-	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
-	// however, we sometimes call this method on the boundary of a
-	// cell being destroyed (pretending it is not a boundary)
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
 
-	Cell A = seg->base_attr.reverse ( tag::surely_exists );
-	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
-	Cell B = seg->tip_attr;
-	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+{	assert ( cll );
+	assert ( msh->get_dim_plus_one() > 2 );
+	// break_deep_connections_0d deals with the case of a vertex cll
+	// break_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
 
-	remove_link_same_dim_rev ( o_seg, seg, msh );
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	unlink_face_from_higher ( cll, pmce, 1, 0 );
+
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );
+	  unlink_face_from_higher ( face, pmce, cp, cn );                                    }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh' and
+			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			unlink_face_from_msh ( fface, cll, msh, cp, cn );
+			unlink_face_from_higher ( fface, pmce, cp, cn );            }  }
+
+	remove_link_same_dim ( cll, msh, tag::do_not_bother );
 	
-} // end of break_deep_connections_1d_rev with tag::mesh_is_not_bdry
+} // end of break_deep_connections_hd with tag::mesh_is_bdry, tag::do_not_bother
 
 
 inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 (	Cell::Core * const o_cll, Cell::Positive::HighDim * const cll,
-	Mesh::Core * const msh, const tag::MeshIsNotBdry &               )
+  Mesh::Core * const msh, const tag::MeshIsNotBdry &               )
 
 // break far connections when removing a negative cell
 // see paragraph 11.9 in the manual
@@ -2015,46 +2757,57 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 } // end of break_deep_connections_hd_rev with tag::mesh_is_not_bdry
 
 
-inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
-(	Cell::Core * o_seg, Cell::Positive::Segment * seg,
-	Mesh::Core * msh, const tag::MeshIsBdry &             )
+inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
+(	Cell::Core * const o_cll, Cell::Positive::HighDim * const cll, Mesh::Core * const msh,
+  const tag::MeshIsNotBdry &, const tag::DoNotBother &                                  )
 
 // break far connections when removing a negative cell
 // see paragraph 11.9 in the manual
 	
-{	assert ( seg != o_seg );
-	assert ( seg );  assert ( o_seg );
-	assert ( msh->get_dim_plus_one() == 2 );
-	assert ( seg->get_dim() == 1 );
-	assert ( o_seg->get_dim() == 1 );
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
 
-	// for all meshes strictly above msh
-	Cell::Core * mce = msh->cell_enclosed;
-	assert ( mce );
-	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 1, 0 );
+{	assert ( cll != o_cll );
+	assert ( cll );  assert ( o_cll );  assert ( msh );
+	assert ( msh->get_dim_plus_one() > 2 );
+	// break_deep_connections_0d deals with the case of a vertex cll
+	// break_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	// we could assert  msh->cell_enclosed == nullptr  (i.e. mesh is not a boundary)
+	// however, we sometimes call this method on the boundary of a
+	// cell being destroyed (pretending it is not a boundary)
 
-	Cell A = seg->base_attr.reverse ( tag::surely_exists );
-	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
-	unlink_face_from_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
-	Cell B = seg->tip_attr;
-	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
-	unlink_face_from_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+		// we switch the two counters
+	  unlink_face_from_msh ( face, cll, msh, cn, cp );                                   }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			// we switch the two counters
+			unlink_face_from_msh ( fface, cll, msh, cn, cp );   }       }
 
-	remove_link_same_dim_rev ( o_seg, seg, msh );
+	remove_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
 	
-} // end of break_deep_connections_1d_rev with tag::mesh_is_not_bdry
+} // end of break_deep_connections_hd_rev with tag::mesh_is_not_bdry, tag::do_not_bother
 
 
 inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 (	Cell::Core * o_cll, Cell::Positive::HighDim * cll,
-	Mesh::Core * msh, const tag::MeshIsBdry &             )
+  Mesh::Core * msh, const tag::MeshIsBdry &             )
 
 // break far connections when removing a negative cell
 // see paragraph 11.9 in the manual
@@ -2103,6 +2856,61 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 	remove_link_same_dim_rev ( o_cll, cll, msh );
 	
 } // end of break_deep_connections_hd_rev with tag::mesh_is_bdry
+
+	
+inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
+(	Cell::Core * o_cll, Cell::Positive::HighDim * cll, Mesh::Core * msh,
+  const tag::MeshIsBdry &, const tag::DoNotBother &                   )
+
+// break far connections when removing a negative cell
+// see paragraph 11.9 in the manual
+	
+// tag::do_not_bother is only relevant for Mesh::Connected::***Dim
+
+{	assert ( cll );  assert ( o_cll );  assert ( msh );
+	assert ( cll != o_cll );
+	assert ( msh->get_dim_plus_one() > 1 );
+	// break_deep_connections_0d deals with the case of a vertex cll
+	// break_deep_connections_1d deals with the case of a segment cll
+	size_t cll_dim = cll->get_dim();
+	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
+	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+
+	// for all meshes strictly above msh
+	Cell::Core * mce = msh->cell_enclosed;
+	assert ( mce );
+	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
+	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	unlink_face_from_higher ( cll, pmce, 0, 1 );  // we switch the two counters
+
+	Mesh cll_bdry = cll->boundary();
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cn, cp );  // we switch the two counters
+	  unlink_face_from_higher ( face, pmce, cn, cp );                                }
+	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
+	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
+		// talvez implementar um iterador especial que devolva cp e cn
+		for ( itt.reset(); itt.in_range(); itt++ )
+		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh' and
+			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+			short int cp, cn;
+			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			unlink_face_from_msh ( fface, cll, msh, cn, cp );  // we switch the two counters
+			unlink_face_from_higher ( fface, pmce, cn, cp );    }  }
+
+	remove_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
+	
+} // end of break_deep_connections_hd_rev with tag::mesh_is_bdry, tag::do_not_bother
 
 	
 inline void not_zero_dim_add_pos_seg  // hidden in anonymous namespace
@@ -3586,7 +4394,7 @@ void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 	
-	not_zero_dim_add_neg_hd ( cll, this );                                                         }
+	not_zero_dim_add_neg_hd ( cll, pos_cll, this );                                                 }
 
 
 void Mesh::NotZeroDim::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
