@@ -4447,7 +4447,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		Cell::Core * rev_face = face_p->reverse_attr.core;
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
-		rev_face->cell_behind_within.erase(this);              }
+		rev_face->cell_behind_within.erase(this);                  }
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_not_bdry
 
@@ -4472,7 +4472,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		Cell::Core * rev_face = face_p->reverse_attr.core;
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
-		rev_face->cell_behind_within.erase(this);              }
+		rev_face->cell_behind_within.erase(this);                  }
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_not_bdry, tag::do_not_bother
 
