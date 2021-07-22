@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.20
+// mesh.h 2021.07.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1282,6 +1282,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// we are still in class Mesh
 
 	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::Around &, const Cell & ) const;
+	inline CellIterator iterator
 	( const tag::OverSegments &, const tag::Around &, const Cell & ) const;
 	inline CellIterator iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Around &, const Cell & ) const;
@@ -2562,6 +2564,9 @@ class tag::Util::MeshCore
 	// we are still in class Mesh::Core
 
 	virtual CellIterator::Core * iterator
+	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              ) = 0;
+	virtual CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
 	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              ) = 0;
 	virtual CellIterator::Core * iterator
@@ -3137,6 +3142,9 @@ class Mesh::ZeroDim : public Mesh::Core
 
 	// we are still in class Mesh::ZeroDim
 
+	CellIterator::Core * iterator
+	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
 	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              );
@@ -3772,6 +3780,9 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 
 	// we are still in class Mesh::Connected::OneDim
 
+	CellIterator::Core * iterator
+	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
 	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              );
@@ -4480,6 +4491,9 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 	
 	// we are still in class Mesh::Fuzzy
 
+	CellIterator::Core * iterator
+	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              );
 	CellIterator::Core * iterator
 	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
 	  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              );
@@ -5378,7 +5392,8 @@ inline size_t Mesh::dim ( ) const
 
 inline Cell Cell::reverse ( const tag::BuildIfNotExists & build ) const
 // 'build' defaults to tag::build_if_not_exists, so method may be called with no arguments
-{	assert ( this->exists() );
+{	std::cout << "Cell::reverse, this->core " << this->core << std::endl;
+	assert ( this->exists() );
 	if ( not this->core->reverse_attr.exists() )
 	{	assert ( this->is_positive() );
 		Cell::Positive * pos_this_core = tag::Util::assert_cast

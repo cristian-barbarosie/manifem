@@ -1047,12 +1047,14 @@ inline void add_link_same_dim  // hidden in anonymous namespace
 {	assert ( cll );  assert ( msh );
 	size_t cll_dim = cll->get_dim();
 	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
+	std::cout << "add_link_same_dim 1" << std::endl;
 /////////////////////////////////////////////////////////////////////////////
 	// inspired in item 24 of the book : Scott Meyers, Effective STL         //
 	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;    //
 	maptype & cmd = cll->meshes_same_dim;                                    //
 	maptype::iterator lb = cmd.lower_bound(msh);                             //
 	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(msh,lb->first) ) );     //
+	std::cout << "add_link_same_dim 2" << std::endl;
 	cmd.emplace_hint ( lb, std::piecewise_construct,                         //
 	      std::forward_as_tuple(msh),                                        // 
 	      std::forward_as_tuple(1,msh->add_to_my_cells(cll,cll_dim)) );      //
@@ -1065,6 +1067,7 @@ inline void add_link_same_dim  // hidden in anonymous namespace
 //	field.where = msh->cells[cll->dim]->begin();                               //
 //	cll->meshes_same_dim[msh] = field;                                         //
 /////////////////////////////////////////////////////////////////////////////////
+	std::cout << "add_link_same_dim 3" << std::endl;
 
 } // end of add_link_same_dim
 
@@ -3193,7 +3196,8 @@ void Cell::Positive::Segment::add_to_mesh ( Mesh::Core * msh )
 
 // there are many types of meshes, so we call a virtual method
 
-{	assert ( msh );  msh->add_pos_seg ( this, tag::mesh_is_not_bdry );  }
+{	assert ( msh );
+	msh->add_pos_seg ( this, tag::mesh_is_not_bdry );  }
 
 
 void Cell::Positive::Segment::add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & )
@@ -3215,8 +3219,7 @@ void Cell::Positive::Segment::remove_from_mesh ( Mesh::Core * msh )
 
 // there are many types of meshes, so we call a virtual method
 
-{	assert ( msh );
-	msh->remove_pos_seg ( this, tag::mesh_is_not_bdry );  }
+{	assert ( msh );  msh->remove_pos_seg ( this, tag::mesh_is_not_bdry );  }
 
 
 void Cell::Positive::Segment::remove_from_mesh ( Mesh::Core * msh, const tag::DoNotBother & )
@@ -3610,11 +3613,14 @@ std::list<Cell>::iterator Mesh::Connected::OneDim::add_to_my_cells
 	
 {	assert ( d == cll->get_dim() );
 	assert ( d <= 1 );
+		assert ( this->last_ver != this->first_ver.reverse() );
+	std::cout << "Mesh::Connected::OneDim::add_to_my_cells 1, d=" << d << std::endl;
 	if ( d == 1 )
 	{	// we cannot add a segment to a closed loop :
 		assert ( this->last_ver != this->first_ver.reverse() );
 		assert ( ( cll->base().reverse() == this->last_ver ) or
 	           ( cll->tip() == this->first_ver.reverse() )    );
+		std::cout << "Mesh::Connected::OneDim::add_to_my_cells 2" << std::endl;
 		this->nb_of_segs++;
 		if ( cll->base().reverse() == this->last_ver )
 			this->last_ver = cll->tip();
@@ -3645,6 +3651,7 @@ std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 		
 {	assert ( d == cll->get_dim() );
 	assert ( d < this->get_dim_plus_one() );
+	std::cout << "Mesh::Fuzzy::add_to_my_cells" << std::endl;
 	std::list <Cell> & mcd = this->cells[d];
 	mcd.push_front ( Cell ( tag::whose_core_is, cll,
                           tag::previously_existing, tag::surely_not_null ) );

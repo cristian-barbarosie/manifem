@@ -1,5 +1,5 @@
 
-// iterator.cpp 2021.07.07
+// iterator.cpp 2021.07.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -565,6 +565,15 @@ CellIterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 
 //--------------------------------------------------------------------------------------------//
 //--------------------------------------------------------------------------------------------//
+
+
+CellIterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
+( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
+	exit ( 1 );                                                                           }
 
 
 CellIterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -1671,6 +1680,15 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 		ReverseOrder::ReverseEachCell::AssumeCellsExist ( this );      }
 
 //-----------------------------------------------------------------------------------------
+
+
+CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
+( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+  const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
+	exit ( 1 );                                                                           }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -2809,6 +2827,17 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 
 //-----------------------------------------------------------------------------------------
 
+
+
+CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
+( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
+  const tag::Around &, Cell::Core * c, const tag::ThisMeshIsPositive &              )
+	
+{	assert ( c->get_dim() == 0 );
+	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	return new CellIterator::Around::OneCell::OfCodimTwo
+		::WorkAround2D::NormalOrder::BuildReverseCells ( this,
+			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -4330,6 +4359,26 @@ Cell CellIterator::Around::OneCell::OfCodimTwo::OverVertices::
 		tcv->reverse_attr.core = tcv->build_reverse ( tag::one_dummy_wrapper );  }
 	assert ( this->current_vertex->reverse_attr.exists() );
 	return this->current_vertex->reverse_attr;              }
+
+
+Cell CellIterator::Around::OneCell
+         ::OfCodimTwo::WorkAround2D::NormalOrder::BuildReverseCells::deref ( )
+// virtual from CellIterator::Core,
+// defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::
+// ::BuildReverseCells::AsTheyAre, here overriden to return the reversed base of the segment
+{	Cell seg = CellIterator::Around::OneCell::OfCodimTwo
+		::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre::deref();
+	return seg.base().reverse();                                          }
+
+
+Cell CellIterator::Around::OneCell
+         ::OfCodimTwo::WorkAround2D::ReverseOrder::BuildReverseCells::deref ( )
+// virtual from CellIterator::Core,
+// defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::
+// ::BuildReverseCells::AsTheyAre, here overriden to return the reversed base of the segment
+{	Cell seg = CellIterator::Around::OneCell::OfCodimTwo
+		::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre::deref();
+	return seg.base().reverse();                                          }
 
 
 void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::advance ( )

@@ -32,6 +32,8 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 	
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current manifold
+
+	std::cout << "Mesh::build 1" << std::endl;
 	
 	assert ( not A.is_positive() );
 	Cell posA = A.reverse();
@@ -40,13 +42,21 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 	assert ( A.dim() == 0 );
 	assert ( B.dim() == 0 );
 
+	std::cout << "Mesh::build 2" << std::endl;
+	
 	Cell prev_point = A;
 	for ( size_t i=1; i < n; ++i )
 	{	Cell P ( tag::vertex );
 		double frac = double(i)/double(n);
 		space.interpolate ( P, 1.-frac, posA, frac, B );
 		Cell seg ( tag::segment, prev_point, P );
+		std::cout << "Mesh::build 3" << std::endl;
+		assert ( seg.exists() );
+		std::cout << "Mesh::build 4" << std::endl;
 		seg.add_to_mesh ( *this );
+		std::cout << "Mesh::build 5" << std::endl;
+		assert ( P.exists() );
+		std::cout << "Mesh::build 6, P.core " << P.core << std::endl;
 		prev_point = P.reverse();                         }
 	Cell seg ( tag::segment, prev_point, B );
 	seg.add_to_mesh ( *this );
@@ -54,6 +64,9 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
 	this_core->first_ver = A;
 	this_core->last_ver = B;
+
+	std::cout << "Mesh::build 7" << std::endl;
+	
 }
 
 //----------------------------------------------------------------------------------//

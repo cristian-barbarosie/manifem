@@ -1,5 +1,5 @@
 
-// iterator.h 2021.07.19
+// iterator.h 2021.07.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -958,7 +958,9 @@ class CellIterator::Around::OneCell : public CellIterator::Core
 	// bool in_range ( )  stays pure virtual from CellIterator::Core
 
 	struct OfCodimTwo
-	{ class Ordered; class OverVertices; class OverSegments; };
+	{ class Ordered; class OverVertices; class OverSegments;
+		struct WorkAround2D { struct NormalOrder { class BuildReverseCells; };
+		                      struct ReverseOrder { class BuildReverseCells; }; };	};
 	class OfAnyCodim;
 	
 };  // end of class CellIterator::Around::OneCell
@@ -1987,7 +1989,8 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	// void advance ( )  virtual from CellIterator::Core, defined by
 	//   CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::BuildReverseCells
 
-	// bool in_range ( )  virtual, defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices
+	// bool in_range ( )  virtual from CellIterator::Core,
+  //   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices
 	
 };  // end of class CellIterator::Around::OneCell::OfCodimTwo
     //                  ::OverVertices::ReverseOrder::BuildReverseCells::ReverseEachCell
@@ -2318,6 +2321,49 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverSegments::ReverseOrder::AsT
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
 
+
+class CellIterator::Around::OneCell::OfCodimTwo::WorkAround2D::NormalOrder::BuildReverseCells
+: public CellIterator::Around::OneCell::OfCodimTwo
+              ::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre
+
+// this is a quick and ugly workaround for a specific need
+// we are in a 2D mesh and we want all vertices around a given vertex
+// so we inherit from ::OverVertices:: - which produces segments !
+// and just override 'deref' to return the reversed base of the segment
+
+{	public :
+
+	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * const c )
+	:	CellIterator::Around::OneCell::OfCodimTwo::OverVertices
+	    ::NormalOrder::BuildReverseCells::AsTheyAre ( msh, c )  // msh_p { msh }, center { c }
+	{ }
+	
+	Cell deref ( ) override;  // virtual from CellIterator::Core,
+	// defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::
+	// ::BuildReverseCells::AsTheyAre, here overriden to return the reversed base of the segment
+
+};  // end of class CellIterator::Around::OneCell::OfCodimTwo::WorkAround2D::NormalOrder::BuildReverseCells
+
+
+class CellIterator::Around::OneCell::OfCodimTwo::WorkAround2D::ReverseOrder::BuildReverseCells
+: public CellIterator::Around::OneCell::OfCodimTwo
+              ::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre
+
+// this is a quick and ugly workaround for a specific need
+// we are in a 2D mesh and we want all vertices around a given vertex
+// so we inherit from ::OverVertices:: - which produces segments !
+// and just override 'deref' to return the reversed base of the segment
+
+{	public :
+
+	Cell deref ( ) override;  // virtual from CellIterator::Core,
+	// defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::
+	// ::BuildReverseCells::AsTheyAre, here overriden to return the reversed base of the segment
+
+};  // end of class CellIterator::Around::OneCell::OfCodimTwo::WorkAround2D::ReverseOrder::BuildReverseCells
+
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
 
 class CellIterator::Around::OneCell::OfAnyCodim
 : public CellIterator::Around::OneCell
@@ -3462,6 +3508,13 @@ inline CellIterator Mesh::iterator
 
 //      ITERATORS OVER SEGMENTS AROUND A GIVEN CELL
 //------------------------------------------------------------------------------------
+
+
+inline CellIterator Mesh::iterator
+( const tag::OverVertices &, const tag::Around &, const Cell & c ) const
+{	return CellIterator ( tag::whose_core_is, this->core->iterator
+      ( tag::over_vertices, tag::as_they_are, tag::build_cells_if_necessary,
+        tag::around, c.core, tag::this_mesh_is_positive                     ) );  }
 
 
 inline CellIterator Mesh::iterator
