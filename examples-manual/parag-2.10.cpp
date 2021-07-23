@@ -143,7 +143,7 @@ int main ( )
 		for ( int i = 1; i < 20; i++ )
 		for ( it2.reset(); it2.in_range(); it2++ )
 		{	Cell ver = *it2;
-			sect.baricenter ( ver );                 }            }
+			if ( ver.is_inner_to ( sect ) ) sect.baricenter ( ver );  }  }
 
 	fisalis.export_msh ("physalis.msh");
 

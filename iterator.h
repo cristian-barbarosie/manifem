@@ -1,5 +1,5 @@
 
-// iterator.h 2021.07.22
+// iterator.h 2021.07.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1251,7 +1251,7 @@ inline Cell::Core * find_first_seg ( Cell::Positive * const pos_cen, Mesh::Core 
 		if ( mce == nullptr ) continue;
 		#ifndef NDEBUG
 		// a boundary has no boundary, so it will appear exactly twice, with opposite orientations
-		// do we accept only 11 here, or is 20 02 acceptable too ?
+		// do we accept only 11 here, or are 20 and 02 acceptable too ?
 		// Cell::field_to_meshes f = it->second;
 		// assert ( f.counter_pos == 1 );
 		// assert ( f.counter_neg == 1 );
@@ -1332,9 +1332,63 @@ inline void rotate_forward_for_ver
 // inline Cell::Core * Mesh::Core::cell_behind_ptr
 // ( const Cell::Core * face, const tag::MayNotExist & ) const
 // which is not difficult to implement
-
-}  // namespace tag::local_functions::iterator_h
 	
+
+inline bool inner_cell ( Mesh::Core * const msh, Cell::Positive * const cen )
+
+// we want to know whether we are in the interior or on the boundary of the mesh
+// so we search for some first_segment, then rotate
+	
+{	assert ( msh );
+	assert ( cen );
+	assert ( cen->get_dim() + 3 == msh->get_dim_plus_one() );
+	Cell::Core * first_segment =  // word "vertex" is misleading here
+		tag::local_functions::iterator_h::find_first_seg ( cen, msh );
+	assert ( first_segment );
+
+	// now we rotate forward until we meet the boundary or close the loop
+	Cell this_center ( tag::whose_core_is, cen,
+	                   tag::previously_existing, tag::surely_not_null );
+	Mesh m ( tag::whose_core_is, msh, tag::previously_existing, tag::is_positive );
+	Cell::Core * vertex_stop = first_segment->boundary().cell_in_front_of
+		( this_center, tag::surely_exists ).core;
+
+	while ( true )
+	{	Cell::Core * vertex_p = first_segment->boundary().cell_behind
+			( this_center, tag::surely_exists ).core;
+		Cell vertex ( tag::whose_core_is, vertex_p,
+		              tag::previously_existing, tag::surely_not_null );
+		Cell new_seg = m.cell_in_front_of ( vertex, tag::may_not_exist );
+		if ( not new_seg.exists() ) return false;  // we have hit the boundary
+		if ( vertex_p->reverse_attr.core == vertex_stop )  // completed loop
+			return true;
+		first_segment = new_seg.core;                                                 }  }
+
+// the above could get simpler and faster by using a method like
+// inline Cell::Core * Mesh::Core::cell_behind_ptr
+// ( const Cell::Core * face, const tag::MayNotExist & ) const
+// which is not difficult to implement
+	
+}  // namespace tag::local_functions::iterator_h
+
+//-----------------------------------------------------------------------------------------
+
+
+inline bool Cell::is_inner_to ( const Mesh & msh ) const
+// builds reverse of 'cen' !
+{	assert ( msh.exists() );
+	assert ( this->exists() );
+	assert ( this->dim() < msh.dim() );
+	if ( this->dim() + 2 == msh.core->get_dim_plus_one() )  // co-dimension one
+		return ( msh.cell_in_front_of ( *this, tag::may_not_exist ) .exists() and
+		         msh.cell_behind ( *this, tag::may_not_exist ) .exists()          );
+	assert ( this->dim() + 3 == msh.core->get_dim_plus_one() );  // co-dimension two
+	Cell::Positive * cll_pos = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive* > ( this->core->get_positive().core );
+	return tag::local_functions::iterator_h::inner_cell ( msh.core, cll_pos );  }
+
+// add code for co-dimension tree or higher ! how do we do that ?
+
 //-----------------------------------------------------------------------------------------
 
 
@@ -3536,7 +3590,7 @@ inline CellIterator Mesh::iterator
 		return CellIterator ( tag::whose_core_is, this->core->iterator
 		  ( tag::over_segments, tag::as_they_are, tag::build_cells_if_necessary,
 	      tag::around, cll.core, tag::this_mesh_is_positive                   ) );
-	// else
+	// else : 'this' mesh is negative
 	return CellIterator ( tag::whose_core_is, this->core->iterator
 		( tag::over_segments, tag::reverse_each_cell, tag::build_cells_if_necessary,
 		  tag::around, cll.core, tag::reverse_order_if_any, tag::this_mesh_is_positive ) );  }
@@ -3561,7 +3615,7 @@ inline CellIterator Mesh::iterator
 		return CellIterator ( tag::whose_core_is, this->core->iterator
 		  ( tag::over_segments, tag::as_they_are, tag::build_cells_if_necessary,
 	      tag::around, cll.core, tag::this_mesh_is_positive                   ) );
-	// else
+	// else : 'this' mesh is negative
 	return CellIterator ( tag::whose_core_is, this->core->iterator
 		( tag::over_segments, tag::reverse_each_cell, tag::do_not_build_cells,
 		  tag::around, cll.core, tag::reverse_order_if_any, tag::this_mesh_is_positive ) );  }
@@ -3630,7 +3684,7 @@ inline CellIterator Mesh::iterator
 		return CellIterator ( tag::whose_core_is, this->core->iterator
 			( tag::over_cells_of_dim, d, tag::as_they_are, tag::build_cells_if_necessary,
 			  tag::around, cll.core, tag::this_mesh_is_positive                          ) );
-	// else
+	// else : 'this' mesh is negative
 	return CellIterator ( tag::whose_core_is, this->core->iterator
 		( tag::over_cells_of_dim, d, tag::reverse_each_cell, tag::build_cells_if_necessary,
 		  tag::around, cll.core, tag::this_mesh_is_positive                                ) );  }
@@ -3651,7 +3705,7 @@ inline CellIterator Mesh::iterator
 		return CellIterator ( tag::whose_core_is, this->core->iterator
 			( tag::over_cells_of_dim, d, tag::as_they_are, tag::do_not_build_cells,
 			  tag::around, cll.core, tag::this_mesh_is_positive                    ) );
-	// else
+	// else : 'this' mesh is negative
 	return CellIterator ( tag::whose_core_is, this->core->iterator
 		( tag::over_cells_of_dim, d, tag::reverse_each_cell, tag::do_not_build_cells,
 		  tag::around, cll.core, tag::this_mesh_is_positive                          ) );  }
