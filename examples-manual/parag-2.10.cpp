@@ -139,17 +139,12 @@ int main ( )
 	std::list<Mesh>::iterator it1;
 	for ( it1 = lm.begin(); it1 != lm.end(); it1++ )
 	{	Mesh sect = *it1;
-		CellIterator it2 = sect.iterator ( tag::over_cells_of_dim, 1 );
+		CellIterator it2 = sect.iterator ( tag::over_vertices );
 		for ( int i = 1; i < 20; i++ )
 		for ( it2.reset(); it2.in_range(); it2++ )
-		{	Cell seg = *it2;
-			sect.baricenter ( seg.tip(), seg );
-			seg = seg.reverse();
-			sect.baricenter ( seg.tip(), seg );  }                     }
+		{	Cell ver = *it2;
+			sect.baricenter ( ver );                 }            }
 
-	// does the 'baricenter' method really need a segment as second argument ?
-	// defined in manifold.h
-	
 	fisalis.export_msh ("physalis.msh");
 
 	std::cout << "produced file physalis.msh" << std::endl;

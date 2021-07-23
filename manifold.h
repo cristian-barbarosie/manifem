@@ -1,5 +1,5 @@
 
-// manifold.h 2021.06.18
+// manifold.h 2021.07.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -757,23 +757,18 @@ inline void Cell::project ( const tag::Onto &, const Manifold m ) const
 	m.core->project ( cll );                                                }
 		
 
-void inline Mesh::baricenter ( const Cell & ver, const Cell & seg_ini )
+void inline Mesh::baricenter ( const Cell & ver )
 
-// 'ver' is a vertex in 'this' mesh, 'seg' is a segment pointing towards 'ver'
+// 'ver' is a vertex in 'this' mesh
 
 {	assert ( ver.dim() == 0 );
-	assert ( seg_ini.dim() == 1 );
 	std::vector < Cell > neighbours;  // vertices
-	Cell seg = seg_ini;
 	size_t n = 0;
-	while ( true )
-	{	assert ( seg.tip() == ver );
-		Cell tri = this->cell_in_front_of ( seg, tag::may_not_exist );
-		if ( not tri.exists() ) return;
-		// 'ver' is on the boundary of mesh so we do nothing
-		n++;  neighbours.push_back ( seg.base().reverse() );
-		seg = tri.boundary().cell_behind(ver);
-		if ( seg == seg_ini ) break;                                    }
+	CellIterator it = this->iterator ( tag::over_vertices, tag::around, ver );
+	for ( it.reset(); it.in_range(); it++ )
+	{	n++;  neighbours.push_back ( *it );  }
+	assert ( n == neighbours.size() );
+	assert ( n >= 2 );
 	std::vector < double > coefs ( n, 1./n );
 	Manifold::working.interpolate ( ver, coefs, neighbours );             }
 

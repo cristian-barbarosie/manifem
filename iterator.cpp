@@ -1,5 +1,5 @@
 
-// iterator.cpp 2021.07.22
+// iterator.cpp 2021.07.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2852,10 +2852,10 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 			::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
 			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	// else : c is negative
-		return new CellIterator::Around::OneCell::OfCodimTwo
-			::OverVertices::NormalOrder::BuildReverseCells::ReverseEachCell ( this,
-			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
-	  	    ( c->reverse_attr.core )                                            );      }
+	return new CellIterator::Around::OneCell::OfCodimTwo
+		::OverVertices::NormalOrder::BuildReverseCells::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2865,9 +2865,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::NormalOrder::AssumeCellsExist::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2877,9 +2883,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::NormalOrder::BuildReverseCells::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2889,9 +2901,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::NormalOrder::AssumeCellsExist::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2900,9 +2918,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::ReverseOrder::BuildReverseCells::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2911,9 +2935,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::ReverseOrder::AssumeCellsExist::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2924,9 +2954,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::ReverseOrder::BuildReverseCells::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2937,9 +2973,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
 	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		::OverVertices::ReverseOrder::AssumeCellsExist::ReverseEachCell ( this,
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	 	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2951,7 +2993,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::NormalOrder::BuildReverseCells::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2963,7 +3006,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2974,7 +3018,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::NormalOrder::BuildReverseCells::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2985,7 +3030,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -2996,7 +3042,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -3007,7 +3054,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -3020,7 +3068,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
@@ -3033,7 +3082,8 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
 	return new CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist::ForcePositive ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	       ( c->get_positive().core )                                        );  }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core

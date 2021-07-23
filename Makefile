@@ -9,16 +9,18 @@ CFLAGS = -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
 #	CFLAGS = -DNDEBUG -c -O4 -I $(HOME)/include/ -std=c++17
 # CFLAGS = -DNDEBUG -c -I $(HOME)/include/ -std=c++17
 
+manifem_objects = iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o
+
 %.o: %.cpp
 	$(CC) $(CFLAGS) $^
 
 main-%.o: examples-manual/parag-%.cpp
 	$(CC) $(CFLAGS) -o $@ $^
 
-manifem-exe-%: iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o main-%.o progressive.o
+manifem-exe-%: main-%.o $(manifem_objects)
 	$(CC) -o $@ -std=c++17 $^
 
-manifem-exe-test-%: iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o test-%.o progressive.o
+manifem-exe-test-%: test-%.o $(manifem_objects)
 	$(CC) -o $@ -std=c++17 $^
 
 manifem-exe-12.10: main-12.10.o
