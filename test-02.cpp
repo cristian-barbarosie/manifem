@@ -38,7 +38,7 @@ int main () {
 		for ( it2.reset(), it3.reset(); it2.in_range(); it2++, it3++ )
 		{	assert ( it3.in_range() );
 			assert ( (*it2).base().reverse() == P );
-			assert ( (*it2).tip() == *it3 );  }
+			assert ( (*it2).tip() == *it3 );         }
 		assert ( not it3.in_range() );                                                }
 
 	std::cout << "end of main" << std::endl << std::flush;

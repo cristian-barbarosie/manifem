@@ -2847,9 +2847,15 @@ CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	
 {	assert ( c->get_dim() == 0 );
 	assert ( this->get_dim_plus_one() == 3 );  // 2D mesh
-	return new CellIterator::Around::OneCell::OfCodimTwo
-		::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
-			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }
+	if ( c->is_positive() )
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
+	// else : c is negative
+		return new CellIterator::Around::OneCell::OfCodimTwo
+			::OverVertices::NormalOrder::BuildReverseCells::ReverseEachCell ( this,
+			  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const>
+	  	    ( c->reverse_attr.core )                                            );      }
 
 
 CellIterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
