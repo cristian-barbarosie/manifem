@@ -5020,7 +5020,11 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
          tag::freshly_created, tag::is_positive                                               )
 {	assert ( not A.is_positive() );
 	assert ( B.is_positive() );
-	this->build ( tag::segment, A, B, tag::divided_in, n );  }
+	this->build ( tag::segment, A, B, tag::divided_in, n );
+	Mesh::Connected::OneDim * this_core = tag::Util::assert_cast
+		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
+	this_core->first_ver = A;
+	this_core->last_ver = B;                                      }
 
 
 inline Mesh::Mesh
@@ -5392,8 +5396,7 @@ inline size_t Mesh::dim ( ) const
 
 inline Cell Cell::reverse ( const tag::BuildIfNotExists & build ) const
 // 'build' defaults to tag::build_if_not_exists, so method may be called with no arguments
-{	std::cout << "Cell::reverse, this->core " << this->core << std::endl;
-	assert ( this->exists() );
+{	assert ( this->exists() );
 	if ( not this->core->reverse_attr.exists() )
 	{	assert ( this->is_positive() );
 		Cell::Positive * pos_this_core = tag::Util::assert_cast
