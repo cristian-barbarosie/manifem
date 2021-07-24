@@ -78,8 +78,8 @@ void Manifold::Euclid::set_coords ( const Function co )  // virtual from Manifol
 
 void Manifold::Implicit::set_coords ( const Function co )  // virtual from Manifold::Core
 {	Manifold m = this->surrounding_space;
-	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
-	assert ( m_euclid );
+	Manifold::Euclid * m_euclid = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Euclid* > ( m.core );
 	m_euclid->coord_func = co;                                                 }
 
 void Manifold::Parametric::set_coords ( const Function co )  // virtual from Manifold::Core
