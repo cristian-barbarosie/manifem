@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.23
+// mesh.h 2021.07.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -350,7 +350,7 @@ class CellIterator
 	inline ~CellIterator ( ) { };
 	
 	inline void reset ( );	
-	inline void reset ( const tag::StartAt &, Cell & );	
+	inline void reset ( const tag::StartAt &, const Cell & );	
 	inline Cell operator* ( );
 	inline CellIterator & operator++ ( );
 	inline CellIterator & operator++ ( int );
@@ -884,8 +884,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// we are still in class Mesh
 	
-	// method baricenter defined in manifold.h
-	void inline baricenter ( const Cell & ver );
+	// method baricenter defined in manifold.cpp
+	void baricenter ( const Cell & ver );
 
 	// iterators defined in iterator.h
 	inline CellIterator iterator ( const tag::OverVertices & ) const;

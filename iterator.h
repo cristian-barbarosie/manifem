@@ -1,5 +1,5 @@
 
-// iterator.h 2021.07.23
+// iterator.h 2021.07.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -93,7 +93,7 @@ inline CellIterator & CellIterator::operator= ( const CellIterator & it )
 inline void CellIterator::reset ( )  {  this->core->reset();  }
 
 
-inline void CellIterator::reset ( const tag::StartAt &, Cell & cll )
+inline void CellIterator::reset ( const tag::StartAt &, const Cell & cll )
 {  this->core->reset( tag::start_at, cll.core );  }
 	
 
@@ -1096,7 +1096,8 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
 	{ }
 	
 	void reset ( );  // virtual from CellIterator::Core
-	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	//   stays pure virtual from CellIterator::Core
 
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 
@@ -1142,7 +1143,8 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
 	inline ReverseOrder ( Mesh::Core * msh, Cell::Positive * const c );
 	
 	void reset ( );  // virtual from CellIterator::Core
-	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	//   stays pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 
@@ -1177,9 +1179,10 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::Assu
 
 	inline AssumeCellsExist ( Mesh::Core * msh, Cell::Positive * const c );
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	//   stays pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 
@@ -1215,9 +1218,10 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::Buil
 
 	inline BuildReverseCells ( Mesh::Core * msh, Cell::Positive * const c );
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	//   stays pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 
@@ -1485,9 +1489,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1525,9 +1529,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1565,9 +1569,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1605,9 +1609,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1645,9 +1649,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1685,9 +1689,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 	      ::OverVertices::NormalOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1725,9 +1729,10 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::Ass
 	// msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	//   stays pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 
@@ -1765,9 +1770,10 @@ class CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::Bui
 	// msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverselOrder
+	// void reset ( const tag::StartAt &, Cell::Core * cll )
+	//   stays pure virtual from CellIterator::Core
 	
 	// Cell deref ( )  stays pure virtual from CellIterator::Core
 
@@ -1834,9 +1840,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1874,9 +1880,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1914,9 +1920,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::AssumeCellsExist ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1954,9 +1960,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -1994,9 +2000,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells ( msh,c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 
@@ -2034,9 +2040,9 @@ class CellIterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells ( msh, c )  // msh_p { msh }, center { c }
 	{ }
 	
-	// void reset ( )  virtual
-	// void reset ( const tag::StartAt &, Cell::Core * cll )  virtual
-	//   both defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	// void reset ( )  virtual,
+	//   defined by CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder
+	void reset ( const tag::StartAt &, Cell::Core * cll );  // virtual from CellIterator::Core
 	
 	Cell deref ( );  // virtual from CellIterator::Core
 

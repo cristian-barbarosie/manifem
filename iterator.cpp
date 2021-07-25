@@ -4276,7 +4276,8 @@ void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::reset
             tag::previously_existing, tag::surely_not_null );
 	this->current_vertex = cll;
 	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
-	assert ( new_ver.tip().core == this->center );
+	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
+	else assert ( new_ver.base().core == this->center );
 	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
 	std::cout << "reset ::OverVertices::NormalOrder";
 	if ( this->last_segment )

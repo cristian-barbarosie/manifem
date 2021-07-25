@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.06.12
+// manifold.cpp 2021.07.25
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -472,5 +472,35 @@ void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 		Function::Scalar * expr_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( it->second.core );
 		coord_scalar->set_value_on_cell ( P_c, expr_scalar->get_value_on_cell(P_c) );  }  }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void Mesh::baricenter ( const Cell & ver )
+
+// 'ver' is a vertex in 'this' mesh
+
+{	assert ( ver.dim() == 0 );
+	std::vector < Cell > neighbours;  // vertices
+	size_t n = 0;
+	if ( this->dim() == 1 )
+	{	Cell front = this->cell_in_front_of ( ver, tag::may_not_exist );
+		if ( not front.exists() ) return;
+		assert ( front.base() == ver.reverse() );
+		neighbours.push_back ( front.tip() );
+		Cell back = this->cell_behind ( ver, tag::may_not_exist );
+		if ( not back.exists() ) return;
+		assert ( back.tip() == ver );
+		neighbours.push_back ( back.base().reverse() );
+		n = 2;                                                           }
+	else
+	{	assert ( this->dim() >= 2 );
+		CellIterator it = this->iterator ( tag::over_vertices, tag::around, ver );
+		for ( it.reset(); it.in_range(); it++ )
+		{	n++;  neighbours.push_back ( *it );  }                                   }
+	assert ( n == neighbours.size() );
+	assert ( n >= 2 );
+	std::vector < double > coefs ( n, 1./n );
+	Manifold::working.interpolate ( ver, coefs, neighbours );                      }
 
 

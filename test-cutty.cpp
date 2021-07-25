@@ -37,9 +37,9 @@ int main ()
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
-	double radius = 0.4;
+//	double radius = 0.4;
 	// std::cout << "radius = ";  std::cin >> radius;
-	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y;
+	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y;
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -52,9 +52,39 @@ int main ()
 
 	Manifold level = RR2.implicit ( psi == 0. );
 
-	special_draw ( rect_mesh, cut, "square-cut.eps" );
+	CellIterator it=cut.iterator(tag::over_vertices);
+	for(it.reset(); it.in_range(); it++) {
+		Cell V=*it;
+		level.project(V);
+		if (V.belongs_to(AB)) y(V)=0.;
+		if (V.belongs_to(BC)) x(V)=1.;
+		if (V.belongs_to(CD)) y(V)=1.;
+		if (V.belongs_to(DA)) x(V)=-1.;
+	}
 
-	std::cout << "produced file square-cut.eps" << std::endl;
+	// 'level' is working manifold
+	
+	for ( it.reset(); it.in_range(); it++ )  // 'it' runs over vertices of cut 
+	{	Cell W = *it; cut.baricenter ( W );  }
+
+	RR2.set_as_working_manifold();
+
+	for ( it.reset(); it.in_range(); it++)  // 'it' runs over vertices of cut 
+	{	Cell V = *it;
+		CellIterator itv = rect_mesh.iterator ( tag::over_vertices, tag::around, V ); 
+		for ( itv.reset(); itv.in_range(); itv++ )
+		{	Cell W = *itv;
+			if ( W.belongs_to(cut) ) continue;
+			if ( W.belongs_to(AB) )  { AB.baricenter(W); continue; }
+			if ( W.belongs_to(BC) )  { BC.baricenter(W); continue; }
+			if ( W.belongs_to(CD) )  { CD.baricenter(W); continue; }
+			if ( W.belongs_to(DA) )  { DA.baricenter(W); continue; }
+			rect_mesh.baricenter ( W );                              }                 }
+
+	special_draw ( rect_mesh, cut, "square-cut.eps" );
+	rect_mesh.export_msh("background.msh");
+	std::cout << "produced files square-cut.eps and background.msh" << std::endl;
+	exit ( 0 );
 	
 } // end of main
 	
@@ -165,6 +195,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	compare_values_of comp_psi ( abs(psi) );
 	std::multiset < Cell, compare_values_of > ms ( comp_psi );
 	
+	{  // just a block of code for hiding names
 	CellIterator it_seg = ambient.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
@@ -173,12 +204,14 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		if ( not opposite_signs ( psi(A), psi(B) ) ) continue;
 		ms.insert ( A );
 		ms.insert ( B );                                        }
+	}  // just a block of code for hiding names
 
 	// at this moment we have a cloud of points, possibly repeated
 
 	Mesh interf ( tag::fuzzy, tag::of_dimension, 1 );
 	// empty mesh, it will be returned after adding segments to it
 
+	{  // just a block of code for hiding names
 	std::set < Cell > set_useful, set_needed;
 	std::forward_list < Cell > list_useful;
 	std::multiset<Cell,compare_values_of>::iterator it_ms;
@@ -189,9 +222,6 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		{	set_useful.insert ( A );
 			list_useful.push_front ( A );                   }  }
 
-	std::cout << "at the beginning, we have " << set_useful.size() << " vertices" << std::endl;
-	int counter = 0;
-	
 	std::forward_list<Cell>::iterator it_list;
 	for ( it_list = list_useful.begin(); it_list != list_useful.end(); it_list++ )
 	
@@ -279,8 +309,6 @@ Mesh build_interface ( Mesh ambient, Function psi )
 
 	}  // end of for it_list
 		
-	std::cout << "in the end, we have " << set_useful.size() << " vertices" << std::endl << std::flush;
-
 	std::set<Cell>::iterator it_set;
 	for ( it_set = set_useful.begin(); it_set != set_useful.end(); it_set++ )
 
@@ -312,14 +340,67 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			// we add a new segment to 'interf'
 			if ( ( not front_exists ) and ( dx*gy < dy*gx ) )
 			{	Cell seg = find_segment ( A, B, ambient );
-				counter++;
 				seg.add_to_mesh ( interf );                       }
 			if ( ( not back_exists ) and ( dx*gy > dy*gx ) )
 			{	Cell seg = find_segment ( B, A, ambient );
-				counter++;
 				seg.add_to_mesh ( interf );                       }  }
 
 	}  // end of for it_set in set_useful
+	}  // just a block of code for hiding names
+                  
+	// we cut in halves some more squares, at places like :      |
+	{  // just a block of code for hiding names                 /
+	size_t counter = 0;                //                      |
+	CellIterator it_seg = interf.iterator ( tag::over_segments );
+	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+	{	Cell seg = *it_seg;
+		Cell A = seg.base().reverse(), B = seg.tip();
+		Cell cll1 = ambient.cell_in_front_of ( seg, tag::surely_exists );
+		if ( cll1.boundary().number_of ( tag::segments ) != 3 ) continue;
+		Cell cll2 = ambient.cell_behind ( seg, tag::surely_exists );
+		assert ( cll2.boundary().number_of ( tag::segments ) == 3 );
+		Cell front = interf.cell_in_front_of ( B, tag::may_not_exist );
+		if ( not front.exists() ) continue;
+		Cell back = interf.cell_behind ( A, tag::may_not_exist );
+		if ( not back.exists() ) continue;
+		Cell cll3 = ambient.cell_in_front_of ( front, tag::surely_exists );
+		if ( cll3.boundary().number_of ( tag::segments ) != 4 ) continue;
+		Cell cll4 = ambient.cell_behind ( front, tag::surely_exists );
+		assert ( cll4.boundary().number_of ( tag::segments ) == 4 );
+		Cell cll5 = ambient.cell_in_front_of ( back, tag::surely_exists );
+		if ( cll5.boundary().number_of ( tag::segments ) != 4 ) continue;
+		Cell cll6 = ambient.cell_behind ( back, tag::surely_exists );
+		assert ( cll6.boundary().number_of ( tag::segments ) == 4 );
+		size_t neigh_1 = 0, neigh_2 = 0, neigh_3 = 0, neigh_4 = 0;
+		CellIterator it1 = ambient.iterator ( tag::over_segments, tag::around, A.reverse() );
+		std::cout << "aha 1" << std::endl;
+		it1.reset ( tag::start_at, back.reverse() );
+		std::cout << "aha 2" << std::endl;
+		for ( it1.reset ( tag::start_at, back.reverse() ); it1.in_range(); it1++ )
+		{	if ( *it1 == seg ) break;
+			neigh_1++;                }
+		assert ( ( neigh_1 == 2 ) or ( neigh_1 == 3 ) );
+		for ( it1.reset ( tag::start_at, seg ); it1.in_range(); it1++ )
+		{	if ( *it1 == back.reverse() ) break;
+			neigh_2++;                           }
+		assert ( ( neigh_2 == 2 ) or ( neigh_2 == 3 ) );
+		if ( neigh_1 + neigh_2 == 6 ) continue;
+		assert ( neigh_1 + neigh_2 == 5 );
+		CellIterator it2 = ambient.iterator ( tag::over_segments, tag::around, B.reverse() );
+		for ( it2.reset ( tag::start_at, seg.reverse() ); it2.in_range(); it2++ )
+		{	if ( *it2 == front ) break;
+			neigh_3++;                  }
+		assert ( ( neigh_3 == 2 ) or ( neigh_3 == 3 ) );
+		for ( it2.reset ( tag::start_at, front ); it2.in_range(); it2++ )
+		{	if ( *it2 == seg.reverse() ) break;
+			neigh_4++;                          }
+		assert ( ( neigh_4 == 2 ) or ( neigh_4 == 3 ) );
+		if ( neigh_3 + neigh_4 == 6 ) continue;
+		assert ( neigh_3 + neigh_4 == 5 );
+		
+		counter++;                                                                    }
+	std::cout << "found " << counter << " interesting configurations" << std::endl;
+	}  // just a block of code for hiding names
 
 	return interf;
 

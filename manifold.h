@@ -1,5 +1,5 @@
 
-// manifold.h 2021.07.24
+// manifold.h 2021.07.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -566,8 +566,7 @@ inline Manifold::Manifold ( const tag::Implicit &, const Manifold & m, const Fun
 inline Manifold::Manifold
 ( const tag::Implicit &, const Manifold & m, const Function & f1, const Function & f2 )
 :	Manifold ( tag::non_existent )  // temporarily empty manifold
-{	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+{	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	this->core = new Manifold::Implicit::TwoEquations ( m, f1, f2 );
 	Manifold::working = *this;                                                }
 	
@@ -640,7 +639,7 @@ class Manifold::Parametric : public Manifold::Core
 
 	std::map < Function, Function > equations;
 
-	inline Parametric ( )	:	Manifold::Core(), surrounding_space ( tag::non_existent ) { }
+	inline Parametric ( ) : Manifold::Core(), surrounding_space ( tag::non_existent ) { }
 
 	inline Parametric ( const Manifold &, const Function::Equality & );
 
@@ -684,24 +683,21 @@ class Manifold::Parametric : public Manifold::Core
 
 inline Manifold::Manifold ( const tag::Parametric &, const Manifold & m, const Function::Equality & f_eq )
 :	Manifold ( tag::non_existent )  // temporary empty manifold
-{	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+{	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	this->core = new Manifold::Parametric ( m, f_eq );
 	Manifold::working = *this;                                                 }
 
 inline Manifold::Manifold ( const tag::Parametric &, const Manifold & m,
 														const Function::Equality & f_eq_1, const Function::Equality & f_eq_2 )
 :	Manifold ( tag::non_existent )  // temporary empty manifold
-{	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+{	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	this->core = new Manifold::Parametric ( m, f_eq_1, f_eq_2 );
 	Manifold::working = *this;                                                 }
 
 inline Manifold::Manifold ( const tag::Parametric &, const Manifold & m,
 const Function::Equality & f_eq_1, const Function::Equality & f_eq_2, const Function::Equality & f_eq_3 )
 :	Manifold ( tag::non_existent )  // temporary empty manifold
-{	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+{	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	this->core = new Manifold::Parametric ( m, f_eq_1, f_eq_2, f_eq_3 );
 	Manifold::working = *this;                                                           }
 
@@ -709,8 +705,7 @@ const Function::Equality & f_eq_1, const Function::Equality & f_eq_2, const Func
 inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Equality & f_eq )
 :	Parametric()
 {	this->surrounding_space = m;
-	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	assert ( this->equations.find ( f_eq.lhs ) == this->equations.end() );
 	this->equations.insert ( std::pair ( f_eq.lhs, f_eq.rhs ) );               }
 //	this->equations [ f_eq.lhs ] = f_eq.rhs;
@@ -719,8 +714,7 @@ inline Manifold::Parametric::Parametric
 ( const Manifold & m, const Function::Equality & f_eq_1, const Function::Equality & f_eq_2 )
 :	Parametric()
 {	this->surrounding_space = m;
-	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	assert ( this->equations.find ( f_eq_1.lhs ) == this->equations.end() );
 	this->equations.insert ( std::pair ( f_eq_1.lhs, f_eq_1.rhs ) );
 	assert ( this->equations.find ( f_eq_2.lhs ) == this->equations.end() );
@@ -732,8 +726,7 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
   const Function::Equality & f_eq_2, const Function::Equality & f_eq_3 )
 :	Parametric()
 {	this->surrounding_space = m;
-	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	assert ( this->equations.find ( f_eq_1.lhs ) == this->equations.end() );
 	this->equations.insert ( std::pair ( f_eq_1.lhs, f_eq_1.rhs ) );
 	assert ( this->equations.find ( f_eq_2.lhs ) == this->equations.end() );
@@ -755,22 +748,6 @@ inline void Cell::project ( const tag::Onto &, const Manifold m ) const
 	Cell::Positive::Vertex * cll = ( Cell::Positive::Vertex * ) this->core;
 	m.core->project ( cll );                                                }
 		
-
-void inline Mesh::baricenter ( const Cell & ver )
-
-// 'ver' is a vertex in 'this' mesh
-
-{	assert ( ver.dim() == 0 );
-	std::vector < Cell > neighbours;  // vertices
-	size_t n = 0;
-	CellIterator it = this->iterator ( tag::over_vertices, tag::around, ver );
-	for ( it.reset(); it.in_range(); it++ )
-	{	n++;  neighbours.push_back ( *it );  }
-	assert ( n == neighbours.size() );
-	assert ( n >= 2 );
-	std::vector < double > coefs ( n, 1./n );
-	Manifold::working.interpolate ( ver, coefs, neighbours );             }
-
 
 }  // end of  namespace maniFEM
 
