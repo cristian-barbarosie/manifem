@@ -372,7 +372,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 
 	// we cut in halves some more squares, at places like :      |
 	{  // just a block of code for hiding names                 /
-	size_t counter = 0;                //                      |
+	size_t counter = 0; //                                     |
 	CellIterator it_seg = interf.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
