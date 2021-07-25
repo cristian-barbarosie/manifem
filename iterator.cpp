@@ -4265,7 +4265,8 @@ void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::rese
 // the above could get simpler and faster by avoiding the use of wrappers
 
 
-void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::reset
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre::reset
 ( const tag::StartAt &, Cell::Core * cll )
 // virtual from CellIterator::Core
 
@@ -4276,21 +4277,265 @@ void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::reset
             tag::previously_existing, tag::surely_not_null );
 	this->current_vertex = cll;
 	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	// center may have dimension different from zero, so we should not use 'tip' !!
 	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
 	else assert ( new_ver.base().core == this->center );
 	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
-	std::cout << "reset ::OverVertices::NormalOrder";
 	if ( this->last_segment )
 	if ( this->last_segment == m.cell_behind ( fv, tag::may_not_exist ).core )
 	// closed loop, i.e., center is interior to the mesh
 	{	this->first_vertex = cll;
-		std::cout << ", center is interior to the mesh " << this->last_segment;
 		this->last_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;  }
-	std::cout << std::endl;
 }
 
 
-void CellIterator::Around::OneCell::OfCodimTwo::OverVertices::ReverseOrder::reset
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	// center may have dimension different from zero, so we should not use 'tip' !!
+	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
+	else assert ( new_ver.base().core == this->center );
+	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_behind ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		this->last_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;  }
+}
+
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::NormalOrder::AssumeCellsExist::ReverseEachCell::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	// center may have dimension different from zero, so we should not use 'tip' !!
+	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
+	else assert ( new_ver.base().core == this->center );
+	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_behind ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		this->last_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;  }
+}
+
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	// center may have dimension different from zero, so we should not use 'tip' !!
+	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
+	else assert ( new_ver.base().core == this->center );
+	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_behind ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		this->last_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;  }
+}
+
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::NormalOrder::BuildReverseCells::ForcePositive::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	// center may have dimension different from zero, so we should not use 'tip' !!
+	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
+	else assert ( new_ver.base().core == this->center );
+	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_behind ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		this->last_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;  }
+}
+
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::NormalOrder::BuildReverseCells::ReverseEachCell::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	// center may have dimension different from zero, so we should not use 'tip' !!
+	if ( this->center->is_positive() ) assert ( new_ver.tip().core == this->center );
+	else assert ( new_ver.base().core == this->center );
+	this->current_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_behind ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		this->last_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;  }
+}
+
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	assert ( new_ver.tip().core == this->center );
+	this->current_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;
+	std::cout << "reset ::OverVertices::ReverseOrder";
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_in_front_of ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		std::cout << ", center is interior to the mesh " << this->last_segment;
+		this->last_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;  }
+	std::cout << std::endl;
+}
+	
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::ReverseOrder::AssumeCellsExist::ForcePositive::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	assert ( new_ver.tip().core == this->center );
+	this->current_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;
+	std::cout << "reset ::OverVertices::ReverseOrder";
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_in_front_of ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		std::cout << ", center is interior to the mesh " << this->last_segment;
+		this->last_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;  }
+	std::cout << std::endl;
+}
+	
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::ReverseOrder::AssumeCellsExist::ReverseEachCell::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	assert ( new_ver.tip().core == this->center );
+	this->current_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;
+	std::cout << "reset ::OverVertices::ReverseOrder";
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_in_front_of ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		std::cout << ", center is interior to the mesh " << this->last_segment;
+		this->last_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;  }
+	std::cout << std::endl;
+}
+	
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	assert ( new_ver.tip().core == this->center );
+	this->current_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;
+	std::cout << "reset ::OverVertices::ReverseOrder";
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_in_front_of ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		std::cout << ", center is interior to the mesh " << this->last_segment;
+		this->last_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;  }
+	std::cout << std::endl;
+}
+	
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::ReverseOrder::BuildReverseCells::ForcePositive::reset
+( const tag::StartAt &, Cell::Core * cll )
+// virtual from CellIterator::Core
+
+{ // closed loop or open chain ?
+	// in other words : central cell is interior or on the boundary ?
+	Mesh m ( tag::whose_core_is, this->msh_p, tag::previously_existing, tag::is_positive );
+	Cell fv ( tag::whose_core_is, this->first_vertex,
+            tag::previously_existing, tag::surely_not_null );
+	this->current_vertex = cll;
+	Cell new_ver ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	assert ( new_ver.tip().core == this->center );
+	this->current_segment = m.cell_behind ( new_ver, tag::may_not_exist ).core;
+	std::cout << "reset ::OverVertices::ReverseOrder";
+	if ( this->last_segment )
+	if ( this->last_segment == m.cell_in_front_of ( fv, tag::may_not_exist ).core )
+	// closed loop, i.e., center is interior to the mesh
+	{	this->first_vertex = cll;
+		std::cout << ", center is interior to the mesh " << this->last_segment;
+		this->last_segment = m.cell_in_front_of ( new_ver, tag::may_not_exist ).core;  }
+	std::cout << std::endl;
+}
+	
+
+void CellIterator::Around::OneCell::OfCodimTwo
+	::OverVertices::ReverseOrder::BuildReverseCells::ReverseEachCell::reset
 ( const tag::StartAt &, Cell::Core * cll )
 // virtual from CellIterator::Core
 

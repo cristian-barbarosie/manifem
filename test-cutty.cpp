@@ -372,28 +372,26 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		Cell cll6 = ambient.cell_behind ( back, tag::surely_exists );
 		assert ( cll6.boundary().number_of ( tag::segments ) == 4 );
 		size_t neigh_1 = 0, neigh_2 = 0, neigh_3 = 0, neigh_4 = 0;
-		CellIterator it1 = ambient.iterator ( tag::over_segments, tag::around, A.reverse() );
-		std::cout << "aha 1" << std::endl;
-		it1.reset ( tag::start_at, back.reverse() );
-		std::cout << "aha 2" << std::endl;
-		for ( it1.reset ( tag::start_at, back.reverse() ); it1.in_range(); it1++ )
-		{	if ( *it1 == seg ) break;
-			neigh_1++;                }
+		CellIterator it1 = ambient.iterator ( tag::over_segments, tag::around, A );
+		it1.reset ( tag::start_at, back );
+		for ( it1.reset ( tag::start_at, back ); it1.in_range(); it1++ )
+		{	if ( *it1 == seg.reverse() ) break;
+			neigh_1++;                          }
 		assert ( ( neigh_1 == 2 ) or ( neigh_1 == 3 ) );
-		for ( it1.reset ( tag::start_at, seg ); it1.in_range(); it1++ )
-		{	if ( *it1 == back.reverse() ) break;
-			neigh_2++;                           }
+		for ( it1.reset ( tag::start_at, seg.reverse() ); it1.in_range(); it1++ )
+		{	if ( *it1 == back ) break;
+			neigh_2++;                 }
 		assert ( ( neigh_2 == 2 ) or ( neigh_2 == 3 ) );
 		if ( neigh_1 + neigh_2 == 6 ) continue;
 		assert ( neigh_1 + neigh_2 == 5 );
-		CellIterator it2 = ambient.iterator ( tag::over_segments, tag::around, B.reverse() );
-		for ( it2.reset ( tag::start_at, seg.reverse() ); it2.in_range(); it2++ )
-		{	if ( *it2 == front ) break;
-			neigh_3++;                  }
+		CellIterator it2 = ambient.iterator ( tag::over_segments, tag::around, B );
+		for ( it2.reset ( tag::start_at, seg ); it2.in_range(); it2++ )
+		{	if ( *it2 == front.reverse() ) break;
+			neigh_3++;                           }
 		assert ( ( neigh_3 == 2 ) or ( neigh_3 == 3 ) );
-		for ( it2.reset ( tag::start_at, front ); it2.in_range(); it2++ )
-		{	if ( *it2 == seg.reverse() ) break;
-			neigh_4++;                          }
+		for ( it2.reset ( tag::start_at, front.reverse() ); it2.in_range(); it2++ )
+		{	if ( *it2 == seg ) break;
+			neigh_4++;                }
 		assert ( ( neigh_4 == 2 ) or ( neigh_4 == 3 ) );
 		if ( neigh_3 + neigh_4 == 6 ) continue;
 		assert ( neigh_3 + neigh_4 == 5 );
