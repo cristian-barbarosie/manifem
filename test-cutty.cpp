@@ -50,8 +50,6 @@ int main ()
 	// builds a set of vertices next to the level line  psi == 0
 	// then builds a one-dimensional mesh
 
-	special_draw ( rect_mesh, cut, "square-cut.eps" );
-
 	Manifold level = RR2.implicit ( psi == 0. );
 
 	CellIterator it=cut.iterator(tag::over_vertices);
@@ -83,6 +81,7 @@ int main ()
 			if ( W.belongs_to(DA) )  { DA.baricenter(W); continue; }
 			rect_mesh.baricenter ( W );                              }                 }
 
+	special_draw ( rect_mesh, cut, "square-cut.eps" );
 	rect_mesh.export_msh("background.msh");
 	std::cout << "produced files square-cut.eps and background.msh" << std::endl;
 	exit ( 0 );
@@ -370,6 +369,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	}  // end of for it_set in set_useful
 	}  // just a block of code for hiding names
                   
+
 	// we cut in halves some more squares, at places like :      |
 	{  // just a block of code for hiding names                 /
 	size_t counter = 0;                //                      |
@@ -435,14 +435,14 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			assert ( neigh_2 == 2 );
 			assert ( neigh_3 == 2 );
 			assert ( neigh_4 == 3 );
-			Cell CB = cll2.boundary().cell_in_front_of ( A );
-			Cell CEDB = ambient.cell_in_front_of ( CB );
-			assert ( CEDB.boundary().number_of(tag::segments) == 4 );
-			cut_diagonal ( ambient, CEDB, CB.base().reverse() );
-			Cell FA = cll1.boundary().cell_in_front_of ( B );
-			Cell AFGH = ambient.cell_in_front_of ( FA );
-			assert ( AFGH.boundary().number_of(tag::segments) == 4 );
-			cut_diagonal ( ambient, AFGH, FA.base().reverse() );       }
+			Cell AC = cll1.boundary().cell_in_front_of ( A );
+			Cell ADEC = ambient.cell_in_front_of ( AC );
+			assert ( ADEC.boundary().number_of(tag::segments) == 4 );
+			cut_diagonal ( ambient, ADEC, AC.tip() );
+			Cell BF = cll2.boundary().cell_in_front_of ( B );
+			Cell FBGH = ambient.cell_in_front_of ( BF );
+			assert ( FBGH.boundary().number_of(tag::segments) == 4 );
+			cut_diagonal ( ambient, FBGH, BF.tip() );       }
 		counter++;                                                                    }
 	std::cout << "found " << counter << " interesting configurations" << std::endl;
 	}  // just a block of code for hiding names
@@ -538,7 +538,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 		Cell base = seg.base().reverse();
 		Cell tip  = seg.tip();
 		file_ps << x(base) << " " << y(base) << " moveto" << std::endl;
-		file_ps << x(tip) << " " << y(tip) << " Lineto^ stroke" << std::endl;  }		
+		file_ps << x(tip) << " " << y(tip) << " lineto stroke" << std::endl;  }		
 	} // just a block of code for hiding 'it'
 	
 	file_ps << "grestore" << std::endl;
