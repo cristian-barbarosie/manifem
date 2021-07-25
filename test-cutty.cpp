@@ -37,7 +37,7 @@ int main ()
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
-//	double radius = 0.4;
+	double radius = 0.4;
 	// std::cout << "radius = ";  std::cin >> radius;
 	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y;
 
@@ -49,6 +49,8 @@ int main ()
 	Mesh cut = build_interface ( rect_mesh, psi );
 	// builds a set of vertices next to the level line  psi == 0
 	// then builds a one-dimensional mesh
+
+	special_draw ( rect_mesh, cut, "square-cut.eps" );
 
 	Manifold level = RR2.implicit ( psi == 0. );
 
@@ -81,13 +83,33 @@ int main ()
 			if ( W.belongs_to(DA) )  { DA.baricenter(W); continue; }
 			rect_mesh.baricenter ( W );                              }                 }
 
-	special_draw ( rect_mesh, cut, "square-cut.eps" );
 	rect_mesh.export_msh("background.msh");
 	std::cout << "produced files square-cut.eps and background.msh" << std::endl;
 	exit ( 0 );
 	
 } // end of main
 	
+//-----------------------------------------------------------------------------------//
+
+
+inline void cut_diagonal ( Mesh ambient, Cell ABCD, Cell A )
+
+{	assert ( ABCD.belongs_to ( ambient, tag::same_dim ) );
+	assert ( ABCD.boundary().number_of ( tag::segments ) == 4 );
+	assert ( A.belongs_to ( ABCD.boundary() ) );
+	Cell AB = ABCD.boundary().cell_in_front_of ( A );
+	Cell BC = ABCD.boundary().cell_in_front_of ( AB.tip() );
+	Cell C = BC.tip();
+	Cell CD = ABCD.boundary().cell_in_front_of ( C );
+	Cell DA = ABCD.boundary().cell_in_front_of ( CD.tip() );
+	assert ( DA.tip() == A );
+	ABCD.remove_from_mesh ( ambient );
+	Cell AC ( tag::segment, A.reverse(), C );
+	Cell ABC ( tag::triangle, AB, BC, AC.reverse() );
+	Cell ACD ( tag::triangle, AC, CD, DA );
+	ABC.add_to_mesh ( ambient );
+	ACD.add_to_mesh ( ambient );                                            }
+
 //-----------------------------------------------------------------------------------//
 
 
@@ -395,7 +417,32 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		assert ( ( neigh_4 == 2 ) or ( neigh_4 == 3 ) );
 		if ( neigh_3 + neigh_4 == 6 ) continue;
 		assert ( neigh_3 + neigh_4 == 5 );
-		
+		if ( neigh_1 == neigh_3 ) continue;
+		if ( neigh_1 == 2 )
+		{	assert ( neigh_2 == 3 );
+			assert ( neigh_3 == 3 );
+			assert ( neigh_4 == 2 );
+			Cell CB = cll1.boundary().cell_behind ( B );
+			Cell CEDB = ambient.cell_in_front_of ( CB );
+			assert ( CEDB.boundary().number_of(tag::segments) == 4 );
+			cut_diagonal ( ambient, CEDB, CB.base().reverse() );
+			Cell FA = cll2.boundary().cell_behind ( A );
+			Cell AFGH = ambient.cell_in_front_of ( FA );
+			assert ( AFGH.boundary().number_of(tag::segments) == 4 );
+			cut_diagonal ( ambient, AFGH, FA.base().reverse() );       }
+		else
+		{	assert ( neigh_1 == 3 );
+			assert ( neigh_2 == 2 );
+			assert ( neigh_3 == 2 );
+			assert ( neigh_4 == 3 );
+			Cell CB = cll2.boundary().cell_in_front_of ( A );
+			Cell CEDB = ambient.cell_in_front_of ( CB );
+			assert ( CEDB.boundary().number_of(tag::segments) == 4 );
+			cut_diagonal ( ambient, CEDB, CB.base().reverse() );
+			Cell FA = cll1.boundary().cell_in_front_of ( B );
+			Cell AFGH = ambient.cell_in_front_of ( FA );
+			assert ( AFGH.boundary().number_of(tag::segments) == 4 );
+			cut_diagonal ( ambient, AFGH, FA.base().reverse() );       }
 		counter++;                                                                    }
 	std::cout << "found " << counter << " interesting configurations" << std::endl;
 	}  // just a block of code for hiding names
