@@ -1,5 +1,5 @@
 
-// manifold.h 2021.07.25
+// manifold.h 2021.07.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -736,6 +736,56 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
 //	this->equations [ f_eq_1.lhs ] = f_eq_1.rhs;
 //	this->equations [ f_eq_2.lhs ] = f_eq_2.rhs;
 //	this->equations [ f_eq_3.lhs ] = f_eq_3.rhs;
+
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Quotient : public Manifold::Core
+
+{	public :
+
+	class OneAction; class TwoActions; class ThreeActions;
+	
+};  // end of class Manifold::Quotient
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Quotient::OneAction : public Manifold::Quotient
+
+// an action is a vector field (a Function with several coordinates)
+// e.g. ( x+0.1, y+0.9 ) or ( 2x, xy )
+
+{	public :
+
+	Function act;
+	
+};  // end of class Manifold::Euclid
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Quotient::TwoActions : public Manifold::Quotient
+
+{	public :
+
+	Function act1, act2;
+	
+};  // end of class Manifold::Quotient::TwoActions
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Quotient::ThreeActions : public Manifold::Quotient
+
+{	public :
+
+	Function act1, act2, act3;
+	
+};  // end of class Manifold::Quotient::ThreeActions
+
+//-----------------------------------------------------------------------------------------
 
 
 inline void Cell::project () const
