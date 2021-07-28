@@ -167,7 +167,7 @@ class Manifold
 	inline void set_as_working_manifold ( )
 	{	Manifold::working = * this;  }
 
-	class Euclid;  class Implicit;  class Parametric;
+	class Euclid;  class Implicit;  class Parametric;  class Quotient;
 
 };  // end of  class Manifold
 
