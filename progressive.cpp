@@ -886,7 +886,10 @@ inline void progress_fill_60
 	Cell new_tri ( tag::triangle, AB, BC, CA );
 	
 	new_tri.add_to_mesh ( mesh_under_constr );
-	if ( B.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( B );         }
+	std::cout << "baricenter a" << std::endl;
+	if ( B.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( B );
+	std::cout << "baricenter b" << std::endl;
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -987,8 +990,11 @@ inline void progress_fill_last_triangle
 	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
 	               ( C.core->hook[tag::node_in_cloud] )                              );
 	C.core->hook.erase ( tag::node_in_cloud );  // optimize !
+	std::cout << "baricenter a" << std::endl;
 	if ( A.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( A );
-	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );         }
+	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );
+	std::cout << "baricenter b" << std::endl;
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -1650,13 +1656,15 @@ check_touching :
 			progress_relocate ( P, 2, sum_of_nor, set_of_nearby_vertices, cloud );
 			// find more vertices close to P and take them all into account; modifies sum_of_nor
 			assert ( prev_seg.tip() == point_120 );
+			std::cout << "baricenter a" << std::endl;
 			if ( point_120 .is_inner_to ( mesh_under_constr ) ) msh.baricenter ( point_120 );
+			std::cout << "baricenter b" << std::endl;
 			progress_add_point ( P, cloud );
 			std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
 			if ( current_name == stopping_criterion ) return;			
 			if ( stop_point_120 == point_120 )  // we have all the loop to cover
 				stop_point_120 = A;
-			if ( stop_point_120 == B )  stop_point_120 = ver_next_to_B;
+			if ( stop_point_120 == B ) stop_point_120 = ver_next_to_B;
 			point_120 = A;
 			point_60 = A;
 			stop_point_60 = ver_next_to_B;

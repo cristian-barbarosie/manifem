@@ -25,10 +25,14 @@ int main ( )
 	Mesh WS ( tag::segment, W.reverse(), S, tag::divided_in, 10 );
 	Mesh SE ( tag::segment, S.reverse(), E, tag::divided_in, 10 );
 	Mesh EN ( tag::segment, E.reverse(), N, tag::divided_in, 10 );
+
+	std::cout << "main a" << std::endl;
 	Mesh circle ( tag::join, NW, WS, SE, EN );
+	std::cout << "main b" << std::endl;
 	
 	RR2.set_as_working_manifold();
 	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.157 );
+	std::cout << "main c" << std::endl;
 
 	disk.draw_ps ("disk.eps");
 	disk.export_msh ("disk.msh");
