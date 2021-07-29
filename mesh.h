@@ -5101,7 +5101,7 @@ inline size_t join_meshes ( Mesh * const that, const container & l )
 		CellIterator itt = m.iterator ( tag::over_cells_of_max_dim );
 		for ( itt.reset(); itt.in_range(); itt++ )
 		{	Cell cll = *itt;
-			cll.add_to_mesh ( *that );  }                                      }
+			cll.add_to_mesh ( *that, tag::do_not_bother );  }          }
 	return n;                                                                 }
 
 }  // anonymous namespace
@@ -5122,7 +5122,6 @@ inline Mesh::Mesh ( const tag::Join &, const container & l )
 	Mesh::Connected::OneDim * mm = dynamic_cast < Mesh::Connected::OneDim* > ( m.core );
 	if ( mm == nullptr )  goto fuzzy;
 	d.push_back ( m );  ll.erase ( it );
-	std::cout << "Mesh::Mesh tag::join a" << std::endl;
 	again :
 	for ( it = ll.begin(); it != ll.end(); it++ )
 	{	m = *it;
@@ -5135,7 +5134,6 @@ inline Mesh::Mesh ( const tag::Join &, const container & l )
 		if ( m_back.last_vertex() == m.first_vertex().reverse() )
 		{  d.push_back ( m );  ll.erase ( it );  goto again;  }    }
 	// if some meshes have not moved to d (are still in ll), the mesh will be disconnected
-	std::cout << "Mesh::Mesh tag::join k" << std::endl;
 	if ( ll.size() ) goto fuzzy;
   mm = new Mesh::Connected::OneDim ( tag::one_dummy_wrapper );
   this->core = mm;
@@ -5146,9 +5144,7 @@ inline Mesh::Mesh ( const tag::Join &, const container & l )
 	fuzzy :
 	this->core = new Mesh::Fuzzy ( tag::of_dim, l.front().core->get_dim_plus_one(),
 	                               tag::minus_one, tag::one_dummy_wrapper           );
-	std::cout << "Mesh::Mesh tag::join x" << std::endl;
   join_meshes ( this, l );
-	std::cout << "Mesh::Mesh tag::join z" << std::endl;
 	return;                                                                                  }
 	
 

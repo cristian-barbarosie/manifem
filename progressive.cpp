@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.07.28
+// progressive.cpp 2021.07.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -886,10 +886,7 @@ inline void progress_fill_60
 	Cell new_tri ( tag::triangle, AB, BC, CA );
 	
 	new_tri.add_to_mesh ( mesh_under_constr );
-	std::cout << "baricenter a" << std::endl;
-	if ( B.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( B );
-	std::cout << "baricenter b" << std::endl;
-}
+	if ( B.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( B );         }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -990,11 +987,8 @@ inline void progress_fill_last_triangle
 	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
 	               ( C.core->hook[tag::node_in_cloud] )                              );
 	C.core->hook.erase ( tag::node_in_cloud );  // optimize !
-	std::cout << "baricenter a" << std::endl;
 	if ( A.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( A );
-	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );
-	std::cout << "baricenter b" << std::endl;
-}
+	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );         }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -1021,7 +1015,6 @@ void progress_relocate
 	for ( std::list<Cell>::const_iterator it = list_of_ver.begin();
         it != list_of_ver.end(); it++                                    )
 		set_of_ver.insert ( *it );
-	// std::cout << "relocate, n = " << n << ", found " << list_of_ver.size() << " neighbours, ";
 
 	std::vector < Cell > vector_of_seg;
 	// vector_of_seg will contain all segments whose both extremities belong to 'set_of-ver'
@@ -1032,7 +1025,6 @@ void progress_relocate
 		if ( set_of_ver.find ( AB.tip() ) != set_of_ver.end() )
 		{	vector_of_seg.push_back ( AB );                        }  }
 
-	// std::cout << vector_of_seg.size() << " segments" << std::endl;
 	if ( vector_of_seg.empty() ) return;
 
 	// there are two cases : 
@@ -1656,9 +1648,7 @@ check_touching :
 			progress_relocate ( P, 2, sum_of_nor, set_of_nearby_vertices, cloud );
 			// find more vertices close to P and take them all into account; modifies sum_of_nor
 			assert ( prev_seg.tip() == point_120 );
-			std::cout << "baricenter a" << std::endl;
 			if ( point_120 .is_inner_to ( mesh_under_constr ) ) msh.baricenter ( point_120 );
-			std::cout << "baricenter b" << std::endl;
 			progress_add_point ( P, cloud );
 			std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
 			if ( current_name == stopping_criterion ) return;			
