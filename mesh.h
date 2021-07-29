@@ -1,5 +1,5 @@
 
-// mesh.h 2021.07.25
+// mesh.h 2021.07.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -507,7 +507,8 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline bool belongs_to ( const Mesh & msh, const tag::Oriented & ) const;
 	inline bool belongs_to ( const Mesh & msh, const tag::NotOriented & ) const;
 	inline bool belongs_to ( const Mesh & msh ) const;
-	inline bool is_inner_to ( const Mesh & msh ) const;
+	
+	inline bool is_inner_to ( const Mesh & msh ) const;  // defined in iterator.h
 
 	// method 'glue_on_bdry_of' is intensively used when building a mesh
 	// it glues 'this' cell to the boundary of 'cll'

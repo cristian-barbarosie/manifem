@@ -476,6 +476,14 @@ void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// for one-dimensional meshes, if you call 'baricenter' on an extremity
+// nothing will happen
+
+// in contrast, for two or more dimensions, 'baricenter' will act even
+// on a vertex on the boundary of 'this' mesh
+// depending on the current working manifold, the resulting coordinates
+// will be projected on the boundary or not
+
 void Mesh::baricenter ( const Cell & ver )
 
 // 'ver' is a vertex in 'this' mesh

@@ -1346,7 +1346,7 @@ inline bool inner_cell ( Mesh::Core * const msh, Cell::Positive * const cen )
 {	assert ( msh );
 	assert ( cen );
 	assert ( cen->get_dim() + 3 == msh->get_dim_plus_one() );
-	Cell::Core * first_segment =  // word "vertex" is misleading here
+	Cell::Core * first_segment =
 		tag::local_functions::iterator_h::find_first_seg ( cen, msh );
 	assert ( first_segment );
 

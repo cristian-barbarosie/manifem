@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.07.04
+// progressive.cpp 2021.07.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -875,8 +875,9 @@ inline void progress_fill_60
 	BC.remove_from_mesh ( progress_interface );
 	assert ( AB.core->hook.find(tag::normal_vector) != AB.core->hook.end() );
 	assert ( BC.core->hook.find(tag::normal_vector) != BC.core->hook.end() );
-	delete static_cast < std::vector < double > * > ( AB.core->hook[tag::normal_vector] );  // optimize !
-	delete static_cast < std::vector < double > * > ( BC.core->hook[tag::normal_vector] );  // optimize !
+	// optimize map access in two statements below !!
+	delete static_cast < std::vector < double > * > ( AB.core->hook[tag::normal_vector] );
+	delete static_cast < std::vector < double > * > ( BC.core->hook[tag::normal_vector] );
 	AB.core->hook.erase ( tag::normal_vector );
 	BC.core->hook.erase ( tag::normal_vector );
 	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
@@ -884,12 +885,8 @@ inline void progress_fill_60
 	B.core->hook.erase ( tag::node_in_cloud );  // optimize !
 	Cell new_tri ( tag::triangle, AB, BC, CA );
 	
-	std::vector < double > vA = Manifold::working.coordinates() ( CA.tip() );
-	std::vector < double > vB = Manifold::working.coordinates() ( B );
-	std::vector < double > vC = Manifold::working.coordinates() ( BC.tip() );
-
 	new_tri.add_to_mesh ( mesh_under_constr );
-	mesh_under_constr.baricenter ( B, AB );                                              }
+	if ( B.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( B );         }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -985,13 +982,13 @@ inline void progress_fill_last_triangle
 	delete static_cast < std::vector < double > * > ( CA.core->hook[tag::normal_vector] );  // optimize !
 	CA.core->hook.erase ( tag::normal_vector );
 	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
-	               ( A.core->hook[tag::node_in_cloud] )                               );
+	               ( A.core->hook[tag::node_in_cloud] )                              );
 	A.core->hook.erase ( tag::node_in_cloud );  // optimize !
 	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
-	               ( C.core->hook[tag::node_in_cloud] )                               );
+	               ( C.core->hook[tag::node_in_cloud] )                              );
 	C.core->hook.erase ( tag::node_in_cloud );  // optimize !
-	mesh_under_constr.baricenter ( A, CA );
-	mesh_under_constr.baricenter ( C, BC );                                              }
+	if ( A.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( A );
+	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );         }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -1653,7 +1650,7 @@ check_touching :
 			progress_relocate ( P, 2, sum_of_nor, set_of_nearby_vertices, cloud );
 			// find more vertices close to P and take them all into account; modifies sum_of_nor
 			assert ( prev_seg.tip() == point_120 );
-			msh.baricenter ( point_120, prev_seg );
+			if ( point_120 .is_inner_to ( mesh_under_constr ) ) msh.baricenter ( point_120 );
 			progress_add_point ( P, cloud );
 			std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
 			if ( current_name == stopping_criterion ) return;			
