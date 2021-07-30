@@ -3575,7 +3575,8 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 		first_ver ( tag::non_existent ), last_ver ( tag::non_existent )
   { }
 
-	inline OneDim ( const tag::With &, size_t n, const tag::Segments &, const tag::OneDummyWrapper & )
+	inline OneDim
+	( const tag::With &, size_t n, const tag::Segments &, const tag::OneDummyWrapper & )
 	:	Mesh::NotZeroDim ( tag::of_dimension, 2, tag::minus_one, tag::one_dummy_wrapper ),
 		nb_of_segs { n }, first_ver ( tag::non_existent ), last_ver ( tag::non_existent )
 	{	}

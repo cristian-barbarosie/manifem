@@ -20,7 +20,7 @@
 //   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
 // this is not the most elegant programming style
-// I use some global variables and also some goto's ...
+// I use some global variables, static_cast and also some goto's ...
 
 #include <stack>
 #include "math.h"
@@ -66,7 +66,8 @@ Mesh progress_interface ( tag::non_existent, tag::is_positive );
 //-------------------------------------------------------------------------------------------------
 
 inline double approx_sqrt ( double arg, const tag::Around &, double centre, double sqrt_of_centre )
-
+// hidden in anonymous namespace
+	
 // we assume all segments have length around the same value, here called 'sqrt_of_centre'
 // so the result should not be too far from 'sqrt_of_centre'
 	
@@ -84,7 +85,8 @@ inline double approx_sqrt ( double arg, const tag::Around &, double centre, doub
 //-------------------------------------------------------------------------------------------------
 
 inline size_t get_topological_dim ( )
-
+// hidden in anonymous namespace
+	
 {	Manifold::Implicit::OneEquation * m_impl_1 =
 		dynamic_cast<Manifold::Implicit::OneEquation*> ( Manifold::working.core );
 	if ( m_impl_1 )
@@ -105,7 +107,8 @@ inline size_t get_topological_dim ( )
 
 std::vector < double > compute_tangent_vec
 (	Cell start, bool check_orth, std::vector < double > given_vec )
-
+// hidden in anonymous namespace
+	
 // computes a vector tangent to Manifold::working at point 'start'
 
 // if third argument is true, candidates will be projected onto the space orthogonal to given_vec
@@ -180,6 +183,7 @@ std::vector < double > compute_tangent_vec
 
 inline std::vector < double > compute_tangent_vec
 (	const tag::AtPoint &, Cell start, const tag::OrthogonalTo &, std::vector < double > given_vec )
+// hidden in anonymous namespace
 
 // computes a vector tangent to Manifold::working at point 'start', normal to given_vec
 
@@ -192,6 +196,7 @@ inline std::vector < double > compute_tangent_vec
 //-------------------------------------------------------------------------------------------------
 
 inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell start )
+// hidden in anonymous namespace
 
 // computes a vector tangent to Manifold::working at point 'start'
 
@@ -202,6 +207,7 @@ inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell s
 
 inline void progress_add_point
 ( const Cell & P, MetricTree<Cell,Manifold::Euclid::SqDist> & cloud )
+// hidden in anonymous namespace
 
 {	assert ( P.dim() == 0 );
 	P.core->hook[tag::node_in_cloud] = static_cast < void * > ( cloud.add ( P ) );  }
@@ -211,6 +217,7 @@ inline void progress_add_point
 
 inline bool positive_orientation
 (	const Cell & A, const Cell & B, const Cell & AB, const Cell & BC )
+// hidden in anonymous namespace
 	
 {	assert ( A == AB.base().reverse() );
 	assert ( B == AB.tip() );
@@ -234,6 +241,7 @@ inline bool positive_orientation
 
 inline double progress_cos_sq_60
 (	const Cell & A, const Cell & B, const Cell & C, const Cell & AB, const Cell & BC )
+// hidden in anonymous namespace
 
 // return cosine square of 180 - ABC (or 0. if wrong orientation)
 // check that  cos_sq > 0.03  to ensure angle ABC is below 80 deg
@@ -265,6 +273,7 @@ inline double progress_cos_sq_60
 			
 inline double progress_cos_sq_120
 (	const Cell & A, const Cell & B, const Cell & C, const Cell & AB, const Cell & BC )
+// hidden in anonymous namespace
 
 // return cosine square of 180 - ABC (or 2. if wrong orientation)
 // for instance, calling function should check cos_sq < 0.671 to ensure angle ABC is below 145 deg
@@ -305,6 +314,7 @@ inline double progress_cos_sq_120
 //-------------------------------------------------------------------------------------------------
 			
 inline bool opposite_signs ( const double a, const double b )
+// hidden in anonymous namespace
 {	if ( a < 0. )  return b >= 0.;
 	if ( a == 0. )  return true;
 	return b <= 0.;                  }
@@ -312,6 +322,7 @@ inline bool opposite_signs ( const double a, const double b )
 //-------------------------------------------------------------------------------------------------
 
 inline Cell search_start_ver_c1 ( )
+// hidden in anonymous namespace
 
 // search for a starting point in a manifold of co-dimension one
 // e.g. a curve in the plane or a surface in 3D
@@ -378,6 +389,7 @@ inline Cell search_start_ver_c1 ( )
 //-------------------------------------------------------------------------------------------------
 
 inline double ext_prod_R2 ( const double vx, const double vy, const double wx, const double wy )
+// hidden in anonymous namespace
 {	return vx*wy - wx*vy;  }
 
 
@@ -386,6 +398,7 @@ inline double ext_prod_R2 ( const double vx, const double vy, const double wx, c
 inline bool origin_outside ( const double & Ax, const double & Ay,
                              const double & Bx, const double & By,
                              const double & Cx, const double & Cy )
+// hidden in anonymous namespace
 
 {	return
 	   opposite_signs ( - ext_prod_R2 ( Bx-Ax, By-Ay, Ax, Ay ), ext_prod_R2 ( Bx-Ax, By-Ay, Cx-Ax, Cy-Ay ) )
@@ -395,6 +408,7 @@ inline bool origin_outside ( const double & Ax, const double & Ay,
 //-------------------------------------------------------------------------------------------------
 
 inline Cell search_start_ver_c2 ( )
+// hidden in anonymous namespace
 
 // search for a starting point in a manifold of co-dimension two (a curve in 3D)
 
@@ -492,6 +506,7 @@ inline Cell search_start_ver_c2 ( )
 //-------------------------------------------------------------------------------------------------
 
 inline Cell search_start_ver ( )
+// hidden in anonymous namespace
 
 // search for a starting point
 // current working manifold may have co-dimension one
@@ -508,6 +523,7 @@ inline Cell search_start_ver ( )
 
 inline void redistribute_vertices ( const Mesh & msh,
   const Cell & start, const Cell & stop, double last_length, size_t n )
+// hidden in anonymous namespace
 
 // perhaps just make some baricenters ?
 
@@ -548,6 +564,7 @@ inline void redistribute_vertices ( const Mesh & msh,
 //-------------------------------------------------------------------------------------------------
 
 inline double get_z_baric ( const Cell & tri )
+// hidden in anonymous namespace
 
 {	assert ( Manifold::working.coordinates().nb_of_components() == 3 );
 	CellIterator it = tri.boundary().iterator ( tag::over_vertices );
@@ -561,6 +578,7 @@ inline double get_z_baric ( const Cell & tri )
 //-------------------------------------------------------------------------------------------------
 
 inline bool tri_correctly_oriented ( const Cell & tri )
+// hidden in anonymous namespace
 
 {	assert ( tri.dim() == 2 );
 
@@ -587,6 +605,7 @@ inline bool tri_correctly_oriented ( const Cell & tri )
 //-------------------------------------------------------------------------------------------------
 
 bool correctly_oriented ( const Mesh msh )
+// hidden in anonymous namespace
 
 // tells whether 'msh's orientation is consistent with the orientation of the
 // surrounding Euclidian space
@@ -647,6 +666,7 @@ bool correctly_oriented ( const Mesh msh )
 //-------------------------------------------------------------------------------------------------
 
 inline void switch_orientation ( Cell cll )
+// hidden in anonymous namespace
 
 // this is always called from switch_orientation ( Mesh )
 // we should deal with segments separately, as well as with negative cells !
@@ -658,13 +678,16 @@ inline void switch_orientation ( Cell cll )
 	for ( itt.reset(); itt.in_range(); itt++ )
 		vec_of_cells.push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->remove_from_mesh ( msh );
+		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->reverse().add_to_mesh ( msh );                                                                 }
+		it->reverse().add_to_mesh ( msh, tag::do_not_bother );                                      }
+// no need to call update_info_connected_one_dim because we are at hands with a closed loop
+// nb_of_segs remains the same, as well as first_ver and last_ver
 
 //-------------------------------------------------------------------------------------------------
 
 void switch_orientation ( Mesh msh )
+// hidden in anonymous namespace
 
 // since 'msh' has just been created, we may choose not to use 'reverse'
 // instead, call switch_orientation on each cell
@@ -675,13 +698,16 @@ void switch_orientation ( Mesh msh )
 	for ( itt.reset(); itt.in_range(); itt++ )
 		vec_of_cells.push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->remove_from_mesh ( msh );
+		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->reverse().add_to_mesh ( msh );                                                               }
+		it->reverse().add_to_mesh ( msh, tag::do_not_bother );                                      }
+// no need to call update_info_connected_one_dim because we are at hands with a closed loop
+// nb_of_segs remains the same, as well as first_ver and last_ver
 
 //-------------------------------------------------------------------------------------------------
 
 inline void improve_tangent ( const Cell & A, std::vector < double > & nor )
+// hidden in anonymous namespace
 
 // project 'nor' onto working manifold
 
@@ -704,6 +730,7 @@ inline void improve_tangent ( const Cell & A, std::vector < double > & nor )
 
 inline void improve_normal
 ( const Cell & A, const Cell & B, std::vector < double > & AB_coord, std::vector < double > & nor )
+// hidden in anonymous namespace
 
 // project 'nor' onto working manifold and normalize it relatively to segment AB
 
@@ -737,6 +764,7 @@ inline void improve_normal
 //-------------------------------------------------------------------------------------------------
 
 inline void build_one_normal ( Cell & B, Cell & C, Cell & new_seg )
+// hidden in anonymous namespace
 
 // builds the normal vector for 'new_seg', based on information from previous segment
 	
@@ -785,6 +813,7 @@ inline void build_one_normal ( Cell & B, Cell & C, Cell & new_seg )
 
 inline void build_each_normal
 ( Cell & B, Cell & C, Cell & new_seg, std::vector < double > & old_e, std::vector < double > & old_f )
+// hidden in anonymous namespace
 
 // 'e' is the vector of the segment, 'f' is orthogonal
 // they are all of approximately the same length, equal to desired_length
@@ -820,6 +849,7 @@ inline void build_each_normal
 //-------------------------------------------------------------------------------------------------
 
 inline Cell build_normals ( const Cell & start )
+// hidden in anonymous namespace
 
 // from a cell 'start', propagate normals along progress_interface
 // (will only cover the connected component containing 'start')
@@ -870,6 +900,7 @@ inline Cell build_normals ( const Cell & start )
 inline void progress_fill_60
 (	Cell & AB, Cell & BC, const Cell & CA, const Cell & B,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud     )
+// hidden in anonymous namespace
 
 {	AB.remove_from_mesh ( progress_interface );
 	BC.remove_from_mesh ( progress_interface );
@@ -892,6 +923,7 @@ inline void progress_fill_60
 
 inline void glue_two_segs_common
 ( Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD, Cell & AD, Cell & BC )
+// hidden in anonymous namespace
 
 {	AB.remove_from_mesh ( progress_interface );
 	CD.remove_from_mesh ( progress_interface );
@@ -914,6 +946,7 @@ inline void glue_two_segs_common
 inline Cell glue_two_segs_S
 (	Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud             )
+// hidden in anonymous namespace
 
 // see paragraph 12.8 in the manual
 
@@ -944,6 +977,7 @@ inline Cell glue_two_segs_S
 inline Cell glue_two_segs_Z
 (	Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud      )
+// hidden in anonymous namespace
 
 // see paragraph 12.8 in the manual
 
@@ -975,6 +1009,7 @@ inline Cell glue_two_segs_Z
 inline void progress_fill_last_triangle
 (	const Cell & A, const Cell & B, const Cell & C, Cell & AB, Cell & BC, Cell & CA,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud                                )
+// hidden in anonymous namespace
 
 {	progress_fill_60 ( AB, BC, CA, B, cloud );
 	CA.remove_from_mesh ( progress_interface );
@@ -995,6 +1030,7 @@ inline void progress_fill_last_triangle
 void progress_relocate
 (	const Cell & P, size_t n, std::vector<double> & normal_dir,
 	std::set<Cell> & set_of_ver, MetricTree<Cell,Manifold::Euclid::SqDist> & cloud )
+// hidden in anonymous namespace
 
 // re-compute the placement of a newly created vertex
 
@@ -1081,6 +1117,7 @@ void progress_relocate
 inline bool check_touching
 (	Cell & ver, std::set<Cell> & set_of_ver, Cell & point_120, Cell & stop_point_120,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud                                 )
+// hidden in anonymous namespace
 
 // analyse position of recently built vertex 'ver' relatively to other vertices on the interface
 // occasionally, different connected components of the interface touch and merge
@@ -1227,6 +1264,7 @@ void progressive_construct ( Mesh & msh,
 	const tag::StartAt &, const Cell & start,
 	const tag::Towards &, std::vector<double> & tangent,
 	const tag::StopAt &, const Cell & stop               )
+// hidden in anonymous namespace
 
 // builds a one-dimensional mesh (a curve)
 	
@@ -1255,7 +1293,7 @@ void progressive_construct ( Mesh & msh,
 				prod += tangent[i] * e[i];                        }
 			if ( prod > 0. )
 			{	Cell last ( tag::segment, A.reverse(), stop );
-				last.add_to_mesh ( msh );
+				last.add_to_mesh ( msh, tag::do_not_bother );
 				// redistribute vertices
 				double n2 = Manifold::working.inner_prod ( A, e, e );
 				double norm = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
@@ -1278,7 +1316,8 @@ void progressive_construct ( Mesh & msh,
 		n2 = desired_len_at_point / n2;
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= n2;
 		Cell AB ( tag::segment, A.reverse(), B );
-		AB.add_to_mesh ( msh );  counter++;  A = B;                                            }
+		AB.add_to_mesh ( msh, tag::do_not_bother );
+		counter++;  A = B;                                                                                }
 
 } // end of  progressive_construct
 
@@ -1286,6 +1325,7 @@ void progressive_construct ( Mesh & msh,
 
 void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & start,
                              const tag::StopAt &, const Cell & stop                )
+// hidden in anonymous namespace
 	
 // builds a one-dimensional mesh (a curve)
 	
@@ -1354,6 +1394,7 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 //-------------------------------------------------------------------------------------------------
 
 inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, const Cell stop )
+// hidden in anonymous namespace
 
 // 'start' and 'stop' are positive vertices (may be one and the same)
 
@@ -1379,6 +1420,7 @@ inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, co
 void progressive_construct
 ( Mesh & msh, const tag::StartAt &, const Cell & start, const tag::StopAt &, const Cell & stop,
   const tag::InherentOrientation & )
+// hidden in anonymous namespace
 
 // 'start' and 'stop' are positive vertices (may be one and the same)
 
@@ -1392,10 +1434,15 @@ void progressive_construct
 	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
 
 	// the number of segments does not count, and we don't know it yet
-	// but we cannot declare 0 segments, or the iterators won't work
 	Mesh msh1 ( tag::whose_core_is,
 	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
 	    tag::freshly_created, tag::is_positive                                               );
+	// the number of segments does not count, and we don't know it yet
+	// we compute it after the mesh is built, by counting segments
+	// but we count segments using an iterator, and the iterator won't work
+	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+	// in iterator.cpp
 	progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
                           tag::stop_at, stop );
 	update_info_connected_one_dim ( msh1, start, stop );
@@ -1403,10 +1450,15 @@ void progressive_construct
 	
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
 	// the number of segments does not count, and we don't know it yet
-	// but we cannot declare 0 segments, or the iterators won't work
 	Mesh msh2 ( tag::whose_core_is,
 	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
 	    tag::freshly_created, tag::is_positive                                               );
+	// the number of segments does not count, and we don't know it yet
+	// we compute it after the mesh is built, by counting segments
+	// but we count segments using an iterator, and the iterator won't work
+	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+	// in iterator.cpp
 	progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
                           tag::stop_at, stop                                      );
 	switch_orientation ( msh2 );
@@ -1423,6 +1475,7 @@ void progressive_construct
 (	Mesh & msh, const tag::StartAt &, Cell start,
 	const tag::Towards &, std::vector<double> & normal,
 	const tag::Boundary &, Mesh bdry                    )
+// hidden in anonymous namespace
 
 // for two-dimensional meshes (arbitrary geometric dimension)
 	
@@ -1727,21 +1780,28 @@ inline void progressive_construct
 (	Mesh & msh, const tag::StartWithNonExistentMesh &,
 	const tag::StartAt, const Cell & start,
 	const tag::InherentOrientation &, bool check_and_switch )
+// hidden in anonymous namespace
 	
 // if last argument is true, compute inherent orientation
 // otherwise, random orientation
 
-{	// call to 'compute_tangent_vec' does not depend on the dimension of the mesh
+{	assert ( not msh.exists() );
+
+	// call to 'compute_tangent_vec' does not depend on the dimension of the mesh
 	desired_len_at_point = desired_length ( start );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	std::vector < double > tangent = compute_tangent_vec ( tag::at_point, start );
 
 	// now we branch, depending on the dimension
 	if ( get_topological_dim() == 1 )
-	// the number of segments does not count, and we don't know it yet
-	// but we cannot declare 0 segments, or the iterators won't work
 	{	msh.core = new Mesh::Connected::OneDim
 			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
+		// the number of segments does not count, and we don't know it yet
+		// we compute it after the mesh is built, by counting segments
+		// but we count segments using an iterator, and the iterator won't work
+		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// in iterator.cpp
 		progressive_construct ( msh, tag::start_at, start, tag::towards, tangent,
 		                        tag::stop_at, start                              );
 		update_info_connected_one_dim ( msh, start, start );                        }
@@ -1785,6 +1845,7 @@ inline void progressive_construct
 inline void progressive_construct
 (	Mesh & msh, const tag::StartWithNonExistentMesh &,
 	const tag::InherentOrientation &, bool check_and_switch )
+// hidden in anonymous namespace
 	
 // if last argument is true, compute inherent orientation
 // otherwise, random orientation
@@ -1801,6 +1862,7 @@ inline void progressive_construct
 (	Mesh & msh, const tag::StartAt &, const Cell & start,
 	const tag::Boundary &, Mesh interface,
 	const tag::InherentOrientation, bool check_and_switch )
+// hidden in anonymous namespace
 
 // if last argument is true, compute inherent orientation
 // otherwise, random orientation
@@ -1855,6 +1917,7 @@ inline void progressive_construct
 void progressive_construct
 (	Mesh & msh, const tag::StartAt &, const Cell & start,
 	const tag::Boundary &, Mesh interface                 )
+// hidden in anonymous namespace
 
 // for two-dimensional meshes in RR^2 (intrinsic orientation)
 //   or in a 2D submanifold of RR^3 (random orientation)
@@ -1885,6 +1948,7 @@ void progressive_construct
 
 void progressive_construct
 (	Mesh & msh, const tag::Boundary &, Mesh interface )
+// hidden in anonymous namespace
 
 // for two-dimensional meshes in RR^2 (intrinsic orientation)
 //   or in a 2D submanifold of RR^3 (random orientation)
@@ -1900,6 +1964,7 @@ void progressive_construct
 void progressive_construct
 (	Mesh & msh, const tag::Boundary &, Mesh interface,
 	const tag::InherentOrientation, bool check_and_switch )
+// hidden in anonymous namespace
 
 // if last argument is true, compute inherent orientation
 // otherwise, random orientation
@@ -2038,11 +2103,15 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 
 // 'start' and 'stop' are positive vertices, may be the same
 
-// the number of segments does not count, and we don't know it yet
-// but we cannot declare 0 segments, or the iterators won't work
 :	Mesh ( tag::whose_core_is,
 	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
 	       tag::freshly_created, tag::is_positive                                               )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
@@ -2070,11 +2139,15 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> tangent,
              const tag::DesiredLength &, const Function & length                  )
 
-// the number of segments does not count, and we don't know it yet
-// but we cannot declare 0 segments, or the iterators won't work
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
@@ -2103,11 +2176,15 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length                 )
 
-// the number of segments does not count, and we don't know it yet
-// but we cannot declare 0 segments, or the iterators won't work
 :	Mesh ( tag::whose_core_is,
 	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
 	       tag::freshly_created, tag::is_positive                                               )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
@@ -2132,7 +2209,11 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	{	this->core = new Mesh::Connected::OneDim
 			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
 		// the number of segments does not count, and we don't know it yet
-		// but we cannot declare 0 segments, or the iterators won't work
+		// we compute it after the mesh is built, by counting segments
+		// but we count segments using an iterator, and the iterator won't work
+		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// in iterator.cpp
 		if ( progress_nb_of_coords == 2 )
 			progressive_construct ( *this, tag::start_at, start,
 			                        tag::stop_at, start, tag::inherent_orientation );
@@ -2163,7 +2244,11 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	{	this->core = new Mesh::Connected::OneDim
 			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
 		// the number of segments does not count, and we don't know it yet
-		// but we cannot declare 0 segments, or the iterators won't work
+		// we compute it after the mesh is built, by counting segments
+		// but we count segments using an iterator, and the iterator won't work
+		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// in iterator.cpp
 		progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );  // random orientation
 		update_info_connected_one_dim ( *this, start, start );                      }
 	else
@@ -2178,11 +2263,15 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
 
-// the number of segments does not count, and we don't know it yet
-// but we cannot declare 0 segments, or the iterators won't work
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
