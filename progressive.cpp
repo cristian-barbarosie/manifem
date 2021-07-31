@@ -1276,7 +1276,7 @@ void progressive_construct ( Mesh & msh,
 	assert ( stop.dim() == 0 );
 
 	size_t counter = 1;
-	size_t max_counter = 0;  // std::cin >> max_counter;
+	size_t max_counter = 0;  //  std::cin >> max_counter;
 	Cell A = start;
 	while ( true )
 	{	double d = Manifold::working.dist_sq ( A, stop );  // long range distance !
@@ -1644,6 +1644,7 @@ check_touching :
 		progress_sq_long_dist = progress_long_dist * progress_long_dist;
 		Cell next_seg = progress_interface.cell_in_front_of ( point_120, tag::surely_exists );
 		Cell  B = next_seg.tip();
+
 		if ( progress_cos_sq_120 ( A, point_120, B, prev_seg, next_seg) < 0.55 )  // 0.67
 		// angle around 120 deg, we want to form two triangles; see paragraph 12.7 in the manual
 		{	// we don't build a new vertex yet, we want to check for a quadrangle first
@@ -1682,6 +1683,7 @@ check_touching :
 				x(P) = x(point_120) / 2. + ( x(A) + x(B) ) / 4.
 					+ sum_of_nor[i] * half_of_sqrt_of_075;         }
 			Manifold::working.project(P);
+
 			Cell AP ( tag::segment, A.reverse(), P );
 			Cell BP ( tag::segment, B.reverse(), P );
 			Cell PB = BP.reverse();
@@ -1728,6 +1730,7 @@ check_touching :
 	{ // just a block of code for hiding variables
 	// we use point_120, the desired distances have been computed there
 	Cell next_seg = progress_interface.cell_in_front_of ( point_120, tag::surely_exists );
+
 	Cell B = next_seg.tip();
 	Cell P ( tag::vertex );  vertex_recently_built = P;
 	assert ( next_seg.core->hook.find(tag::normal_vector) !=
@@ -1738,6 +1741,7 @@ check_touching :
 	{	Function x = Manifold::working.coordinates()[i];
 		x(P) = ( x(point_120) + x(B) ) / 2. + f[i] * sqrt_of_075;  }
 	Manifold::working.project(P);
+
 	Cell AP ( tag::segment, point_120.reverse(), P );
 	Cell BP ( tag::segment, B.reverse(), P );
 	Cell PB = BP.reverse();
@@ -1750,14 +1754,21 @@ check_touching :
 	AP.add_to_mesh ( progress_interface );
 	PB.add_to_mesh ( progress_interface );
 	std::cout << "building brand new triangle " << ++current_name << std::endl;
-	if ( current_name == stopping_criterion ) return;			
 	build_one_normal ( point_120, P, AP );  // based on previous segment
 	build_one_normal ( P, B, PB );  // based on previous segment
 	progress_relocate ( P, 1, f, set_of_nearby_vertices, cloud );
 	// find more vertices close to P and take them all into account; modifies f
 	progress_add_point ( P, cloud );
 	stop_point_120 = progress_interface.cell_in_front_of(B).tip();
-	goto check_touching;
+	
+	if ( current_name == stopping_criterion ) return;
+
+	point_60 = point_120;
+	Cell BC = progress_interface.cell_in_front_of ( B, tag::surely_exists );
+	stop_point_60 = BC.tip();
+	stop_point_120 = stop_point_60;
+	goto angles_60;
+	// goto check_touching;
 	} // just a block of code for hiding variables
 
 search_for_start :  // execution only reaches this point through 'goto'
