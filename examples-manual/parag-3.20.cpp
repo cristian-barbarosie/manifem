@@ -82,11 +82,12 @@ int main ()
 	Mesh small_circle ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, 5, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               );
-	AB.add_to_mesh ( small_circle );
-	BC.add_to_mesh ( small_circle );
-	CD.add_to_mesh ( small_circle );
-	DE.add_to_mesh ( small_circle );
-	EA.add_to_mesh ( small_circle );
+	AB.add_to_mesh ( small_circle, tag::do_not_bother );
+	BC.add_to_mesh ( small_circle, tag::do_not_bother );
+	CD.add_to_mesh ( small_circle, tag::do_not_bother );
+	DE.add_to_mesh ( small_circle, tag::do_not_bother );
+	EA.add_to_mesh ( small_circle, tag::do_not_bother );
+	// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 	update_info_connected_one_dim ( small_circle, A, A );
 
 	Cell V ( tag::vertex );  x(V) = 1.;  y(V) = 0.;  z(V) = 1.;

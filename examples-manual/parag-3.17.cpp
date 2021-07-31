@@ -1,7 +1,7 @@
 
 // example presented in paragraph 3.17 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// a diamond-shape domain in RR2
+// a diamond-shaped domain in RR2
 
 #include "maniFEM.h"
 

@@ -681,6 +681,7 @@ inline void switch_orientation ( Cell cll )
 		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
 		it->reverse().add_to_mesh ( msh, tag::do_not_bother );                                      }
+// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 // no need to call update_info_connected_one_dim because we are at hands with a closed loop
 // nb_of_segs remains the same, as well as first_ver and last_ver
 
@@ -701,6 +702,7 @@ void switch_orientation ( Mesh msh )
 		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
 		it->reverse().add_to_mesh ( msh, tag::do_not_bother );                                      }
+// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 // no need to call update_info_connected_one_dim because we are at hands with a closed loop
 // nb_of_segs remains the same, as well as first_ver and last_ver
 
@@ -1294,12 +1296,15 @@ void progressive_construct ( Mesh & msh,
 			if ( prod > 0. )
 			{	Cell last ( tag::segment, A.reverse(), stop );
 				last.add_to_mesh ( msh, tag::do_not_bother );
+				// the meaning of tag::do_not_bother is explained
+				// at the end of paragraph 11.6 in the manual
 				// redistribute vertices
 				double n2 = Manifold::working.inner_prod ( A, e, e );
-				double norm = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
+				double norm = approx_sqrt ( n2, tag::around,
+			                              sq_desired_len_at_point, desired_len_at_point );
 				norm = approx_sqrt ( n2, tag::around, norm*norm, norm );
 				redistribute_vertices ( msh, start, stop, norm, 15 );
-				break;                                                                 }  }
+				break;                                                                       }  }
 		Cell B ( tag::vertex );
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 		{	Function x = Manifold::working.coordinates()[i];
@@ -1317,7 +1322,8 @@ void progressive_construct ( Mesh & msh,
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= n2;
 		Cell AB ( tag::segment, A.reverse(), B );
 		AB.add_to_mesh ( msh, tag::do_not_bother );
-		counter++;  A = B;                                                                                }
+		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
+		counter++;  A = B;                                                                            }
 
 } // end of  progressive_construct
 
@@ -1827,10 +1833,11 @@ inline void progressive_construct
 		// Mesh interf ( tag::of_dimension_one );
 		Mesh interf ( tag::whose_core_is,
 		    new Mesh::Connected::OneDim ( tag::with, 3, tag::segments, tag::one_dummy_wrapper ),
-		    tag::freshly_created, tag::is_positive                                               );
-		AB.reverse().add_to_mesh(interf);
-		BC.reverse().add_to_mesh(interf);
-		CA.reverse().add_to_mesh(interf);
+		    tag::freshly_created, tag::is_positive                                              );
+		AB.reverse().add_to_mesh ( interf, tag::do_not_bother );
+		BC.reverse().add_to_mesh ( interf, tag::do_not_bother );
+		CA.reverse().add_to_mesh ( interf, tag::do_not_bother );
+		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 		update_info_connected_one_dim ( interf, B, B );
 		progressive_construct ( msh, tag::start_at, AB.reverse(), tag::towards, normal,
 		                        tag::boundary, interf                                  );         }
