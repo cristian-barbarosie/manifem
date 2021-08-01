@@ -15,7 +15,7 @@ int main ()
 	Function xyz = RR3.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xyz[0],  y = xyz[1],  z = xyz[2];
 
-	cout << "this example takes some time" << endl;
+	cout << "this example takes time" << endl;
 	Function f1 = x*x + y*y + 0.1;
 	Function f2 = 1. - power ( f1, -0.5 );
 	Function d1 = f1 * f2 * f2 + z*z;

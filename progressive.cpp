@@ -860,7 +860,9 @@ inline Cell build_normals ( const Cell & start )
 // 'normal' should have norm approximately equal to desired_length
 
 {	assert ( start.belongs_to ( progress_interface, tag::same_dim, tag::oriented ) );
+	#ifndef NDEBUG
 	std::cout << "building normals" << std::endl;
+	#endif
 
 	// we keep local copies of desired_len_at_point and sq_desired_len_at_point
 	double dlp = desired_len_at_point, sdlp = sq_desired_len_at_point;
@@ -1669,7 +1671,9 @@ check_touching :
 			Cell ver_next_to_B = seg_next_to_B.tip();
 			if ( ver_prev_to_A == ver_next_to_B )  // quadrangle
 			{	// check orientations : correct side ?
+				#ifndef NDEBUG
 				std::cout << "shrinking quadrangle" << std::endl;
+				#endif
 				// choose the shortest diagonal, add two triangles to the mesh under construction
 				if ( Manifold::working.dist_sq ( A, B ) <
 						 Manifold::working.dist_sq ( point_120, ver_next_to_B ) )

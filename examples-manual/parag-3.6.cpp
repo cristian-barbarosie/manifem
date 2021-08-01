@@ -16,7 +16,7 @@ int main ()
 	Function xyz = RR3.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xyz[0], y = xyz[1], z = xyz[2];
 
-	cout << "this example takes some time" << endl;
+	// cout << "this example takes some time" << endl;
 	// cout << setprecision(10);
 
 	RR3.implicit ( x*x + y*y + z*z == 1. );
