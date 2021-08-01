@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.07.29
+// progressive.cpp 2021.08.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1491,6 +1491,7 @@ void progressive_construct
 {	// we don't want to change 'bdry' so we make a copy of it
 	// one more reason : bdry may be Mesh::Connected::OneDim,
 	// we want a Mesh::Fuzzy interface to play with
+	// in the future, we will want a Mesh::STSI
 	{ // just a block of code for hiding 'it', 'interface'
 	Mesh interface ( tag::fuzzy, tag::of_dim, 1 );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim );
@@ -1553,10 +1554,12 @@ void progressive_construct
 	assert ( ret == start );
 
 	Cell point_60 = start.tip();
-	
+
+	#ifndef NDEBUG
 	int stopping_criterion = 0;
 	// std::cout << "stopping criterion : ";  std::cin >> stopping_criterion;
 	int current_name = 1;
+	#endif
 
 restart:
 	
@@ -1565,6 +1568,9 @@ restart:
 angles_60 :
 
 	// starting at 'point_60', we go along this connected component of 'progress_interface'
+	// we stop at 'stop_point_60', not including 'stop_point_60'
+	// if point_60 == stop_point_60, we want to treat every vertex in the
+	// current connected component of 'progress_interface'
 	{ // just a block of code for hiding variables
 	Cell prev_seg = progress_interface.cell_behind ( point_60, tag::surely_exists );
 	Cell A = prev_seg.base().reverse();
@@ -1588,15 +1594,19 @@ angles_60 :
 			if ( ver_next_to_B == A )  // this is the last triangle in this piece of progress_interface
 			{	progress_fill_last_triangle
 					( A, point_60, B, prev_seg, next_seg, seg_next_to_B, cloud );
+				#ifndef NDEBUG
 				std::cout << "shrinking triangle " << ++current_name << std::endl;
-				if ( current_name == stopping_criterion ) return;			
+				if ( current_name == stopping_criterion ) return;
+				#endif
 				goto search_for_start;  	                                                        }
 			Cell AB ( tag::segment, A.reverse(), B );
 			progress_fill_60 ( prev_seg, next_seg, AB.reverse(), point_60, cloud );
 			AB.add_to_mesh ( progress_interface );
 			build_one_normal ( A, B, AB );  // based on previous segment
+			#ifndef NDEBUG
 			std::cout << "found angle around 60 deg " << ++current_name << std::endl;
 			if ( current_name == stopping_criterion ) return;
+			#endif
 			if ( stop_point_120 == B )
 			{	if ( stop_point_120 == point_120 )
 				{	point_120 = A;  stop_point_120 = A;  }
@@ -1625,8 +1635,10 @@ check_touching :
 	{	// if ( current_name == 296 ) return;
 		assert ( point_120.belongs_to
 			( progress_interface, tag::cell_has_low_dim, tag::not_oriented ) );
+		#ifndef NDEBUG
 		std::cout << "touch " << ++current_name << std::endl;
 		if ( current_name == stopping_criterion ) return;
+		#endif
 		point_60 = point_120;  stop_point_60 = point_60;  stop_point_120 = point_60;
 		goto angles_60;                                                                     }
 	} // just a block of code for hiding 'touch'
@@ -1634,6 +1646,9 @@ check_touching :
 // look for angles around 120 deg :
 
 	// starting at 'point_120', we go along this connected component of 'progress_interface'
+	// we stop at 'stop_point_120', not including 'stop_point_120'
+	// if point_120 == stop_point_120, we want to treat every vertex in the
+	// current connected component of 'progress_interface'
 	{  // just a block of code for hiding prev_seg and A
 	Cell prev_seg = progress_interface.cell_behind ( point_120, tag::surely_exists );
 	Cell A = prev_seg.base().reverse();
@@ -1711,8 +1726,10 @@ check_touching :
 			assert ( prev_seg.tip() == point_120 );
 			if ( point_120 .is_inner_to ( mesh_under_constr ) ) msh.baricenter ( point_120 );
 			progress_add_point ( P, cloud );
+			#ifndef NDEBUG
 			std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
-			if ( current_name == stopping_criterion ) return;			
+			if ( current_name == stopping_criterion ) return;
+			#endif
 			if ( stop_point_120 == point_120 )  // we have all the loop to cover
 				stop_point_120 = A;
 			if ( stop_point_120 == B ) stop_point_120 = ver_next_to_B;
@@ -1753,15 +1770,17 @@ check_touching :
 	next_seg.core->hook.erase ( tag::normal_vector );
 	AP.add_to_mesh ( progress_interface );
 	PB.add_to_mesh ( progress_interface );
-	std::cout << "building brand new triangle " << ++current_name << std::endl;
 	build_one_normal ( point_120, P, AP );  // based on previous segment
 	build_one_normal ( P, B, PB );  // based on previous segment
 	progress_relocate ( P, 1, f, set_of_nearby_vertices, cloud );
 	// find more vertices close to P and take them all into account; modifies f
 	progress_add_point ( P, cloud );
 	stop_point_120 = progress_interface.cell_in_front_of(B).tip();
-	
+
+	#ifndef NDEBUG
+	std::cout << "building brand new triangle " << ++current_name << std::endl;
 	if ( current_name == stopping_criterion ) return;
+	#endif
 
 	point_60 = point_120;
 	Cell BC = progress_interface.cell_in_front_of ( B, tag::surely_exists );
@@ -1779,7 +1798,9 @@ search_for_start :  // execution only reaches this point through 'goto'
 	// so we cannot use a CellIterator - perhaps an unstructured one ?
 	if ( progress_interface.number_of ( tag::segments ) == 0 ) return;
 	// empty interface, meshing process ended
+	#ifndef NDEBUG
 	std::cout << "search for start " << current_name << std::endl;
+	#endif
 	CellIterator it = progress_interface.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell tmp = *it;
