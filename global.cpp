@@ -499,7 +499,7 @@ void Mesh::draw_ps_3d ( std::string file_name )
 //----------------------------------------------------------------------------------//
 
 
-void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_numbering )
+void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 
 {	// we use the current manifold
 	Manifold space = Manifold::working;
@@ -518,14 +518,14 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 	if (coord.nb_of_components() == 2)
 	{	for ( it.reset() ; it.in_range(); it++ )
 		{	Cell p = *it;
-			file_msh << ver_numbering [p.core] << " "
+			file_msh << ver_numbering (p) << " "
 		           << x(p) << " " << y(p) << " " << 0 << std::endl;  }  }
 	else
 	{	assert  ( coord.nb_of_components() == 3 );
 		Function z = coord[2];
 		for ( it.reset() ; it.in_range(); it++ )
 		{	Cell p = *it;
-			file_msh << ver_numbering [p.core] << " "
+			file_msh << ver_numbering (p) << " "
 		           << x(p) << " " << y(p) << " " << z(p) << std::endl;  }  }
 	file_msh << "$EndNodes" << std::endl;
 	} // just to make variables local : it, counter, x, y
@@ -541,9 +541,9 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 			Cell elem = *it;
 			file_msh << counter << " 1 0 ";
 			Cell A = elem.base().reverse();
-			file_msh << ver_numbering [A.core] << " ";
+			file_msh << ver_numbering (A) << " ";
 			Cell B = elem.tip();
-			file_msh << ver_numbering [B.core] << std::endl;    }  }
+			file_msh << ver_numbering (B) << std::endl;    }  }
 	else if ( this->dim() == 2 )
 	{	CellIterator it = this->iterator ( tag::over_cells_of_dim, 2 );
 		size_t counter = 0;
@@ -558,7 +558,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 			CellIterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
 			for ( itt.reset(); itt.in_range(); ++itt )
 			{	Cell p = *itt;
-				file_msh << ver_numbering [p.core] << " ";   }
+				file_msh << ver_numbering (p) << " ";   }
 			file_msh << std::endl;                                                   }  }
 	else
 	{	assert ( this->dim() == 3);
@@ -584,7 +584,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_03 = back.boundary().cell_in_front_of(ver_0);
 				for ( ; itv.in_range(); ++itv )
-				{	Cell p = *itv;  file_msh << ver_numbering [p.core] << " ";   }
+				{	Cell p = *itv;  file_msh << ver_numbering (p) << " ";   }
 				Cell left_wall = elem.boundary().cell_in_front_of(seg_03); // square face on the left
 				// left_wall is 0473 in gmsh's documentation
 				assert ( left_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
@@ -597,7 +597,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				CellIterator itvv = front.boundary().iterator ( tag::over_vertices, tag::require_order );
 				itvv.reset ( tag::start_at, ver_4 );
 				for ( ; itvv.in_range(); ++itvv )
-				{	Cell p = *itvv;  file_msh << ver_numbering [p.core] << " ";   }                }
+				{	Cell p = *itvv;  file_msh << ver_numbering (p) << " ";   }                }
 			else
 			{	assert( n_faces == 5 );
 				// triangular prism = 6-node prism
@@ -621,7 +621,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				Cell seg_02 = base.boundary().cell_in_front_of(ver_0);
 				for (  ; itv.in_range(); ++itv )
 				{	Cell p = *itv;
-					file_msh << ver_numbering [p.core] << " ";   }
+					file_msh << ver_numbering (p) << " ";   }
 				Cell right_wall = elem.boundary().cell_in_front_of(seg_02);
 				// right_wall is 0352 in gmsh's documentation
 				assert ( right_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
@@ -634,7 +634,7 @@ void Mesh::export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_number
 				CellIterator itvv = roof.boundary().iterator ( tag::over_vertices, tag::require_order );
 				itvv.reset ( tag::start_at, ver_3 );
 				for ( ; itvv.in_range(); ++itvv )
-				{	Cell p = *itvv;  file_msh << ver_numbering [p.core] << " ";  }               }
+				{	Cell p = *itvv;  file_msh << ver_numbering (p) << " ";  }               }
 			file_msh << std::endl;                                                                } }
 	file_msh << "$EndElements" << std::endl;
 	
@@ -649,14 +649,17 @@ void Mesh::export_msh ( std::string f )
 	
 // the numbering of vertices is produced on-the-fly
 
-{	std::map < Cell::Core *, size_t > numbering;
+{	Cell::Numbering::Map numbering;
 
 	CellIterator it = this->iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
-	{	++counter;  Cell p = *it;  numbering [p.core] = counter;  }
+	{	++counter;  Cell p = *it;  numbering (p) = counter;  }
 
 	this->export_msh ( f, numbering );
 
 } // end of Mesh::export_msh
 
+
+size_t & Cell::Numbering::Map::operator() ( const Cell p )  // virtual from Cell::Numbering
+{	return this->map[p.core];  }

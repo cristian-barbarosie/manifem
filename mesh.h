@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.07.29
+//   mesh.h  2021.08.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -566,6 +566,8 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	class NegativeVertex;  class NegativeNotVertex;
 	class NegativeSegment;  class NegativeHighDim;
 
+	class Numbering;  // a callable object with a Cell as argument, returning a size_t
+	
 }; // end of  class Cell
 
 
@@ -1337,7 +1339,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void draw_ps ( std::string file_name );
 	void draw_ps_3d ( std::string file_name );
-	void export_msh ( std::string f, std::map<Cell::Core*,size_t> & ver_numbering );
+	void export_msh ( std::string f, Cell::Numbering & ver_numbering );
 	void export_msh ( std::string f );
 	
 	// several versions of 'build' below are defined in global.cpp
@@ -5899,8 +5901,36 @@ inline bool tag::Util::Core::dispose_query ( )
 	return this->nb_of_wrappers == 0;     }
 
 
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+class Cell::Numbering
+
+// abstract class, specialized in Cell::Numbering::Field and Cell::Numbering::Map
+
+{	public :
+
+	virtual ~Numbering ( ) { };
+
+	virtual size_t & operator() ( const Cell ) = 0;
+
+	class Map;  class Field;
+
+};	
+
+
+class Cell::Numbering::Map : public Cell::Numbering
+
+{	public :
+
+	std::map < Cell::Core *, size_t > map;
+
+	size_t & operator() ( const Cell );  // virtual from Cell::Numbering, defined in global.cpp
+
+};	
+
+
 }  // namespace maniFEM
 
 #endif  // ifndef MANIFEM_MESH_H
 
-//23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789

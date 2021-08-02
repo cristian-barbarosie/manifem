@@ -187,109 +187,37 @@ class Field::ShortInt::Block : public Field::ShortInt::Core
 	
 // a Field::SizeT can be used for enumerating vertices
 
-class Field::SizeT
+class Field::SizeT : public Field::Core
 
-// wrapper for fields holding size_t values
-
-{	public :
-
-	class Core;
-	
-	Field::SizeT::Core * core;
-
-	inline SizeT ( const tag::WhoseCoreIs &, Field::SizeT::Core * c )
-	:	core { c }
-	{	assert ( c );  }
-
-	inline SizeT ( const tag::LivesOnPoints & );
-	inline SizeT ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s );
-
-	inline Field::SizeT operator[] ( size_t );
-	class TakenOnCell;
-	inline Field::SizeT::TakenOnCell operator() ( Cell );
-	
-	class Core;  class Block;  class Scalar;
-};
-
-
-class Field::SizeT::Core : public Field::Core
-
-// base class for several different fields
-
-{	public :
-
-	// attribute  lives_on_cells_of_dim  inherited from Field::Core
-
-	inline Core ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
-	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	}
-
-	virtual ~Core ( ) { };
-
-	// size_t nb_of_components  stays pure virtual from Field::Core
-
-	virtual Field::SizeT::Scalar * component ( size_t ) = 0;
-
-	inline Field::SizeT::TakenOnCell on_cell ( Cell::Core * cll );
-
-	// Field::SizeT::TakenOnCell on_cell ( Cell::Core * cll )
-	//   defined inline by Field::SizeT::Core
-
-};
-
-
-class Field::SizeT::Scalar : public Field::SizeT::Core
-	
 {	public :
 
 	// attribute  lives_on_cells_of_dim  inherited from Field::Core
 
 	size_t index_in_heap;
 
-	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
-	:	Field::SizeT::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	index_in_heap = Cell::double_heap_size_pos[d];
-		Cell::double_heap_size_pos[d] ++;               }
-	
-	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &,
-		size_t d, const tag::HasIndexInHeap, size_t i )
-	:	Field::SizeT::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	index_in_heap = i;  }
-	
-	size_t nb_of_components ( );  // virtual from Field::Core
+	inline SizeT ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
+	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
+	{	}
 
-	Field::SizeT::Scalar * component ( size_t );  // virtual from Field::SizeT::Core
+	virtual ~SizeT ( ) { };
+
+	size_t & on_cell ( Cell::Core * cll );
 
 };
 
 
-class Field::SizeT::Block : public Field::SizeT::Core
-	
+class Cell::Numbering::Field : public Cell::Numbering
+
 {	public :
 
-	// attribute  lives_on_cells_of_dim  inherited from Field::Core
+	maniFEM::Field::SizeT * field;
 
-	size_t min_index, max_index_p1;
-	
-	inline Block ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d,
-	                    const tag::HasSize &, size_t s                                         )
-	:	Field::SizeT::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	min_index = Cell::size_t_heap_size_pos[d];
-		Cell::size_t_heap_size_pos[d] += s;
-		max_index_p1 = Cell::size_t_heap_size_pos[d];  }
-	
-	size_t nb_of_components ( );  // virtual from Field::Core
+	size_t & operator() ( const Cell );  // virtual from Cell::Numbering
 
-	Field::SizeT::Scalar * component ( size_t );  // virtual from Field::SizeT::Core
-
-	// Field::SizeT::TakenOnCell on_cell ( Cell::Core * cll )
-	//   defined inline by Field::SizeT::Core
-
-};
+};	
 
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
-
 
 // a Field::Double can be used for storing coordinates of vertices or values of solutions
 	
@@ -466,6 +394,10 @@ class Field::Double::TakenOnCell
 inline Field::Double::TakenOnCell Field::Double::Core::on_cell ( Cell::Core * cll )
 {	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
 	return Field::Double::TakenOnCell { this, cll };          }
+
+inline size_t & Field::SizeT::on_cell ( Cell::Core * cll )
+{	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
+	return cll->size_t_heap[this->index_in_heap];             }
 
 inline Field::Double Field::Double::operator[] ( size_t i )
 {	return Field::Double ( tag::whose_core_is, this->core->component(i) );  }

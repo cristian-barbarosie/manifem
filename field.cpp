@@ -26,18 +26,11 @@ using namespace maniFEM;
 size_t Field::ShortInt::Scalar::nb_of_components ( )  // virtual from Field::Core
 {	return 1;  }
 
-size_t Field::SizeT::Scalar::nb_of_components ( )  // virtual from Field::Core
-{	return 1;  }
-
 size_t Field::Double::Scalar::nb_of_components ( )  // virtual from Field::Core
 {	return 1;  }
 
 
 size_t Field::ShortInt::Block::nb_of_components ( )  // virtual from Field::Core
-{	return tag::Util::assert_diff ( this->max_index_p1, this->min_index );  }
-// tag::Util::assert_diff  provides a safe way to substract two size_t numbers
-
-size_t Field::SizeT::Block::nb_of_components ( )  // virtual from Field::Core
 {	return tag::Util::assert_diff ( this->max_index_p1, this->min_index );  }
 // tag::Util::assert_diff  provides a safe way to substract two size_t numbers
 
@@ -48,10 +41,6 @@ size_t Field::Double::Block::nb_of_components ( )  // virtual from Field::Core
 
 Field::ShortInt::Scalar * Field::ShortInt::Scalar::component ( size_t i )
 // virtual from Field::Core
-{	assert ( i == 0 );
-	return this;        }
-
-Field::SizeT::Scalar * Field::SizeT::Scalar::component ( size_t i )  // virtual from Field::Core
 {	assert ( i == 0 );
 	return this;        }
 
@@ -68,13 +57,6 @@ Field::ShortInt::Scalar * Field::ShortInt::Block::component ( size_t i )
 	return new Field::ShortInt::Scalar ( tag::lives_on_positive_cells, tag::of_dim,
 	      this->lives_on_cells_of_dim, tag::has_index_in_heap, this->min_index + i );  }
 
-Field::SizeT::Scalar * Field::SizeT::Block::component ( size_t i )  // virtual from Field::Core
-// we build a new Field::Scalar
-// it would be nice to check whether a field for index i exists already ...
-{	assert ( i < this->nb_of_components() );
-	return new Field::SizeT::Scalar ( tag::lives_on_positive_cells, tag::of_dim,
-	   this->lives_on_cells_of_dim, tag::has_index_in_heap, this->min_index + i );  }
-
 Field::Double::Scalar * Field::Double::Block::component ( size_t i )  // virtual from Field::Core
 // we build a new Field::Scalar
 // it would be nice to check whether a field for index i exists already ...
@@ -82,7 +64,10 @@ Field::Double::Scalar * Field::Double::Block::component ( size_t i )  // virtual
 	return new Field::Double::Scalar ( tag::lives_on_positive_cells, tag::of_dim,
 	    this->lives_on_cells_of_dim, tag::has_index_in_heap, this->min_index + i );  }
 
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 
 
-
+size_t & Cell::Numbering::Field::operator() ( const Cell p )  // virtual from Cell::Numbering
+{	return this->field->on_cell ( p.core );  }
 
