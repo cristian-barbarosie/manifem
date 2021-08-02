@@ -1,5 +1,5 @@
 
-// field.h 2020.01.03
+//   field.h  2021.08.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -35,33 +35,55 @@ namespace tag {
 	struct HasIndexInHeap { };  static const HasIndexInHeap has_index_in_heap;
 }
 
-	
-class Field
+//---------------------------------------------------------------------------------------
 
-// wrapper for fields
+	
+// we have three types of Fields
+// a Field::ShortInt can be used for labeling cells in different regions
+//   or for holding the jump of a segment
+// a Field::SizeT can be used for enumerating vertices
+// a Field::Double can be used for storing coordinates of vertices or values of solutions
+
+struct Field  {  class ShortInt;  class SizeT;  class Double;  }
+
+	
+// since there will be just a few Field objects in a program,
+// and they will usually be destroyed only at the end of the program,
+// we do not use here the mechanism of inheriting from tag::Util::Wrapper and tag::Util::Core
+	
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+
+// a Field::ShortInt can be used for labeling cells in different regions
+//   or for holding the jump of a segment
+	
+class Field::ShortInt
+
+// wrapper for fields holding short int values
 
 {	public :
 
 	class Core;
 	
-	Field::Core * core;
+	Field::ShortInt::Core * core;
 
-	inline Field ( const tag::WhoseCoreIs &, Field::Core * c )
+	inline ShortInt ( const tag::WhoseCoreIs &, Field::Core * c )
 	:	core { c }
 	{	assert ( c );  }
 
-	inline Field ( const tag::LivesOnPoints & );
-	inline Field ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s );
+	inline ShortInt ( const tag::LivesOnPoints & );
+	inline ShortInt ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s );
 
-	inline Field operator[] ( size_t );
+	inline Field::ShortInt operator[] ( size_t );
 	class TakenOnCell;
-	inline Field::TakenOnCell operator() ( Cell );
+	inline Field::ShortInt::TakenOnCell operator() ( Cell );
 	
 	class Block;  class Scalar;
 };
 
 
-class Field::Core
+class Field::ShortInt::Core
 
 // base class for several different fields
 
@@ -76,38 +98,14 @@ class Field::Core
 	virtual ~Core ( ) { };
 
 	virtual size_t nb_of_components ( ) = 0;
-	virtual Field::Scalar * component ( size_t ) = 0;
+	virtual Field::ShortInt::Scalar * component ( size_t ) = 0;
 
-	inline Field::TakenOnCell on_cell ( Cell::Core * cll );
-
-};
-
-
-class Field::Scalar : public Field::Core
-	
-{	public :
-
-	size_t index_in_heap;
-
-	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
-	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	index_in_heap = Cell::double_heap_size_pos[d];
-		Cell::double_heap_size_pos[d] ++;               }
-	
-	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &,
-		size_t d, const tag::HasIndexInHeap, size_t i )
-	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	index_in_heap = i;  }
-	
-	size_t nb_of_components ( );  // virtual from Field::Core
-	Field::Scalar * component ( size_t );  // virtual from Field::Core
+	inline Field::ShortInt::TakenOnCell on_cell ( Cell::Core * cll );
 
 };
 
-
-// we should have a Field::Vector as parent for Field::Block and Field::Aggregate
-
-class Field::Block : public Field::Core
+	
+class Field::ShortInt::Block : public Field::ShortInt::Core
 	
 {	public :
 
@@ -115,50 +113,213 @@ class Field::Block : public Field::Core
 	
 	inline Block ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d,
 	                    const tag::HasSize &, size_t s                                         )
-	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
+	:	Field::ShortInt::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
+	{	min_index = Cell::short_int_heap_size_pos[d];
+		Cell::short_int_heap_size_pos[d] += s;
+		max_index_p1 = Cell::short_int_heap_size_pos[d];  }
+	
+	size_t nb_of_components ( );  // virtual from Field::Core
+	Field::ShortInt::Scalar * component ( size_t );  // virtual from Field::Core
+};
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+	
+// a Field::SizeT can be used for enumerating vertices
+
+class Field::SizeT
+
+// wrapper for fields holding size_t values
+
+{	public :
+
+	class Core;
+	
+	Field::SizeT::Core * core;
+
+	inline SizeT ( const tag::WhoseCoreIs &, Field::Core * c )
+	:	core { c }
+	{	assert ( c );  }
+
+	inline SizeT ( const tag::LivesOnPoints & );
+	inline SizeT ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s );
+
+	inline Field::SizeT operator[] ( size_t );
+	class TakenOnCell;
+	inline Field::SizeT::TakenOnCell operator() ( Cell );
+	
+	class Block;  class Scalar;
+};
+
+
+class Field::SizeT::Core
+
+// base class for several different fields
+
+{	public :
+
+	size_t lives_on_cells_of_dim;
+
+	inline Core ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
+	:	lives_on_cells_of_dim { d }
+	{	}
+
+	virtual ~Core ( ) { };
+
+	virtual size_t nb_of_components ( ) = 0;
+	virtual Field::SizeT::Scalar * component ( size_t ) = 0;
+
+	inline Field::SizeT::TakenOnCell on_cell ( Cell::Core * cll );
+
+};
+
+
+class Field::SizeT::Block : public Field::SizeT::Core
+	
+{	public :
+
+	size_t min_index, max_index_p1;
+	
+	inline Block ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d,
+	                    const tag::HasSize &, size_t s                                         )
+	:	Field::SizeT::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
+	{	min_index = Cell::size_t_int_heap_size_pos[d];
+		Cell::size_t_heap_size_pos[d] += s;
+		max_index_p1 = Cell::size_t_heap_size_pos[d];  }
+	
+	size_t nb_of_components ( );  // virtual from Field::Core
+	Field::SizeT::Scalar * component ( size_t );  // virtual from Field::Core
+
+};
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+
+// a Field::Double can be used for storing coordinates of vertices or values of solutions
+	
+class Field::Double
+
+// wrapper for fields
+
+{	public :
+
+	class Core;
+	
+	Field::Double::Core * core;
+
+	inline Double ( const tag::WhoseCoreIs &, Field::Core * c )
+	:	core { c }
+	{	assert ( c );  }
+
+	inline Double ( const tag::LivesOnPoints & );
+	inline Double ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s );
+
+	inline Field::Double operator[] ( size_t );
+	class TakenOnCell;
+	inline Field:::Double:TakenOnCell operator() ( Cell );
+	
+	class Block;  class Scalar;
+};
+
+
+class Field::Double::Core
+
+// base class for several different fields
+
+{	public :
+
+	size_t lives_on_cells_of_dim;
+
+	inline Core ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
+	:	lives_on_cells_of_dim { d }
+	{	}
+
+	virtual ~Core ( ) { };
+
+	virtual size_t nb_of_components ( ) = 0;
+	virtual Field::Double::Scalar * component ( size_t ) = 0;
+
+	inline Field::Double::TakenOnCell on_cell ( Cell::Core * cll );
+
+};
+
+
+class Field::Double::Scalar : public Field::Double::Core
+	
+{	public :
+
+	size_t index_in_heap;
+
+	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
+	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
+	{	index_in_heap = Cell::double_heap_size_pos[d];
+		Cell::double_heap_size_pos[d] ++;               }
+	
+	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &,
+		size_t d, const tag::HasIndexInHeap, size_t i )
+	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
+	{	index_in_heap = i;  }
+	
+	size_t nb_of_components ( );  // virtual from Field::Core
+	Field::Double::Scalar * component ( size_t );  // virtual from Field::Core
+
+};
+
+
+class Field::Double::Block : public Field::Double::Core
+	
+{	public :
+
+	size_t min_index, max_index_p1;
+	
+	inline Block ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d,
+	                    const tag::HasSize &, size_t s                                         )
+	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
 	{	min_index = Cell::double_heap_size_pos[d];
 		Cell::double_heap_size_pos[d] += s;
 		max_index_p1 = Cell::double_heap_size_pos[d];  }
 	
 	size_t nb_of_components ( );  // virtual from Field::Core
-	Field::Scalar * component ( size_t );  // virtual from Field::Core
+	Field::Double::Scalar * component ( size_t );  // virtual from Field::Core
 
 };
 
 	
-inline Field::Field ( const tag::LivesOnPoints & )
-:	core { new Field::Scalar ( tag::lives_on_positive_cells, tag::of_dim, 0 ) }
+inline Field::Double::Double ( const tag::LivesOnPoints & )
+:	core { new Field::Double::Scalar ( tag::lives_on_positive_cells, tag::of_dim, 0 ) }
 {	assert ( core );  }
 
 	
-inline Field::Field ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s )
-:	core { new Field::Block ( tag::lives_on_positive_cells, tag::of_dim, 0,
+inline Field::Double::Double ( const tag::LivesOnPoints &, const tag::HasSize &, size_t s )
+:	core { new Field::Double::Block ( tag::lives_on_positive_cells, tag::of_dim, 0,
                                   tag::has_size, s                               ) }
 {	assert ( core );  }
 
 	
-// class Field::TakenOnCell holds a temporary object,
-// the result of Field::operator(), or of Field::Core::on_cell
+// class Field::Double::TakenOnCell holds a temporary object,
+// the result of Field::Double::operator(), or of Field::Double::Core::on_cell
 // it is versatile in the sense that the Field may have one components or several
-// if the Field f has one component, we may use the Field::TakenOnCell object like in
+// if the Field f has one component, we may use the Field::Double::TakenOnCell object like in
 // double x = f(cll)  or  f(cll) = 2.0
-// if the Field f has several components, we may use the Field::TakenOnCell object like in
+// if the Field f has several components, we may use the Field::Double::TakenOnCell object like in
 // vector<double> vec = f(cll)  or  f(cll) = vec
 
 // Trebuie sa ne gandim si la chestii de tipul += *=
 // si chiar  x = y = F(P)  sau  F(P) = F(Q) = 2  si chiar  F(P) = F(P)
 
-class Field::TakenOnCell	
+class Field::Double::TakenOnCell	
 
 {	public :
 
-	Field::Core * f;
+	Field::Double::Core * f;
 	Cell::Core * cll;
 
 	TakenOnCell ( const Field::TakenOnCell & ) = delete;
 	TakenOnCell ( const Field::TakenOnCell && ) = delete;
-	Field::TakenOnCell operator= ( const Field::TakenOnCell & ) = delete;
-	Field::TakenOnCell operator= ( const Field::TakenOnCell && ) = delete;
+	Field::Double::TakenOnCell operator= ( const Field::TakenOnCell & ) = delete;
+	Field::Double::TakenOnCell operator= ( const Field::TakenOnCell && ) = delete;
 	
 	inline operator double ()
 	// can be used like in  double x = f(cll)  or  cout << f(cll)
@@ -171,21 +332,21 @@ class Field::TakenOnCell
 
 	inline double & reference ( )
 	// can be used like in  f(cll) = 2.0
-	{	Field::Scalar * f_scalar = dynamic_cast<Field::Scalar*> ( f );
-		assert ( f_scalar );
+	{	Field::Double::Scalar * f_scalar = tag::Util::assert_cast
+			< Field::Double::Core*, Field::Double::Scalar* > ( f );
 		return cll->double_heap[f_scalar->index_in_heap];               }
 
 	inline operator std::vector<double> ()
 	// can be used like in  vector<double> vec = f(cll)
-	{	Field::Block * f_block = dynamic_cast<Field::Block*> ( f );
-		assert ( f_block );
+	{	Field::Double::Block * f_block = tag::Util::assert_cast
+			< Field::::Double*, Field::Double::Block* > ( f );
 		return std::vector<double> { & cll->double_heap[f_block->min_index],
 		                             & cll->double_heap[f_block->max_index_p1] };  }
 	
 	inline std::vector<double> operator= ( const std::vector<double> & x )
 	// can be used like in  f(cll) = vec
-	{	Field::Block * f_block = dynamic_cast<Field::Block*> ( f );
-		assert ( f_block );
+	{	Field::Double::Block * f_block = tag::Util::assert_cast
+			< Field::Double*, Fiel::Doubled::Block* > ( f );
 		size_t i_min    = f_block->min_index,
 		       i_max_p1 = f_block->max_index_p1;
 		for ( size_t i = i_min; i < i_max_p1; i++ )
@@ -195,14 +356,14 @@ class Field::TakenOnCell
 };
 
 
-inline Field::TakenOnCell Field::Core::on_cell ( Cell::Core * cll )
+inline Field::Double::TakenOnCell Field::Double::Core::on_cell ( Cell::Core * cll )
 {	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
-	return Field::TakenOnCell { this, cll };                 }
+	return Field::Double::TakenOnCell { this, cll };          }
 
-inline Field Field::operator[] ( size_t i )
-{	return Field ( tag::whose_core_is, this->core->component(i) );  }
+inline Field::Double Field::operator[] ( size_t i )
+{	return Field::Double ( tag::whose_core_is, this->core->component(i) );  }
 	
-inline Field::TakenOnCell Field::operator() ( Cell cll )
+inline Field::Double::TakenOnCell Field::operator() ( Cell cll )
 {	return this->core->on_cell(cll.core);  }
 
 	
