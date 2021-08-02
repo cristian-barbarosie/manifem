@@ -1,5 +1,5 @@
 
-// function.h 2021.07.10
+// function.h 2021.08.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1118,9 +1118,9 @@ class Function::CoupledWithField
 	
 {	public :
 
-  Field::Core * field;
+	Field::Double::Core * field;
 
-	inline CoupledWithField ( Field::Core * f ) : field { f }
+	inline CoupledWithField ( Field::Double::Core * f ) : field { f }
 	{	assert ( f );  }
 		
 	class Scalar;  class Vector;
@@ -1134,7 +1134,7 @@ class Function::CoupledWithField::Scalar
 	
 {	public :
 
-	inline Scalar ( Field::Scalar * f )
+	inline Scalar ( Field::Double::Scalar * f )
 	:	Function::Scalar(),
 		Function::CoupledWithField ( f )
 	{	assert ( f->nb_of_components() == 1 );  }
@@ -1179,7 +1179,7 @@ class Function::CoupledWithField::Vector
 	
 {	public :
 
-	inline Vector ( Field::Block * f )
+	inline Vector ( Field::Double::Block * f )
 	:	Function::Aggregate ( tag::reserve_size, f->nb_of_components() ),
 		Function::CoupledWithField ( f )
 	{	size_t n = f->nb_of_components();

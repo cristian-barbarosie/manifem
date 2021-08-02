@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.07.25
+// manifold.cpp 2021.08.02
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -34,16 +34,16 @@ Function Manifold::Euclid::build_coord_func
 // virtual from Manifold::Core
 	
 {	assert ( deg == 1 );
-	Field::Core * field;
+	Field::Double::Core * field;
 	Function::Core * func;
 	if ( this->dim == 1 )
-	{	Field::Scalar * field_scalar = new Field::Scalar
+	{	Field::Double::Scalar * field_scalar = new Field::Double::Scalar
 			( tag::lives_on_positive_cells, tag::of_dim, 0 );
 		field = field_scalar;
 		func = new Function::CoupledWithField::Scalar ( field_scalar );  }
 	else
 	{	assert ( this->dim > 1 );
-		Field::Block * field_block = new Field::Block
+		Field::Double::Block * field_block = new Field::Double::Block
 			( tag::lives_on_positive_cells, tag::of_dim, 0, tag::has_size, this->dim );
 		field = field_block;
 	  func = new Function::CoupledWithField::Vector ( field_block );                }

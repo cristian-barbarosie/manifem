@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.08.01
+// progressive.cpp 2021.08.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1625,7 +1625,7 @@ angles_60 :
 		A = point_60;  prev_seg = next_seg;  point_60 = B;                                            }
 	} // just a block of code for hiding variables
 
-check_touching :
+// check_touching :
 
 	{ // just a block of code for hiding 'touch'
 	Function x = Manifold::working.coordinates()[0];
