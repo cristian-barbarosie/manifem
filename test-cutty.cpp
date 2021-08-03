@@ -7,6 +7,8 @@ using namespace maniFEM;
 
 int global_counter = 0;
 
+std::list <std::list <Cell>> list_of_triplets;
+
 inline bool opposite_signs ( double a, double b )
 {	return ( ( a >= 0. ) and ( b <= 0. ) ) or ( ( a <= 0. ) and ( b >= 0. ) );  }
 
@@ -24,7 +26,15 @@ int main ()
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
+	
+	Field::Scalar * field_x = new Field::Scalar( tag::lives_on_positive_cells, tag::of_dim, 0 );
+	Function::Core*	func_x = new Function::CoupledWithField::Scalar ( field_x );  
+    Function x_bg ( tag::whose_core_is, func_x );
 
+	Field::Scalar * field_y = new Field::Scalar( tag::lives_on_positive_cells, tag::of_dim, 0 );
+	Function::Core*	func_y = new Function::CoupledWithField::Scalar ( field_y );  
+    Function y_bg ( tag::whose_core_is, func_y );
+	
 	Cell A ( tag::vertex );  x(A) = -1.;  y(A) = 0.;
 	Cell B ( tag::vertex );  x(B) =  1.;  y(B) = 0.;
 	Cell C ( tag::vertex );  x(C) =  1.;  y(C) = 1.;
@@ -37,9 +47,17 @@ int main ()
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
+	{ // just a block of code for hiding names
+	CellIterator it=rect_mesh.iterator(tag::over_vertices);
+	for(it.reset(); it.in_range(); it++)
+	{	Cell V=*it;
+		x_bg(V)=x(V);
+		y_bg(V)=y(V);  }
+	} // just a block of code for hiding names
+	
 	double radius = 0.4;
 	// std::cout << "radius = ";  std::cin >> radius;
-	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.5*x*x*y*y;
+	Function psi = 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius );
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -52,15 +70,16 @@ int main ()
 
 	Manifold level = RR2.implicit ( psi == 0. );
 
+	{ // just a block of code for hiding names
+		
 	CellIterator it=cut.iterator(tag::over_vertices);
-	for(it.reset(); it.in_range(); it++) {
-		Cell V=*it;
+	for(it.reset(); it.in_range(); it++)
+	{	Cell V=*it;
 		level.project(V);
 		if (V.belongs_to(AB)) y(V)=0.;
 		if (V.belongs_to(BC)) x(V)=1.;
 		if (V.belongs_to(CD)) y(V)=1.;
-		if (V.belongs_to(DA)) x(V)=-1.;
-	}
+		if (V.belongs_to(DA)) x(V)=-1.;  }
 
 	// 'level' is working manifold
 	
@@ -80,7 +99,35 @@ int main ()
 			if ( W.belongs_to(CD) )  { CD.baricenter(W); continue; }
 			if ( W.belongs_to(DA) )  { DA.baricenter(W); continue; }
 			rect_mesh.baricenter ( W );                              }                 }
-
+	} // just a block of code for hiding names
+	
+	// solve equilibrium problem, compute new psi
+	
+	{ // just a block of code for hiding names
+	CellIterator it=rect_mesh.iterator(tag::over_vertices);
+	for(it.reset(); it.in_range(); it++)
+	{	Cell V=*it;
+		x(V)=x_bg(V);
+		y(V)=y_bg(V);  }
+	for ( std::list <std::list <Cell >>::iterator it_triple=list_of_triplets.begin();
+        it_triple != list_of_triplets.end(); it_triple++                            )
+	{	std::list<Cell> triplet = *it_triple;
+		std::list<Cell>::iterator itt = triplet.begin();
+		assert( itt != triplet.end() );
+		Cell square = *itt;
+		itt++;
+		assert( itt != triplet.end() );
+		Cell tri1 = *itt;
+		itt++;
+		assert( itt != triplet.end() );
+		Cell tri2 = *itt;
+		itt++;
+		assert( itt == triplet.end() );
+		tri1.remove_from_mesh(rect_mesh);
+		tri2.remove_from_mesh(rect_mesh);
+		square.add_to_mesh(rect_mesh);                    }
+	} // just a block of code for hiding names
+	
 	special_draw ( rect_mesh, cut, "square-cut.eps" );
 	rect_mesh.export_msh("background.msh");
 	std::cout << "produced files square-cut.eps and background.msh" << std::endl;
@@ -91,7 +138,7 @@ int main ()
 //-----------------------------------------------------------------------------------//
 
 
-inline void cut_diagonal ( Mesh ambient, Cell ABCD, Cell A )
+inline Cell cut_diagonal ( Mesh ambient, Cell ABCD, Cell A )
 
 {	assert ( ABCD.belongs_to ( ambient, tag::same_dim ) );
 	assert ( ABCD.boundary().number_of ( tag::segments ) == 4 );
@@ -107,7 +154,9 @@ inline void cut_diagonal ( Mesh ambient, Cell ABCD, Cell A )
 	Cell ABC ( tag::triangle, AB, BC, AC.reverse() );
 	Cell ACD ( tag::triangle, AC, CD, DA );
 	ABC.add_to_mesh ( ambient );
-	ACD.add_to_mesh ( ambient );                                            }
+	ACD.add_to_mesh ( ambient );    
+	list_of_triplets.push_back({ABCD,ABC,ACD});
+	return AC;                                                    }
 
 //-----------------------------------------------------------------------------------//
 
@@ -151,9 +200,7 @@ void verify_tri ( Cell tri )
 		typename maptype::iterator itt = cm2.find ( tri.boundary().core );
 		assert ( itt != cm2.end() );
 		Cell::field_to_meshes f = itt->second;
-		std::cout << "f, neg " << f.counter_neg << ", pos " << f.counter_pos << std::endl;
-	}		
-}		
+		std::cout << "f, neg " << f.counter_neg << ", pos " << f.counter_pos << std::endl; }  }		
 
 //-----------------------------------------------------------------------------------//
 
@@ -175,23 +222,9 @@ inline Cell find_segment ( Cell & A, Cell & B, Mesh & ambient )
 	{	Cell sq = *it_sq;
 		assert ( A.belongs_to ( sq.boundary() ) );
 		if ( not B.belongs_to ( sq.boundary() ) ) continue;
-		Cell AC = sq.boundary().cell_in_front_of ( A );
-		Cell C = AC.tip();
-		Cell CB = sq.boundary().cell_in_front_of ( C );
-		assert ( CB.tip() == B );
-		Cell BD = sq.boundary().cell_in_front_of ( B );
-		Cell D = BD.tip();
-		Cell DA = sq.boundary().cell_in_front_of ( D );
-		assert ( DA.tip() == A );
-		sq.remove_from_mesh ( ambient );
-		Cell AB ( tag::segment, A.reverse(), B );
-		Cell ACB ( tag::triangle, AC, CB, AB.reverse() );
-		Cell BDA ( tag::triangle, BD, DA, AB );
-		// verify_tri ( ACB );  verify_tri ( BDA );
-		ACB.add_to_mesh ( ambient );
-		BDA.add_to_mesh ( ambient );
-		return AB;                                            }
-	assert ( false );
+		Cell diag = cut_diagonal(ambient,sq,A);
+		return diag;                                        }
+	assert ( false );   
 
 }  // end of  find_segment
 
@@ -246,7 +279,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	std::forward_list<Cell>::iterator it_list;
 	for ( it_list = list_useful.begin(); it_list != list_useful.end(); it_list++ )
 	
-	{	// this process begins with values of psi close to zero
+	{	// this process begins with vertices where the value of psi is closest to zero
 		Cell A = *it_list;
 		if ( set_useful.find ( A ) == set_useful.end() ) continue;
 		
@@ -329,7 +362,11 @@ Mesh build_interface ( Mesh ambient, Function psi )
 					set_needed.insert ( Bmin );                  }           }   }
 
 	}  // end of for it_list
-		
+
+
+	// below we build the interface
+	// at the same time we modify the ambient mesh (cut some squares in two halves)
+	
 	std::set<Cell>::iterator it_set;
 	for ( it_set = set_useful.begin(); it_set != set_useful.end(); it_set++ )
 
@@ -361,18 +398,26 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			// we add a new segment to 'interf'
 			if ( ( not front_exists ) and ( dx*gy < dy*gx ) )
 			{	Cell seg = find_segment ( A, B, ambient );
+				// find_segment may return an existing segment or a new one (a diagonal)
+				// in the latter case, it modifies the ambient mesh
 				seg.add_to_mesh ( interf );                       }
 			if ( ( not back_exists ) and ( dx*gy > dy*gx ) )
 			{	Cell seg = find_segment ( B, A, ambient );
+				// find_segment may return an existing segment or a new one (a diagonal)
+				// in the latter case, it modifies the ambient mesh
 				seg.add_to_mesh ( interf );                       }  }
 
 	}  // end of for it_set in set_useful
 	}  // just a block of code for hiding names
                   
+	// we cut in halves some more squares (not touching the interface)
+	
+	//                                    |
+	//             at places like :      /
+	//                                  |
 
-	// we cut in halves some more squares, at places like :      |
-	{  // just a block of code for hiding names                 /
-	size_t counter = 0; //                                     |
+	{  // just a block of code for hiding names
+	size_t counter = 0;
 	CellIterator it_seg = interf.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
