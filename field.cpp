@@ -1,5 +1,5 @@
 
-// field.cpp 2020.08.02
+// field.cpp 2020.08.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -29,10 +29,9 @@ size_t Field::ShortInt::Scalar::nb_of_components ( )  // virtual from Field::Cor
 size_t Field::Double::Scalar::nb_of_components ( )  // virtual from Field::Core
 {	return 1;  }
 
+size_t Field::SizeT::nb_of_components ( )  // virtual from Field::Core
+{	return 1;  }
 
-size_t Field::ShortInt::Block::nb_of_components ( )  // virtual from Field::Core
-{	return tag::Util::assert_diff ( this->max_index_p1, this->min_index );  }
-// tag::Util::assert_diff  provides a safe way to substract two size_t numbers
 
 size_t Field::Double::Block::nb_of_components ( )  // virtual from Field::Core
 {	return tag::Util::assert_diff ( this->max_index_p1, this->min_index );  }
@@ -69,5 +68,5 @@ Field::Double::Scalar * Field::Double::Block::component ( size_t i )  // virtual
 
 
 size_t & Cell::Numbering::Field::operator() ( const Cell p )  // virtual from Cell::Numbering
-{	return this->field->on_cell ( p.core );  }
+{	return this->field.on_cell ( p.core );  }
 

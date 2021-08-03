@@ -1,5 +1,5 @@
 
-//   field.h  2021.08.02
+//   field.h  2021.08.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -201,6 +201,8 @@ class Field::SizeT : public Field::Core
 
 	virtual ~SizeT ( ) { };
 
+	size_t nb_of_components ( );  // virtual from Field::Core  
+
 	size_t & on_cell ( Cell::Core * cll );
 
 };
@@ -210,7 +212,19 @@ class Cell::Numbering::Field : public Cell::Numbering
 
 {	public :
 
-	maniFEM::Field::SizeT * field;
+	maniFEM::Field::SizeT field;
+
+	inline Field ( const tag::Vertices & )
+	: Field ( tag::cells_of_dim, 0 )
+	{ }
+	
+	inline Field ( const tag::Segments & )
+	: Field ( tag::cells_of_dim, 1 )
+	{ }
+	
+	inline Field ( const tag::CellsOfDim &, const size_t )
+	: field ( tag::lives_on_positive_cells, tag::of_dim, 0 )
+	{ }
 
 	size_t & operator() ( const Cell );  // virtual from Cell::Numbering
 
@@ -397,6 +411,7 @@ inline Field::Double::TakenOnCell Field::Double::Core::on_cell ( Cell::Core * cl
 
 inline size_t & Field::SizeT::on_cell ( Cell::Core * cll )
 {	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
+	assert ( this->index_in_heap < cll->size_t_heap.size() );
 	return cll->size_t_heap[this->index_in_heap];             }
 
 inline Field::Double Field::Double::operator[] ( size_t i )
