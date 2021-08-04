@@ -196,8 +196,9 @@ class Field::SizeT : public Field::Core
 	size_t index_in_heap;
 
 	inline SizeT ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
-	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	}
+	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
+		index_in_heap { Cell::size_t_heap_size_pos[d] }
+	{	Cell::size_t_heap_size_pos[d] ++;  }
 
 	virtual ~SizeT ( ) { };
 
@@ -213,6 +214,8 @@ class Cell::Numbering::Field : public Cell::Numbering
 {	public :
 
 	maniFEM::Field::SizeT field;
+
+	size_t counter { 0 };
 
 	inline Field ( const tag::Vertices & )
 	: Field ( tag::cells_of_dim, 0 )
@@ -292,14 +295,15 @@ class Field::Double::Scalar : public Field::Double::Core
 	size_t index_in_heap;
 
 	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
-	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	index_in_heap = Cell::double_heap_size_pos[d];
-		Cell::double_heap_size_pos[d] ++;               }
+	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
+		index_in_heap { Cell::double_heap_size_pos[d] }
+	{	Cell::double_heap_size_pos[d] ++;  }
 	
 	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &,
 		size_t d, const tag::HasIndexInHeap, size_t i )
-	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	index_in_heap = i;  }
+	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
+		index_in_heap { i }
+	{ }
 	
 	size_t nb_of_components ( );  // virtual from Field::Double::Core
 
@@ -383,12 +387,14 @@ class Field::Double::TakenOnCell
 	// can be used like in  f(cll) = 2.0
 	{	Field::Double::Scalar * f_scalar = tag::Util::assert_cast
 			< Field::Double::Core*, Field::Double::Scalar* > ( f );
+		assert ( f_scalar->index_in_heap < cll->double_heap.size() );
 		return cll->double_heap[f_scalar->index_in_heap];        }
 
 	inline operator std::vector<double> ()
 	// can be used like in  vector<double> vec = f(cll)
 	{	Field::Double::Block * f_block = tag::Util::assert_cast
 			< Field::Double::Core*, Field::Double::Block* > ( f );
+		assert ( f_block->max_index_p1 <= cll->double_heap.size() );
 		return std::vector<double> { & cll->double_heap[f_block->min_index],
 		                             & cll->double_heap[f_block->max_index_p1] };  }
 	

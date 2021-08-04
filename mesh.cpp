@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.07.21
+// mesh.cpp 2021.08.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -39,12 +39,19 @@ size_t Mesh::maximum_dimension_plus_one { 4 };  // static data member
 // see method Mesh::set_max_dim and paragraph 11.7 in the manual
 
 // static data members :
+
 std::vector < size_t > Cell::double_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0. );
 std::vector < size_t > Cell::double_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0. );
 std::vector < size_t > Cell::size_t_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::size_t_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::short_int_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::short_int_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0 );
+std::vector < std::vector < void(*)(Cell::Core*,void*) > >
+   Cell::init_pos_cell ( Mesh::maximum_dimension_plus_one );
+std::vector < std::vector < void(*)(Cell::Core*,void*) > >
+   Cell::init_neg_cell ( Mesh::maximum_dimension_plus_one );
+std::vector < std::vector < void* > > Cell::data_for_init_pos ( Mesh::maximum_dimension_plus_one );
+std::vector < std::vector < void* > > Cell::data_for_init_neg ( Mesh::maximum_dimension_plus_one );
 
 // int Cell::counter { 0 };
 

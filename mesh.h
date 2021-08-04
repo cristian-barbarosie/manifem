@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.02
+//   mesh.h  2021.08.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -415,7 +415,7 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 
 	typedef tag::Util::CellCore Core;
 
-	// static int counter;
+	// static attributes at the end
 
 	// Cell::Core * core  inherited from tag::Util::Wrapper < Cell::Core >
 
@@ -536,6 +536,15 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline void print_everything ( );
 #endif
 
+	// static int counter;
+
+	// a list of functions to be called each time a new cell is created
+	// two lists, in fact, one for positive cells the other for negative cells
+	static std::vector < std::vector < void(*)(Cell::Core*,void*) > > init_pos_cell, init_neg_cell;
+	// more data can be passed to the above functions by using
+	static std::vector < std::vector < void* > > data_for_init_pos, data_for_init_neg;
+	// probably through a 'this' pointer
+	
 	static std::vector < size_t > double_heap_size_pos, double_heap_size_neg,
 		size_t_heap_size_pos, size_t_heap_size_neg, short_int_heap_size_pos, short_int_heap_size_neg;
 
@@ -1432,7 +1441,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	std::string name;
 	#endif
 
-	inline CellCore ( const tag::OfDimension &, const size_t d,
+	inline CellCore ( const tag::OfDimension &, const size_t d,  // for positive cells
                     const tag::HasNoReverse &, const tag::OneDummyWrapper & )
 	#ifdef MANIFEM_COLLECT_CM	
 	:	tag::Util::Core::DelegateDispose
@@ -1444,9 +1453,17 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 		size_t_heap ( Cell::size_t_heap_size_pos [d] ),
 		short_int_heap ( Cell::short_int_heap_size_pos [d] ),
 		reverse_attr ( tag::non_existent )
-	{	}  // { Cell::counter++;  }
+	{	// Cell::counter++;
+		std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_pos_cell[d];
+		std::vector < void* > & data = Cell::data_for_init_pos[d];
+		std::vector<void(*)(Cell::Core*,void*)>::iterator it_f = init.begin();
+		std::vector<void*>::iterator it_d = data.begin();
+		for ( ; it_f != init.end(); it_f++, it_d++ )
+		{	assert ( it_d != data.end() );
+			(*it_f) ( this, *it_d );       }
+		assert ( it_d == data.end() );                                          }
 
-	inline CellCore ( const tag::OfDimension &, const size_t d,
+	inline CellCore ( const tag::OfDimension &, const size_t d,  // for negative cells
                     const tag::ReverseOf &, Cell::Core * direct_cell_p, const tag::OneDummyWrapper & )
 	#ifdef MANIFEM_COLLECT_CM	
 	:	tag::Util::Core::DelegateDispose
@@ -1454,11 +1471,19 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	#else  // no MANIFEM_COLLECT_CM
 	:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
 	#endif  // MANIFEM_COLLECT_CM	
-		double_heap ( Cell::double_heap_size_pos [d] ),
-		size_t_heap ( Cell::size_t_heap_size_pos [d] ),
-		short_int_heap ( Cell::short_int_heap_size_pos [d] ),
+		double_heap ( Cell::double_heap_size_neg [d] ),
+		size_t_heap ( Cell::size_t_heap_size_neg [d] ),
+		short_int_heap ( Cell::short_int_heap_size_neg [d] ),
 		reverse_attr ( tag::whose_core_is, direct_cell_p, tag::previously_existing, tag::surely_not_null )
-	{	}  // { Cell::counter++;  }
+	{	// Cell::counter++;
+		std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_neg_cell[d];
+		std::vector < void* > & data = Cell::data_for_init_neg[d];
+		std::vector<void(*)(Cell::Core*,void*)>::iterator it_f = init.begin();
+		std::vector<void*>::iterator it_d = data.begin();
+		for ( ; it_f != init.end(); it_f++, it_d++ )
+		{	assert ( it_d != data.end() );
+			(*it_f) ( this, *it_d );       }
+		assert ( it_d == data.end() );                                          }
 
 	virtual ~CellCore ( )  // 
 	{	}  // { Cell::counter--;  std::cout << Cell::counter << std::endl;  }
