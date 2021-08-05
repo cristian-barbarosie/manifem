@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.04.10
+// finite-elem.h 2021.08.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -46,6 +46,7 @@ namespace tag {
 	static const FromFiniteElementWithMaster from_finite_element_with_master;
 	struct ThroughDockedFiniteElement { };
 	static const ThroughDockedFiniteElement through_docked_finite_element;
+	struct UseNumbering { };  static const UseNumbering use_numbering;
 }
 
 class FiniteElement;
@@ -163,14 +164,25 @@ class FiniteElement
 	
 	FiniteElement::Core * core;
 
+	std::vector < Cell::Numbering * > numbers;
+
 	// constructor
 
 	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	                       const tag::UseNumbering &, Cell::Numbering * num         );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	                       const tag::UseNumbering &, Cell::Numbering * num         );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	                       const tag::UseNumbering &, Cell::Numbering * num         );
 
 	// destructor
 	
@@ -368,6 +380,32 @@ inline FiniteElement::FiniteElement
 	Function t = RR_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
 
+	// std::vector < Cell::Numbering::Field * > numbers;
+	// this->numbers .emplace ( this->numbers.end(), tag::vertices );
+	this->numbers.push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+
+	this->core = new FiniteElement::WithMaster::Segment ( RR_master );
+	
+	work_manif.set_as_working_manifold();                                                   }
+
+
+inline FiniteElement::FiniteElement
+(	const tag::WithMaster &, const tag::Segment &,
+	const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	const tag::UseNumbering &, Cell::Numbering * num         )
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	// we keep the working manifold and restore it at the end
+	Manifold work_manif = Manifold::working;
+	
+	Manifold RR_master ( tag::Euclid, tag::of_dim, 1 );
+	Function t = RR_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	// we should take advantage of the memory space already reserved for x and y
+
+	this->numbers.push_back ( num );
+
 	this->core = new FiniteElement::WithMaster::Segment ( RR_master );
 	
 	work_manif.set_as_working_manifold();                                                   }
@@ -388,6 +426,33 @@ inline FiniteElement::FiniteElement
 	// we should take advantage of the memory space already reserved for x and y
 	// Function xi = xi_eta[0], eta = xi_eta[1];
 
+	// std::vector < Cell::Numbering::Field * > numbers;
+	// this->numbers .emplace ( this->numbers.end(), tag::vertices );
+	this->numbers.push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+
+	this->core = new FiniteElement::WithMaster::Triangle ( RR2_master );
+	
+	work_manif.set_as_working_manifold();                                                       }
+
+
+inline FiniteElement::FiniteElement
+(	const tag::WithMaster &, const tag::Triangle &,
+	const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	const tag::UseNumbering &, Cell::Numbering * num         )
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	// we keep the working manifold and restaure it at the end
+	Manifold work_manif = Manifold::working;
+	
+	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
+	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	// we should take advantage of the memory space already reserved for x and y
+	// Function xi = xi_eta[0], eta = xi_eta[1];
+
+	this->numbers.push_back ( num );
+
 	this->core = new FiniteElement::WithMaster::Triangle ( RR2_master );
 	
 	work_manif.set_as_working_manifold();                                                       }
@@ -407,6 +472,33 @@ inline FiniteElement::FiniteElement
 	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
 	// Function xi = xi_eta[0], eta = xi_eta[1];
+
+	// std::vector < Cell::Numbering::Field * > numbers;
+	// this->numbers .emplace ( this->numbers.end(), tag::vertices );
+	this->numbers.push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+
+	this->core = new FiniteElement::WithMaster::Quadrangle ( RR2_master );
+	
+	work_manif.set_as_working_manifold();                                                       }
+
+
+inline FiniteElement::FiniteElement
+(	const tag::WithMaster &, const tag::Quadrangle &,
+	const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	const tag::UseNumbering &, Cell::Numbering * num         )
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	// we keep the working manifold and restaure it at the end
+	Manifold work_manif = Manifold::working;
+	
+	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
+	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	// we should take advantage of the memory space already reserved for x and y
+	// Function xi = xi_eta[0], eta = xi_eta[1];
+
+	this->numbers.push_back ( num );
 
 	this->core = new FiniteElement::WithMaster::Quadrangle ( RR2_master );
 	
