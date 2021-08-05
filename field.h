@@ -233,7 +233,7 @@ class Cell::Numbering::Field : public Cell::Numbering
 		Cell::data_for_init_pos[d] .push_back
 			( static_cast < void* > ( this ) );                                              }
 
-	inline size_t size ( )
+	size_t size ( )  // virtual from Cell::Numbering
 	{	return this->counter;  }
 	
 	size_t & operator() ( const Cell );  // virtual from Cell::Numbering

@@ -5937,6 +5937,8 @@ class Cell::Numbering
 
 	virtual ~Numbering ( ) { };
 
+	virtual size_t size ( ) = 0;
+
 	virtual size_t & operator() ( const Cell ) = 0;
 
 	class Map;  class Field;  // latter defined in field.h
@@ -5950,6 +5952,9 @@ class Cell::Numbering::Map : public Cell::Numbering
 
 	std::map < Cell::Core *, size_t > map;
 
+	size_t size ( )  // virtual from Cell::Numbering
+	{	return this->map.size();  }
+	
 	size_t & operator() ( const Cell );  // virtual from Cell::Numbering, defined in global.cpp
 
 };	
