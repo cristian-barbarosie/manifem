@@ -1,5 +1,5 @@
 
-//   field.h  2021.08.03
+//   field.h  2021.08.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -225,12 +225,19 @@ class Cell::Numbering::Field : public Cell::Numbering
 	: Field ( tag::cells_of_dim, 1 )
 	{ }
 	
-	inline Field ( const tag::CellsOfDim &, const size_t )
-	: field ( tag::lives_on_positive_cells, tag::of_dim, 0 )
-	{ }
+	static void set_and_increment ( Cell::Core * cll, void * num );
+		
+	inline Field ( const tag::CellsOfDim &, const size_t d )
+	: field ( tag::lives_on_positive_cells, tag::of_dim, d )
+	{ Cell::init_pos_cell[d] .push_back ( & Cell::Numbering::Field::set_and_increment );
+		Cell::data_for_init_pos[d] .push_back
+			( static_cast < void* > ( this ) );                                              }
 
+	inline size_t size ( )
+	{	return this->counter;  }
+	
 	size_t & operator() ( const Cell );  // virtual from Cell::Numbering
-
+		
 };	
 
 //---------------------------------------------------------------------------------------

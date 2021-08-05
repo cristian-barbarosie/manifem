@@ -1,5 +1,5 @@
 
-// field.cpp 2020.08.03
+// field.cpp 2020.08.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -70,3 +70,8 @@ Field::Double::Scalar * Field::Double::Block::component ( size_t i )  // virtual
 size_t & Cell::Numbering::Field::operator() ( const Cell p )  // virtual from Cell::Numbering
 {	return this->field.on_cell ( p.core );  }
 
+void Cell::Numbering::Field::set_and_increment ( Cell::Core * cll, void * num )  // static
+{	Cell::Numbering::Field * num_f = static_cast < Cell::Numbering::Field* > ( num );
+	cll->size_t_heap[num_f->field.index_in_heap] = num_f->counter;
+	num_f->counter++;                                                                 }
+		

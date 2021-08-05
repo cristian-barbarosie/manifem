@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.03
+//   mesh.h  2021.08.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1461,7 +1461,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 		for ( ; it_f != init.end(); it_f++, it_d++ )
 		{	assert ( it_d != data.end() );
 			(*it_f) ( this, *it_d );       }
-		assert ( it_d == data.end() );                                          }
+		assert ( it_d == data.end() );                                               }
 
 	inline CellCore ( const tag::OfDimension &, const size_t d,  // for negative cells
                     const tag::ReverseOf &, Cell::Core * direct_cell_p, const tag::OneDummyWrapper & )
@@ -1483,7 +1483,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 		for ( ; it_f != init.end(); it_f++, it_d++ )
 		{	assert ( it_d != data.end() );
 			(*it_f) ( this, *it_d );       }
-		assert ( it_d == data.end() );                                          }
+		assert ( it_d == data.end() );                                               }
 
 	virtual ~CellCore ( )  // 
 	{	}  // { Cell::counter--;  std::cout << Cell::counter << std::endl;  }
@@ -5939,7 +5939,7 @@ class Cell::Numbering
 
 	virtual size_t & operator() ( const Cell ) = 0;
 
-	class Map;  class Field;
+	class Map;  class Field;  // latter defined in field.h
 
 };	
 

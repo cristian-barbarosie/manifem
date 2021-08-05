@@ -6,27 +6,21 @@ using namespace maniFEM;
 
 int main () 
 
-{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
-	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy[0],  y = xy[1];
-	Function d = 0.1/(x*x+y*y+0.5);
+{	Manifold spiral ( tag::Euclid, tag::of_dim, 1 );
+	Function t = spiral.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	const double pi = 4.*atan(1.);
 
 	Cell::Numbering::Field num ( tag::vertices );
 	
-	Manifold circle_manif = RR2.implicit ( x*x + 2*y*y == 1. );
-	Mesh circle ( tag::progressive, tag::entire_manifold, circle_manif, tag::desired_length, d );
-	// Mesh circle ( tag::progressive, tag::desired_length, 0.2 );
+	Cell A ( tag::vertex );  t(A) = pi/2.;
+	Cell B ( tag::vertex );  t(B) = 5.*pi;
+	Mesh arc_of_spiral ( tag::segment, A.reverse(), B, tag::divided_in, 50 );
+	 
+	CellIterator it = arc_of_spiral.iterator ( tag::over_vertices );
+//	for ( it.reset(); it.in_range(); it++ )
+//	{	Cell P = *it;
+//		std::cout << "vertex number " << num(P) << " has coords " << x(P) << " " << y(P) << std::endl; }
 
-	CellIterator it = circle.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell P = *it;
-		std::cout << "vertex number " << num(P) << " has coords " << x(P) << " " << y(P) << std::endl; }
-	exit ( 0 );
-
-	RR2.set_as_working_manifold();
-	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, d );
-
-	disk.export_msh ("disk.msh");
-	disk.draw_ps ("disk.eps");
-	std::cout << "produced files disk.eps and disk.msh" << std::endl;
+	std::cout << "so we have " << num.size() << " labels, but only "
+						<< arc_of_spiral.number_of ( tag::vertices ) << " vertices" << std::endl;
 }
