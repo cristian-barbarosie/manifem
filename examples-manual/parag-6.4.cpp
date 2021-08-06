@@ -26,7 +26,7 @@ void impose_value_of_unknown
 	for ( size_t j = 0; j < size_matrix; j++ )
 	{	if ( i == j ) continue;
 		vector_b(j) -= matrix_A.coeffRef ( j, i ) * val;
-		matrix_A.coeffRef ( j, i ) = 0.;                  }  }
+		matrix_A.coeffRef ( j, i ) = 0.;                 }  }
 
 	
 int main ()
@@ -38,7 +38,7 @@ int main ()
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
-	Cell::Numbering & numbering = * ( fe.numbers[0] );
+	Cell::Numbering & numbering = fe.numbering ( tag::vertices );
 
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;

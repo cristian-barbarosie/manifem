@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.08.05
+// finite-elem.h 2021.08.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -204,6 +204,10 @@ class FiniteElement
 	inline void dock_on ( const Cell & cll );
 
 	inline double integrate ( const Function & );
+
+	inline Cell::Numbering & numbering ( const tag::Vertices & );
+	inline Cell::Numbering & numbering ( const tag::Segments & );
+	inline Cell::Numbering & numbering ( const tag::CellsOfDim &, const size_t d );
 	
 };  // end of  class FiniteElement
 	
@@ -237,12 +241,27 @@ class FiniteElement::Core
 
 //-----------------------------------------------------------------------------------------//
 
+
 inline FiniteElement::~FiniteElement ()  {  delete this->core;  }
 
 inline void FiniteElement::dock_on ( const Cell & cll )
 {	this->core->dock_on ( cll );  }
 
+
+inline Cell::Numbering & FiniteElement::numbering ( const tag::Vertices & )
+{	assert ( this->numbers.size() );
+	return * this->numbers[0];       }
+
+inline Cell::Numbering & FiniteElement::numbering ( const tag::Segments & )
+{	assert ( this->numbers.size() > 1 );
+	return * this->numbers[1];           }
+
+inline Cell::Numbering & FiniteElement::numbering ( const tag::CellsOfDim &, const size_t d )
+{	assert ( this->numbers.size() > d );
+	return * this->numbers[d];           }
+
 //-----------------------------------------------------------------------------------------//
+
 
 class FiniteElement::WithMaster : public FiniteElement::Core
 
