@@ -10,7 +10,7 @@
 #include <Eigen/Sparse>
 
 using namespace maniFEM;
-using namespace std;
+
 
 void impose_value_of_unknown
 (	Eigen::SparseMatrix <double> & matrix_A, Eigen::VectorXd & vector_b,
@@ -38,6 +38,10 @@ int main ()
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
 
+	// declare the type of finite element
+	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
+
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
 	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
@@ -48,10 +52,6 @@ int main ()
 	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 10 );
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
-
-	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
 
 	// there will be a more elegant and efficient way of producing the numbering
 	std::map < Cell::Core *, size_t > numbering;

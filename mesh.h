@@ -1348,7 +1348,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void draw_ps ( std::string file_name );
 	void draw_ps_3d ( std::string file_name );
-	void export_msh ( std::string f, Cell::Numbering & ver_numbering );
+	void export_msh ( std::string f, Cell::Numbering & );
+	void export_msh ( std::string f, std::map < Cell::Core *, size_t > & );
 	void export_msh ( std::string f );
 	
 	// several versions of 'build' below are defined in global.cpp
@@ -5950,10 +5951,18 @@ class Cell::Numbering::Map : public Cell::Numbering
 
 {	public :
 
-	std::map < Cell::Core *, size_t > map;
+	std::map < Cell::Core *, size_t > * map;
+
+	inline Map ( )
+	: map { new std::map < Cell::Core *, size_t > }
+	{	}
+
+	inline Map ( std::map < Cell::Core *, size_t > * numb_map )
+	:	map { numb_map }
+	{	}
 
 	size_t size ( )  // virtual from Cell::Numbering
-	{	return this->map.size();  }
+	{	return this->map->size();  }
 	
 	size_t & operator() ( const Cell );  // virtual from Cell::Numbering, defined in global.cpp
 

@@ -1,5 +1,5 @@
 
-// global.cpp 2021.07.23
+// global.cpp 2021.08.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -554,12 +554,11 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				file_msh << counter << " 2 0 ";
 			else // a quadrilateral
 			{	assert ( elem.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				file_msh << counter << " 3 0 ";                            }
+				file_msh << counter << " 3 0 ";                                     }
 			CellIterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
 			for ( itt.reset(); itt.in_range(); ++itt )
-			{	Cell p = *itt;
-				file_msh << ver_numbering (p) << " ";   }
-			file_msh << std::endl;                                                   }  }
+			{	Cell p = *itt;  file_msh << ver_numbering (p) << " ";   }
+			file_msh << std::endl;                                                                 }  }
 	else
 	{	assert ( this->dim() == 3);
 		CellIterator it = this->iterator ( tag::over_cells_of_dim, 3 );
@@ -571,7 +570,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 			if ( n_faces == 4 ) // a tetrahedron
 				file_msh << counter << " 4 0 ";  // to finish !
 			else if ( n_faces == 6 )
-			{	// 3d parallelogram = 8-node hexaedron = cube
+			{	// 3d parallelogram = 8-node hexahedron = cube
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 5 0 ";
@@ -620,8 +619,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_02 = base.boundary().cell_in_front_of(ver_0);
 				for (  ; itv.in_range(); ++itv )
-				{	Cell p = *itv;
-					file_msh << ver_numbering (p) << " ";   }
+				{	Cell p = *itv;  file_msh << ver_numbering (p) << " ";   }
 				Cell right_wall = elem.boundary().cell_in_front_of(seg_02);
 				// right_wall is 0352 in gmsh's documentation
 				assert ( right_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
@@ -645,6 +643,20 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 } // end of Mesh::export_msh
 
 
+void Mesh::export_msh ( std::string f, std::map < Cell::Core *, size_t > & numb_map )
+	
+{	Cell::Numbering::Map numbering ( & numb_map );
+
+	CellIterator it = this->iterator ( tag::over_vertices );
+	size_t counter = 0;
+	for ( it.reset() ; it.in_range(); it++ )
+	{	++counter;  Cell p = *it;  numbering (p) = counter;  }
+
+	this->export_msh ( f, numbering );
+
+} // end of Mesh::export_msh
+
+
 void Mesh::export_msh ( std::string f )
 	
 // the numbering of vertices is produced on-the-fly
@@ -662,4 +674,4 @@ void Mesh::export_msh ( std::string f )
 
 
 size_t & Cell::Numbering::Map::operator() ( const Cell p )  // virtual from Cell::Numbering
-{	return this->map[p.core];  }
+{	return (*(this->map))[p.core];  }
