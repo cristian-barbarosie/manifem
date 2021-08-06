@@ -38,7 +38,7 @@ int main ()
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
-	Cell::Numbering & numbering = * ( fe.numbers[0] );
+	// Cell::Numbering & numbering = * ( fe.numbers[0] );
 
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
@@ -51,9 +51,23 @@ int main ()
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	size_t size_matrix = fe.numbers[0]->size();
+	std::map < Cell::Core *, size_t > number_map;
+	{ // just a block of code for hiding 'it' and 'counter'
+	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	size_t counter = 0;
+	for ( it.reset() ; it.in_range(); it++ )
+	{	Cell p = *it;  ++counter;  number_map [p.core] = counter;  }
+	} // just a block of code
+	Cell::Numbering::Map numbering ( & number_map );
+
+	size_t size_matrix = numbering.size();
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
 	Eigen::SparseMatrix <double> matrix_A ( size_matrix, size_matrix );
+	matrix_A.reserve ( Eigen::VectorXi::Constant ( size_matrix, 9 ) );
+	// since we will be working with a mesh of squares,
+	// there will be about 9 non-zero elements per column
+	// the diagonal entry plus eight neighbour vertices
+	
 	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
 	vector_b.setZero();
 
