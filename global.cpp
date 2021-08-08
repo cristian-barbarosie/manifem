@@ -1,5 +1,5 @@
 
-// global.cpp 2021.08.05
+// global.cpp 2021.08.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -643,14 +643,9 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 } // end of Mesh::export_msh
 
 
-void Mesh::export_msh ( std::string f, std::map < Cell::Core *, size_t > & numb_map )
+void Mesh::export_msh ( std::string f, std::map < Cell, size_t > & numb_map )
 	
 {	Cell::Numbering::Map numbering ( & numb_map );
-
-	CellIterator it = this->iterator ( tag::over_vertices );
-	size_t counter = 0;
-	for ( it.reset() ; it.in_range(); it++ )
-	{	++counter;  Cell p = *it;  numbering (p) = counter;  }
 
 	this->export_msh ( f, numbering );
 
@@ -666,7 +661,7 @@ void Mesh::export_msh ( std::string f )
 	CellIterator it = this->iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
-	{	++counter;  Cell p = *it;  numbering (p) = counter;  }
+	{	Cell p = *it;  numbering (p) = counter;  ++counter;  }
 
 	this->export_msh ( f, numbering );
 
@@ -674,4 +669,4 @@ void Mesh::export_msh ( std::string f )
 
 
 size_t & Cell::Numbering::Map::operator() ( const Cell p )  // virtual from Cell::Numbering
-{	return (*(this->map))[p.core];  }
+{	return (*(this->map))[p];  }

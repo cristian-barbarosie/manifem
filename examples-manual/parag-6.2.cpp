@@ -51,12 +51,17 @@ int main ()
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
 	// a different solution for numbering vertices is shown in paragraph 6.4 of the manual
-	Cell::Numbering::Map numbering;
+	// below we use an std::map<Cell,size_t>
+	// one could use instead a Cell::Numbering::Map
+	// which is merely a thin wrapper around an std::map<Cell,double>
+	// in the latter case, the access would be achieved like this : numbering(P)
+	std::map<Cell,size_t> numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD.iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
-	{	Cell V = *it;  numbering ( V ) = counter;  ++counter;  }
+	{	Cell V = *it;  numbering[V] = counter;  ++counter;  }
+	assert ( counter == numbering.size() );
 	} // just a block of code
 
 	size_t size_matrix = numbering.size();
@@ -73,7 +78,6 @@ int main ()
 
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
-	int counter = 0;	
 	CellIterator it = ABCD.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_square = *it;
@@ -84,8 +88,8 @@ int main ()
 		for ( it1.reset(); it1.in_range(); it1++ )
 		for ( it2.reset(); it2.in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
-			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering(V) << ", W=("
-			// 					<< x(W) << "," << y(W) << ") " << numbering(W) << std::endl;
+			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
+			// 					<< x(W) << "," << y(W) << ") " << numbering[W]) << std::endl;
 			Function psiV = fe.basis_function(V),
 			         psiW = fe.basis_function(W),
 			         d_psiV_dx = psiV.deriv(x),
@@ -93,7 +97,7 @@ int main ()
 			         d_psiW_dx = psiW.deriv(x),
 			         d_psiW_dy = psiW.deriv(y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
-			matrix_A.coeffRef ( numbering(V), numbering(W) ) +=
+			matrix_A.coeffRef ( numbering[V], numbering[W] ) +=
 				fe.integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
 		}  }
 	} // just a block of code 
@@ -103,25 +107,25 @@ int main ()
 	CellIterator it = AB.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering(P);
+		size_t i = numbering[P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it' 
 	CellIterator it = BC.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering(P);
+		size_t i = numbering[P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, y(P) );  }
 	} { // just a block of code for hiding 'it'
 	CellIterator it = CD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering(P);
+		size_t i = numbering[P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, x(P) );  }
 	} { // just a block of code for hiding 'it'
 	CellIterator it = DA.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering(P);
+		size_t i = numbering[P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} // just a block of code 
 	
@@ -146,7 +150,8 @@ int main ()
 	vector_sol = cg.solve ( vector_b );
 
 	ABCD.export_msh ("square-Dirichlet.msh", numbering );
-	{ // just a block of code for hiding variables
+
+  { // just a block of code for hiding variables
 	std::ofstream solution_file ("square-Dirichlet.msh", std::fstream::app );
 	solution_file << "$NodeData" << std::endl;
 	solution_file << "1" << std::endl;   // one string follows
@@ -160,7 +165,7 @@ int main ()
 	CellIterator it = ABCD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering(P);
+		size_t i = numbering[P];
 		solution_file << i << " " << vector_sol[i] << std::endl;   }
 	} // just a block of code
 
