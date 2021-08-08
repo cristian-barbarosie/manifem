@@ -55,7 +55,7 @@ int main ()
 	// one could use instead a Cell::Numbering::Map
 	// which is merely a thin wrapper around an std::map<Cell,double>
 	// in the latter case, the access would be achieved like this : numbering(P)
-	std::map<Cell,size_t> numbering;
+	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD.iterator ( tag::over_vertices );
 	size_t counter = 0;
