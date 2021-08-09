@@ -38,6 +38,12 @@ int main ()
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
 
+	// declare the type of finite element
+	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
+	FiniteElement fe_bdry ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ_bdry = fe_bdry.set_integrator ( tag::Gauss, tag::seg_3 );
+
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
 	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
@@ -49,21 +55,16 @@ int main ()
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
-	FiniteElement fe_bdry ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ_bdry = fe_bdry.set_integrator ( tag::Gauss, tag::seg_3 );
-
-	// there will be a more elegant and efficient way of producing the numbering
-	std::map < Cell::Core *, size_t > numbering;
+	Cell::Numbering::Map numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD.iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
-	{	Cell p = *it;  ++counter;  numbering [p.core] = counter;  }
-	} // just a block of code 
-	
+	{	Cell V = *it;  numbering(V) = counter;  ++counter;  }
+	assert ( counter == numbering.size() );
+	} // just a block of code
+
+	std::cout << "main 1" << std::endl;
 	size_t size_matrix = ABCD.number_of ( tag::vertices );
 	assert ( size_matrix == numbering.size() );
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
@@ -71,9 +72,9 @@ int main ()
 	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
 	vector_b.setZero();
 
+	std::cout << "main 2" << std::endl;
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
-	int counter = 0;	
 	CellIterator it = ABCD.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_square = *it;
@@ -84,8 +85,6 @@ int main ()
 		for ( it1.reset(); it1.in_range(); it1++ )
 		for ( it2.reset(); it2.in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
-			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V.core] << ", W=("
-			// 					<< x(W) << "," << y(W) << ") " << numbering[W.core] << std::endl;
 			Function psiV = fe.basis_function(V),
 			         psiW = fe.basis_function(W),
 			         d_psiV_dx = psiV.deriv(x),
@@ -93,11 +92,12 @@ int main ()
 			         d_psiW_dx = psiW.deriv(x),
 			         d_psiW_dy = psiW.deriv(y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
-			matrix_A.coeffRef ( numbering[V.core]-1, numbering[W.core]-1 ) +=
+			matrix_A.coeffRef ( numbering(V), numbering(W) ) +=
 				fe.integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
 		}  }
 	} // just a block of code 
 
+	std::cout << "main 3" << std::endl;
 	Function heat_source = y*y;
 	// impose Neumann boundary conditions du/dn = 1.
 	{ // just a block of code for hiding 'it'
@@ -107,50 +107,37 @@ int main ()
 		fe_bdry.dock_on ( seg );
 		Cell V = seg.base().reverse();
 		assert ( V.is_positive() );
-		size_t i = numbering[V.core]-1;
+		size_t i = numbering(V);
 		Function psiV = fe_bdry.basis_function(V);
 		vector_b[i] += fe_bdry.integrate ( heat_source * psiV );
 		Cell W = seg.tip();
 		assert ( W.is_positive() );
-		size_t j = numbering[W.core]-1;
+		size_t j = numbering(W);
 		Function psiW = fe_bdry.basis_function(W);
 		vector_b[j] += fe_bdry.integrate ( heat_source * psiW );   }
 	} // just a block of code 
 	
+	std::cout << "main 4" << std::endl;
 	// impose Dirichlet boundary conditions  u = 0
 	{ // just a block of code for hiding 'it'
 	CellIterator it = AB.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P.core]-1;
+		size_t i = numbering(P);
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it' 
 	CellIterator it = BC.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P.core]-1;
+		size_t i = numbering(P);
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it'
 	CellIterator it = CD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P.core]-1;
+		size_t i = numbering(P);
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} // just a block of code 
-
-//	for ( size_t i = 0; i < size_matrix; i++ )
-//	{	std::cout << i << " ";
-//		for ( size_t j = 0; j < size_matrix; j++ )
-//			std::cout << matrix_A.coeffRef (i,j) << " ";
-//		std::cout << std::endl;                           }
-
-//	std::cout << std::endl;
-//	for ( size_t j = 0; j < size_matrix; j++ )
-//		std::cout << vector_b (j) << " ";
-//	std::cout << std::endl;
-//	for ( size_t i = 0; i < size_matrix; i++ )
-//		std::cout << vector_sol (i) << " ";
-//	std::cout << std::endl;
 
 	// solve the system of linear equations
 	Eigen::ConjugateGradient < Eigen::SparseMatrix<double>,
@@ -160,7 +147,7 @@ int main ()
 
 	ABCD.export_msh ("square-Neumann.msh", numbering );
 	{ // just a block of code for hiding variables
-	ofstream solution_file ("square-Dirichlet.msh", fstream::app );
+	ofstream solution_file ("square-Neumann.msh", fstream::app );
 	solution_file << "$NodeData" << endl;
 	solution_file << "1" << endl;   // one string follows
 	solution_file << "\"temperature\"" << endl;
@@ -173,32 +160,12 @@ int main ()
 	CellIterator it = ABCD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P.core];
-		solution_file << i << " " << vector_sol[i-1] << std::endl;   }
+		size_t i = numbering(P);
+		solution_file << i << " " << vector_sol[i] << std::endl;   }
 	} // just a block of code
 
 	std::cout << "produced file square-Neumann.msh" << std::endl;
 
 	return 0;
 }
-
-/*
-
-		FiniteElement::WithMaster * fe_core =
-			dynamic_cast < FiniteElement::WithMaster * > ( fe.core );
-		assert ( fe_core );
-		Function::Diffeomorphism * tran = Function::core_to_diffeom ( fe_core->transf.core );
-		Function::name[tran->master_coords[0].core] = "xi";
-		Function::name[tran->master_coords[1].core] = "eta";
-
-			std::cout << "psiV : " << psiV.repr() << std::endl;
-			std::cout << "psiW : " << psiW.repr() << std::endl;
-
-	std::cout << "d psiV / dx : " << d_psiV_dx.repr() << std::endl;
-	std::cout << "d psiV / dy : " << d_psiV_dy.repr() << std::endl;
-	std::cout << "d psiW / dx : " << d_psiW_dx.repr() << std::endl;
-	std::cout << "d psiW / dy : " << d_psiW_dy.repr() << std::endl;
-
-
-*/	
 

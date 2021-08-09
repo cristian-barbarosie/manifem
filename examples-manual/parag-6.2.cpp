@@ -52,9 +52,7 @@ int main ()
 
 	// a different solution for numbering vertices is shown in paragraph 6.4 of the manual
 	// below we use an std::map<Cell,size_t>
-	// one could use instead a Cell::Numbering::Map
-	// which is merely a thin wrapper around an std::map<Cell,double>
-	// in the latter case, the access would be achieved like this : numbering(P)
+	// one could use instead a Cell::Numbering::Map, see paragraph 6.3 in the manual
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD.iterator ( tag::over_vertices );

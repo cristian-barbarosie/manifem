@@ -36,7 +36,8 @@ int main ()
 	Function x = xy[0],  y = xy[1];
 
 	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	FiniteElement fe ( tag::with_master, tag::quadrangle,
+	                   tag::Lagrange, tag::of_degree, 1, tag::enumerate_cells );
 	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
 	Cell::Numbering & numbering = fe.numbering ( tag::vertices );
 
@@ -78,7 +79,6 @@ int main ()
 
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
-	int counter = 0;	
 	CellIterator it = ABCD.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_square = *it;
