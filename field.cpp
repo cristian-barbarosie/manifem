@@ -1,5 +1,5 @@
 
-// field.cpp 2020.08.05
+// field.cpp 2020.08.10
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -23,7 +23,7 @@
 
 using namespace maniFEM;
 
-size_t Field::ShortInt::Scalar::nb_of_components ( )  // virtual from Field::Core
+size_t Field::ShortInt::nb_of_components ( )  // virtual from Field::Core
 {	return 1;  }
 
 size_t Field::Double::Scalar::nb_of_components ( )  // virtual from Field::Core
@@ -38,23 +38,10 @@ size_t Field::Double::Block::nb_of_components ( )  // virtual from Field::Core
 // tag::Util::assert_diff  provides a safe way to substract two size_t numbers
 
 
-Field::ShortInt::Scalar * Field::ShortInt::Scalar::component ( size_t i )
-// virtual from Field::Core
-{	assert ( i == 0 );
-	return this;        }
-
 Field::Double::Scalar * Field::Double::Scalar::component ( size_t i )  // virtual from Field::Core
 {	assert ( i == 0 );
 	return this;        }
 
-
-Field::ShortInt::Scalar * Field::ShortInt::Block::component ( size_t i )
-// virtual from Field::Core
-// we build a new Field::Scalar
-// it would be nice to check whether a field for index i exists already ...
-{	assert ( i < this->nb_of_components() );
-	return new Field::ShortInt::Scalar ( tag::lives_on_positive_cells, tag::of_dim,
-	      this->lives_on_cells_of_dim, tag::has_index_in_heap, this->min_index + i );  }
 
 Field::Double::Scalar * Field::Double::Block::component ( size_t i )  // virtual from Field::Core
 // we build a new Field::Scalar
