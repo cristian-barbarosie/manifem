@@ -902,64 +902,79 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// iterators defined in iterator.h
 	inline CellIterator iterator ( const tag::OverVertices & ) const;
+	inline CellIterator iterator ( const tag::OverVertices &, const tag::AsTheyAre & ) const;
+	inline CellIterator iterator ( const tag::OverVertices &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::RequireOrder &, const tag::AsTheyAre & ) const;
+	inline CellIterator iterator ( const tag::OverVertices &, const tag::Backwards & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::Backwards & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::Backwards &, const tag::AsTheyAre & ) const;
+	inline CellIterator iterator ( const tag::OverVertices &, const tag::ForcePositive & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::ForcePositive &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::RequireOrder &, const tag::ForcePositive & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::ForcePositive &, const tag::Backwards & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::Backwards &, const tag::ForcePositive & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::ReverseEachCell &,
+	  const tag::DoNotBuildCells &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::RequireOrder &,
+	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::ReverseEachCell &,
+	  const tag::DoNotBuildCells &, const tag::Backwards &    ) const;
+	inline CellIterator iterator
+	( const tag::OverVertices &, const tag::Backwards &,
+	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
+
+	// we are still in class Mesh
+
 	inline CellIterator iterator ( const tag::Over &, const tag::Vertices & ) const
 	{	return this->iterator ( tag::over_vertices );  }
-	inline CellIterator iterator ( const tag::OverVertices &, const tag::AsTheyAre & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::AsTheyAre & ) const
 	{	return this->iterator ( tag::over_vertices, tag::as_they_are );  }
-	inline CellIterator iterator ( const tag::OverVertices &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::RequireOrder & ) const
 	{	return this->iterator ( tag::over_vertices, tag::require_order );  }
-	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator ( const tag::Over &, const tag::Vertices &,
                                  const tag::AsTheyAre &, const tag::RequireOrder & ) const
 	{	return this->iterator ( tag::over_vertices, tag::as_they_are, tag::require_order );  }
-	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::RequireOrder &, const tag::AsTheyAre & ) const;
 	inline CellIterator iterator ( const tag::Over &, const tag::Vertices &,
                                  const tag::RequireOrder &, const tag::AsTheyAre & ) const
 	{	return this->iterator ( tag::over_vertices, tag::require_order, tag::as_they_are );  }
-	inline CellIterator iterator ( const tag::OverVertices &, const tag::Backwards & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::Backwards & ) const
 	{	return this->iterator ( tag::over_vertices, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::AsTheyAre &, const tag::Backwards & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::AsTheyAre &, const tag::Backwards & ) const
 	{	return this->iterator ( tag::over_vertices, tag::as_they_are, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::Backwards &, const tag::AsTheyAre & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::Backwards &, const tag::AsTheyAre & ) const
 	{	return this->iterator ( tag::over_vertices, tag::backwards, tag::as_they_are );  }
-	inline CellIterator iterator ( const tag::OverVertices &, const tag::ForcePositive & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::ForcePositive & ) const
 	{	return this->iterator ( tag::over_vertices, tag::force_positive );  }
-	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::ForcePositive &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
 	  const tag::ForcePositive &, const tag::RequireOrder & ) const
 	{	return this->iterator ( tag::over_vertices, tag::force_positive, tag::require_order );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::RequireOrder &, const tag::ForcePositive & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
 	  const tag::RequireOrder &, const tag::ForcePositive & ) const
 	{	return this->iterator ( tag::over_vertices, tag::require_order, tag::force_positive );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::ForcePositive &, const tag::Backwards & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
 	  const tag::ForcePositive &, const tag::Backwards & ) const
 	{	return this->iterator ( tag::over_vertices, tag::force_positive, tag::backwards );  }
-	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::Backwards &, const tag::ForcePositive & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
 	  const tag::Backwards &, const tag::ForcePositive & ) const
@@ -970,144 +985,135 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
                                  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const
 	{	return this->iterator ( tag::over_vertices, tag::reverse_each_cell, tag::do_not_build_cells );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::ReverseEachCell &,
-	  const tag::DoNotBuildCells &, const tag::RequireOrder & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
     const tag::ReverseEachCell &, const tag::DoNotBuildCells &, const tag::RequireOrder & ) const
 	{	return this->iterator
 			( tag::over_vertices, tag::reverse_each_cell, tag::do_not_build_cells, tag::require_order );  }
-	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::RequireOrder &,
-	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
     const tag::RequireOrder &, const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const
 	{	return this->iterator
 			( tag::over_vertices, tag::require_order, tag::reverse_each_cell, tag::do_not_build_cells );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::ReverseEachCell &,
-	  const tag::DoNotBuildCells &, const tag::Backwards &    ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &,
     const tag::ReverseEachCell &, const tag::DoNotBuildCells &, const tag::Backwards & ) const
 	{	return this->iterator
 			( tag::over_vertices, tag::reverse_each_cell, tag::do_not_build_cells, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverVertices &, const tag::Backwards &,
-	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Vertices &, const tag::Backwards &,
     const tag::ReverseEachCell &, const tag::DoNotBuildCells &       ) const
 	{	return this->iterator
 			( tag::over_vertices, tag::backwards, tag::reverse_each_cell, tag::do_not_build_cells );  }
-
+	
 	// we are still in class Mesh
 	
 	inline CellIterator iterator ( const tag::OverSegments & ) const;
+	inline CellIterator iterator ( const tag::OverSegments &, const tag::AsTheyAre & ) const;
+	inline CellIterator iterator ( const tag::OverSegments &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::RequireOrder &, const tag::AsTheyAre & ) const;
+	inline CellIterator iterator ( const tag::OverSegments &, const tag::Backwards & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Backwards & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::Backwards &, const tag::AsTheyAre & ) const;
+	inline CellIterator iterator ( const tag::OverSegments &, const tag::ForcePositive & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::ForcePositive &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::RequireOrder &, const tag::ForcePositive & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Backwards & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::Backwards &, const tag::ForcePositive & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::ReverseEachCell &,
+	  const tag::DoNotBuildCells &, const tag::RequireOrder & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::RequireOrder &,
+	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::ReverseEachCell &,
+	  const tag::DoNotBuildCells &, const tag::Backwards &    ) const;
+	inline CellIterator iterator
+	( const tag::OverSegments &, const tag::Backwards &,
+	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
+
+	// we are still in class Mesh
+
 	inline CellIterator iterator ( const tag::Over &, const tag::Segments & ) const
 	{	return this->iterator ( tag::over_segments );  }
-	inline CellIterator iterator ( const tag::OverSegments &, const tag::AsTheyAre & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::AsTheyAre & ) const
 	{	return this->iterator ( tag::over_segments, tag::as_they_are );  }
-	inline CellIterator iterator ( const tag::OverSegments &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::RequireOrder & ) const
 	{	return this->iterator ( tag::over_segments, tag::require_order );  }
-	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::AsTheyAre &, const tag::RequireOrder & ) const
 	{	return this->iterator ( tag::over_segments, tag::as_they_are, tag::require_order );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::RequireOrder &, const tag::AsTheyAre & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::RequireOrder &, const tag::AsTheyAre & ) const
 	{	return this->iterator ( tag::over_segments, tag::require_order, tag::as_they_are );  }
-	inline CellIterator iterator ( const tag::OverSegments &, const tag::Backwards & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::Backwards & ) const
 	{	return this->iterator ( tag::over_segments, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::AsTheyAre &, const tag::Backwards & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::AsTheyAre &, const tag::Backwards & ) const
 	{	return this->iterator ( tag::over_segments, tag::as_they_are, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::Backwards &, const tag::AsTheyAre & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::Backwards &, const tag::AsTheyAre & ) const
 	{	return this->iterator ( tag::over_segments, tag::backwards, tag::as_they_are );  }
-	inline CellIterator iterator ( const tag::OverSegments &, const tag::ForcePositive & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::ForcePositive & ) const
 	{	return this->iterator ( tag::over_segments, tag::force_positive );  }
-	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::ForcePositive &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::ForcePositive &, const tag::RequireOrder & ) const
 	{	return this->iterator ( tag::over_segments, tag::force_positive, tag::require_order );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::RequireOrder &, const tag::ForcePositive & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::RequireOrder &, const tag::ForcePositive & ) const
 	{	return this->iterator ( tag::over_segments, tag::require_order, tag::force_positive );  }
-	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::ForcePositive &, const tag::Backwards & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::ForcePositive &, const tag::Backwards & ) const
 	{	return this->iterator ( tag::over_segments, tag::force_positive, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::Backwards &, const tag::ForcePositive & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::Backwards &, const tag::ForcePositive & ) const
 	{	return this->iterator ( tag::over_segments, tag::backwards, tag::force_positive );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const
 	{	return this->iterator ( tag::over_segments, tag::reverse_each_cell, tag::do_not_build_cells );  }
-	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBuildCells &, const tag::RequireOrder & ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::ReverseEachCell &, const tag::DoNotBuildCells &, const tag::RequireOrder & ) const
 	{	return this->iterator
 			( tag::over_segments, tag::reverse_each_cell, tag::do_not_build_cells, tag::require_order );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::RequireOrder &,
-	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::RequireOrder &,
 	  const tag::ReverseEachCell &, const tag::DoNotBuildCells &          ) const
 	{	return this->iterator
 			( tag::over_segments, tag::require_order, tag::reverse_each_cell, tag::do_not_build_cells );  }
-	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::ReverseEachCell &,
-	  const tag::DoNotBuildCells &, const tag::Backwards &    ) const;
 	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &,
 	  const tag::ReverseEachCell &, const tag::DoNotBuildCells &, const tag::Backwards & ) const
 	{	return this->iterator
 			( tag::over_segments, tag::reverse_each_cell, tag::do_not_build_cells, tag::backwards );  }
 	inline CellIterator iterator
-	( const tag::OverSegments &, const tag::Backwards &,
-	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const;
-	inline CellIterator iterator
 	( const tag::Over &, const tag::Segments &, const tag::Backwards &,
 	  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const
 	{	return this->iterator
 			( tag::over_segments, tag::backwards, tag::reverse_each_cell, tag::do_not_build_cells );  }
-
+	
 	// we are still in class Mesh
 	
 	inline CellIterator iterator ( const tag::OverCellsOfDim &, const size_t ) const;
