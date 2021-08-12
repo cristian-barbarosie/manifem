@@ -1,5 +1,5 @@
 
-// manifold.h 2021.07.27
+// manifold.h 2021.08.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -40,7 +40,19 @@ namespace tag {
 	struct Implicit { };  static const Implicit implicit;
 	struct Parametric { };  static const Parametric parametric;
 	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;
+	struct Spin { };  static const Spin spin;
 }
+
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+// there will be just a few Manifold objects in a program,
+// and they will usually be destroyed only at the end of the program,
+// so we do not use here the mechanism of inheriting from tag::Util::Wrapper and tag::Util::Core
+	
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 
 
 class Manifold
@@ -48,6 +60,11 @@ class Manifold
 {	public :
 
 	class Core;
+	
+	class Action;  // a set of generators of a discrete group
+	               // could be translations, e.g. {(1,0),(0,1)} generating Z^2
+
+	class ActionExponent;  // a vector of 'dim' short integers
 	
 	Manifold::Core * core;
 
@@ -122,15 +139,15 @@ class Manifold
 	
 	// metric in the manifold (an inner product on the tangent space) (metric not used)
 	static double default_inner_prod ( const Cell & P, const std::vector<double> & v,
-                                     const std::vector<double> & w, const Function & metric );
+	                                   const std::vector<double> & w, const Function & metric );
 	
 	// metric in the manifold (an inner product on the tangent space) not constant
 	static double zoom_inner_prod ( const Cell & P, const std::vector<double> & v,
-                                     const std::vector<double> & w, const Function & metric );
+	                                const std::vector<double> & w, const Function & metric );
 	
 	// metric in the manifold (an inner product on the tangent space) not constant, anisotropic
 	static double matrix_inner_prod ( const Cell & P, const std::vector<double> & v,
-                                     const std::vector<double> & w, const Function & metric );
+	                                  const std::vector<double> & w, const Function & metric );
 
 	inline void set_metric ( const Function & metric );
 	
@@ -138,18 +155,42 @@ class Manifold
 	inline void interpolate
 	( const Cell & P, double s, const Cell & A, double t, const Cell & B ) const;
 
+	// P = sA + sB,  s+t == 1
+	inline void interpolate
+	( const Cell & P, double s, const Cell & A, double t, const Cell & B,
+	  const tag::Spin &, const Manifold::ActionExponent & exp            ) const;
+
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
 		double t, const Cell & B, double u, const Cell & C, double v, const Cell & D ) const;
 
+	// P = sA + sB + uC + vD,  s+t+u+v == 1
+	inline void interpolate ( const Cell & P, double s, const Cell & A,
+	  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent &,
+	  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent &,
+		double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent & ) const;
+
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
 		double t, const Cell & B, double u, const Cell & C, double v, const Cell & D,
-		double w, const Cell & E, double z, const Cell & F ) const;
+		double w, const Cell & E, double z, const Cell & F                           ) const;
+
+	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
+	inline void interpolate ( const Cell & P, double s, const Cell & A,
+	  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent &,
+	  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent &,
+	  double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent &,
+	  double w, const Cell & E, const tag::Spin &, const Manifold::ActionExponent &,
+		double z, const Cell & F, const tag::Spin &, const Manifold::ActionExponent & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1
 	inline void interpolate
-		( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points ) const;
+	( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points ) const;
+
+	// P = sum c_k P_k,  sum c_k == 1
+	inline void interpolate
+	( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points,
+	  const tag::Spin &, const Manifold::ActionExponent & exp         ) const;
 
 	inline void project ( const Cell & ) const;
 	
@@ -200,10 +241,25 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const = 0;
 
+	// P = sA + sB,  s+t == 1
+	virtual void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Manifold::ActionExponent & exp                    ) const = 0;
+
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
 		double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D ) const = 0;
+
+	// P = sA + sB + uC + vD,  s+t+u+v == 1
+	virtual void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Manifold::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Manifold::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Manifold::ActionExponent & ) const = 0;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -211,6 +267,20 @@ class Manifold::Core
 		double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
 		double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const = 0;
 	
+	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
+	virtual void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Manifold::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Manifold::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Manifold::ActionExponent &,
+	  double w, Cell::Positive::Vertex * E,
+		const tag::Spin &, const Manifold::ActionExponent &,
+	  double z, Cell::Positive::Vertex * F,
+		const tag::Spin &, const Manifold::ActionExponent & ) const = 0;
+
 	// P = sum c_k P_k,  sum c_k == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P, std::vector < double > & coefs,
 														 std::vector < Cell::Positive::Vertex * > & points ) const = 0;
@@ -253,19 +323,53 @@ inline void Manifold::set_metric ( const Function & m )
 // P = sA + sB,  s+t == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A, double t, const Cell & B ) const
+
 {	assert ( P.dim() == 0 );  assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( P.is_positive() );  assert ( A.is_positive() );  assert ( B.is_positive() );
 	assert ( s >= 0. );  assert ( s <= 1. );
 	assert ( t >= 0. );  assert ( t <= 1. );
+
+	double sum = s+t;
 	// cannot assert the sum is 1. due to round-off errors
-	this->core->interpolate ( ( Cell::Positive::Vertex * ) P.core,
-		s, ( Cell::Positive::Vertex * ) A.core, t, ( Cell::Positive::Vertex * ) B.core );  }
+	assert ( sum > 0.98 );  assert ( sum < 1.02 );
+
+	Cell::Positive::Vertex * P_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( P.core );
+	Cell::Positive::Vertex * A_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	Cell::Positive::Vertex * B_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	this->core->interpolate ( P_c, s, A_c, t, B_c );                                       }
+
+
+// P = sA + sB,  s+t == 1
+inline void Manifold::interpolate
+( const Cell & P, double s, const Cell & A, double t, const Cell & B,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AB         ) const
+
+{	assert ( P.dim() == 0 );  assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
+	assert ( P.is_positive() );  assert ( A.is_positive() );  assert ( B.is_positive() );
+	assert ( s >= 0. );  assert ( s <= 1. );
+	assert ( t >= 0. );  assert ( t <= 1. );
+
+	double sum = s+t;
+	// cannot assert the sum is 1. due to round-off errors
+	assert ( sum > 0.98 );  assert ( sum < 1.02 );
+
+	Cell::Positive::Vertex * P_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( P.core );
+	Cell::Positive::Vertex * A_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	Cell::Positive::Vertex * B_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	this->core->interpolate ( P_c, s, A_c, t, B_c, tag::spin, exp_AB );                    }
 
 
 // P = sA + sB + uC + vD,  s+t+u+v == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A, double t, const Cell & B,
                   double u, const Cell & C, double v, const Cell & D ) const
+
 {	assert ( P.dim() == 0 );
 	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( C.dim() == 0 );  assert ( D.dim() == 0 );
@@ -276,10 +380,58 @@ inline void Manifold::interpolate
 	assert ( t >= 0. );  assert ( t <= 1. );
 	assert ( u >= 0. );  assert ( u <= 1. );
 	assert ( v >= 0. );  assert ( v <= 1. );
+
+	double sum = s+t+u+v;
 	// cannot assert the sum is 1. due to round-off errors
-	this->core->interpolate ( ( Cell::Positive::Vertex * ) P.core,
-		s, ( Cell::Positive::Vertex * ) A.core, t, ( Cell::Positive::Vertex * ) B.core,
-		u, ( Cell::Positive::Vertex * ) C.core, v, ( Cell::Positive::Vertex * ) D.core );  }
+	assert ( sum > 0.98 );  assert ( sum < 1.02 );
+
+	Cell::Positive::Vertex * P_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( P.core );
+	Cell::Positive::Vertex * A_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	Cell::Positive::Vertex * B_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	Cell::Positive::Vertex * C_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( C.core );
+	Cell::Positive::Vertex * D_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( D.core );
+	this->core->interpolate ( P_c, s, A_c, t, B_c, u, C_c, v, D_c );  }
+
+
+// P = sA + sB + uC + vD,  s+t+u+v == 1
+inline void Manifold::interpolate
+( const Cell & P, double s, const Cell & A,
+  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent & exp_AB,
+  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent & exp_AC,
+	double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent & exp_AD ) const
+
+{	assert ( P.dim() == 0 );
+	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
+	assert ( C.dim() == 0 );  assert ( D.dim() == 0 );
+	assert ( P.is_positive() );
+	assert ( A.is_positive() );  assert ( B.is_positive() );
+	assert ( C.is_positive() );  assert ( D.is_positive() );
+	assert ( s >= 0. );  assert ( s <= 1. );
+	assert ( t >= 0. );  assert ( t <= 1. );
+	assert ( u >= 0. );  assert ( u <= 1. );
+	assert ( v >= 0. );  assert ( v <= 1. );
+
+	double sum = s+t+u+v;
+	// cannot assert the sum is 1. due to round-off errors
+	assert ( sum > 0.98 );  assert ( sum < 1.02 );
+
+	Cell::Positive::Vertex * P_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( P.core );
+	Cell::Positive::Vertex * A_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	Cell::Positive::Vertex * B_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	Cell::Positive::Vertex * C_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( C.core );
+	Cell::Positive::Vertex * D_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( D.core );
+	this->core->interpolate ( P_c, s, A_c, t, B_c, tag::spin, exp_AB,
+              u, C_c, tag::spin, exp_AC, v, D_c, tag::spin, exp_AD );  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
@@ -287,6 +439,7 @@ inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A, double t, const Cell & B,
                   double u, const Cell & C, double v, const Cell & D,
                   double w, const Cell & E, double z, const Cell & F ) const
+
 {	assert ( P.dim() == 0 );
 	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( C.dim() == 0 );  assert ( D.dim() == 0 );
@@ -301,11 +454,72 @@ inline void Manifold::interpolate
 	assert ( v >= 0. );  assert ( v <= 1. );
 	assert ( w >= 0. );  assert ( w <= 1. );
 	assert ( z >= 0. );  assert ( z <= 1. );
+
+	double sum = s+t+u+v+w+z;
 	// cannot assert the sum is 1. due to round-off errors
-	this->core->interpolate ( ( Cell::Positive::Vertex * ) P.core,
-		s, ( Cell::Positive::Vertex * ) A.core, t, ( Cell::Positive::Vertex * ) B.core,
-		u, ( Cell::Positive::Vertex * ) C.core, v, ( Cell::Positive::Vertex * ) D.core,
-		w, ( Cell::Positive::Vertex * ) E.core, z, ( Cell::Positive::Vertex * ) F.core );  }
+	assert ( sum > 0.98 );  assert ( sum < 1.02 );
+
+	Cell::Positive::Vertex * P_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( P.core );
+	Cell::Positive::Vertex * A_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	Cell::Positive::Vertex * B_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	Cell::Positive::Vertex * C_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( C.core );
+	Cell::Positive::Vertex * D_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( D.core );
+	Cell::Positive::Vertex * E_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( E.core );
+	Cell::Positive::Vertex * F_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( F.core );
+	this->core->interpolate ( P_c, s, A_c, t, B_c, u, C_c, v, D_c, w, E_c, z, F_c );  }
+
+
+// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
+inline void Manifold::interpolate
+( const Cell & P, double s, const Cell & A,
+  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent & exp_AB,
+  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent & exp_AC,
+  double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent & exp_AD,
+  double w, const Cell & E, const tag::Spin &, const Manifold::ActionExponent & exp_AE,
+	double z, const Cell & F, const tag::Spin &, const Manifold::ActionExponent & exp_AF ) const
+{	assert ( P.dim() == 0 );
+	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
+	assert ( C.dim() == 0 );  assert ( D.dim() == 0 );
+	assert ( E.dim() == 0 );  assert ( F.dim() == 0 );
+	assert ( P.is_positive() );
+	assert ( A.is_positive() );  assert ( B.is_positive() );
+	assert ( C.is_positive() );  assert ( D.is_positive() );
+	assert ( E.is_positive() );  assert ( F.is_positive() );
+	assert ( s >= 0. );  assert ( s <= 1. );
+	assert ( t >= 0. );  assert ( t <= 1. );
+	assert ( u >= 0. );  assert ( u <= 1. );
+	assert ( v >= 0. );  assert ( v <= 1. );
+	assert ( w >= 0. );  assert ( w <= 1. );
+	assert ( z >= 0. );  assert ( z <= 1. );
+
+	double sum = s+t+u+v+w+z;
+	// cannot assert the sum is 1. due to round-off errors
+	assert ( sum > 0.98 );  assert ( sum < 1.02 );
+
+	Cell::Positive::Vertex * P_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( P.core );
+	Cell::Positive::Vertex * A_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	Cell::Positive::Vertex * B_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	Cell::Positive::Vertex * C_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( C.core );
+	Cell::Positive::Vertex * D_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( D.core );
+	Cell::Positive::Vertex * E_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( E.core );
+	Cell::Positive::Vertex * F_c = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( F.core );
+	this->core->interpolate ( P_c, s, A_c, t, B_c, tag::spin, exp_AB,
+              u, C_c, tag::spin, exp_AC, v, D_c, tag::spin, exp_AD,
+              w, E_c, tag::spin, exp_AE, z, F_c, tag::spin, exp_AF );  }
 
 
 // P = sum c_k P_k,  sum c_k == 1
@@ -313,7 +527,7 @@ inline void Manifold::interpolate
 ( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points ) const
 	
 {	assert ( points.size() == coefs.size() );
-	for ( size_t i = 0; i < points.size(); i++ )  // if debug !
+	for ( size_t i = 0; i < points.size(); i++ )  // if debug !!
 	{	assert ( points[i].is_positive() );
 		assert ( points[i].dim() == 0 );
 		assert ( coefs[i] >= 0. );   assert ( coefs[i] <= 1. );  }
@@ -681,7 +895,8 @@ class Manifold::Parametric : public Manifold::Core
 
 
 
-inline Manifold::Manifold ( const tag::Parametric &, const Manifold & m, const Function::Equality & f_eq )
+inline Manifold::Manifold
+( const tag::Parametric &, const Manifold & m, const Function::Equality & f_eq )
 :	Manifold ( tag::non_existent )  // temporary empty manifold
 {	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	this->core = new Manifold::Parametric ( m, f_eq );
@@ -694,8 +909,9 @@ inline Manifold::Manifold ( const tag::Parametric &, const Manifold & m,
 	this->core = new Manifold::Parametric ( m, f_eq_1, f_eq_2 );
 	Manifold::working = *this;                                                 }
 
-inline Manifold::Manifold ( const tag::Parametric &, const Manifold & m,
-const Function::Equality & f_eq_1, const Function::Equality & f_eq_2, const Function::Equality & f_eq_3 )
+inline Manifold::Manifold
+( const tag::Parametric &, const Manifold & m, const Function::Equality & f_eq_1,
+  const Function::Equality & f_eq_2, const Function::Equality & f_eq_3           )
 :	Manifold ( tag::non_existent )  // temporary empty manifold
 {	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
 	this->core = new Manifold::Parametric ( m, f_eq_1, f_eq_2, f_eq_3 );
@@ -737,29 +953,99 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
 //	this->equations [ f_eq_2.lhs ] = f_eq_2.rhs;
 //	this->equations [ f_eq_3.lhs ] = f_eq_3.rhs;
 
-
+//-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
 
 
-class Manifold::Quotient : public Manifold::Core
+class Manifold::Action
+
+// a set of generators of a discrete group
+// could be translations, e.g. {(1,0),(0,1)} generating Z^2
 
 {	public :
 
-	class OneAction; class TwoActions; class ThreeActions;
+	size_t dim;
 	
 };  // end of class Manifold::Quotient
 
 //-----------------------------------------------------------------------------------------
 
 
-class Manifold::Quotient::OneAction : public Manifold::Quotient
+class Manifold::Quotient : public Manifold::Core
 
-// an action is a vector field (a Function with several coordinates)
-// e.g. ( x+0.1, y+0.9 ) or ( 2x, xy )
+// a Euclidian manifold divided by a group of actions
 
 {	public :
 
-	Function act;
+	Manifold base_space;  // wrap around a Manifold::Euclid
+	
+	Manifold::Action act;  // set of generators for a discrete group
+
+	inline Quotient ( ) : Manifold::Core(), base_space ( tag::non_existent ) { }
+
+	// P = sA + sB,  s+t == 1     virtual from Manifold::Core
+	void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
+
+	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
+	void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D  ) const;
+
+	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
+	void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
+	  double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const;
+
+	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
+  void interpolate ( Cell::Positive::Vertex * P,
+		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const;
+	
+	// P = sA + sB,  s+t == 1     virtual from Manifold::Core
+	void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Manifold::ActionExponent & exp      ) const;
+
+	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
+	void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Manifold::ActionExponent & exp      ) const;
+
+	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
+	void interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
+	  double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F,
+		const tag::Spin &, const Manifold::ActionExponent & exp      ) const;
+
+	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
+  void interpolate ( Cell::Positive::Vertex * P,
+		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points,
+		const tag::Spin &, const Manifold::ActionExponent & exp                           ) const;
+	
+	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
+	//   virtual from Manifold::Core, here execution forbidden
+	
+	Function get_coord_func ( ) const;  // virtual from Manifold::Core
+
+	void set_coords ( const Function co );  // virtual from Manifold::Core
+
+	void project ( Cell::Positive::Vertex * ) const;  // virtual from Manifold::Core
+
+	class OneAction;  class TwoActions;  class ThreeActions;  // to delete
+
+};  // end of class Manifold::Quotient
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Quotient::OneAction : public Manifold::Quotient
+// to delete
+
+{	public :
+
 	
 };  // end of class Manifold::Euclid
 
@@ -767,6 +1053,7 @@ class Manifold::Quotient::OneAction : public Manifold::Quotient
 
 
 class Manifold::Quotient::TwoActions : public Manifold::Quotient
+// to delete
 
 {	public :
 
