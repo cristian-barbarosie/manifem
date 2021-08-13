@@ -163,8 +163,8 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
 	  coord_scalar->set_value_on_cell
-			( P, s * coord_scalar->get_value_on_cell(A) +
-			     t * coord_scalar->get_value_on_cell(B)   );
+			( P, s * coord_scalar->get_value_on_cell ( A ) +
+			     t * coord_scalar->get_value_on_cell ( B )   );
 		return;                                            } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
@@ -173,15 +173,15 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
-			( P, s * coord_i->get_value_on_cell(A) +
-			     t * coord_i->get_value_on_cell(B) );                                   }  }
+			( P, s * coord_i->get_value_on_cell ( A ) +
+			     t * coord_i->get_value_on_cell ( B ) );                                }  }
 
 
 void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const Manifold::ActionExponent exp_AB ) const
+  const tag::Spin &, const Manifold::ActionExponent & exp_AB ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed 
@@ -233,10 +233,10 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
 	  coord_scalar->set_value_on_cell
-			( P, s * coord_scalar->get_value_on_cell(A) +
-			     t * coord_scalar->get_value_on_cell(B) +
-			     u * coord_scalar->get_value_on_cell(C) +
-			     v * coord_scalar->get_value_on_cell(D)   );
+			( P, s * coord_scalar->get_value_on_cell ( A ) +
+			     t * coord_scalar->get_value_on_cell ( B ) +
+			     u * coord_scalar->get_value_on_cell ( C ) +
+			     v * coord_scalar->get_value_on_cell ( D )   );
 		return;                                                        } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
@@ -245,21 +245,21 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
-			( P, s * coord_i->get_value_on_cell(A) +
-			     t * coord_i->get_value_on_cell(B) +
-			     u * coord_i->get_value_on_cell(C) +
-			     v * coord_i->get_value_on_cell(D)   );           }                             }
+			( P, s * coord_i->get_value_on_cell ( A ) +
+			     t * coord_i->get_value_on_cell ( B ) +
+			     u * coord_i->get_value_on_cell ( C ) +
+			     v * coord_i->get_value_on_cell ( D )   );                               }  }
 
 
 void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const Manifold::ActionExponent exp_AB,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AB,
   double u, Cell::Positive::Vertex * C,
-  const tag::Spin &, const Manifold::ActionExponent exp_AC,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AC,
   double v, Cell::Positive::Vertex * D,
-  const tag::Spin &, const Manifold::ActionExponent exp_AD ) const
+  const tag::Spin &, const Manifold::ActionExponent & exp_AD ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
@@ -284,7 +284,7 @@ void Manifold::Euclid::interpolate
 			( P, s * coord_i->get_value_on_cell ( A ) +
 			     t * coord_i->get_value_on_cell ( B, tag::spin, exp_AB ) +
 			     u * coord_i->get_value_on_cell ( C, tag::spin, exp_AC ) +
-			     v * coord_i->get_value_on_cell ( D, tag::spin, exp_AD )   );           }        }
+			     v * coord_i->get_value_on_cell ( D, tag::spin, exp_AD )   );           }       }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
@@ -318,12 +318,12 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
 	  coord_scalar->set_value_on_cell
-			( P, s * coord_scalar->get_value_on_cell(A) +
-			     t * coord_scalar->get_value_on_cell(B) +
-			     u * coord_scalar->get_value_on_cell(C) +
-			     v * coord_scalar->get_value_on_cell(D) +
-			     w * coord_scalar->get_value_on_cell(E) +
-			     z * coord_scalar->get_value_on_cell(F)   );
+			( P, s * coord_scalar->get_value_on_cell ( A ) +
+			     t * coord_scalar->get_value_on_cell ( B ) +
+			     u * coord_scalar->get_value_on_cell ( C ) +
+			     v * coord_scalar->get_value_on_cell ( D ) +
+			     w * coord_scalar->get_value_on_cell ( E ) +
+			     z * coord_scalar->get_value_on_cell ( F )   );
 		return;                                             } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
@@ -332,27 +332,27 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
-			( P, s * coord_i->get_value_on_cell(A) +
-			     t * coord_i->get_value_on_cell(B) +
-				   u * coord_i->get_value_on_cell(C) +
-			     v * coord_i->get_value_on_cell(D) +
-			     w * coord_i->get_value_on_cell(E) +
-			     z * coord_i->get_value_on_cell(F)   );            }                              }
+			( P, s * coord_i->get_value_on_cell ( A ) +
+			     t * coord_i->get_value_on_cell ( B ) +
+				   u * coord_i->get_value_on_cell ( C ) +
+			     v * coord_i->get_value_on_cell ( D ) +
+			     w * coord_i->get_value_on_cell ( E ) +
+			     z * coord_i->get_value_on_cell ( F )   );                              }       }
 
 
 void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const Manifold::ActionExponent exp_AB,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AB,
   double u, Cell::Positive::Vertex * C,
-  const tag::Spin &, const Manifold::ActionExponent exp_AC,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AC,
   double v, Cell::Positive::Vertex * D,
-  const tag::Spin &, const Manifold::ActionExponent exp_AD,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AD,
   double w, Cell::Positive::Vertex * E,
-  const tag::Spin &, const Manifold::ActionExponent exp_AE,
+  const tag::Spin &, const Manifold::ActionExponent & exp_AE,
   double z, Cell::Positive::Vertex * F,
-  const tag::Spin &, const Manifold::ActionExponent exp_AF ) const
+  const tag::Spin &, const Manifold::ActionExponent & exp_AF ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
@@ -362,12 +362,12 @@ void Manifold::Euclid::interpolate
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
 	  coord_scalar->set_value_on_cell
-			( P, s * coord_scalar->get_value_on_cell(A) +
-			     t * coord_scalar->get_value_on_cell(B) +
-			     u * coord_scalar->get_value_on_cell(C) +
-			     v * coord_scalar->get_value_on_cell(D) +
-			     w * coord_scalar->get_value_on_cell(E) +
-			     z * coord_scalar->get_value_on_cell(F)   );
+			( P, s * coord_scalar->get_value_on_cell ( A ) +
+			     t * coord_scalar->get_value_on_cell ( B ) +
+			     u * coord_scalar->get_value_on_cell ( C ) +
+			     v * coord_scalar->get_value_on_cell ( D ) +
+			     w * coord_scalar->get_value_on_cell ( E ) +
+			     z * coord_scalar->get_value_on_cell ( F )   );
 		return;                                             } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
@@ -376,12 +376,12 @@ void Manifold::Euclid::interpolate
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
-			( P, s * coord_i->get_value_on_cell(A) +
-			     t * coord_i->get_value_on_cell(B) +
-				   u * coord_i->get_value_on_cell(C) +
-			     v * coord_i->get_value_on_cell(D) +
-			     w * coord_i->get_value_on_cell(E) +
-			     z * coord_i->get_value_on_cell(F)   );            }                              }
+			( P, s * coord_i->get_value_on_cell ( A ) +
+			     t * coord_i->get_value_on_cell ( B ) +
+				   u * coord_i->get_value_on_cell ( C ) +
+			     v * coord_i->get_value_on_cell ( D ) +
+			     w * coord_i->get_value_on_cell ( E ) +
+			     z * coord_i->get_value_on_cell ( F )   );                              }     }
 
 
 // P = sum c_k P_k,  sum c_k == 1
@@ -592,7 +592,7 @@ void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 			< Function::Core*, Function::Scalar* > ( it->first.core );
 		Function::Scalar * expr_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( it->second.core );
-		coord_scalar->set_value_on_cell ( P_c, expr_scalar->get_value_on_cell(P_c) );  }  }
+		coord_scalar->set_value_on_cell ( P_c, expr_scalar->get_value_on_cell ( P_c ) );  }  }
 
 //-----------------------------------------------------------------------------------------
 
