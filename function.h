@@ -1,5 +1,5 @@
 
-// function.h 2021.08.02
+// function.h 2021.08.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -132,6 +132,7 @@ class Function
 	class Vector;  class Aggregate;  class CoupledWithField;
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
+	class MultiValued;
 	class Equality;
 
 };  // end of  class Function
@@ -236,6 +237,8 @@ class Function::Scalar : public Function::Core
 	// assign a numeric value to the function on the cell and return that value
 	
 	virtual double get_value_on_cell ( Cell::Core * ) const = 0;
+	virtual double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
 
 	// Function deriv ( Function )
 	// Function replace ( const Function & x, const Function & y )
@@ -267,16 +270,17 @@ class Function::ArithmeticExpression : public Function::Scalar
 
 	double set_value_on_cell ( Cell::Core *, const double & );  // virtual from Function::Scalar
 	// here execution forbidden
-	
-	// double get_value_on_cell ( Cell::Core * )  stays pure virtual from Function::Scalar
+
+	// two versions of
+	// double get_value_on_cell ( Cell::Core * )  stay pure virtual from Function::Scalar
 
 	// Function deriv ( Function )
 	// Function replace ( const Function & x, const Function & y )
-	//   stay pure virtual from Function::Core, through Function::Scalar
+	//   stay pure virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	// string repr ( const Function::From & from = Function::from_void )
-	//   stays pure virtual from Function::Core, through Function::Scalar
+	//   stays pure virtual from Function::Core
 	#endif
 };
 
@@ -304,17 +308,19 @@ class Function::Constant : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	// virtual from Function::Core
 	#endif
 };
 
@@ -347,17 +353,19 @@ class Function::Sum : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -384,17 +392,19 @@ class Function::Product : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -424,17 +434,17 @@ class Function::Power : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -462,17 +472,17 @@ class Function::Sqrt : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -505,17 +515,17 @@ class Function::Sin : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -548,17 +558,17 @@ class Function::Cos : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -649,17 +659,17 @@ class Function::Step : public Function::ArithmeticExpression
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar, through Function::ArithmeticExpression
+	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
+	//  virtual from Function::Core
 	#endif
 
 }; // end of  class Function::Step
@@ -701,6 +711,8 @@ class Function::Vector : public Function::Core
 
 class Function::Aggregate : public Function::Vector
 	
+// inheriting from this class means simply that there is a 'components' member
+
 {	public :
 
 	std::vector < Function > components;
@@ -715,7 +727,7 @@ class Function::Aggregate : public Function::Vector
 	inline Function::Aggregate operator= ( const Function::Aggregate & ) = delete;
 	inline Function::Aggregate operator= ( Function::Aggregate && ) = delete;
 
-	// 'nb_of_components' and 'component' are virtual from Function::Core, through Function::Vector
+	// 'nb_of_components' and 'component' are virtual from Function::Core
 	// overridden by Function::CoupledWithField::Vector
 	size_t nb_of_components ( ) const;
 	Function component ( size_t i );
@@ -847,14 +859,14 @@ class Function::Diffeomorphism::OneDim
 	double get_value_on_cell ( Cell::Core * ) const;  // virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 	#endif
 
 };  // end of class Function::Diffeomorphism::OneDim
@@ -926,9 +938,9 @@ class Function::Immersion
 	inline Function::Immersion operator= ( const Function::Immersion & ) = delete;
 	inline Function::Immersion operator= ( Function::Immersion && ) = delete;
 
-	size_t nb_of_components ( ) const;  // virtual from Function::Core, through Function::Vector
+	size_t nb_of_components ( ) const;  // virtual from Function::Core
 
-	Function component ( size_t i );  // virtual from Function::Core, through Function::Vector
+	Function component ( size_t i );  // virtual from Function::Core
 	
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
 	// virtual from Function::Vector
@@ -1083,14 +1095,14 @@ class Function::Composition : public Function::Scalar
 	double get_value_on_cell ( Cell::Core * ) const;  // virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -1154,14 +1166,14 @@ class Function::CoupledWithField::Scalar
 	double get_value_on_cell ( Cell::Core * ) const;  // virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
-	//  virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
-	//  virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
-	// virtual from Function::Core, through Function::Scalar
+	//  virtual from Function::Core
 	#endif
 };
 
@@ -1175,7 +1187,7 @@ class Function::CoupledWithField::Vector
 
 // quando calculamos as componentes duma funcao associada a um campo vectorial,
 // nao precisamos de criar as componentes do campo vectorial
-// podemos ter uma funcao escalar associada a um indice dentro dum campo vectorial
+// podemos ter uma funcao escalar associada a um indice dentro dum campo vectorial Block
 	
 {	public :
 
@@ -1344,6 +1356,47 @@ inline Function smooth_max
 	                    smooth_max ( h, i, tag::threshold, d ),
 	                    smooth_max ( j, k, tag::threshold, d ), tag::threshold, d );  }
 										
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::MultiValued : public Function::Core
+	
+{	public :
+
+	Function base;
+
+	inline MultiValued ( double c )
+	:	base {  c }
+	{ }
+
+	inline MultiValued ( const Function::MultiValued & ) = delete;
+	inline MultiValued ( Function::MultiValued && ) = delete;
+	
+	inline Function::MultiValued operator= ( const Function::MultiValued & ) = delete;
+	inline Function::MultiValued operator= ( Function::MultiValued && ) = delete;
+
+	size_t nb_of_components ( ) const;  // virtual from Function::Core
+
+	Function component ( size_t i ); // virtual from Function::Core
+
+	double set_value_on_cell ( Cell::Core *, const double & );
+	//  virtual from Function::Core (here execution forbidden)
+
+	double get_value_on_cell ( Cell::Core * ) const;
+	//  virtual from Function::Scalar
+
+	Function deriv ( Function ) const;
+	//  virtual from Function::Core
+
+	Function replace ( const Function & x, const Function & y );
+	//  virtual from Function::Core
+	
+	#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	//  virtual from Function::Core
+	#endif
+};
+
 //-----------------------------------------------------------------------------------------//
 
 
