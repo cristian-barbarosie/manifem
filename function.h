@@ -320,6 +320,7 @@ class Function::Constant : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -367,6 +368,7 @@ class Function::Sum : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -408,6 +410,7 @@ class Function::Product : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -452,6 +455,7 @@ class Function::Power : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -494,6 +498,7 @@ class Function::Sqrt : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -541,6 +546,7 @@ class Function::Sin : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -588,6 +594,7 @@ class Function::Cos : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -693,6 +700,7 @@ class Function::Step : public Function::ArithmeticExpression
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
@@ -1413,11 +1421,25 @@ inline Function smooth_max
 //-----------------------------------------------------------------------------------------//
 
 
-class Function::MultiValued : public Function::Core
-	
+class Function::Scalar::MultiValued : public Function::Scalar
+
+// here (finally) the method get_value_on_cell with tag::spin is meaningful
+// suppose 'exp' is a pair of short integers (i,j)
+// then the above refered method checks that the 'actions' match
+// those of the current working manifold
+// then takes the coordinates of the cell, applies to  them the first action 'i' times
+// then applies the second action 'j' times (recall the group should be commutative)
+// then sets the coordinates of a temporary (inner) vertex
+// and finally computes the value of the 'base' function on this inner cell
+// the vector of 'actions' is only used for the above refered checking operation
+
 {	public :
 
-	Function base;
+	static Cell inner_vertex;
+	
+	Function base;  // should be Function::Scalar
+	std::vector < Function > transf;
+	std::vector < Manifold::Action > actions;
 
 	inline MultiValued ( double c )
 	:	base {  c }
@@ -1426,18 +1448,19 @@ class Function::MultiValued : public Function::Core
 	inline MultiValued ( const Function::MultiValued & ) = delete;
 	inline MultiValued ( Function::MultiValued && ) = delete;
 	
-	inline Function::MultiValued operator= ( const Function::MultiValued & ) = delete;
-	inline Function::MultiValued operator= ( Function::MultiValued && ) = delete;
+	inline Function::Scalar::MultiValued operator=
+	( const Function::Scalar::MultiValued & ) = delete;
+	inline Function::Scalar::MultiValued operator= ( Function::Scalar::MultiValued && ) = delete;
 
 	size_t nb_of_components ( ) const;  // virtual from Function::Core
 
 	Function component ( size_t i ); // virtual from Function::Core
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	//  virtual from Function::Scalar
-
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	double set_value_on_cell ( Cell::Core *, const double & );
-	//  virtual from Function::Core (here execution forbidden)
+	//  virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -1449,8 +1472,57 @@ class Function::MultiValued : public Function::Core
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
 
+};  // end of class Function::Scalar::Multivalued
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Vector::MultiValued : public Function::Vector
+
+// same as above, vector values
+
+{	public :
+
+	Function base;  //  should be Funcion::Vecctor
+	std::vector < Function > transf;
+	std::vector < Manifold::Action > actions;
+
+	inline MultiValued ( double c )
+	:	base {  c }
+	{ }
+
+	inline MultiValued ( const Function::MultiValued & ) = delete;
+	inline MultiValued ( Function::MultiValued && ) = delete;
+	
+	inline Function::Vector::MultiValued operator=
+	( const Function::Vector::MultiValued & ) = delete;
+	inline Function::Vector::MultiValued operator= ( Function::Vector::MultiValued && ) = delete;
+
+	size_t nb_of_components ( ) const;  // virtual from Function::Core
+
+	Function component ( size_t i ); // virtual from Function::Core
+
+	std::vector < double > get_value_on_cell ( Cell::Core * ) const;
+	std::vector < double > get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	std::vector < double > set_value_on_cell ( Cell::Core *, const double & );
+	//  virtual from Function::Vector
+
+	Function deriv ( Function ) const;
+	//  virtual from Function::Core
+
+	Function replace ( const Function & x, const Function & y );
+	//  virtual from Function::Core
+	
+	#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	//  virtual from Function::Core
+	#endif
+
+};  // end of  class Function::Vecttor::Multivalued
+
+//-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
 
 

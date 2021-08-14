@@ -1034,8 +1034,7 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
 
 class Manifold::Action
 
-// a set of generators of a discrete group
-// could be translations, e.g. {(1,0),(0,1)} generating Z^2
+// a generator of a discrete group
 
 {	public :
 
