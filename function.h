@@ -1,5 +1,5 @@
 
-// function.h 2021.08.13
+// function.h 2021.08.14
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -49,7 +49,8 @@ namespace tag
 	  static const PreviouslyNonExistent previously_non_existent;
 	struct LessThan { };  static const LessThan less_than;
 	struct IfLessThan { };  static const IfLessThan if_less_than;
-	struct Otherwise { };  static const Otherwise otherwise;                  }
+	struct Otherwise { };  static const Otherwise otherwise;
+	struct Spin { };  static const Spin spin;                              }
 	
 
 class Manifold;
@@ -115,8 +116,11 @@ class Function
 	inline void set_core_to_null ( );
 	inline void change_core_to ( Function::Core * );
 	
-	class TakenOnCell;
+	class TakenOnCell;  class TakenOnCellWithSpin;
+	typedef std::vector < short int > ActionExponent;
 	inline Function::TakenOnCell operator() ( const Cell & cll ) const;
+	inline Function::TakenOnCellWithSpin operator()
+	( Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const;
 
 	inline Function deriv ( const Function & x ) const;  // derivative with respect to x
 
@@ -132,7 +136,7 @@ class Function
 	class Vector;  class Aggregate;  class CoupledWithField;
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
-	class MultiValued;
+	class MultiValued;  class Action;
 	class Equality;
 
 };  // end of  class Function
@@ -233,13 +237,16 @@ class Function::Scalar : public Function::Core
 
 	Function component ( size_t i ); // virtual from Function::Core
 
+	virtual double get_value ( ) const = 0;
+	virtual void set_value ( double ) const = 0;
+
+	virtual double get_value_on_cell ( Cell::Core * ) const = 0;
+	virtual double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const = 0;
+
 	virtual double set_value_on_cell ( Cell::Core *, const double & ) = 0;
 	// assign a numeric value to the function on the cell and return that value
 	
-	virtual double get_value_on_cell ( Cell::Core * ) const = 0;
-	virtual double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
-
 	// Function deriv ( Function )
 	// Function replace ( const Function & x, const Function & y )
 	//    stay pure virtual from Function::Core
@@ -268,11 +275,13 @@ class Function::ArithmeticExpression : public Function::Scalar
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
-	double set_value_on_cell ( Cell::Core *, const double & );  // virtual from Function::Scalar
-	// here execution forbidden
-
+	// double get_value  and  void set_value  stay pure virtual from Function::Scalar
+	
 	// two versions of
 	// double get_value_on_cell ( Cell::Core * )  stay pure virtual from Function::Scalar
+
+	double set_value_on_cell ( Cell::Core *, const double & );  // virtual from Function::Scalar
+	// here execution forbidden
 
 	// Function deriv ( Function )
 	// Function replace ( const Function & x, const Function & y )
@@ -304,13 +313,17 @@ class Function::Constant : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
-	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   defined by Function::ArithmeticExpression (execution forbidden)
+	double get_value ( ) const;
+	void set_value ( double ) const;
+	// virtual from Function::Scalar
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	// virtual from Function::Scalar
+
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -349,13 +362,13 @@ class Function::Sum : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
-	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   defined by Function::ArithmeticExpression (execution forbidden)
-
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	// virtual from Function::Scalar
+
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -388,13 +401,13 @@ class Function::Product : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
-	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   defined by Function::ArithmeticExpression (execution forbidden)
-
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Manifold::ActionExponent & exp ) const = 0;
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	// virtual from Function::Scalar
+
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   defined by Function::ArithmeticExpression (execution forbidden)
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -430,11 +443,13 @@ class Function::Power : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	// virtual from Function::Scalar
+
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::ArithmeticExpression (execution forbidden)
-
-	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -468,11 +483,13 @@ class Function::Sqrt : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	// virtual from Function::Scalar
+
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::ArithmeticExpression (execution forbidden)
-
-	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -511,11 +528,13 @@ class Function::Sin : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	// virtual from Function::Scalar
+
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::ArithmeticExpression (execution forbidden)
-
-	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -554,11 +573,13 @@ class Function::Cos : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	// virtual from Function::Scalar
+
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::ArithmeticExpression (execution forbidden)
-
-	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -655,11 +676,13 @@ class Function::Step : public Function::ArithmeticExpression
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	// virtual from Function::Scalar
+
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::ArithmeticExpression (execution forbidden)
-
-	double get_value_on_cell ( Cell::Core * ) const;
-	// virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -689,12 +712,17 @@ class Function::Vector : public Function::Core
 	
 	// Function component ( )  stays pure virtual from Function::Core
 
+	virtual std::vector<double> get_value ( ) const = 0;
+	virtual void set_value ( const std::vector<double> & ) const = 0;
+
+	virtual std::vector<double> get_value_on_cell ( Cell::Core * ) const = 0;
+	virtual std::vector<double> get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const = 0;
+
 	virtual std::vector<double> set_value_on_cell
 	( Cell::Core *, const std::vector<double> & ) = 0;
 	// assign a numeric vector to the function on the cell and return that vector
 	
-	virtual std::vector<double> get_value_on_cell ( Cell::Core * ) const = 0;
-
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core, here execution forbidden, to change
 
@@ -732,10 +760,12 @@ class Function::Aggregate : public Function::Vector
 	size_t nb_of_components ( ) const;
 	Function component ( size_t i );
 	
-	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
+	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
+	std::vector<double> get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	// virtual from Function::Vector
 
-	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
+	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
 	// virtual from Function::Vector
 
 	// Function deriv ( Function )
@@ -853,10 +883,10 @@ class Function::Diffeomorphism::OneDim
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 
+	double get_value_on_cell ( Cell::Core * ) const;  // virtual from Function::Scalar
+
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Vector
-
-	double get_value_on_cell ( Cell::Core * ) const;  // virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -942,14 +972,13 @@ class Function::Immersion
 
 	Function component ( size_t i );  // virtual from Function::Core
 	
-	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
-	// virtual from Function::Vector
-
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	// virtual from Function::Vector
 
-	// Function deriv ( Function )
-	//    defined by Function::Vector (execution forbidden), to change
+	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
+	// virtual from Function::Vector
+
+	// Function deriv ( Function )  defined by Function::Vector (execution forbidden), to change
 
 	// Function replace ( const Function & x, const Function & y );
 	//    defined by Function::Vector (execution forbidden), to change
@@ -1091,8 +1120,8 @@ class Function::Composition : public Function::Scalar
 	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
 	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
-	double set_value_on_cell ( Cell::Core *, const double & );  // virtual from Function::Scalar
 	double get_value_on_cell ( Cell::Core * ) const;  // virtual from Function::Scalar
+	double set_value_on_cell ( Cell::Core *, const double & );  // virtual from Function::Scalar
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -1214,12 +1243,12 @@ class Function::CoupledWithField::Vector
 	virtual Function component ( size_t i ) override;
 	// virtual from Function::Core, through Function::Vector, Function::Aggregate
 	
-	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
-	// virtual from Function::Vector, through Function::Aggregate
-	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	// virtual from Function::Vector, through Function::Aggregate
 
+	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
+	// virtual from Function::Vector, through Function::Aggregate
+	
 	// Function deriv ( Function )
 	//    defined by Function::Vector (execution forbidden), may change
 
@@ -1379,11 +1408,11 @@ class Function::MultiValued : public Function::Core
 
 	Function component ( size_t i ); // virtual from Function::Core
 
-	double set_value_on_cell ( Cell::Core *, const double & );
-	//  virtual from Function::Core (here execution forbidden)
-
 	double get_value_on_cell ( Cell::Core * ) const;
 	//  virtual from Function::Scalar
+
+	double set_value_on_cell ( Cell::Core *, const double & );
+	//  virtual from Function::Core (here execution forbidden)
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core

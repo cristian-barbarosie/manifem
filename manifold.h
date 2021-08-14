@@ -1,5 +1,5 @@
 
-// manifold.h 2021.08.12
+// manifold.h 2021.08.14
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -39,9 +39,7 @@ namespace tag {
 	struct lagrange { };  static const lagrange Lagrange;
 	struct Implicit { };  static const Implicit implicit;
 	struct Parametric { };  static const Parametric parametric;
-	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;
-	struct Spin { };  static const Spin spin;
-}
+	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;  }
 
 
 //---------------------------------------------------------------------------------------
