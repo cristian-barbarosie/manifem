@@ -62,8 +62,6 @@ class Manifold
 	class Action;  // a set of generators of a discrete group
 	               // could be translations, e.g. {(1,0),(0,1)} generating Z^2
 
-	class ActionExponent;  // a vector of 'dim' short integers
-	
 	Manifold::Core * core;
 
 	inline Manifold ( const tag::WhoseCoreIs &, Manifold::Core * c )
@@ -156,7 +154,7 @@ class Manifold
 	// P = sA + sB,  s+t == 1
 	inline void interpolate
 	( const Cell & P, double s, const Cell & A, double t, const Cell & B,
-	  const tag::Spin &, const Manifold::ActionExponent & exp            ) const;
+	  const tag::Spin &, const Function::ActionExponent & exp            ) const;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
@@ -164,9 +162,9 @@ class Manifold
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
-	  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent &,
-	  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent &,
-		double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent & ) const;
+	  double t, const Cell & B, const tag::Spin &, const Function::ActionExponent &,
+	  double u, const Cell & C, const tag::Spin &, const Function::ActionExponent &,
+		double v, const Cell & D, const tag::Spin &, const Function::ActionExponent & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
@@ -175,11 +173,11 @@ class Manifold
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
-	  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent &,
-	  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent &,
-	  double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent &,
-	  double w, const Cell & E, const tag::Spin &, const Manifold::ActionExponent &,
-		double z, const Cell & F, const tag::Spin &, const Manifold::ActionExponent & ) const;
+	  double t, const Cell & B, const tag::Spin &, const Function::ActionExponent &,
+	  double u, const Cell & C, const tag::Spin &, const Function::ActionExponent &,
+	  double v, const Cell & D, const tag::Spin &, const Function::ActionExponent &,
+	  double w, const Cell & E, const tag::Spin &, const Function::ActionExponent &,
+		double z, const Cell & F, const tag::Spin &, const Function::ActionExponent & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1
 	inline void interpolate
@@ -188,7 +186,7 @@ class Manifold
 	// P = sum c_k P_k,  sum c_k == 1
 	inline void interpolate
 	( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points,
-	  const tag::Spin &, const Manifold::ActionExponent & exp         ) const;
+	  const tag::Spin &, const Function::ActionExponent & exp         ) const;
 
 	inline void project ( const Cell & ) const;
 	
@@ -242,7 +240,7 @@ class Manifold::Core
 	// P = sA + sB,  s+t == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent & exp                    ) const = 0;
+		const tag::Spin &, const Function::ActionExponent & exp                    ) const = 0;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -253,11 +251,11 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent & ) const = 0;
+		const tag::Spin &, const Function::ActionExponent & ) const = 0;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -269,15 +267,15 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Manifold::ActionExponent & ) const = 0;
+		const tag::Spin &, const Function::ActionExponent & ) const = 0;
 
 	// P = sum c_k P_k,  sum c_k == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P, std::vector < double > & coefs,
@@ -343,7 +341,7 @@ inline void Manifold::interpolate
 // P = sA + sB,  s+t == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A, double t, const Cell & B,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AB         ) const
+  const tag::Spin &, const Function::ActionExponent & exp_AB         ) const
 
 {	assert ( P.dim() == 0 );  assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( P.is_positive() );  assert ( A.is_positive() );  assert ( B.is_positive() );
@@ -399,9 +397,9 @@ inline void Manifold::interpolate
 // P = sA + sB + uC + vD,  s+t+u+v == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A,
-  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent & exp_AB,
-  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent & exp_AC,
-	double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent & exp_AD ) const
+  double t, const Cell & B, const tag::Spin &, const Function::ActionExponent & exp_AB,
+  double u, const Cell & C, const tag::Spin &, const Function::ActionExponent & exp_AC,
+	double v, const Cell & D, const tag::Spin &, const Function::ActionExponent & exp_AD ) const
 
 {	assert ( P.dim() == 0 );
 	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
@@ -477,11 +475,11 @@ inline void Manifold::interpolate
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A,
-  double t, const Cell & B, const tag::Spin &, const Manifold::ActionExponent & exp_AB,
-  double u, const Cell & C, const tag::Spin &, const Manifold::ActionExponent & exp_AC,
-  double v, const Cell & D, const tag::Spin &, const Manifold::ActionExponent & exp_AD,
-  double w, const Cell & E, const tag::Spin &, const Manifold::ActionExponent & exp_AE,
-	double z, const Cell & F, const tag::Spin &, const Manifold::ActionExponent & exp_AF ) const
+  double t, const Cell & B, const tag::Spin &, const Function::ActionExponent & exp_AB,
+  double u, const Cell & C, const tag::Spin &, const Function::ActionExponent & exp_AC,
+  double v, const Cell & D, const tag::Spin &, const Function::ActionExponent & exp_AD,
+  double w, const Cell & E, const tag::Spin &, const Function::ActionExponent & exp_AE,
+	double z, const Cell & F, const tag::Spin &, const Function::ActionExponent & exp_AF ) const
 {	assert ( P.dim() == 0 );
 	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( C.dim() == 0 );  assert ( D.dim() == 0 );
@@ -581,7 +579,7 @@ class Manifold::Euclid : public Manifold::Core
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent & exp                    ) const ;
+		const tag::Spin &, const Function::ActionExponent & exp                    ) const ;
 	void pretty_interpolate
 		( const Cell & P, double s, const Cell & A, double t, const Cell & B ) const;
 
@@ -592,11 +590,11 @@ class Manifold::Euclid : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent & ) const;
+		const tag::Spin &, const Function::ActionExponent & ) const;
 	void pretty_interpolate
 	(	const Cell & P, double s, const Cell & A, double t, const Cell & B,
 		                double u, const Cell & C, double v, const Cell & D  ) const;
@@ -609,15 +607,15 @@ class Manifold::Euclid : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Manifold::ActionExponent & ) const;
+		const tag::Spin &, const Function::ActionExponent & ) const;
 	void pretty_interpolate ( const Cell & P, double s, const Cell & A,
 		double t, const Cell & B, double u, const Cell & C, double v, const Cell & D,
 		double w, const Cell & E, double z, const Cell & F ) const;
@@ -704,7 +702,7 @@ class Manifold::Implicit : public Manifold::Core
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent & exp                    ) const ;
+		const tag::Spin &, const Function::ActionExponent & exp                    ) const ;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -713,11 +711,11 @@ class Manifold::Implicit : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent & ) const;
+		const tag::Spin &, const Function::ActionExponent & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -727,15 +725,15 @@ class Manifold::Implicit : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Manifold::ActionExponent & ) const ;
+		const tag::Spin &, const Function::ActionExponent & ) const ;
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
   void interpolate ( Cell::Positive::Vertex * P,
@@ -920,7 +918,7 @@ class Manifold::Parametric : public Manifold::Core
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent & exp                    ) const ;
+		const tag::Spin &, const Function::ActionExponent & exp                    ) const ;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -929,11 +927,11 @@ class Manifold::Parametric : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent & ) const;
+		const tag::Spin &, const Function::ActionExponent & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -943,15 +941,15 @@ class Manifold::Parametric : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Manifold::ActionExponent &,
+		const tag::Spin &, const Function::ActionExponent &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Manifold::ActionExponent & ) const;
+		const tag::Spin &, const Function::ActionExponent & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -1082,25 +1080,25 @@ class Manifold::Quotient : public Manifold::Core
 	// P = sA + sB,  s+t == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Manifold::ActionExponent & exp      ) const;
+		const tag::Spin &, const Function::ActionExponent & exp      ) const;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
 	  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Manifold::ActionExponent & exp      ) const;
+		const tag::Spin &, const Function::ActionExponent & exp      ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
 	  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
 	  double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Manifold::ActionExponent & exp      ) const;
+		const tag::Spin &, const Function::ActionExponent & exp      ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
   void interpolate ( Cell::Positive::Vertex * P,
 		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points,
-		const tag::Spin &, const Manifold::ActionExponent & exp                           ) const;
+		const tag::Spin &, const Function::ActionExponent & exp                           ) const;
 	
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden

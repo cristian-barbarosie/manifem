@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.08.12
+// manifold.cpp 2021.08.14
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -181,7 +181,7 @@ void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AB ) const
+  const tag::Spin &, const Function::ActionExponent & exp_AB ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed 
@@ -255,11 +255,11 @@ void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AB,
+  const tag::Spin &, const Function::ActionExponent & exp_AB,
   double u, Cell::Positive::Vertex * C,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AC,
+  const tag::Spin &, const Function::ActionExponent & exp_AC,
   double v, Cell::Positive::Vertex * D,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AD ) const
+  const tag::Spin &, const Function::ActionExponent & exp_AD ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
@@ -344,15 +344,15 @@ void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AB,
+  const tag::Spin &, const Function::ActionExponent & exp_AB,
   double u, Cell::Positive::Vertex * C,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AC,
+  const tag::Spin &, const Function::ActionExponent & exp_AC,
   double v, Cell::Positive::Vertex * D,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AD,
+  const tag::Spin &, const Function::ActionExponent & exp_AD,
   double w, Cell::Positive::Vertex * E,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AE,
+  const tag::Spin &, const Function::ActionExponent & exp_AE,
   double z, Cell::Positive::Vertex * F,
-  const tag::Spin &, const Manifold::ActionExponent & exp_AF ) const
+  const tag::Spin &, const Function::ActionExponent & exp_AF ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
