@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.08
+//   mesh.h  2021.08.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -529,8 +529,7 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 
 	// we are still in class Cell
 
-	inline void project ( ) const;
-	
+	inline void project ( ) const;  // both defined in manifold.h
 	inline void project ( const tag::Onto &, const Manifold m ) const;
 		
 #ifndef NDEBUG

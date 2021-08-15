@@ -1,5 +1,5 @@
 
-// manifold.h 2021.08.14
+// manifold.h 2021.08.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -59,9 +59,6 @@ class Manifold
 
 	class Core;
 	
-	class Action;  // a set of generators of a discrete group
-	               // could be translations, e.g. {(1,0),(0,1)} generating Z^2
-
 	Manifold::Core * core;
 
 	inline Manifold ( const tag::WhoseCoreIs &, Manifold::Core * c )
@@ -220,9 +217,11 @@ class Manifold::Core
 	double (*inner_prod) ( const Cell & P, const std::vector<double> & v,
 												 const std::vector<double> & w, const Function & metric );
 
-	inline Core ()
+	inline Core ( )
 	:	metric (1.), inner_prod { & Manifold::default_inner_prod }
 	{ }
+
+	virtual ~Core ( ) { };
 
 	virtual Function build_coord_func
 		( const tag::lagrange &, const tag::OfDegree &, size_t d ) = 0;
@@ -1032,19 +1031,6 @@ inline Manifold::Parametric::Parametric ( const Manifold & m, const Function::Eq
 //-----------------------------------------------------------------------------------------
 
 
-class Manifold::Action
-
-// a generator of a discrete group
-
-{	public :
-
-	size_t dim;
-	
-};  // end of class Manifold::Quotient
-
-//-----------------------------------------------------------------------------------------
-
-
 class Manifold::Quotient : public Manifold::Core
 
 // a Euclidian manifold divided by a group of actions
@@ -1053,9 +1039,19 @@ class Manifold::Quotient : public Manifold::Core
 
 	Manifold base_space;  // wrap around a Manifold::Euclid
 	
-	Manifold::Action act;  // set of generators for a discrete group
+	std::vector < Function::Action > actions;  // set of generators for a discrete group
 
-	inline Quotient ( ) : Manifold::Core(), base_space ( tag::non_existent ) { }
+	inline Quotient ( ) : Manifold::Core(), base_space ( tag::non_existent )
+	{ Function::vertex_for_multivalued = Cell ( tag::vertex );  }
+
+	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
+	//   virtual from Manifold::Core, here execution forbidden
+	
+	Function get_coord_func ( ) const;  // virtual from Manifold::Core
+
+	void set_coords ( const Function co );  // virtual from Manifold::Core
+
+	void project ( Cell::Positive::Vertex * ) const;  // virtual from Manifold::Core
 
 	// P = sA + sB,  s+t == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -1099,52 +1095,7 @@ class Manifold::Quotient : public Manifold::Core
 		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points,
 		const tag::Spin &, const Function::ActionExponent & exp                           ) const;
 	
-	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
-	//   virtual from Manifold::Core, here execution forbidden
-	
-	Function get_coord_func ( ) const;  // virtual from Manifold::Core
-
-	void set_coords ( const Function co );  // virtual from Manifold::Core
-
-	void project ( Cell::Positive::Vertex * ) const;  // virtual from Manifold::Core
-
-	class OneAction;  class TwoActions;  class ThreeActions;  // to delete
-
 };  // end of class Manifold::Quotient
-
-//-----------------------------------------------------------------------------------------
-
-
-class Manifold::Quotient::OneAction : public Manifold::Quotient
-// to delete
-
-{	public :
-
-	
-};  // end of class Manifold::Euclid
-
-//-----------------------------------------------------------------------------------------
-
-
-class Manifold::Quotient::TwoActions : public Manifold::Quotient
-// to delete
-
-{	public :
-
-	Function act1, act2;
-	
-};  // end of class Manifold::Quotient::TwoActions
-
-//-----------------------------------------------------------------------------------------
-
-
-class Manifold::Quotient::ThreeActions : public Manifold::Quotient
-
-{	public :
-
-	Function act1, act2, act3;
-	
-};  // end of class Manifold::Quotient::ThreeActions
 
 //-----------------------------------------------------------------------------------------
 

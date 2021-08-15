@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.14
+// function.cpp 2021.08.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -23,12 +23,15 @@
 #include <sstream>
 
 #include "function.h"
+#include "manifold.h"
 
 using namespace maniFEM;
 
 //-----------------------------------------------------------------------------------------//
 
 unsigned int Function::total_cores { 0 };
+Cell Function::vertex_for_multivalued ( tag::non_existent );
+size_t Function::Action::counter { 0 };
 
 #ifndef NDEBUG
 std::map < const Function::Core*, std::string > Function::name;
@@ -258,6 +261,10 @@ std::vector<double> Function::Aggregate::get_value_on_cell
 // virtual from Function::Vector
 { assert ( false );  }
 
+void Function::CoupledWithField::Scalar::set_value ( double v )
+// virtual from Function::Scalar
+{ assert ( false );  }
+
 double Function::CoupledWithField::Scalar::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
 { return this->field->on_cell(cll);  }
@@ -266,34 +273,122 @@ double Function::CoupledWithField::Scalar::get_value_on_cell ( Cell::Core * cll 
 double Function::CoupledWithField::Scalar::get_value_on_cell
 ( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
 // virtual from Function::Scalar
-{ assert ( false );  }
+{ return this->field->on_cell(cll);  }
+// { return this->field->on_cell(cll).reference();  }
 
 void Function::Diffeomorphism::OneDim::set_value ( double v )
 // virtual from Function::Scalar
 { assert ( false );  }
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell ( Cell::Core * cll ) const
-// virtual from Function::Scalar
-{ assert ( false );  }
+{ assert ( false );  }  // virtual from Function::Scalar
+	
+double Function::Diffeomorphism::OneDim::get_value_on_cell
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{ assert ( false );  }  // virtual from Function::Scalar
 	
 std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
 ( Cell::Core * cll ) const  // virtual from Function::Vector
 { return this->field->on_cell(cll);  }
 	
+std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{ assert ( false );  }  // virtual from Function::Vector
+	
 std::vector<double> Function::Immersion::get_value_on_cell ( Cell::Core * cll ) const
-// virtual from Function::Vector
-{ assert ( false );  }
+{ assert ( false );  }  // virtual from Function::Vector
 
-void Function::Composition::set_value ( double v )
-// virtual from Function::Scalar
+std::vector<double> Function::Immersion::get_value_on_cell
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{ assert ( false );  }  // virtual from Function::Vector
+
+void Function::Composition::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
-// virtual from Function::Vector
+// virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	// we assume here that cll lives in master coordinates
 	return base_scalar->get_value_on_cell(cll);                   }
+
+double Function::Composition::get_value_on_cell  // virtual from Function::Scalar
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{ assert ( false );  }
+	
+void Function::Scalar::MultiValued::set_value ( double v )  // virtual from Function::Scalar
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
+		< Function::Core*, Function::Scalar* > ( this->base.core );
+	base_scalar->set_value ( v );                                 }
+
+double Function::Scalar::MultiValued::get_value_on_cell ( Cell::Core * cll ) const
+// virtual from Function::Scalar
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
+		< Function::Core*, Function::Scalar* > ( this->base.core );
+	return base_scalar->get_value_on_cell(cll);                   }
+
+double Function::Scalar::MultiValued::get_value_on_cell  // virtual from Function::Scalar
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
+		< Function::Core*, Function::Scalar* > ( this->base.core );
+	Manifold::Quotient * manif = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
+	size_t n = exp.size();
+	assert ( manif->actions == this->actions );
+	assert ( this->actions.size() == n );
+	assert ( this->transf.size() == n );
+	assert ( this->inv_transf.size() == n );
+	Function coord = Manifold::working.coordinates();
+	Cell c ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	coord ( Function::vertex_for_multivalued ) = coord(c);
+	for ( size_t i = 0; i < n; i++ )
+	{	short int exp_i = exp[i];
+		if ( exp_i > 0 )
+		{	size_t abs_exp_i = exp_i;
+			for ( size_t j = 0; j < abs_exp_i; j++ )
+				coord ( Function::vertex_for_multivalued ) =
+					this->transf[i] ( Function::vertex_for_multivalued );  }
+		if ( exp_i < 0 )
+		{	size_t abs_exp_i = -exp_i;
+			for ( size_t j = 0; j < abs_exp_i; j++ )
+				coord ( Function::vertex_for_multivalued ) =
+					this->inv_transf[i] ( Function::vertex_for_multivalued );  }  }
+	return base_scalar->get_value_on_cell ( Function::vertex_for_multivalued .core );     }
+
+std::vector<double> Function::Vector::MultiValued::get_value_on_cell ( Cell::Core * cll ) const
+// virtual from Function::Vector
+{	Function::Vector * base_vector = tag::Util::assert_cast
+		< Function::Core*, Function::Vector* > ( this->base.core );
+	return base_vector->get_value_on_cell(cll);                   }
+
+std::vector<double> Function::Vector::MultiValued::get_value_on_cell
+// virtual from Function::Vector
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{	Function::Vector * base_vector = tag::Util::assert_cast
+		< Function::Core*, Function::Vector* > ( this->base.core );
+	Manifold::Quotient * manif = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
+	size_t n = exp.size();
+	assert ( manif->actions == this->actions );
+	assert ( this->actions.size() == n );
+	assert ( this->transf.size() == n );
+	assert ( this->inv_transf.size() == n );
+	Function coord = Manifold::working.coordinates();
+	Cell c ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+	coord ( Function::vertex_for_multivalued ) = coord(c);
+	for ( size_t i = 0; i < n; i++ )
+	{	short int exp_i = exp[i];
+		if ( exp_i > 0 )
+		{	size_t abs_exp_i = exp_i;
+			for ( size_t j = 0; j < abs_exp_i; j++ )
+				coord ( Function::vertex_for_multivalued ) =
+					this->transf[i] ( Function::vertex_for_multivalued );  }
+		if ( exp_i < 0 )
+		{	size_t abs_exp_i = -exp_i;
+			for ( size_t j = 0; j < abs_exp_i; j++ )
+				coord ( Function::vertex_for_multivalued ) =
+					this->inv_transf[i] ( Function::vertex_for_multivalued );  }  }
+	return base_vector->get_value_on_cell ( Function::vertex_for_multivalued .core );      }
 
 //-----------------------------------------------------------------------------------------//
 	
@@ -307,6 +402,7 @@ double Function::ArithmeticExpression::set_value_on_cell
 	
 std::vector<double> Function::Aggregate::set_value_on_cell
 ( Cell::Core * cll, const std::vector<double> & x )  // virtual from Function::Vector
+// there should be a faster way !!
 { size_t n = this->nb_of_components();
 	assert ( n == x.size() );
 	for ( size_t i = 0; i < n; i++ )

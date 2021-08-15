@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.08.14
+// manifold.cpp 2021.08.15
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -64,6 +64,10 @@ Function Manifold::Parametric::build_coord_func
 // virtual from Manifold::Core
 {	assert ( false );  }
 
+Function Manifold::Quotient::build_coord_func
+( const tag::lagrange &, const tag::OfDegree &, size_t deg )
+{	assert ( false );  }  // virtual from Manifold::Core
+
 //-----------------------------------------------------------------------------------------
 	
 Function Manifold::Euclid::get_coord_func ( ) const  // virtual from Manifold::Core
@@ -74,6 +78,9 @@ Function Manifold::Implicit::get_coord_func ( ) const  // virtual from Manifold:
 
 Function Manifold::Parametric::get_coord_func ( ) const  // virtual from Manifold::Core
 {	return this->surrounding_space.coordinates();  }
+
+Function Manifold::Quotient::get_coord_func ( ) const  // virtual from Manifold::Core
+{	return this->base_space.coordinates();  }
 
 //-----------------------------------------------------------------------------------------
 
@@ -91,6 +98,9 @@ void Manifold::Parametric::set_coords ( const Function co )  // virtual from Man
 	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
 	assert ( m_euclid );
 	m_euclid->coord_func = co;                                                 }
+
+void Manifold::Quotient::set_coords ( const Function co )
+{	assert ( false );  }  // virtual from Manifold::Core
 
 //-----------------------------------------------------------------------------------------
 
@@ -593,6 +603,9 @@ void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 		Function::Scalar * expr_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( it->second.core );
 		coord_scalar->set_value_on_cell ( P_c, expr_scalar->get_value_on_cell ( P_c ) );  }  }
+
+
+void Manifold::Quotient::project ( Cell::Positive::Vertex * P_c ) const  { }
 
 //-----------------------------------------------------------------------------------------
 

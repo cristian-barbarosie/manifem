@@ -1,5 +1,5 @@
 
-// function.h 2021.08.14
+// function.h 2021.08.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -116,8 +116,10 @@ class Function
 	inline void set_core_to_null ( );
 	inline void change_core_to ( Function::Core * );
 	
-	class TakenOnCell;  class TakenOnCellWithSpin;
 	typedef std::vector < short int > ActionExponent;
+	// see paragraph ** in the manual
+	
+	class TakenOnCell;  class TakenOnCellWithSpin;
 	inline Function::TakenOnCell operator() ( const Cell & cll ) const;
 	inline Function::TakenOnCellWithSpin operator()
 	( Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const;
@@ -136,9 +138,13 @@ class Function
 	class Vector;  class Aggregate;  class CoupledWithField;
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
-	class MultiValued;  class Action;
 	class Equality;
 
+	class Action;  // a generator of a discrete group
+	// an action will act on functions, particularly on coordinates of a quotient manifold
+
+	static Cell vertex_for_multivalued;
+	
 };  // end of  class Function
 
 
@@ -254,7 +260,10 @@ class Function::Scalar : public Function::Core
 	// string repr ( const Function::From & from = Function::from_void )
 	//   stays pure virtual from Function::Core
 	#endif
-};
+
+	class MultiValued;  
+
+};  // end of class Function::Scalar
 
 
 //-----------------------------------------------------------------------------------------//
@@ -749,7 +758,10 @@ class Function::Vector : public Function::Core
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core, here forbids execution
 	#endif
-};
+
+	class MultiValued;
+	
+};  // end of class Function::Vector
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1421,13 +1433,35 @@ inline Function smooth_max
 //-----------------------------------------------------------------------------------------//
 
 
+class Function::Action
+
+// a generator of a discrete group
+
+{	public :
+
+	static size_t counter;
+	size_t id;
+
+	inline Action ( )
+	: id { this->counter }	
+	{	counter++;  }
+
+};  // end of class Function::Action
+
+
+inline bool operator== ( const Function::Action & a, const Function::Action & b )
+{	return a.id == b.id;  }
+
+//-----------------------------------------------------------------------------------------
+
+
 class Function::Scalar::MultiValued : public Function::Scalar
 
 // here (finally) the method get_value_on_cell with tag::spin is meaningful
 // suppose 'exp' is a pair of short integers (i,j)
 // then the above refered method checks that the 'actions' match
 // those of the current working manifold
-// then takes the coordinates of the cell, applies to  them the first action 'i' times
+// then takes the coordinates of the cell, applies to them the first action 'i' times
 // then applies the second action 'j' times (recall the group should be commutative)
 // then sets the coordinates of a temporary (inner) vertex
 // and finally computes the value of the 'base' function on this inner cell
@@ -1435,18 +1469,16 @@ class Function::Scalar::MultiValued : public Function::Scalar
 
 {	public :
 
-	static Cell inner_vertex;
-	
 	Function base;  // should be Function::Scalar
-	std::vector < Function > transf;
-	std::vector < Manifold::Action > actions;
+	std::vector < Function > transf, inv_transf;
+	std::vector < Function::Action > actions;
 
 	inline MultiValued ( double c )
 	:	base {  c }
 	{ }
 
-	inline MultiValued ( const Function::MultiValued & ) = delete;
-	inline MultiValued ( Function::MultiValued && ) = delete;
+	inline MultiValued ( const Function::Scalar::MultiValued & ) = delete;
+	inline MultiValued ( Function::Scalar::MultiValued && ) = delete;
 	
 	inline Function::Scalar::MultiValued operator=
 	( const Function::Scalar::MultiValued & ) = delete;
@@ -1455,6 +1487,8 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	size_t nb_of_components ( ) const;  // virtual from Function::Core
 
 	Function component ( size_t i ); // virtual from Function::Core
+
+	void set_value ( double );  // virtual from Function::Scalar
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
@@ -1485,15 +1519,15 @@ class Function::Vector::MultiValued : public Function::Vector
 {	public :
 
 	Function base;  //  should be Funcion::Vecctor
-	std::vector < Function > transf;
-	std::vector < Manifold::Action > actions;
+	std::vector < Function > transf, inv_transf;
+	std::vector < Function::Action > actions;
 
 	inline MultiValued ( double c )
 	:	base {  c }
 	{ }
 
-	inline MultiValued ( const Function::MultiValued & ) = delete;
-	inline MultiValued ( Function::MultiValued && ) = delete;
+	inline MultiValued ( const Function::Vector::MultiValued & ) = delete;
+	inline MultiValued ( Function::Vector::MultiValued && ) = delete;
 	
 	inline Function::Vector::MultiValued operator=
 	( const Function::Vector::MultiValued & ) = delete;
@@ -1506,8 +1540,8 @@ class Function::Vector::MultiValued : public Function::Vector
 	std::vector < double > get_value_on_cell ( Cell::Core * ) const;
 	std::vector < double > get_value_on_cell
 	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
-	std::vector < double > set_value_on_cell ( Cell::Core *, const double & );
-	//  virtual from Function::Vector
+	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
+	// virtual from Function::Vector
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
