@@ -16,7 +16,7 @@ int main () {
 	// xy is a map defined on our future mesh with values in RR2 :
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 
-	// we can extract components of xyz using the [] operator :
+	// we can extract components of xy using the [] operator :
 	Function x = xy[0],  y = xy[1];
 
 	Cell A ( tag::vertex );  x(A) = -1.;  y(A) = 0.;

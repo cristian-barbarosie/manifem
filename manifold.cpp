@@ -450,6 +450,13 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	this->project ( P );                                          }
 
 
+// P = sA + sB,  s+t == 1     virtual from Manifold::Core
+void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	const tag::Spin &, const Function::ActionExponent & exp                    ) const 
+{	assert ( false );  }
+
+
 // P = sA + sB + uC + vD,  s+t == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
@@ -458,6 +465,18 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 {	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                                      }
+
+
+// P = sA + sB + uC + vD,  s+t == 1     virtual from Manifold::Core
+void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Function::ActionExponent & ) const
+{	assert ( false );  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
@@ -471,10 +490,25 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	this->project ( P );                                                                  }
 
 
+// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
+void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double w, Cell::Positive::Vertex * E,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double z, Cell::Positive::Vertex * F,
+		const tag::Spin &, const Function::ActionExponent & ) const
+{	assert ( false );  }
+
+
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
-
 {	this->surrounding_space.core->interpolate ( P, coefs, points );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                            }
@@ -483,18 +517,35 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const
-
 {	this->surrounding_space.core->interpolate ( P, s, A, t, B );
 	this->project ( P );                                          }
+
+
+// P = sA + sB,  s+t == 1     virtual from Manifold::Core
+void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	const tag::Spin &, const Function::ActionExponent & exp                    ) const 
+{	assert ( false );  }
 
 
 // P = sA + sB + uC + vD,  s+t == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D ) const
-
 {	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D );
 	this->project ( P );                                                      }
+
+
+// P = sA + sB + uC + vD,  s+t == 1     virtual from Manifold::Core
+void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Function::ActionExponent & ) const
+{	assert ( false );  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
@@ -503,17 +554,94 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 	double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
 	double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
 //  virtual from Manifold::Core
-
 {	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );
 	this->project ( P );                                                                  }
+
+
+// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
+void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double w, Cell::Positive::Vertex * E,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double z, Cell::Positive::Vertex * F,
+		const tag::Spin &, const Function::ActionExponent & ) const
+{	assert ( false );  }
 
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
-
 {	this->surrounding_space.core->interpolate ( P, coefs, points );
 	this->project ( P );                                            }
+
+
+// P = sA + sB,  s+t == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const
+{	this->base_space.core->interpolate ( P, s, A, t, B );  }
+
+
+// P = sA + sB,  s+t == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	const tag::Spin &, const Function::ActionExponent & exp                    ) const 
+{	assert ( false );  }
+
+
+// P = sA + sB + uC + vD,  s+t == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D ) const
+{	this->base_space.core->interpolate ( P, s, A, t, B, u, C, v, D );  }
+
+
+// P = sA + sB + uC + vD,  s+t == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Function::ActionExponent & ) const
+{	assert ( false );  }
+
+
+// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+	double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+	double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
+	double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
+//  virtual from Manifold::Core
+{	this->base_space.core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );  }
+
+
+// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+	  double s, Cell::Positive::Vertex * A,
+	  double t, Cell::Positive::Vertex * B,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double u, Cell::Positive::Vertex * C,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double v, Cell::Positive::Vertex * D,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double w, Cell::Positive::Vertex * E,
+		const tag::Spin &, const Function::ActionExponent &,
+	  double z, Cell::Positive::Vertex * F,
+		const tag::Spin &, const Function::ActionExponent & ) const
+{	assert ( false );  }
+
+
+// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
+void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
+	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
+{	this->base_space.core->interpolate ( P, coefs, points );   }
 
 //-----------------------------------------------------------------------------------------
 

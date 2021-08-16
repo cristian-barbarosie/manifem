@@ -1,5 +1,5 @@
 
-// function.h 2021.08.15
+// function.h 2021.08.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -108,6 +108,9 @@ class Function
 	inline Function & operator= ( const Function & m );
 	
 	inline size_t nb_of_components ( ) const;
+
+	inline bool exists ( )
+	{	return this->core;  }
 
 	inline Function operator[] ( size_t ) const;
 
@@ -1441,16 +1444,53 @@ class Function::Action
 
 	static size_t counter;
 	size_t id;
+	
+	Function coords, transf;  // here we keep the coordinates function together with the composed ones
+	// just prior to the declaration of the respective quotient manifold
+	// the quotient manifold will then keep theese coordinates
+	// and then we can forget about them
 
 	inline Action ( )
-	: id { this->counter }	
-	{	counter++;  }
+	: id { Function::Action::counter }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	{	Function::Action::counter++;  }
 
+	struct Applied { class ToFunction;  };	
+	inline Function::Action::Applied::ToFunction operator() ( const Function & );
+		
 };  // end of class Function::Action
 
 
 inline bool operator== ( const Function::Action & a, const Function::Action & b )
 {	return a.id == b.id;  }
+
+
+class Function::Action::Applied::ToFunction
+
+// a temporary object returned by Function::Action::operator()
+// useful for describing an action,
+// prior to the declaration of the respective quotient manifold
+
+{	public :
+
+	Function::Action & act;
+	Function fun;
+
+	inline ToFunction ( Function::Action & a, const Function & f )
+	:	act { a }, fun { f }
+	{	}
+		
+	inline void operator= (const Function & );
+
+};  // end of class Function::Action::Applied::ToFunction
+
+
+inline Function::Action::Applied::ToFunction Function::Action::operator() ( const Function & f )
+{	return Function::Action::Applied::ToFunction ( *this, f );  }
+
+
+inline void Function::Action::Applied::ToFunction::operator= (const Function & f )
+{ this->act.coords = this->fun;
+	this->act.transf = f;         }
 
 //-----------------------------------------------------------------------------------------
 
