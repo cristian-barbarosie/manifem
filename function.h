@@ -50,7 +50,9 @@ namespace tag
 	struct LessThan { };  static const LessThan less_than;
 	struct IfLessThan { };  static const IfLessThan if_less_than;
 	struct Otherwise { };  static const Otherwise otherwise;
-	struct Spin { };  static const Spin spin;                              }
+	struct Spin { };  static const Spin spin;
+	struct Through { };  static const Through through;
+	struct Becomes { };  static const Becomes becomes;                         }
 	
 
 class Manifold;
@@ -103,6 +105,23 @@ class Function
 	// an 'expr'ession involving master coordinates ( e.g.  1. - xi - eta )
 	// composed with a map (diffeomorphism or immersion) sending it in the physical space
 
+	class Action;  // a generator of a discrete group
+	// an action will act on functions, particularly on coordinates of a quotient manifold
+
+	// three constructors below are incomplete
+	inline Function ( const tag::Through &, const Function::Action &,
+	                  const tag::Becomes &, const Function &         );
+ 	inline Function ( const tag::Through &, const Function::Action &,
+	                  const tag::Becomes &, const Function &,
+	                  const tag::Through &, const Function::Action &,
+	                  const tag::Becomes &, const Function &         );
+	inline Function ( const tag::Through &, const Function::Action &,
+	                  const tag::Becomes &, const Function &,
+	                  const tag::Through &, const Function::Action &,
+	                  const tag::Becomes &, const Function &,
+	                  const tag::Through &, const Function::Action &,
+	                  const tag::Becomes &, const Function &         );
+
 	inline ~Function();
 
 	inline Function & operator= ( const Function & m );
@@ -118,6 +137,19 @@ class Function
 	inline void set_core ( Function::Core *, const tag::PreviouslyNonExistent & );
 	inline void set_core_to_null ( );
 	inline void change_core_to ( Function::Core * );
+
+	inline Function multivalued ( const tag::Through &, const Function::Action &,
+	                              const tag::Becomes &, const Function &         );
+ 	inline Function multivalued ( const tag::Through &, const Function::Action &,
+	                              const tag::Becomes &, const Function &,
+	                              const tag::Through &, const Function::Action &,
+	                              const tag::Becomes &, const Function &         );
+	inline Function multivalued ( const tag::Through &, const Function::Action &,
+	                              const tag::Becomes &, const Function &,
+	                              const tag::Through &, const Function::Action &,
+	                              const tag::Becomes &, const Function &,
+	                              const tag::Through &, const Function::Action &,
+	                              const tag::Becomes &, const Function &         );
 	
 	typedef std::vector < short int > ActionExponent;
 	// see paragraph ** in the manual
@@ -142,9 +174,6 @@ class Function
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
 	class Equality;
-
-	class Action;  // a generator of a discrete group
-	// an action will act on functions, particularly on coordinates of a quotient manifold
 
 	static Cell vertex_for_multivalued;
 	
@@ -1513,9 +1542,32 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	std::vector < Function > transf, inv_transf;
 	std::vector < Function::Action > actions;
 
-	inline MultiValued ( double c )
-	:	base {  c }
-	{ }
+	inline MultiValued ( const Function & b,
+	  const tag::Through &, const Function::Action & g,
+		const tag::Becomes &, const Function & f         )
+	:	base { b }, transf { { f } }, inv_transf { }
+	{	// assert ( Manifold::Current.actions == { g } );
+	}
+
+	inline MultiValued ( const Function & b,
+	  const tag::Through &, const Function::Action & g1,
+	  const tag::Becomes &, const Function & f1,
+		const tag::Through &, const Function::Action & g2,
+		const tag::Becomes &, const Function & f2         )
+	:	base { b }, transf { { f1, f2 } }, inv_transf { }
+	{	// assert ( Manifold::Current.actions == { g1, g2 } );
+	}
+
+	inline MultiValued ( const Function & b,
+	  const tag::Through &, const Function::Action & g1,
+	  const tag::Becomes &, const Function & f1,
+		const tag::Through &, const Function::Action & g2,
+	  const tag::Becomes &, const Function & f2,
+		const tag::Through &, const Function::Action & g3,
+		const tag::Becomes &, const Function & f3         )
+	:	base { b }, transf { { f1, f2, f3 } }, inv_transf { }
+	{	// assert ( Manifold::Current.actions == { g1, g2, g3 } );
+	}
 
 	inline MultiValued ( const Function::Scalar::MultiValued & ) = delete;
 	inline MultiValued ( Function::Scalar::MultiValued && ) = delete;
@@ -1524,9 +1576,8 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	( const Function::Scalar::MultiValued & ) = delete;
 	inline Function::Scalar::MultiValued operator= ( Function::Scalar::MultiValued && ) = delete;
 
-	size_t nb_of_components ( ) const;  // virtual from Function::Core
-
-	Function component ( size_t i ); // virtual from Function::Core
+	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
+	// Function component ( size_t i ) defined by Function::Scalar, returns self
 
 	void set_value ( double );  // virtual from Function::Scalar
 
@@ -1595,6 +1646,41 @@ class Function::Vector::MultiValued : public Function::Vector
 	#endif
 
 };  // end of  class Function::Vecttor::Multivalued
+
+//-----------------------------------------------------------------------------------------//
+
+
+inline Function Function::multivalued
+( const tag::Through &, const Function::Action & g,
+  const tag::Becomes &, const Function & f         )
+
+{	return Function ( tag::whose_core_is,
+		new Function::Scalar::MultiValued ( *this, tag::through, g, tag::becomes, f ) );  }
+
+
+inline Function Function::multivalued
+( const tag::Through &, const Function::Action & g1,
+  const tag::Becomes &, const Function & f1,
+  const tag::Through &, const Function::Action & g2,
+  const tag::Becomes &, const Function & f2         )
+
+{	return Function ( tag::whose_core_is,
+		new Function::Scalar::MultiValued ( *this, tag::through, g1, tag::becomes, f1,
+		                                           tag::through, g2, tag::becomes, f2 ) );  }
+
+
+inline Function Function::multivalued
+( const tag::Through &, const Function::Action & g1,
+  const tag::Becomes &, const Function & f1,
+  const tag::Through &, const Function::Action & g2,
+  const tag::Becomes &, const Function & f2,
+  const tag::Through &, const Function::Action & g3,
+  const tag::Becomes &, const Function & f3         )
+
+{	return Function ( tag::whose_core_is,
+		new Function::Scalar::MultiValued ( *this, tag::through, g1, tag::becomes, f1,
+		                                           tag::through, g2, tag::becomes, f2,
+		                                           tag::through, g3, tag::becomes, f3 ) );  }
 
 //-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//

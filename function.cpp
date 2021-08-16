@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.15
+// function.cpp 2021.08.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -431,6 +431,10 @@ double Function::Composition::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Vector
 { assert ( false );  }
 
+double Function::Scalar::MultiValued::set_value_on_cell
+( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
+{ assert ( false );  }
+
 //-----------------------------------------------------------------------------------------//
 
 #ifndef NDEBUG	
@@ -497,9 +501,13 @@ std::string Function::Composition::repr ( const Function::From & from ) const
 std::string Function::Diffeomorphism::OneDim::repr ( const Function::From & from ) const
 { assert ( false );  }
 
+std::string Function::Scalar::MultiValued::repr ( const Function::From & from ) const
+{	return "multi" + this->base.core->repr ( Function::from_function );  }
+
 #endif // DEBUG
 
 //-----------------------------------------------------------------------------------------//
+
 
 Function maniFEM::operator+ ( const Function & f, const Function & g )
 
@@ -668,6 +676,9 @@ Function Function::Vector::deriv ( Function x ) const
 { assert ( false );  }
 
 Function Function::Diffeomorphism::OneDim::deriv ( Function x ) const
+{ assert ( false );  }
+
+Function Function::Scalar::MultiValued::deriv ( Function x ) const
 { assert ( false );  }
 
 //-------------------------------------------------------------------------------------
@@ -888,6 +899,11 @@ Function Function::Diffeomorphism::OneDim::replace
 Function Function::Composition::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core, through Function::Vector
 {	return Function ( tag::whose_core_is, this );  }
+
+Function Function::Scalar::MultiValued::replace
+( const Function & x, const Function & y )
+//  virtual from Function::Vector
+{	assert ( false );  }
 
 //--------------------------------------------------------------------------
 
