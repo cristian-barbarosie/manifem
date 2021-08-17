@@ -331,28 +331,38 @@ double Function::Scalar::MultiValued::get_value_on_cell  // virtual from Functio
 ( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
-	Manifold::Quotient * manif = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
+	// Manifold::Quotient * manif = tag::Util::assert_cast
+	// 	< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
 	size_t n = exp.size();
-	assert ( manif->actions == this->actions );
+	// assert ( manif->actions == this->actions );
+	std::cout << "aha 1" << std::endl << std::flush;
 	assert ( this->actions.size() == n );
 	assert ( this->transf.size() == n );
-	assert ( this->inv_transf.size() == n );
+	// assert ( this->inv_transf.size() == n );
+	std::cout << "aha 2" << std::endl << std::flush;
 	Function coord = Manifold::working.coordinates();
 	Cell c ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
-	coord ( Function::vertex_for_multivalued ) = coord(c);
+	std::cout << "aha 3" << std::endl << std::flush;
+	coord ( Function::vertex_for_multivalued ) = coord ( c );
+	std::cout << "aha 4" << std::endl << std::flush;
 	for ( size_t i = 0; i < n; i++ )
 	{	short int exp_i = exp[i];
 		if ( exp_i > 0 )
 		{	size_t abs_exp_i = exp_i;
+			std::cout << "aha 5" << std::endl << std::flush;
 			for ( size_t j = 0; j < abs_exp_i; j++ )
+			{	std::cout << "aha 6" << std::endl << std::flush;
 				coord ( Function::vertex_for_multivalued ) =
 					this->transf[i] ( Function::vertex_for_multivalued );  }
+			std::cout << "aha 7" << std::endl << std::flush;
+		}
 		if ( exp_i < 0 )
 		{	size_t abs_exp_i = -exp_i;
+			assert ( false );
 			for ( size_t j = 0; j < abs_exp_i; j++ )
 				coord ( Function::vertex_for_multivalued ) =
 					this->inv_transf[i] ( Function::vertex_for_multivalued );  }  }
+	std::cout << "aha 9" << std::endl << std::flush;
 	return base_scalar->get_value_on_cell ( Function::vertex_for_multivalued .core );     }
 
 std::vector<double> Function::Vector::MultiValued::get_value_on_cell ( Cell::Core * cll ) const

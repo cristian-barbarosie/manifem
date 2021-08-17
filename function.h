@@ -1474,7 +1474,8 @@ class Function::Action
 	static size_t counter;
 	size_t id;
 	
-	Function coords, transf;  // here we keep the coordinates function together with the composed ones
+	Function coords, transf;
+	// here we keep the coordinates function together with the composed ones
 	// just prior to the declaration of the respective quotient manifold
 	// the quotient manifold will then keep theese coordinates
 	// and then we can forget about them
@@ -1545,8 +1546,8 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	inline MultiValued ( const Function & b,
 	  const tag::Through &, const Function::Action & g,
 		const tag::Becomes &, const Function & f         )
-	:	base { b }, transf { { f } }, inv_transf { }
-	{	// assert ( Manifold::Current.actions == { g } );
+	:	base { b }, transf { { f } }, inv_transf { }, actions { { g } }
+	{	// assert ( Manifold::working.actions == { g } );
 	}
 
 	inline MultiValued ( const Function & b,
@@ -1554,8 +1555,8 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	  const tag::Becomes &, const Function & f1,
 		const tag::Through &, const Function::Action & g2,
 		const tag::Becomes &, const Function & f2         )
-	:	base { b }, transf { { f1, f2 } }, inv_transf { }
-	{	// assert ( Manifold::Current.actions == { g1, g2 } );
+	:	base { b }, transf { { f1, f2 } }, inv_transf { }, actions { { g1, g2 } }
+	{	// assert ( Manifold::working.actions == { g1, g2 } );
 	}
 
 	inline MultiValued ( const Function & b,
@@ -1565,8 +1566,8 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	  const tag::Becomes &, const Function & f2,
 		const tag::Through &, const Function::Action & g3,
 		const tag::Becomes &, const Function & f3         )
-	:	base { b }, transf { { f1, f2, f3 } }, inv_transf { }
-	{	// assert ( Manifold::Current.actions == { g1, g2, g3 } );
+	:	base { b }, transf { { f1, f2, f3 } }, inv_transf { }, actions { { g1, g2, g3 } }
+	{	// assert ( Manifold::working.actions == { g1, g2, g3 } );
 	}
 
 	inline MultiValued ( const Function::Scalar::MultiValued & ) = delete;
@@ -1714,6 +1715,7 @@ class Function::TakenOnCell
 			return *this;                            }
 		else
 		{	(*this) = static_cast <std::vector<double>> (other);
+			std::cout << "operator=" << std::endl << std::flush;
 			return *this;                                          }  }
 	
 	inline operator double() const

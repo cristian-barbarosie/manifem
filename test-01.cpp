@@ -16,18 +16,23 @@ int main ()
 	g1 ( xy ) = (x+1.) && y;
 	g2 ( xy ) = x && (y+1.);
 
-	// create multi-functions xm, ym (for testing purposes)
-	Function xm = x.multivalued ( tag::through, g1, tag::becomes, x+1.5,
-	                              tag::through, g2, tag::becomes, x-0.2 );
+	// create a multi-valued function xm (for testing purposes)
+	Function xm ( tag::Lagrange, tag::of_degree, 1, tag::multivalued );
+	xm.property ( tag::through, g1, tag::becomes, xm + 1.5 );
+	xm.property ( tag::through, g2, tag::becomes, xm - 0.2 );
 
+	Function::vertex_for_multivalued = Cell ( tag::vertex );
 	Cell V ( tag::vertex );  x(V) = 1.1;  y(V) = 22.2;
 
-	std::cout << xm(V) << std::endl;
-	std::cout << "00 " << xm ( V, tag::spin, {0,0} ) << std::endl;
-	std::cout << "01 " << xm ( V, tag::spin, {0,1} ) << std::endl;
-	std::cout << "10 " << xm ( V, tag::spin, {1,0} ) << std::endl;
-	std::cout << "11 " << xm ( V, tag::spin, {1,1} ) << std::endl;
-	std::cout << "12 " << xm ( V, tag::spin, {1,2} ) << std::endl;
+	std::cout << xm(V) << std::endl << std::flush;
+	std::cout << "00 " << std::endl << std::flush;
+	std::cout << xm ( V, tag::spin, {0,0} ) << std::endl << std::flush;
+	std::cout << "10 " << std::endl << std::flush;
+	std::cout << xm ( V, tag::spin, {1,0} ) << std::endl << std::flush;
+	std::cout << "11 " << std::endl << std::flush;
+	std::cout << xm ( V, tag::spin, {1,1} ) << std::endl << std::flush;
+	std::cout << "12 " << std::endl << std::flush;
+	std::cout << xm ( V, tag::spin, {1,2} ) << std::endl << std::flush;
 	
 	// and divide RR2 by these equivalence relations
 	// Manifold torus_manif = RR2.quotient ( g1, g2 );
