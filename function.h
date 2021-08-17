@@ -1,5 +1,5 @@
 
-// function.h 2021.08.16
+// function.h 2021.08.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1701,7 +1701,7 @@ class Function::TakenOnCell
 	TakenOnCell ( const Function::TakenOnCell && other ) = delete;
 	
 	Function::TakenOnCell & operator= ( const Function::TakenOnCell & other )
-	{	if ( f->nb_of_components() == 1 )
+	{	if ( this->f->nb_of_components() == 1 )
 		{	(*this) = static_cast <double> (other);
 			return *this;                            }
 		else
@@ -1709,7 +1709,7 @@ class Function::TakenOnCell
 			return *this;                                          }  }
 
 	Function::TakenOnCell & operator= ( const Function::TakenOnCell && other )
-	{	if ( f->nb_of_components() == 1 )
+	{	if ( this->f->nb_of_components() == 1 )
 		{	(*this) = static_cast <double> (other);
 			return *this;                            }
 		else
@@ -1719,52 +1719,149 @@ class Function::TakenOnCell
 	inline operator double() const
 	// can be used like in  double x = f(cll)  or  cout << f(cll)
 	{	Function::Scalar * f_scalar =
-			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
-		return f_scalar->get_value_on_cell ( cll );                       }
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->get_value_on_cell ( this->cll );                            }
 		
 	inline double operator= ( const double & x )
 	// can be used like in  f(cll) = 2.0
 	{	Function::Scalar * f_scalar =
-			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
-		return f_scalar->set_value_on_cell ( cll, x );                  }
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell ( this->cll, x );                         }
 
 	inline double operator+= ( const double & x )
 	// can be used like in  f(cll) += 2.0
 	{	Function::Scalar * f_scalar =
-			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
-		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) + x ); }
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) + x );              }
 
 	inline double operator-= ( const double & x )
 	// can be used like in  f(cll) -= 2.0
 	{	Function::Scalar * f_scalar =
-			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
-		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) - x ); }
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) - x );              }
 
 	inline double operator*= ( const double & x )
 	// can be used like in  f(cll) *= 2.0
 	{	Function::Scalar * f_scalar =
-			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
-		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) * x ); }
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) * x );              }
 
 	inline double operator/= ( const double & x )
 	// can be used like in  f(cll) /= 2.0
 	{	Function::Scalar * f_scalar =
-			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( f );
-		return f_scalar->set_value_on_cell ( cll, f_scalar->get_value_on_cell(cll) / x ); }
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) / x );              }
 
 	inline operator std::vector<double>() const
 	// can be used like in  vector<double> vec = f(cll)
 	{	Function::Vector * f_vect =
-			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( f );
-	  return f_vect->get_value_on_cell ( cll );                         }
+			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
+	  return f_vect->get_value_on_cell ( this->cll );                              }
 		
 	inline std::vector<double> operator= ( const std::vector<double> & x )
 	// can be used like in  f(cll) = vec
 	{	Function::Vector * f_vect =
-			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( f );
-		return f_vect->set_value_on_cell ( cll, x );                      }
+			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
+		return f_vect->set_value_on_cell ( this->cll, x );                           }
 
 };  // end of class Function::TakenOnCell	
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::TakenOnCellWithSpin
+
+{	public :
+
+  Function::Core * f;
+	const Function::ActionExponent & spin;
+	
+	// Function::TakenOnCellWithSpin should only be used as temporary objects
+	// they should be immediately converted to a (reference to a) double or vector<double>
+	// so an ordinary pointer is OK here
+	
+	Cell::Core * cll;
+
+	TakenOnCellWithSpin ( const Function & ff, Cell & c, const Function::ActionExponent & exp )
+	:	f { ff.core }, spin { exp }, cll { c.core }
+	{	}
+
+	TakenOnCellWithSpin ( const Function::TakenOnCellWithSpin & other ) = delete;
+	TakenOnCellWithSpin ( const Function::TakenOnCellWithSpin && other ) = delete;
+	
+	Function::TakenOnCellWithSpin & operator= ( const Function::TakenOnCellWithSpin & other )
+	{	if ( this->f->nb_of_components() == 1 )
+		{	(*this) = static_cast <double> ( other );
+			return *this;                            }
+		else
+		{	(*this) = static_cast <std::vector<double>> ( other );
+			return *this;                                          }  }
+
+	Function::TakenOnCellWithSpin & operator= ( const Function::TakenOnCellWithSpin && other )
+	{	if ( this->f->nb_of_components() == 1 )
+		{	(*this) = static_cast <double> ( other );
+			return *this;                             }
+		else
+		{	(*this) = static_cast <std::vector<double>> ( other );
+			return *this;                                          }  }
+	
+	inline operator double() const
+	// can be used like in  double x = f(cll)  or  cout << f(cll)
+	{	Function::Scalar * f_scalar =
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->get_value_on_cell ( this->cll, tag::spin, this->spin );     }
+		
+	inline double operator= ( const double & x )
+	// can be used like in  f(cll) = 2.0
+	{	Function::Scalar * f_scalar =
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell ( this->cll, x );                         }
+
+	inline double operator+= ( const double & x )
+	// can be used like in  f(cll) += 2.0
+	{	Function::Scalar * f_scalar =
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) + x );              }
+
+	inline double operator-= ( const double & x )
+	// can be used like in  f(cll) -= 2.0
+	{	Function::Scalar * f_scalar =
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) - x );              }
+
+	inline double operator*= ( const double & x )
+	// can be used like in  f(cll) *= 2.0
+	{	Function::Scalar * f_scalar =
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) * x );              }
+
+	inline double operator/= ( const double & x )
+	// can be used like in  f(cll) /= 2.0
+	{	Function::Scalar * f_scalar =
+			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
+		return f_scalar->set_value_on_cell
+			( this->cll, f_scalar->get_value_on_cell ( this->cll ) / x );              }
+
+	inline operator std::vector<double>() const
+	// can be used like in  vector<double> vec = f(cll)
+	{	Function::Vector * f_vect =
+			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
+	  return f_vect->get_value_on_cell ( this->cll, tag::spin, this->spin );       }
+		
+	inline std::vector<double> operator= ( const std::vector<double> & x )
+	// can be used like in  f(cll) = vec
+	{	Function::Vector * f_vect =
+			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
+		return f_vect->set_value_on_cell ( this->cll, x );                           }
+
+};  // end of class Function::TakenOnCellWithSpin
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1801,6 +1898,11 @@ inline Function Function::operator[] ( size_t i ) const
 
 inline Function::TakenOnCell Function::operator() ( const Cell & cll ) const
 {	return Function::TakenOnCell { this->core, cll.core };   }
+
+
+inline Function::TakenOnCellWithSpin Function::operator()
+( Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+{	return Function::TakenOnCellWithSpin ( *this, cll, exp );   }
 
 
 }  // namespace maniFEM
