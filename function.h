@@ -1,5 +1,5 @@
 
-// function.h 2021.08.17
+// function.h 2021.08.18
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -274,6 +274,7 @@ class Function::Scalar : public Function::Core
 	size_t nb_of_components ( ) const;  // virtual from Function::Core, here returns 1
 
 	Function component ( size_t i ); // virtual from Function::Core
+	// never actually used for objects in this class because Function::operator[] returns self
 
 	virtual void set_value ( double ) = 0;  // only for constants
 
@@ -312,8 +313,11 @@ class Function::ArithmeticExpression : public Function::Scalar
 	inline ArithmeticExpression ( const Function::ArithmeticExpression & ) = delete;
 	inline ArithmeticExpression ( Function::ArithmeticExpression && ) = delete;
 	
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	// void set_value  stays pure virtual from Function::Scalar
 	
@@ -331,7 +335,8 @@ class Function::ArithmeticExpression : public Function::Scalar
 	// string repr ( const Function::From & from = Function::from_void )
 	//   stays pure virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::ArithmeticExpression
 
 //-----------------------------------------------------------------------------------------//
 
@@ -350,8 +355,11 @@ class Function::Constant : public Function::ArithmeticExpression
 	inline Function::Constant operator= ( const Function::Constant & ) = delete;
 	inline Function::Constant operator= ( Function::Constant && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar
 
@@ -374,7 +382,8 @@ class Function::Constant : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	// virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Constant
 
 //-----------------------------------------------------------------------------------------//
 
@@ -398,8 +407,11 @@ class Function::Sum : public Function::ArithmeticExpression
 	inline Function::Sum operator= ( const Function::Sum & ) = delete;
 	inline Function::Sum operator= ( Function::Sum && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -422,7 +434,8 @@ class Function::Sum : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Sum
 
 //-----------------------------------------------------------------------------------------//
 
@@ -440,8 +453,11 @@ class Function::Product : public Function::ArithmeticExpression
 	inline Function::Product operator= ( const Function::Product & ) = delete;
 	inline Function::Product operator= ( Function::Product && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -464,7 +480,8 @@ class Function::Product : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Product
 
 //-----------------------------------------------------------------------------------------//
 
@@ -485,8 +502,11 @@ class Function::Power : public Function::ArithmeticExpression
 	inline Function::Power operator= ( const Function::Power & ) = delete;
 	inline Function::Power operator= ( Function::Power && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -509,7 +529,8 @@ class Function::Power : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Power
 
 //-----------------------------------------------------------------------------------------//
 
@@ -528,8 +549,11 @@ class Function::Sqrt : public Function::ArithmeticExpression
 	inline Function::Sqrt operator= ( const Function::Sqrt & ) = delete;
 	inline Function::Sqrt operator= ( Function::Sqrt && ) = delete;
 	
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -552,7 +576,8 @@ class Function::Sqrt : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Sqrt
 
 //-----------------------------------------------------------------------------------------//
 
@@ -576,8 +601,11 @@ class Function::Sin : public Function::ArithmeticExpression
 	inline Function::Sin operator= ( const Function::Sin & ) = delete;
 	inline Function::Sin operator= ( Function::Sin && ) = delete;
 	
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -600,7 +628,8 @@ class Function::Sin : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Sin
 
 //-----------------------------------------------------------------------------------------//
 
@@ -624,8 +653,11 @@ class Function::Cos : public Function::ArithmeticExpression
 	inline Function::Cos operator= ( const Function::Cos & ) = delete;
 	inline Function::Cos operator= ( Function::Cos && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -648,7 +680,8 @@ class Function::Cos : public Function::ArithmeticExpression
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Cos
 
 //-----------------------------------------------------------------------------------------//
 
@@ -730,8 +763,11 @@ class Function::Step : public Function::ArithmeticExpression
 	inline Function::Step operator= ( const Function::Step & ) = delete;
 	inline Function::Step operator= ( Function::Step && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -816,7 +852,7 @@ class Function::Aggregate : public Function::Vector
 	inline Function::Aggregate operator= ( Function::Aggregate && ) = delete;
 
 	// 'nb_of_components' and 'component' are virtual from Function::Core
-	// overridden by Function::CoupledWithField::Vector
+	// later overridden by Function::CoupledWithField::Vector
 	size_t nb_of_components ( ) const;
 	Function component ( size_t i );
 	
@@ -838,7 +874,8 @@ class Function::Aggregate : public Function::Vector
 	// std::string repr ( const Function::From & from = Function::from_void )
 	//    defined by Function::Vector (execution forbidden)
 	#endif
-};
+
+};  // end of  class Function::Aggregate
 
 
 //-----------------------------------------------------------------------------------------//
@@ -940,8 +977,11 @@ class Function::Diffeomorphism::OneDim
 	inline Function::Diffeomorphism::OneDim operator=
 		( Function::Diffeomorphism::OneDim && ) = delete;
 	
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -983,8 +1023,7 @@ inline Function::Function ( const tag::Diffeomorphism &, const tag::OneDim &,
 
 //-----------------------------------------------------------------------------------------//
 
-class Function::Immersion
-: public Function::Vector, public Function::Map
+class Function::Immersion : public Function::Vector, public Function::Map
 
 // a map from a master manifold to a geometric manifold
 // geometric dimension striclty higher than master dimension
@@ -1184,8 +1223,11 @@ class Function::Composition : public Function::Scalar
 	inline Function::Composition operator= ( const Function::Composition & ) = delete;
 	inline Function::Composition operator= ( Function::Composition && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -1205,7 +1247,8 @@ class Function::Composition : public Function::Scalar
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::Composition
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1260,8 +1303,11 @@ class Function::CoupledWithField::Scalar
 	inline Function::CoupledWithField::Scalar operator=
 		( Function::CoupledWithField::Scalar && ) = delete;
 
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
 
 	void set_value ( double );  // virtual from Function::Scalar, execution forbidden
 
@@ -1281,7 +1327,8 @@ class Function::CoupledWithField::Scalar
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
 	#endif
-};
+
+};  // end of  class Function::CoupledWithField::Scalar
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1525,23 +1572,36 @@ inline void Function::Action::Applied::ToFunction::operator= (const Function & f
 //-----------------------------------------------------------------------------------------
 
 
-class Function::Scalar::MultiValued : public Function::Scalar
+class Function::MultiValued
+
+// classes Function::Scalar::MultiValued and Function::Vector::MultiValued inherit from here
+
+{	public :
+
+	Function base;
+
+	std::vector < Function::Action > actions;
+
+};  // end of class Function::Scalar::Multivalued
+
+//-----------------------------------------------------------------------------------------
+
+
+class Function::Scalar::MultiValued : public Function::MultiValued, public Function::Scalar
 
 // here (finally) the method get_value_on_cell with tag::spin is meaningful
 // suppose 'exp' is a pair of short integers (i,j)
 // then the above refered method checks that the 'actions' match
 // those of the current working manifold
-// then takes the coordinates of the cell, applies to them the first action 'i' times
+// then takes the value of 'base' on the cell, applies the first action 'i' times
 // then applies the second action 'j' times (recall the group should be commutative)
-// then sets the coordinates of a temporary (inner) vertex
-// and finally computes the value of the 'base' function on this inner cell
 // the vector of 'actions' is only used for the above refered checking operation
 
 {	public :
 
-	Function base;  // should be Function::Scalar
-	std::vector < Function > transf, inv_transf;
-	std::vector < Function::Action > actions;
+	// members inherited from Function::MultiValued :
+	// Function base  -- here should be Function::Scalar
+	// std::vector < Function::Action > actions
 
 	inline MultiValued ( const Function & b,
 	  const tag::Through &, const Function::Action & g,
@@ -1577,16 +1637,21 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	( const Function::Scalar::MultiValued & ) = delete;
 	inline Function::Scalar::MultiValued operator= ( Function::Scalar::MultiValued && ) = delete;
 
-	// size_t nb_of_components ( )  defined by Function::Scalar, returns 1
-	// Function component ( size_t i ) defined by Function::Scalar, returns self
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
 
-	void set_value ( double );  // virtual from Function::Scalar
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
+
+	void set_value ( double );  // virtual from Function::Scalar, delegates to base
 
 	double get_value_on_cell ( Cell::Core * ) const;
-	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	//  virtual from Function::Scalar, delegates to base
+
+	// double get_value_on_cell  with tag::spin  stays pure virtual from Function::Scalar
+
 	double set_value_on_cell ( Cell::Core *, const double & );
-	//  virtual from Function::Scalar
+	//   virtual from Function::Scalar, here execution forbidden
 
 	Function deriv ( Function ) const;
 	//  virtual from Function::Core
@@ -1599,24 +1664,153 @@ class Function::Scalar::MultiValued : public Function::Scalar
 	//  virtual from Function::Core
 	#endif
 
+	class JumpIsSum;  class JumpIsLinear;
+
 };  // end of class Function::Scalar::Multivalued
 
 //-----------------------------------------------------------------------------------------//
 
 
-class Function::Vector::MultiValued : public Function::Vector
+class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiValued
 
-// same as above, vector values
+// here the actions are mere translations on RR (sums)
 
 {	public :
 
-	Function base;  //  should be Funcion::Vecctor
-	std::vector < Function > transf, inv_transf;
-	std::vector < Function::Action > actions;
+	// members inherited from Function::MultiValued :
+	// Function base  -- here should be Function::Scalar
+	// std::vector < Function::Action > actions
+	
+	std::vector < double > beta;
+	// upon each action[i], the value v of the function becomes  v + beta[i]
+	
+	inline JumpIsSum ( const Function::Scalar::MultiValued::JumpIsSum & ) = delete;
+	inline JumpIsSum ( Function::Scalar::MultiValued::JumpIsSum && ) = delete;
+	
+	inline Function::Scalar::MultiValued::JumpIsSum operator=
+		( const Function::Scalar::MultiValued::JumpIsSum & ) = delete;
+	inline Function::Scalar::MultiValued::JumpIsSum operator=
+		( Function::Scalar::MultiValued::JumpIsSum && ) = delete;
 
-	inline MultiValued ( double c )
-	:	base {  c }
-	{ }
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
+
+	// void set_value ( double )
+	//   defined by Function::Scalar::Multivalued, delegates to base
+
+	// double get_value_on_cell ( Cell::Core * ) const;
+	//   defined by Function::Scalar::Multivalued, delegates to base
+
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	//  virtual from Function::Scalar
+	
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   defined by Function::Scalar::Multivalued, execution forbidden
+
+#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	//  virtual from Function::Core
+	#endif
+
+};  // end of class Function::Scalar::Multivalued::JumpIsSum
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::MultiValued
+
+// here the actions are linear (affine) maps on RR
+
+{	public :
+
+	// members inherited from Function::MultiValued :
+	// Function base  -- here should be Function::Scalar
+	// std::vector < Function::Action > actions
+	
+	std::vector < double > alpha;
+	double gamma;
+	// upon each action[i], the value v of the function becomes  alpha[i] * v + beta[i]
+	// group is commutative only if  beta[i] / (alpha[i]-1.)  does not depend on i
+	// we call  gamma  the common value, so  beta[i] = gamma * (alpha[i]-1.)
+	// upon action[i], the value v of the function becomes  alpha[i] * ( v - gamma ) + gamma
+	
+	inline JumpIsLinear ( const Function::Scalar::MultiValued::JumpIsLinear & ) = delete;
+	inline JumpIsLinear ( Function::Scalar::MultiValued::JumpIsLinear && ) = delete;
+	
+	inline Function::Scalar::MultiValued::JumpIsLinear operator=
+		( const Function::Scalar::MultiValued::JumpIsLinear & ) = delete;
+	inline Function::Scalar::MultiValued::JumpIsLinear operator=
+		( Function::Scalar::MultiValued::JumpIsLinear && ) = delete;
+
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
+
+	// void set_value ( double )
+	//   defined by Function::Scalar::Multivalued, delegates to base
+
+	// double get_value_on_cell ( Cell::Core * ) const;
+	//   defined by Function::Scalar::Multivalued, delegates to base
+
+	double get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	//  virtual from Function::Scalar
+	
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   defined by Function::Scalar::Multivalued, execution forbidden
+
+#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	//  virtual from Function::Core
+	#endif
+
+};  // end of class Function::Scalar::Multivalued::JumpIsLinear
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Vector::MultiValued : public Function::MultiValued, public Function::Vector
+
+// same as Function::Scalar::MultiValued, here with vector values
+
+{	public :
+
+	// members inherited from Function::MultiValued :
+	// Function base  -- here should be Function::Vector
+	// std::vector < Function::Action > actions
+
+	inline MultiValued ( const Function & b,
+	  const tag::Through &, const Function::Action & g,
+		const tag::Becomes &, const Function & f         )
+	:	base { b }, transf { { f } }, inv_transf { }, actions { { g } }
+	{	// assert ( Manifold::working.actions == { g } );
+	}
+
+	inline MultiValued ( const Function & b,
+	  const tag::Through &, const Function::Action & g1,
+	  const tag::Becomes &, const Function & f1,
+		const tag::Through &, const Function::Action & g2,
+		const tag::Becomes &, const Function & f2         )
+	:	base { b }, transf { { f1, f2 } }, inv_transf { }, actions { { g1, g2 } }
+	{	// assert ( Manifold::working.actions == { g1, g2 } );
+	}
+
+	inline MultiValued ( const Function & b,
+	  const tag::Through &, const Function::Action & g1,
+	  const tag::Becomes &, const Function & f1,
+		const tag::Through &, const Function::Action & g2,
+	  const tag::Becomes &, const Function & f2,
+		const tag::Through &, const Function::Action & g3,
+		const tag::Becomes &, const Function & f3         )
+	:	base { b }, transf { { f1, f2, f3 } }, inv_transf { }, actions { { g1, g2, g3 } }
+	{	// assert ( Manifold::working.actions == { g1, g2, g3 } );
+	}
 
 	inline MultiValued ( const Function::Vector::MultiValued & ) = delete;
 	inline MultiValued ( Function::Vector::MultiValued && ) = delete;
@@ -1629,10 +1823,14 @@ class Function::Vector::MultiValued : public Function::Vector
 
 	Function component ( size_t i ); // virtual from Function::Core
 
+	void set_value ( std::vector < double > );  // virtual from Function::Vector, delegates to base
+
 	std::vector < double > get_value_on_cell ( Cell::Core * ) const;
-	std::vector < double > get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
-	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
+
+	// std::vector < double > get_value_on_cell  with tag::spin
+	//   stays pure virtual from Function::Vector
+
+	std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & );
 	// virtual from Function::Vector
 
 	Function deriv ( Function ) const;
@@ -1646,7 +1844,54 @@ class Function::Vector::MultiValued : public Function::Vector
 	//  virtual from Function::Core
 	#endif
 
-};  // end of  class Function::Vecttor::Multivalued
+	class JumpIsSum;  class JumpIsLinear;
+
+};  // end of class Function::Vector::Multivalued
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiValued
+
+// here the actions are mere translations on RR (sums)
+
+{	public :
+
+	// members inherited from Function::MultiValued :
+	// Function base  -- here should be Function::Vector
+	// std::vector < Function::Action > actions
+	
+	std::vector < std::vector < double > > beta;
+	// upon each action[i], the value v of the function becomes  v + beta[i]
+	
+	inline JumpIsSum ( const Function::Vector::MultiValued::JumpIsSum & ) = delete;
+	inline JumpIsSum ( Function::Vector::MultiValued::JumpIsSum && ) = delete;
+	
+	inline Function::Vector::MultiValued::JumpIsSum operator=
+		( const Function::Vector::MultiValued::JumpIsSum & ) = delete;
+	inline Function::Vector::MultiValued::JumpIsSum operator=
+		( Function::Vector::MultiValued::JumpIsSum && ) = delete;
+
+
+	// void set_value ( double )
+	//   defined by Function::Vector::Multivalued, delegates to base
+
+	// double get_value_on_cell ( Cell::Core * ) const;
+	//   defined by Function::Vector::Multivalued, delegates to base
+
+	std::vector < double > get_value_on_cell
+	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	//  virtual from Function::Vector
+	
+	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
+	//   defined by Function::Vector::Multivalued
+
+#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	//  virtual from Function::Core
+	#endif
+
+};  // end of class Function::Vector::Multivalued::JumpIsSum
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1892,7 +2137,8 @@ inline Function Function::operator[] ( size_t i ) const
 	Function::Scalar * f_scalar = dynamic_cast < Function::Scalar * > ( this->core );
 	if ( f_scalar )
 	{	assert ( this->nb_of_components() == 1 );
-		return * this;                             }
+		assert ( i == 0 );
+		return *this;                             }
   Function::Vector * f_vector = dynamic_cast < Function::Vector * > ( this->core );
 	assert ( f_vector );
 	return Function ( tag::whose_core_is, f_vector->component(i).core );               }

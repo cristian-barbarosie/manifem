@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.16
+// function.cpp 2021.08.18
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -51,33 +51,43 @@ size_t Function::Immersion::nb_of_components ( ) const
 { assert ( false );  }
 
 size_t Function::CoupledWithField::Vector::nb_of_components ( ) const
-// virtual from Function::Core through Function::Vector, Function::Aggregate
-// here overridden
-{	return this->field->nb_of_components();  }
+// virtual from Function::Core, defined in Function::Aggregate, here overridden
+{	assert ( this->components.size() == this->field->nb_of_components() );
+	return this->field->nb_of_components();                          }
+
+size_t Function::Vector::Multivalued::nb_of_components ( ) const
+// virtual from Function::Core
+{	return this->base->nb_of_components();  }
 
 //-----------------------------------------------------------------------------------------//
 
+
 Function Function::Scalar::component ( size_t i )
 // virtual from Function::Core
+// never actually used because Function::operator[] returns self
 {	assert ( i == 0 );
 	return Function ( tag::whose_core_is, this );  }
 
 Function Function::Aggregate::component ( size_t i )
-// virtual from Function::Core, through Function::Vector
+// virtual from Function::Core
 {	assert ( i < this->components.size() );
 	return this->components[i];             }
 
 Function Function::Immersion::component ( size_t i )
-// virtual from Function::Core, through Function::Vector
+// virtual from Function::Core
 {	assert ( false );  }
 
 Function Function::CoupledWithField::Vector::component ( size_t i )
-// virtual from Function::Core, through Function::Vector, Function::Aggregate
-// here overridden
+// virtual from Function::Core, defined in Function::Aggregate, here overridden
 {	size_t n = this->field->nb_of_components();
 	assert ( i < n );
 	assert ( this->components.size() == n );
 	return this->components[i];                   }
+
+// in Function::Vector::MultiValued::JumpIsSum::component,
+// build a new Function::Scalar::MultiValued
+
+// forbid execution of Function::Vector::MultiValued::JumpIsLinear::component
 
 //-----------------------------------------------------------------------------------------//
 	
@@ -327,78 +337,72 @@ double Function::Scalar::MultiValued::get_value_on_cell ( Cell::Core * cll ) con
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	return base_scalar->get_value_on_cell(cll);                   }
 
-double Function::Scalar::MultiValued::get_value_on_cell  // virtual from Function::Scalar
+
+double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual from Function::Scalar
 ( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	// Manifold::Quotient * manif = tag::Util::assert_cast
 	// 	< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
 	size_t n = exp.size();
 	// assert ( manif->actions == this->actions );
-	std::cout << "aha 1" << std::endl << std::flush;
 	assert ( this->actions.size() == n );
-	assert ( this->transf.size() == n );
-	// assert ( this->inv_transf.size() == n );
-	std::cout << "aha 2" << std::endl << std::flush;
-	Function coord = Manifold::working.coordinates();
-	Cell c ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
-	std::cout << "aha 3" << std::endl << std::flush;
-	coord ( Function::vertex_for_multivalued ) = coord ( c );
-	std::cout << "aha 4" << std::endl << std::flush;
-	for ( size_t i = 0; i < n; i++ )
+	assert ( this->beta.size() == n );
+  double val = base_scalar->get_value_on_cell ( cll );
+	for ( size_t i = 0; i < n; i++ ) val += exp[i] * this->beta[i];
+	return val;                                                     }
+
+
+double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
+// virtual from Function::Scalar
+( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+
+{	Function::Scalar * base_scalar = tag::Util::assert_cast
+		< Function::Core*, Function::Scalar* > ( this->base.core );
+	// Manifold::Quotient * manif = tag::Util::assert_cast
+	// 	< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
+	size_t n = exp.size();
+	// assert ( manif->actions == this->actions );
+	assert ( this->actions.size() == n );
+  double val = base_scalar->get_value_on_cell ( cll ) - this->gamma;
+	for ( size_t i = 0; i < n; i++ ) val *=  ( this->alpha[i], exp[i] );
 	{	short int exp_i = exp[i];
+		double alpha_i = this->alpha[i];
 		if ( exp_i > 0 )
 		{	size_t abs_exp_i = exp_i;
-			std::cout << "aha 5" << std::endl << std::flush;
-			for ( size_t j = 0; j < abs_exp_i; j++ )
-			{	std::cout << "aha 6" << std::endl << std::flush;
-				coord ( Function::vertex_for_multivalued ) =
-					this->transf[i] ( Function::vertex_for_multivalued );  }
-			std::cout << "aha 7" << std::endl << std::flush;
-		}
+			for ( size_t j = 0; j < abs_exp_i; j++ ) val *= alpha_i;  }
 		if ( exp_i < 0 )
 		{	size_t abs_exp_i = -exp_i;
-			assert ( false );
-			for ( size_t j = 0; j < abs_exp_i; j++ )
-				coord ( Function::vertex_for_multivalued ) =
-					this->inv_transf[i] ( Function::vertex_for_multivalued );  }  }
-	std::cout << "aha 9" << std::endl << std::flush;
-	return base_scalar->get_value_on_cell ( Function::vertex_for_multivalued .core );     }
+			for ( size_t j = 0; j < abs_exp_i; j++ ) val /= alpha_i;  }  }
+	return val + this->gamma;                                            }
 
-std::vector<double> Function::Vector::MultiValued::get_value_on_cell ( Cell::Core * cll ) const
-// virtual from Function::Vector
+
+std::vector<double> Function::Vector::MultiValued::JumpIsSum get_value_on_cell
+( Cell::Core * cll ) const  // virtual from Function::Vector
 {	Function::Vector * base_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( this->base.core );
 	return base_vector->get_value_on_cell(cll);                   }
 
-std::vector<double> Function::Vector::MultiValued::get_value_on_cell
+
+std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
 // virtual from Function::Vector
 ( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+	
 {	Function::Vector * base_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( this->base.core );
-	Manifold::Quotient * manif = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
+	// Manifold::Quotient * manif = tag::Util::assert_cast
+	// 	< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
 	size_t n = exp.size();
-	assert ( manif->actions == this->actions );
+	size_t dim = base_vector->nb_of_components;
+	// assert ( manif->actions == this->actions );
 	assert ( this->actions.size() == n );
-	assert ( this->transf.size() == n );
-	assert ( this->inv_transf.size() == n );
-	Function coord = Manifold::working.coordinates();
-	Cell c ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
-	coord ( Function::vertex_for_multivalued ) = coord(c);
+	assert ( this->beta.size() == n );
+	std::vector < double > val = base_vector->get_value_on_cell ( cll );
 	for ( size_t i = 0; i < n; i++ )
-	{	short int exp_i = exp[i];
-		if ( exp_i > 0 )
-		{	size_t abs_exp_i = exp_i;
-			for ( size_t j = 0; j < abs_exp_i; j++ )
-				coord ( Function::vertex_for_multivalued ) =
-					this->transf[i] ( Function::vertex_for_multivalued );  }
-		if ( exp_i < 0 )
-		{	size_t abs_exp_i = -exp_i;
-			for ( size_t j = 0; j < abs_exp_i; j++ )
-				coord ( Function::vertex_for_multivalued ) =
-					this->inv_transf[i] ( Function::vertex_for_multivalued );  }  }
-	return base_vector->get_value_on_cell ( Function::vertex_for_multivalued .core );      }
+		for ( size_t j = 0; j < dim; j++ )
+			val[j] += exp[i] * this->beta[i][j];
+	return val;                                                            }
 
 //-----------------------------------------------------------------------------------------//
 	
