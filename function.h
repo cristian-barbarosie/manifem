@@ -1819,9 +1819,9 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	( const Function::Vector::MultiValued & ) = delete;
 	inline Function::Vector::MultiValued operator= ( Function::Vector::MultiValued && ) = delete;
 
-	size_t nb_of_components ( ) const;  // virtual from Function::Core
+	size_t nb_of_components ( ) const;  // virtual from Function::Core, delegates to base
 
-	Function component ( size_t i ); // virtual from Function::Core
+	// Function component ( size_t i )  stays pure virtual from Function::Core
 
 	void set_value ( std::vector < double > );  // virtual from Function::Vector, delegates to base
 
