@@ -1,5 +1,5 @@
 
-// function.h 2021.08.18
+// function.h 2021.08.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -173,6 +173,7 @@ class Function
 	class Vector;  class Aggregate;  class CoupledWithField;
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
+	class MultiValued;
 	class Equality;
 
 	static Cell vertex_for_multivalued;
@@ -1582,6 +1583,11 @@ class Function::MultiValued
 
 	std::vector < Function::Action > actions;
 
+	inline MultiValued ( const Function & b, std::vector < Function::Action > a )
+	:	base { b }, actions { a }
+	{	// assert ( Manifold::working.actions == a );
+	}
+
 };  // end of class Function::Scalar::Multivalued
 
 //-----------------------------------------------------------------------------------------
@@ -1603,40 +1609,13 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 	// Function base  -- here should be Function::Scalar
 	// std::vector < Function::Action > actions
 
-	inline MultiValued ( const Function & b,
-	  const tag::Through &, const Function::Action & g,
-		const tag::Becomes &, const Function & f         )
-	:	base { b }, transf { { f } }, inv_transf { }, actions { { g } }
-	{	// assert ( Manifold::working.actions == { g } );
-	}
-
-	inline MultiValued ( const Function & b,
-	  const tag::Through &, const Function::Action & g1,
-	  const tag::Becomes &, const Function & f1,
-		const tag::Through &, const Function::Action & g2,
-		const tag::Becomes &, const Function & f2         )
-	:	base { b }, transf { { f1, f2 } }, inv_transf { }, actions { { g1, g2 } }
-	{	// assert ( Manifold::working.actions == { g1, g2 } );
-	}
-
-	inline MultiValued ( const Function & b,
-	  const tag::Through &, const Function::Action & g1,
-	  const tag::Becomes &, const Function & f1,
-		const tag::Through &, const Function::Action & g2,
-	  const tag::Becomes &, const Function & f2,
-		const tag::Through &, const Function::Action & g3,
-		const tag::Becomes &, const Function & f3         )
-	:	base { b }, transf { { f1, f2, f3 } }, inv_transf { }, actions { { g1, g2, g3 } }
-	{	// assert ( Manifold::working.actions == { g1, g2, g3 } );
-	}
+	inline MultiValued ( const Function & b, std::vector < Function::Action > a )
+	:	Function::MultiValued ( b, a )
+	{	}
 
 	inline MultiValued ( const Function::Scalar::MultiValued & ) = delete;
 	inline MultiValued ( Function::Scalar::MultiValued && ) = delete;
 	
-	inline Function::Scalar::MultiValued operator=
-	( const Function::Scalar::MultiValued & ) = delete;
-	inline Function::Scalar::MultiValued operator= ( Function::Scalar::MultiValued && ) = delete;
-
 	// size_t nb_of_components ( )
 	//   virtual from Function::Core, defined by Function::Scalar, returns 1
 
@@ -1785,40 +1764,13 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	// Function base  -- here should be Function::Vector
 	// std::vector < Function::Action > actions
 
-	inline MultiValued ( const Function & b,
-	  const tag::Through &, const Function::Action & g,
-		const tag::Becomes &, const Function & f         )
-	:	base { b }, transf { { f } }, inv_transf { }, actions { { g } }
-	{	// assert ( Manifold::working.actions == { g } );
-	}
-
-	inline MultiValued ( const Function & b,
-	  const tag::Through &, const Function::Action & g1,
-	  const tag::Becomes &, const Function & f1,
-		const tag::Through &, const Function::Action & g2,
-		const tag::Becomes &, const Function & f2         )
-	:	base { b }, transf { { f1, f2 } }, inv_transf { }, actions { { g1, g2 } }
-	{	// assert ( Manifold::working.actions == { g1, g2 } );
-	}
-
-	inline MultiValued ( const Function & b,
-	  const tag::Through &, const Function::Action & g1,
-	  const tag::Becomes &, const Function & f1,
-		const tag::Through &, const Function::Action & g2,
-	  const tag::Becomes &, const Function & f2,
-		const tag::Through &, const Function::Action & g3,
-		const tag::Becomes &, const Function & f3         )
-	:	base { b }, transf { { f1, f2, f3 } }, inv_transf { }, actions { { g1, g2, g3 } }
-	{	// assert ( Manifold::working.actions == { g1, g2, g3 } );
-	}
+	inline MultiValued ( const Function & b, std::vector < Function::Action > a )
+	:	Function::MultiValued ( b, a )
+	{	}
 
 	inline MultiValued ( const Function::Vector::MultiValued & ) = delete;
 	inline MultiValued ( Function::Vector::MultiValued && ) = delete;
 	
-	inline Function::Vector::MultiValued operator=
-	( const Function::Vector::MultiValued & ) = delete;
-	inline Function::Vector::MultiValued operator= ( Function::Vector::MultiValued && ) = delete;
-
 	size_t nb_of_components ( ) const;  // virtual from Function::Core, delegates to base
 
 	// Function component ( size_t i )  stays pure virtual from Function::Core
@@ -1872,6 +1824,11 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	inline Function::Vector::MultiValued::JumpIsSum operator=
 		( Function::Vector::MultiValued::JumpIsSum && ) = delete;
 
+	// size_t nb_of_components ( )  virtual from Function::Core
+	//   defined by Function::Vector::MultiValued, delegates to base
+
+	Function component ( size_t i );   // virtual from Function::Core,
+	//  builds a new Function::Scalar::MultiValued::JumpIsSum
 
 	// void set_value ( double )
 	//   defined by Function::Vector::Multivalued, delegates to base

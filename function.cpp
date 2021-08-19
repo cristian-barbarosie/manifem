@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.18
+// function.cpp 2021.08.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -30,7 +30,6 @@ using namespace maniFEM;
 //-----------------------------------------------------------------------------------------//
 
 unsigned int Function::total_cores { 0 };
-Cell Function::vertex_for_multivalued ( tag::non_existent );
 size_t Function::Action::counter { 0 };
 
 #ifndef NDEBUG
@@ -85,7 +84,7 @@ Function Function::CoupledWithField::Vector::component ( size_t i )
 	return this->components[i];                   }
 
 // in Function::Vector::MultiValued::JumpIsSum::component,
-// build a new Function::Scalar::MultiValued
+// build a new Function::Scalar::MultiValued::JumpIsSum
 
 // forbid execution of Function::Vector::MultiValued::JumpIsLinear::component
 

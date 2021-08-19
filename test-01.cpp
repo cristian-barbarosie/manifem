@@ -21,7 +21,6 @@ int main ()
 	xm.property ( tag::through, g1, tag::becomes, xm + 1.5 );
 	xm.property ( tag::through, g2, tag::becomes, xm - 0.2 );
 
-	Function::vertex_for_multivalued = Cell ( tag::vertex );
 	Cell V ( tag::vertex );  x(V) = 1.1;  y(V) = 22.2;
 
 	std::cout << xm(V) << std::endl << std::flush;
