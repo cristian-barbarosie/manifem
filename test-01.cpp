@@ -29,6 +29,11 @@ int main ()
 
 	Cell V ( tag::vertex );  x(V) = 1.1;  y(V) = 22.2;
 
+	std::vector < double > vv = analyse_linear_expression ( x-4.3, x );
+	for ( size_t i = 0; i < vv.size(); i++ )
+		std::cout << vv[i] << " ";
+	std::cout << std::endl;
+		
 	// std::cout << xm(V) << std::endl << std::flush;
 	// std::cout << "0 0 " << std::endl << std::flush;
 	// std::cout << xm ( V, tag::spin, {0,0} ) << std::endl << std::flush;

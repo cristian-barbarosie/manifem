@@ -576,6 +576,9 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 	if ( g_const )
 	{	if ( g_const->val == 0. ) return g;
 		if ( g_const->val == 1. ) return f;  }
+
+	// if both are constant :
+	if ( f_const and g_const ) return Function ( f_const->val * g_const->val );
 	
 	// if one of them is a product, or both :
   Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
