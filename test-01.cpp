@@ -16,24 +16,27 @@ int main ()
 	g1 ( xy ) = (x+1.) && y;
 	g2 ( xy ) = x && (y+1.);
 
-	// create a multi-valued function xm (for testing purposes)
-	Function xm ( tag::Lagrange, tag::of_degree, 1, tag::multivalued );
-	xm.property ( tag::through, g1, tag::becomes, xm + 1.5 );
-	xm.property ( tag::through, g2, tag::becomes, xm - 0.2 );
-
-	Cell V ( tag::vertex );  x(V) = 1.1;  y(V) = 22.2;
-
-	std::cout << xm(V) << std::endl << std::flush;
-	std::cout << "00 " << std::endl << std::flush;
-	std::cout << xm ( V, tag::spin, {0,0} ) << std::endl << std::flush;
-	std::cout << "10 " << std::endl << std::flush;
-	std::cout << xm ( V, tag::spin, {1,0} ) << std::endl << std::flush;
-	std::cout << "11 " << std::endl << std::flush;
-	std::cout << xm ( V, tag::spin, {1,1} ) << std::endl << std::flush;
-	std::cout << "12 " << std::endl << std::flush;
-	std::cout << xm ( V, tag::spin, {1,2} ) << std::endl << std::flush;
-	
 	// and divide RR2 by these equivalence relations
 	// Manifold torus_manif = RR2.quotient ( g1, g2 );
 
+	// create a multi-valued function xm (for testing purposes)
+	// Function xm ( tag::Lagrange, tag::of_degree, 1, tag::multivalued );
+	// describe the action of g1 and g2 on xm :
+	// g1 ( xm ) = xm + 1.5;
+	// g2 ( xm ) = xm - 0.2;
+	// xm.property ( tag::through, g1, tag::becomes, xm + 1.5 );
+	// xm.property ( tag::through, g2, tag::becomes, xm - 0.2 );
+
+	Cell V ( tag::vertex );  x(V) = 1.1;  y(V) = 22.2;
+
+	// std::cout << xm(V) << std::endl << std::flush;
+	// std::cout << "0 0 " << std::endl << std::flush;
+	// std::cout << xm ( V, tag::spin, {0,0} ) << std::endl << std::flush;
+	// std::cout << "1 0 " << std::endl << std::flush;
+	// std::cout << xm ( V, tag::spin, {1,0} ) << std::endl << std::flush;
+	// std::cout << "1 1 " << std::endl << std::flush;
+	// std::cout << xm ( V, tag::spin, {1,1} ) << std::endl << std::flush;
+	// std::cout << "1 2 " << std::endl << std::flush;
+	// std::cout << xm ( V, tag::spin, {1,2} ) << std::endl << std::flush;
+	
 }

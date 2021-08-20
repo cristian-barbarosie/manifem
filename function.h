@@ -1,5 +1,5 @@
 
-// function.h 2021.08.19
+// function.h 2021.08.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1603,6 +1603,8 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 // then applies the second action 'j' times (recall the group should be commutative)
 // the vector of 'actions' is only used for the above refered checking operation
 
+// abstract class, specialized in Function::Scalar::MultiValued::JumpIsSum and JumpIsLinear
+
 {	public :
 
 	// members inherited from Function::MultiValued :
@@ -1690,11 +1692,6 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::Scalar::Multivalued, execution forbidden
 
-#ifndef NDEBUG	
-	std::string repr ( const Function::From & from = Function::from_void ) const;
-	//  virtual from Function::Core
-	#endif
-
 };  // end of class Function::Scalar::Multivalued::JumpIsSum
 
 //-----------------------------------------------------------------------------------------//
@@ -1744,11 +1741,6 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::Scalar::Multivalued, execution forbidden
 
-#ifndef NDEBUG	
-	std::string repr ( const Function::From & from = Function::from_void ) const;
-	//  virtual from Function::Core
-	#endif
-
 };  // end of class Function::Scalar::Multivalued::JumpIsLinear
 
 //-----------------------------------------------------------------------------------------//
@@ -1757,6 +1749,7 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 class Function::Vector::MultiValued : public Function::MultiValued, public Function::Vector
 
 // same as Function::Scalar::MultiValued, here with vector values
+// abstract class, specialized in Function::Vector::MultiValued::JumpIsSum
 
 {	public :
 
@@ -1843,47 +1836,39 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
 	//   defined by Function::Vector::Multivalued
 
-#ifndef NDEBUG	
-	std::string repr ( const Function::From & from = Function::from_void ) const;
-	//  virtual from Function::Core
-	#endif
-
 };  // end of class Function::Vector::Multivalued::JumpIsSum
 
 //-----------------------------------------------------------------------------------------//
 
 
-inline Function Function::multivalued
-( const tag::Through &, const Function::Action & g,
-  const tag::Becomes &, const Function & f         )
+inline std::vector < double > analyse_linear_expression ( Function expression, Function base )
 
-{	return Function ( tag::whose_core_is,
-		new Function::Scalar::MultiValued ( *this, tag::through, g, tag::becomes, f ) );  }
+// 'base' is a vector of arguments, e.g. (x,y,z)
+// 'expression' is a linear expression in x, y and z
+// we want to identify the coefficients of this linear expression
+// both 'base' and 'expression' may be scalar or vector
+
+{	size_t n_coord = base.nb_of_components();
+	size_t dim_expr = expression.nb_of_components();
+	assert ( n_coord == 1 );  // para ja'
+	assert ( dim_expr == 1 );  // para ja'
+	Function::Sum * sum = dynamic_cast < Function::Sum * > ( expression.core );
+	assert ( sum );  // para ja'
+	std::forward_list < Function > terms = sum->terms;
+	std::forward_list<Function>::iterator it = terms.begin();
+	assert ( it != terms.end() );
+	Function x = *it;
+	assert ( x.core == base.core );  // para ja'
+	it++;
+	assert ( it != terms.end() );
+	Function c = *it;
+	it++;
+	assert ( it == terms.end() );  // dois termos, para ja'
+	Function::Constant * cc = dynamic_cast < Function::Constant * > ( c.core );
+	assert ( cc );
+	return { cc->val };                                                           }
 
 
-inline Function Function::multivalued
-( const tag::Through &, const Function::Action & g1,
-  const tag::Becomes &, const Function & f1,
-  const tag::Through &, const Function::Action & g2,
-  const tag::Becomes &, const Function & f2         )
-
-{	return Function ( tag::whose_core_is,
-		new Function::Scalar::MultiValued ( *this, tag::through, g1, tag::becomes, f1,
-		                                           tag::through, g2, tag::becomes, f2 ) );  }
-
-
-inline Function Function::multivalued
-( const tag::Through &, const Function::Action & g1,
-  const tag::Becomes &, const Function & f1,
-  const tag::Through &, const Function::Action & g2,
-  const tag::Becomes &, const Function & f2,
-  const tag::Through &, const Function::Action & g3,
-  const tag::Becomes &, const Function & f3         )
-
-{	return Function ( tag::whose_core_is,
-		new Function::Scalar::MultiValued ( *this, tag::through, g1, tag::becomes, f1,
-		                                           tag::through, g2, tag::becomes, f2,
-		                                           tag::through, g3, tag::becomes, f3 ) );  }
 
 //-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//

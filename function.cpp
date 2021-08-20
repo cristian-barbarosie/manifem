@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.19
+// function.cpp 2021.08.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -54,9 +54,9 @@ size_t Function::CoupledWithField::Vector::nb_of_components ( ) const
 {	assert ( this->components.size() == this->field->nb_of_components() );
 	return this->field->nb_of_components();                          }
 
-size_t Function::Vector::Multivalued::nb_of_components ( ) const
+size_t Function::Vector::MultiValued::nb_of_components ( ) const
 // virtual from Function::Core
-{	return this->base->nb_of_components();  }
+{	return this->base.nb_of_components();  }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -365,7 +365,7 @@ double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
 	// assert ( manif->actions == this->actions );
 	assert ( this->actions.size() == n );
   double val = base_scalar->get_value_on_cell ( cll ) - this->gamma;
-	for ( size_t i = 0; i < n; i++ ) val *=  ( this->alpha[i], exp[i] );
+	for ( size_t i = 0; i < n; i++ )
 	{	short int exp_i = exp[i];
 		double alpha_i = this->alpha[i];
 		if ( exp_i > 0 )
@@ -377,7 +377,7 @@ double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
 	return val + this->gamma;                                            }
 
 
-std::vector<double> Function::Vector::MultiValued::JumpIsSum get_value_on_cell
+std::vector<double> Function::Vector::MultiValued::get_value_on_cell
 ( Cell::Core * cll ) const  // virtual from Function::Vector
 {	Function::Vector * base_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( this->base.core );
@@ -393,7 +393,7 @@ std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
 	// Manifold::Quotient * manif = tag::Util::assert_cast
 	// 	< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
 	size_t n = exp.size();
-	size_t dim = base_vector->nb_of_components;
+	size_t dim = base_vector->nb_of_components();
 	// assert ( manif->actions == this->actions );
 	assert ( this->actions.size() == n );
 	assert ( this->beta.size() == n );
@@ -446,6 +446,10 @@ double Function::Composition::set_value_on_cell
 
 double Function::Scalar::MultiValued::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
+{ assert ( false );  }
+
+std::vector < double > Function::Vector::MultiValued::set_value_on_cell
+( Cell::Core * cll, const std::vector<double> & x )  // virtual from Function::Scalar
 { assert ( false );  }
 
 //-----------------------------------------------------------------------------------------//
@@ -516,6 +520,9 @@ std::string Function::Diffeomorphism::OneDim::repr ( const Function::From & from
 
 std::string Function::Scalar::MultiValued::repr ( const Function::From & from ) const
 {	return "multi" + this->base.core->repr ( Function::from_function );  }
+
+std::string Function::Vector::MultiValued::repr ( const Function::From & from ) const
+{ assert ( false );  }
 
 #endif // DEBUG
 
@@ -692,6 +699,9 @@ Function Function::Diffeomorphism::OneDim::deriv ( Function x ) const
 { assert ( false );  }
 
 Function Function::Scalar::MultiValued::deriv ( Function x ) const
+{ assert ( false );  }
+
+Function Function::Vector::MultiValued::deriv ( Function x ) const
 { assert ( false );  }
 
 //-------------------------------------------------------------------------------------
@@ -913,10 +923,11 @@ Function Function::Composition::replace ( const Function & x, const Function & y
 //  virtual from Function::Core, through Function::Vector
 {	return Function ( tag::whose_core_is, this );  }
 
-Function Function::Scalar::MultiValued::replace
-( const Function & x, const Function & y )
-//  virtual from Function::Vector
-{	assert ( false );  }
+Function Function::Scalar::MultiValued::replace ( const Function & x, const Function & y )
+{	assert ( false );  }  //  virtual from Function::Scalar
+
+Function Function::Vector::MultiValued::replace ( const Function & x, const Function & y )
+{	assert ( false );  }  //  virtual from Function::Vector
 
 //--------------------------------------------------------------------------
 
