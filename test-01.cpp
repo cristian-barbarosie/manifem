@@ -12,9 +12,8 @@ int main ()
 	Function x = xy[0],  y = xy[1];
 
 	// we introduce two equivalence relations on RR2
-	Function::Action g1, g2;
-	g1 ( xy ) = (x+1.) && y;
-	g2 ( xy ) = x && (y+1.);
+	Function::Action g1 ( tag::transforms, xy, tag::into, (x+1.) && y );
+	Function::Action g2 ( tag::transforms, xy, tag::into, x && (y+1.) );
 
 	// and divide RR2 by these equivalence relations
 	// Manifold torus_manif = RR2.quotient ( g1, g2 );
@@ -29,7 +28,9 @@ int main ()
 
 	Cell V ( tag::vertex );  x(V) = 1.1;  y(V) = 22.2;
 
-	std::vector < double > vv = analyse_linear_expression ( x-4.3, x );
+	std::vector < double > vv =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( (4.1-x) && (y-2), xy );
 	for ( size_t i = 0; i < vv.size(); i++ )
 		std::cout << vv[i] << " ";
 	std::cout << std::endl;

@@ -1,5 +1,5 @@
 
-// manifold.h 2021.08.15
+// manifold.h 2021.08.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1041,8 +1041,25 @@ class Manifold::Quotient : public Manifold::Core
 	
 	std::vector < Function::Action > actions;  // set of generators for a discrete group
 
-	inline Quotient ( ) : Manifold::Core(), base_space ( tag::non_existent )
-	{ Function::vertex_for_multivalued = Cell ( tag::vertex );  }
+	inline Quotient ( Manifold b, const Function::Action g1 )
+	: Manifold::Core(), base_space ( b ), actions { { g1 } }
+	{	assert ( g1.coords.core == b.coordinates().core );
+		Function::vertex_for_multivalued = Cell ( tag::vertex );  }  // eliminate ?
+
+	inline Quotient ( Manifold b, const Function::Action g1, const Function::Action g2 )
+	: Manifold::Core(), base_space ( b ), actions { { g1, g2 } }
+	{	assert ( g1.coords.core == b.coordinates().core );
+		assert ( g2.coords.core == b.coordinates().core );
+		// build coordinate system : a vector multi-function
+		Function::vertex_for_multivalued = Cell ( tag::vertex );  }  // eliminate ?
+
+	inline Quotient ( Manifold b,
+	  const Function::Action g1, const Function::Action g2, const Function::Action g3 )
+	: Manifold::Core(), base_space ( b ), actions { { g1, g2, g3 } }
+	{	assert ( g1.coords.core == b.coordinates().core );
+		assert ( g2.coords.core == b.coordinates().core );
+		assert ( g3.coords.core == b.coordinates().core );
+		Function::vertex_for_multivalued = Cell ( tag::vertex );  }  // eliminate ?
 
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden
@@ -1104,6 +1121,7 @@ class Manifold::Quotient : public Manifold::Core
 inline void Cell::project () const
 {	this->project ( tag::onto, Manifold::working );  }
 	
+
 inline void Cell::project ( const tag::Onto &, const Manifold m ) const
 {	assert ( m.core );
 	assert ( this->core->get_dim() == 0 );

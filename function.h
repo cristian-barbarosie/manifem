@@ -1,5 +1,5 @@
 
-// function.h 2021.08.20
+// function.h 2021.08.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -52,7 +52,9 @@ namespace tag
 	struct Otherwise { };  static const Otherwise otherwise;
 	struct Spin { };  static const Spin spin;
 	struct Through { };  static const Through through;
-	struct Becomes { };  static const Becomes becomes;                         }
+	struct Becomes { };  static const Becomes becomes;
+	struct Transforms { };  static const Transforms transforms;
+	struct Into { };  static const Into into;                                 }
 	
 
 class Manifold;
@@ -124,7 +126,7 @@ class Function
 
 	inline ~Function();
 
-	inline Function & operator= ( const Function & m );
+	inline Function & operator= ( const Function & );
 	
 	inline size_t nb_of_components ( ) const;
 
@@ -1526,15 +1528,14 @@ class Function::Action
 	// here we keep the coordinates function together with the composed ones
 	// just prior to the declaration of the respective quotient manifold
 	// the quotient manifold will then keep theese coordinates
-	// and then we can forget about them
+	// after that, we can forget about them
 
-	inline Action ( )
-	: id { Function::Action::counter }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	inline Action ( const tag::Transforms &, const Function f, const tag::Into &, const Function g )
+	: id { Function::Action::counter }, coords ( f ), transf ( g )
 	{	Function::Action::counter++;  }
 
 	struct Applied { class ToFunction;  };	
-	inline Function::Action::Applied::ToFunction operator() ( const Function & );
-		
+
 };  // end of class Function::Action
 
 
@@ -1544,7 +1545,7 @@ inline bool operator== ( const Function::Action & a, const Function::Action & b 
 
 class Function::Action::Applied::ToFunction
 
-// a temporary object returned by Function::Action::operator()
+// a temporary object returned by operator* ( Function::Action, Function )
 // useful for describing an action,
 // prior to the declaration of the respective quotient manifold
 
@@ -1553,20 +1554,20 @@ class Function::Action::Applied::ToFunction
 	Function::Action & act;
 	Function fun;
 
-	inline ToFunction ( Function::Action & a, const Function & f )
+	inline ToFunction ( Function::Action & a, Function & f )
 	:	act { a }, fun { f }
 	{	}
 		
-	inline void operator= (const Function & );
+	inline void operator= ( const Function );
 
 };  // end of class Function::Action::Applied::ToFunction
 
 
-inline Function::Action::Applied::ToFunction Function::Action::operator() ( const Function & f )
-{	return Function::Action::Applied::ToFunction ( *this, f );  }
+inline Function::Action::Applied::ToFunction operator*
+( Function::Action & a, Function & f)
+{	return Function::Action::Applied::ToFunction ( a, f );  }
 
-
-inline void Function::Action::Applied::ToFunction::operator= (const Function & f )
+inline void Function::Action::Applied::ToFunction::operator= ( const Function f )
 { this->act.coords = this->fun;
 	this->act.transf = f;         }
 
@@ -1647,7 +1648,7 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 
 	class JumpIsSum;  class JumpIsLinear;
 
-};  // end of class Function::Scalar::Multivalued
+};  // end of class Function::Scalar::MultiValued
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1683,16 +1684,23 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	//   defined by Function::Scalar::Multivalued, delegates to base
 
 	// double get_value_on_cell ( Cell::Core * ) const;
-	//   defined by Function::Scalar::Multivalued, delegates to base
+	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	double get_value_on_cell
 	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	//  virtual from Function::Scalar
 	
 	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   defined by Function::Scalar::Multivalued, execution forbidden
+	//   defined by Function::Scalar::MultiValued, execution forbidden
 
-};  // end of class Function::Scalar::Multivalued::JumpIsSum
+	// the return value of 'analyse_linear_expression' should be double
+	// however, we use std::vector < double > instead
+	// a zero-length vector means not succeeded
+	// success is represented by a one-length vector
+	inline static std::vector < double > analyse_linear_expression
+		( Function expression, Function base );
+	
+};  // end of class Function::Scalar::MultiValued::JumpIsSum
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1729,19 +1737,19 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	//   defined by Function::Scalar, returns self, never actually used
 
 	// void set_value ( double )
-	//   defined by Function::Scalar::Multivalued, delegates to base
+	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	// double get_value_on_cell ( Cell::Core * ) const;
-	//   defined by Function::Scalar::Multivalued, delegates to base
+	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	double get_value_on_cell
 	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	//  virtual from Function::Scalar
 	
 	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   defined by Function::Scalar::Multivalued, execution forbidden
+	//   defined by Function::Scalar::MultiValued, execution forbidden
 
-};  // end of class Function::Scalar::Multivalued::JumpIsLinear
+};  // end of class Function::Scalar::MultiValued::JumpIsLinear
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1791,7 +1799,7 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 
 	class JumpIsSum;  class JumpIsLinear;
 
-};  // end of class Function::Vector::Multivalued
+};  // end of class Function::Vector::MultiValued
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1824,51 +1832,104 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	//  builds a new Function::Scalar::MultiValued::JumpIsSum
 
 	// void set_value ( double )
-	//   defined by Function::Vector::Multivalued, delegates to base
+	//   defined by Function::Vector::MultiValued, delegates to base
 
 	// double get_value_on_cell ( Cell::Core * ) const;
-	//   defined by Function::Vector::Multivalued, delegates to base
+	//   defined by Function::Vector::MultiValued, delegates to base
 
 	std::vector < double > get_value_on_cell
 	( Cell::Core *, const tag::Spin &, const Function::ActionExponent & exp ) const;
 	//  virtual from Function::Vector
 	
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
-	//   defined by Function::Vector::Multivalued
+	//   defined by Function::Vector::MultiValued
 
-};  // end of class Function::Vector::Multivalued::JumpIsSum
+	inline static std::vector < double > analyse_linear_expression
+		( Function expression, Function base );
+	
+};  // end of class Function::Vector::MultiValued::JumpIsSum
 
 //-----------------------------------------------------------------------------------------//
 
 
-inline std::vector < double > analyse_linear_expression ( Function expression, Function base )
+inline std::vector < double >  // static
+Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
+( Function expression, Function base )
 
-// 'base' is a vector of arguments, e.g. (x,y,z)
-// 'expression' is a linear expression in x, y and z
-// we want to identify the coefficients of this linear expression
-// both 'base' and 'expression' may be scalar or vector
+// 'base' is a variable, say x
+// 'expression' is an expression in x (a sum x+c)
+// we want to identify c
+
+// the return value should be double
+// however, we use std::vector < double > instead
+// a zero-length vector means not succeeded
+// success is represented by a one-length vector
 
 {	size_t n_coord = base.nb_of_components();
 	size_t dim_expr = expression.nb_of_components();
-	assert ( n_coord == 1 );  // para ja'
-	assert ( dim_expr == 1 );  // para ja'
+	assert ( n_coord == 1 );
+	assert ( dim_expr == 1 );
+	Function::CoupledWithField * cf =
+		dynamic_cast < Function::CoupledWithField* > ( base.core );
+	assert ( cf );
+	Field::Double::Scalar * fi =
+		dynamic_cast < Field::Double::Scalar * > ( cf->field );
+	assert ( fi );
+	Function::CoupledWithField * cfe =
+		dynamic_cast < Function::CoupledWithField* > ( expression.core );
+	if ( cfe )
+	{	Field::Double::Scalar * fie =
+			dynamic_cast < Field::Double::Scalar * > ( cfe->field );
+		if ( fie == nullptr ) return {};
+		if ( fi->index_in_heap != fie->index_in_heap ) return {};
+		return { 0. };                                             }
 	Function::Sum * sum = dynamic_cast < Function::Sum * > ( expression.core );
-	assert ( sum );  // para ja'
+	if ( sum == nullptr ) return {};
 	std::forward_list < Function > terms = sum->terms;
 	std::forward_list<Function>::iterator it = terms.begin();
 	assert ( it != terms.end() );
 	Function x = *it;
-	assert ( x.core == base.core );  // para ja'
+	if ( x.core != base.core ) // maybe the other way around ? sum is commutative
+	{	Function c = x;
+		Function::Constant * cc = dynamic_cast < Function::Constant * > ( c.core );
+		if ( cc == nullptr ) return {};
+		it++;
+		assert ( it != terms.end() );
+		Function xx = *it;
+		if ( xx.core != base.core ) return {};
+		return { cc->val };                                                           }
 	it++;
 	assert ( it != terms.end() );
 	Function c = *it;
 	it++;
-	assert ( it == terms.end() );  // dois termos, para ja'
+	if ( it != terms.end() ) return {};
 	Function::Constant * cc = dynamic_cast < Function::Constant * > ( c.core );
-	assert ( cc );
-	return { cc->val };                                                           }
+	if ( cc == nullptr ) return {};
+	return { cc->val };                                                                }
 
 
+inline std::vector < double >  // static
+Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+( Function expression, Function base )
+
+// 'base' is a set of variables, say xyz
+// 'expression' is a vector expression in x (a sum x+a, y+b, z+c)
+// we want to identify a, b, c
+// a zero-length return vector means not succeeded
+
+{	size_t n_coord = base.nb_of_components();
+	size_t dim_expr = expression.nb_of_components();
+	assert ( n_coord == dim_expr );
+	std::vector < double > res;
+	res.reserve ( n_coord );
+	for ( size_t i = 0; i < n_coord; i++ )
+	{	std::vector < double > res_i =
+			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
+			( expression[i], base[i] );
+		if ( res_i.size() == 0 ) return {};
+		assert ( res_i.size() == 1 );
+		res.push_back ( res_i[0] );                                            }
+	return res;                                                                }
 
 //-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
