@@ -119,7 +119,7 @@ class Manifold
 	// square of the distance, computed from the inner product
 	// only meaningful for short distances
 	inline double dist_sq ( const Cell & A, const Cell & B ) const
-	{	const Function & coord = coordinates();
+	{	const Function & coord = this->coordinates();
 		std::vector < double > vA = coord ( A ), vB = coord ( B ),
 			delta ( coord.nb_of_components() );
 		for ( size_t i = 0; i < coord.nb_of_components(); i++ )
@@ -195,6 +195,11 @@ class Manifold
 	                             const Function::Equality eq2 ) const;
 	inline Manifold parametric ( const Function::Equality eq1,
         	const Function::Equality eq2, const Function::Equality eq3 ) const;
+
+	inline Manifold quotient ( const Function::Action g1 );
+	inline Manifold quotient ( const Function::Action g1, const Function::Action g2 );
+	inline Manifold quotient
+	( const Function::Action g1, const Function::Action g2, const Function::Action g3 );
 
 	static Manifold working;
 
@@ -559,6 +564,7 @@ inline Manifold Manifold::parametric ( const Function::Equality eq1,
 {	return Manifold ( tag::parametric, *this, eq1, eq2, eq3 );  }
 
 //------------------------------------------------------------------------------------------
+
 
 class Manifold::Euclid : public Manifold::Core
 
@@ -1041,17 +1047,46 @@ class Manifold::Quotient : public Manifold::Core
 	
 	std::vector < Function::Action > actions;  // set of generators for a discrete group
 
+	Function coord_func { tag::non_existent };
+
 	inline Quotient ( Manifold b, const Function::Action g1 )
 	: Manifold::Core(), base_space ( b ), actions { { g1 } }
 	{	assert ( g1.coords.core == b.coordinates().core );
-		Function::vertex_for_multivalued = Cell ( tag::vertex );  }  // eliminate ?
+		assert ( this->coord_func.core == nullptr );
+		if ( b.coordinates().nb_of_components() == 1 )
+		{	std::vector < double > v1 =
+				Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
+				( g1.transf, g1.coords );
+			assert ( v1.size() > 0 );
+			this->coord_func.core = new Function::Scalar::MultiValued::JumpIsSum
+				( tag::associated_with, b.coordinates(), { g1 }, v1 );              }
+		else	
+		{	assert ( b.coordinates().nb_of_components() > 1 );
+			std::vector < double > v1 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+				( g1.transf, g1.coords );
+			assert ( v1.size() > 0 );
+			this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
+				( tag::associated_with, b.coordinates(), { g1 }, { v1 } );          }
+		this->coord_func.core->nb_of_wrappers = 1;                                }
 
 	inline Quotient ( Manifold b, const Function::Action g1, const Function::Action g2 )
 	: Manifold::Core(), base_space ( b ), actions { { g1, g2 } }
 	{	assert ( g1.coords.core == b.coordinates().core );
 		assert ( g2.coords.core == b.coordinates().core );
-		// build coordinate system : a vector multi-function
-		Function::vertex_for_multivalued = Cell ( tag::vertex );  }  // eliminate ?
+		std::vector < double > v1 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g1.transf, g1.coords );
+		assert ( v1.size() > 0 );
+		std::vector < double > v2 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g2.transf, g2.coords );
+		assert ( v2.size() > 0 );
+		assert ( b.coordinates().nb_of_components() >= 2 );
+		assert ( this->coord_func.core == nullptr );
+		this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
+			( tag::associated_with, b.coordinates(), { g1, g2 }, { v1, v2 } );
+		this->coord_func.core->nb_of_wrappers = 1;                            }
 
 	inline Quotient ( Manifold b,
 	  const Function::Action g1, const Function::Action g2, const Function::Action g3 )
@@ -1059,7 +1094,23 @@ class Manifold::Quotient : public Manifold::Core
 	{	assert ( g1.coords.core == b.coordinates().core );
 		assert ( g2.coords.core == b.coordinates().core );
 		assert ( g3.coords.core == b.coordinates().core );
-		Function::vertex_for_multivalued = Cell ( tag::vertex );  }  // eliminate ?
+		std::vector < double > v1 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g1.transf, g1.coords );
+		assert ( v1.size() > 0 );
+		std::vector < double > v2 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g2.transf, g2.coords );
+		assert ( v2.size() > 0 );
+		std::vector < double > v3 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g3.transf, g3.coords );
+		assert ( v3.size() > 0 );
+		assert ( b.coordinates().nb_of_components() >= 3 );
+		assert ( this->coord_func.core == nullptr );
+		this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
+			( tag::associated_with, b.coordinates(), { g1, g2, g3 }, { v1, v2, v3 } );
+		this->coord_func.core->nb_of_wrappers = 1;                                   }
 
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden
@@ -1118,10 +1169,22 @@ class Manifold::Quotient : public Manifold::Core
 //-----------------------------------------------------------------------------------------
 
 
+inline Manifold Manifold::quotient ( const Function::Action g1 )
+{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, g1 ) );  }
+
+inline Manifold Manifold::quotient ( const Function::Action g1, const Function::Action g2 )
+{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, g1, g2 ) );  }
+
+inline Manifold Manifold::quotient
+( const Function::Action g1, const Function::Action g2, const Function::Action g3 )
+{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, g1, g2, g3 ) );  }
+
+//-----------------------------------------------------------------------------------------
+
+
 inline void Cell::project () const
 {	this->project ( tag::onto, Manifold::working );  }
 	
-
 inline void Cell::project ( const tag::Onto &, const Manifold m ) const
 {	assert ( m.core );
 	assert ( this->core->get_dim() == 0 );

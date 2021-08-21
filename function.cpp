@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.20
+// function.cpp 2021.08.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -83,8 +83,10 @@ Function Function::CoupledWithField::Vector::component ( size_t i )
 	assert ( this->components.size() == n );
 	return this->components[i];                   }
 
-// in Function::Vector::MultiValued::JumpIsSum::component,
+Function Function::Vector::MultiValued::JumpIsSum::component ( size_t i )
+// virtual from Function::Core
 // build a new Function::Scalar::MultiValued::JumpIsSum
+{	assert ( false );  }
 
 // forbid execution of Function::Vector::MultiValued::JumpIsLinear::component
 
@@ -299,10 +301,12 @@ double Function::Diffeomorphism::OneDim::get_value_on_cell
 std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
 ( Cell::Core * cll ) const  // virtual from Function::Vector
 { return this->field->on_cell(cll);  }
+// { return this->field->on_cell(cll).reference();  }
 	
 std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
 ( Cell::Core * cll, const tag::Spin &, const Function::ActionExponent & exp ) const
-{ assert ( false );  }  // virtual from Function::Vector
+{ return this->field->on_cell(cll);  }  // virtual from Function::Vector
+// { return this->field->on_cell(cll).reference();  }
 	
 std::vector<double> Function::Immersion::get_value_on_cell ( Cell::Core * cll ) const
 { assert ( false );  }  // virtual from Function::Vector

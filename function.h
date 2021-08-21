@@ -51,6 +51,7 @@ namespace tag
 	struct IfLessThan { };  static const IfLessThan if_less_than;
 	struct Otherwise { };  static const Otherwise otherwise;
 	struct Spin { };  static const Spin spin;
+	struct AssociatedWith { };  static const AssociatedWith associated_with;
 	struct Through { };  static const Through through;
 	struct Becomes { };  static const Becomes becomes;
 	struct Transforms { };  static const Transforms transforms;
@@ -178,8 +179,6 @@ class Function
 	class MultiValued;
 	class Equality;
 
-	static Cell vertex_for_multivalued;
-	
 };  // end of  class Function
 
 
@@ -1612,7 +1611,8 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 	// Function base  -- here should be Function::Scalar
 	// std::vector < Function::Action > actions
 
-	inline MultiValued ( const Function & b, std::vector < Function::Action > a )
+	inline MultiValued ( const tag::AssociatedWith &, const Function & b,
+	                     std::vector < Function::Action > a               )
 	:	Function::MultiValued ( b, a )
 	{	}
 
@@ -1666,6 +1666,11 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	std::vector < double > beta;
 	// upon each action[i], the value v of the function becomes  v + beta[i]
 	
+	inline JumpIsSum ( const tag::AssociatedWith &, const Function & f,
+										 std::vector < Function::Action > ac, std::vector < double > be )
+	:	Function::Scalar::MultiValued ( tag::associated_with, f, ac ), beta { be }
+	{	assert ( ac.size() == be.size() );  }
+
 	inline JumpIsSum ( const Function::Scalar::MultiValued::JumpIsSum & ) = delete;
 	inline JumpIsSum ( Function::Scalar::MultiValued::JumpIsSum && ) = delete;
 	
@@ -1765,7 +1770,8 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	// Function base  -- here should be Function::Vector
 	// std::vector < Function::Action > actions
 
-	inline MultiValued ( const Function & b, std::vector < Function::Action > a )
+	inline MultiValued ( const tag::AssociatedWith &, const Function & b,
+	                     std::vector < Function::Action > a               )
 	:	Function::MultiValued ( b, a )
 	{	}
 
@@ -1816,6 +1822,12 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	
 	std::vector < std::vector < double > > beta;
 	// upon each action[i], the value v of the function becomes  v + beta[i]
+
+	inline JumpIsSum ( const tag::AssociatedWith &, const Function & f,
+										 std::vector < Function::Action > ac,
+										 std::vector < std::vector < double > > be      )
+	:	Function::Vector::MultiValued ( tag::associated_with, f, ac ), beta { be }
+	{	assert ( ac.size() == be.size() );  }
 	
 	inline JumpIsSum ( const Function::Vector::MultiValued::JumpIsSum & ) = delete;
 	inline JumpIsSum ( Function::Vector::MultiValued::JumpIsSum && ) = delete;

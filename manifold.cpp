@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.08.15
+// manifold.cpp 2021.08.21
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -80,7 +80,7 @@ Function Manifold::Parametric::get_coord_func ( ) const  // virtual from Manifol
 {	return this->surrounding_space.coordinates();  }
 
 Function Manifold::Quotient::get_coord_func ( ) const  // virtual from Manifold::Core
-{	return this->base_space.coordinates();  }
+{	return this->coord_func;  }
 
 //-----------------------------------------------------------------------------------------
 
