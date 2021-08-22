@@ -1,5 +1,5 @@
 
-//   field.h  2021.08.10
+//   field.h  2021.08.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -73,6 +73,9 @@ class Field::Core
 
 // a Field::ShortInt can be used for labeling cells in different regions
 //   or for holding the jump of a segment
+
+// note that Cell::Positive::short_int_heap and Cell::Negative::short_int_heap
+// are filled with zeros by the Cell::Core constructor (unlike double_heap and size_t_heap)
 	
 class Field::ShortInt : public Field::Core
 
@@ -83,8 +86,9 @@ class Field::ShortInt : public Field::Core
 	size_t index_in_heap;
 
 	inline ShortInt ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
-	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	}
+	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
+		index_in_heap { Cell::short_int_heap_size_pos[d] }
+	{	Cell::short_int_heap_size_pos[d] ++;  }
 
 	virtual ~ShortInt ( ) { };
 

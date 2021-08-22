@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.15
+//   mesh.h  2021.08.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1611,7 +1611,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	#endif  // MANIFEM_COLLECT_CM	
 		double_heap ( Cell::double_heap_size_pos [d] ),
 		size_t_heap ( Cell::size_t_heap_size_pos [d] ),
-		short_int_heap ( Cell::short_int_heap_size_pos [d] ),
+		short_int_heap ( Cell::short_int_heap_size_pos [d], 0 ),
 		reverse_attr ( tag::non_existent )
 	{	// Cell::counter++;
 		std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_pos_cell[d];
@@ -1633,7 +1633,7 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	#endif  // MANIFEM_COLLECT_CM	
 		double_heap ( Cell::double_heap_size_neg [d] ),
 		size_t_heap ( Cell::size_t_heap_size_neg [d] ),
-		short_int_heap ( Cell::short_int_heap_size_neg [d] ),
+		short_int_heap ( Cell::short_int_heap_size_neg [d], 0 ),
 		reverse_attr ( tag::whose_core_is, direct_cell_p, tag::previously_existing, tag::surely_not_null )
 	{	// Cell::counter++;
 		std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_neg_cell[d];

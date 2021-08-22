@@ -1,5 +1,5 @@
 
-// manifold.h 2021.08.21
+// manifold.h 2021.08.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1045,72 +1045,18 @@ class Manifold::Quotient : public Manifold::Core
 
 	Manifold base_space;  // wrap around a Manifold::Euclid
 	
-	std::vector < Function::Action > actions;  // set of generators for a discrete group
-
 	Function coord_func { tag::non_existent };
 
-	inline Quotient ( Manifold b, const Function::Action g1 )
-	: Manifold::Core(), base_space ( b ), actions { { g1 } }
-	{	assert ( g1.coords.core == b.coordinates().core );
-		assert ( this->coord_func.core == nullptr );
-		if ( b.coordinates().nb_of_components() == 1 )
-		{	std::vector < double > v1 =
-				Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
-				( g1.transf, g1.coords );
-			assert ( v1.size() > 0 );
-			this->coord_func.core = new Function::Scalar::MultiValued::JumpIsSum
-				( tag::associated_with, b.coordinates(), { g1 }, v1 );              }
-		else	
-		{	assert ( b.coordinates().nb_of_components() > 1 );
-			std::vector < double > v1 =
-			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-				( g1.transf, g1.coords );
-			assert ( v1.size() > 0 );
-			this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
-				( tag::associated_with, b.coordinates(), { g1 }, { v1 } );          }
-		this->coord_func.core->nb_of_wrappers = 1;                                }
+	std::vector < Function::Action > actions;  // set of generators for a discrete group
+	
+	std::vector < Field::ShortInt > fields;  // a jump (exponent) per action
 
-	inline Quotient ( Manifold b, const Function::Action g1, const Function::Action g2 )
-	: Manifold::Core(), base_space ( b ), actions { { g1, g2 } }
-	{	assert ( g1.coords.core == b.coordinates().core );
-		assert ( g2.coords.core == b.coordinates().core );
-		std::vector < double > v1 =
-			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-			( g1.transf, g1.coords );
-		assert ( v1.size() > 0 );
-		std::vector < double > v2 =
-			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-			( g2.transf, g2.coords );
-		assert ( v2.size() > 0 );
-		assert ( b.coordinates().nb_of_components() >= 2 );
-		assert ( this->coord_func.core == nullptr );
-		this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
-			( tag::associated_with, b.coordinates(), { g1, g2 }, { v1, v2 } );
-		this->coord_func.core->nb_of_wrappers = 1;                            }
+	inline Quotient ( Manifold b, const Function::Action g1 );
+
+	inline Quotient ( Manifold b, const Function::Action g1, const Function::Action g2 );
 
 	inline Quotient ( Manifold b,
-	  const Function::Action g1, const Function::Action g2, const Function::Action g3 )
-	: Manifold::Core(), base_space ( b ), actions { { g1, g2, g3 } }
-	{	assert ( g1.coords.core == b.coordinates().core );
-		assert ( g2.coords.core == b.coordinates().core );
-		assert ( g3.coords.core == b.coordinates().core );
-		std::vector < double > v1 =
-			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-			( g1.transf, g1.coords );
-		assert ( v1.size() > 0 );
-		std::vector < double > v2 =
-			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-			( g2.transf, g2.coords );
-		assert ( v2.size() > 0 );
-		std::vector < double > v3 =
-			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-			( g3.transf, g3.coords );
-		assert ( v3.size() > 0 );
-		assert ( b.coordinates().nb_of_components() >= 3 );
-		assert ( this->coord_func.core == nullptr );
-		this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
-			( tag::associated_with, b.coordinates(), { g1, g2, g3 }, { v1, v2, v3 } );
-		this->coord_func.core->nb_of_wrappers = 1;                                   }
+	  const Function::Action g1, const Function::Action g2, const Function::Action g3 );
 
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden
@@ -1165,6 +1111,89 @@ class Manifold::Quotient : public Manifold::Core
 	
 	
 };  // end of class Manifold::Quotient
+
+//-----------------------------------------------------------------------------------------
+
+
+inline Manifold::Quotient::Quotient ( Manifold b, const Function::Action g1 )
+
+: Manifold::Core(), base_space ( b ), actions { { g1 } }
+
+{	assert ( g1.coords.core == b.coordinates().core );
+	assert ( this->coord_func.core == nullptr );
+	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	if ( b.coordinates().nb_of_components() == 1 )
+	{	std::vector < double > v1 =
+			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
+			( g1.transf, g1.coords );
+		assert ( v1.size() > 0 );
+		this->coord_func.core = new Function::Scalar::MultiValued::JumpIsSum
+			( tag::associated_with, b.coordinates(), { g1 }, v1 );              }
+	else	
+	{	assert ( b.coordinates().nb_of_components() > 1 );
+		std::vector < double > v1 =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g1.transf, g1.coords );
+		assert ( v1.size() > 0 );
+		this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
+			( tag::associated_with, b.coordinates(), { g1 }, { v1 } );          }
+	this->coord_func.core->nb_of_wrappers = 1;                                }
+
+
+inline Manifold::Quotient::Quotient
+( Manifold b, const Function::Action g1, const Function::Action g2 )
+	
+: Manifold::Core(), base_space ( b ), actions { { g1, g2 } }
+
+{	assert ( g1.coords.core == b.coordinates().core );
+	assert ( g2.coords.core == b.coordinates().core );
+	this->fields.reserve ( 2 );
+	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	std::vector < double > v1 =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( g1.transf, g1.coords );
+	assert ( v1.size() > 0 );
+	std::vector < double > v2 =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( g2.transf, g2.coords );
+	assert ( v2.size() > 0 );
+	assert ( b.coordinates().nb_of_components() >= 2 );
+	assert ( this->coord_func.core == nullptr );
+	this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
+		( tag::associated_with, b.coordinates(), { g1, g2 }, { v1, v2 } );
+	this->coord_func.core->nb_of_wrappers = 1;                            }
+
+
+inline Manifold::Quotient::Quotient ( Manifold b,
+  const Function::Action g1, const Function::Action g2, const Function::Action g3 )
+	
+: Manifold::Core(), base_space ( b ), actions { { g1, g2, g3 } }
+
+{	assert ( g1.coords.core == b.coordinates().core );
+	assert ( g2.coords.core == b.coordinates().core );
+	assert ( g3.coords.core == b.coordinates().core );
+	this->fields.reserve ( 3 );
+	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	std::vector < double > v1 =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( g1.transf, g1.coords );
+	assert ( v1.size() > 0 );
+	std::vector < double > v2 =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( g2.transf, g2.coords );
+	assert ( v2.size() > 0 );
+	std::vector < double > v3 =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( g3.transf, g3.coords );
+	assert ( v3.size() > 0 );
+	assert ( b.coordinates().nb_of_components() >= 3 );
+	assert ( this->coord_func.core == nullptr );
+	this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
+		( tag::associated_with, b.coordinates(), { g1, g2, g3 }, { v1, v2, v3 } );
+	this->coord_func.core->nb_of_wrappers = 1;                                    }
 
 //-----------------------------------------------------------------------------------------
 
