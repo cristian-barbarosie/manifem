@@ -1,5 +1,5 @@
 
-// function.h 2021.08.21
+// function.h 2021.08.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -50,7 +50,6 @@ namespace tag
 	struct LessThan { };  static const LessThan less_than;
 	struct IfLessThan { };  static const IfLessThan if_less_than;
 	struct Otherwise { };  static const Otherwise otherwise;
-	struct Spin { };  static const Spin spin;
 	struct AssociatedWith { };  static const AssociatedWith associated_with;
 	struct Through { };  static const Through through;
 	struct Becomes { };  static const Becomes becomes;
@@ -160,7 +159,7 @@ class Function
 	class TakenOnCell;  class TakenOnCellWithSpin;
 	inline Function::TakenOnCell operator() ( const Cell & cll ) const;
 	inline Function::TakenOnCellWithSpin operator()
-	( Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const;
+	( const Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const;
 
 	inline Function deriv ( const Function & x ) const;  // derivative with respect to x
 
@@ -2046,9 +2045,9 @@ class Function::TakenOnCellWithSpin
 	// they should be immediately converted to a (reference to a) double or vector<double>
 	// so an ordinary pointer is OK here
 	
-	Cell::Core * cll;
+	Cell::Core * const cll;
 
-	TakenOnCellWithSpin ( const Function & ff, Cell & c, const Function::ActionExponent & exp )
+	TakenOnCellWithSpin ( const Function & ff, const Cell & c, const Function::ActionExponent & exp )
 	:	f { ff.core }, spin { exp }, cll { c.core }
 	{	}
 
@@ -2164,7 +2163,7 @@ inline Function::TakenOnCell Function::operator() ( const Cell & cll ) const
 
 
 inline Function::TakenOnCellWithSpin Function::operator()
-( Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const
+( const Cell & cll, const tag::Spin &, const Function::ActionExponent & exp ) const
 {	return Function::TakenOnCellWithSpin ( *this, cll, exp );   }
 
 

@@ -1049,7 +1049,7 @@ class Manifold::Quotient : public Manifold::Core
 
 	std::vector < Function::Action > actions;  // set of generators for a discrete group
 	
-	std::vector < Field::ShortInt > fields;  // a jump (exponent) per action
+	std::vector < Field::ShortInt > spins;  // a jump (exponent) per action
 
 	inline Quotient ( Manifold b, const Function::Action g1 );
 
@@ -1121,7 +1121,7 @@ inline Manifold::Quotient::Quotient ( Manifold b, const Function::Action g1 )
 
 {	assert ( g1.coords.core == b.coordinates().core );
 	assert ( this->coord_func.core == nullptr );
-	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
 	if ( b.coordinates().nb_of_components() == 1 )
 	{	std::vector < double > v1 =
 			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
@@ -1147,9 +1147,9 @@ inline Manifold::Quotient::Quotient
 
 {	assert ( g1.coords.core == b.coordinates().core );
 	assert ( g2.coords.core == b.coordinates().core );
-	this->fields.reserve ( 2 );
-	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->spins.reserve ( 2 );
+	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
 	std::vector < double > v1 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
 		( g1.transf, g1.coords );
@@ -1173,10 +1173,10 @@ inline Manifold::Quotient::Quotient ( Manifold b,
 {	assert ( g1.coords.core == b.coordinates().core );
 	assert ( g2.coords.core == b.coordinates().core );
 	assert ( g3.coords.core == b.coordinates().core );
-	this->fields.reserve ( 3 );
-	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	this->fields.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->spins.reserve ( 3 );
+	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
 	std::vector < double > v1 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
 		( g1.transf, g1.coords );

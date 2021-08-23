@@ -134,6 +134,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct IntrinsicOrientation { };  static const IntrinsicOrientation intrinsic_orientation;
 	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
 	struct RandomOrientation { };  static const RandomOrientation random_orientation;
+	struct Spin { };  static const Spin spin;
+
 	struct Util
 	{ template < class T > class Wrapper;
 		class Core;
@@ -736,7 +738,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// we are still in class Mesh
 	
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
-                const tag::DividedIn &, const size_t n                      );
+	              const tag::DividedIn &, const size_t n               );
+	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
+	              const tag::DividedIn &, const size_t n,
+	              const tag::Spin &, std::vector < short int >         );
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
@@ -1515,6 +1520,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n );
+	void build ( const tag::Segment &,  // builds a chain of n segment cells
+	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
+	             const tag::Spin &, std::vector < short int >                           );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	
@@ -5215,6 +5223,21 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
 	this_core->first_ver = A;
 	this_core->last_ver = B;                                      }
+
+
+inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
+                    const tag::DividedIn &, const size_t n,
+                    const tag::Spin &, std::vector < short int > s       )
+: Mesh ( tag::whose_core_is,
+         new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                               )
+{	assert ( not A.is_positive() );
+	assert ( B.is_positive() );
+	this->build ( tag::segment, A, B, tag::divided_in, n, tag::spin, s );
+	Mesh::Connected::OneDim * this_core = tag::Util::assert_cast
+		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
+	this_core->first_ver = A;
+	this_core->last_ver = B;                                              }
 
 
 inline Mesh::Mesh

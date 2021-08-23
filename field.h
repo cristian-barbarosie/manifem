@@ -71,8 +71,8 @@ class Field::Core
 //---------------------------------------------------------------------------------------
 
 
-// a Field::ShortInt can be used for labeling cells in different regions
-//   or for holding the jump of a segment
+// a Field::ShortInt can be used to label cells in different regions
+//   or to hold the jump of a segment
 
 // note that Cell::Positive::short_int_heap and Cell::Negative::short_int_heap
 // are filled with zeros by the Cell::Core constructor (unlike double_heap and size_t_heap)
