@@ -22,7 +22,7 @@ int main ( )
 	Cell A ( tag::vertex );  x(A) = 0.02;
 
 	// with this vertex, we build a segment
-	Mesh seg ( tag::segment, A.reverse(), A, tag::divided_in, 10, tag::spin, {1} );
+	Mesh seg ( tag::segment, A.reverse(), A, tag::divided_in, 10, tag::spin, g );
 
 	Cell prev = seg.cell_behind(A).base().reverse();
 	Cell next = seg.cell_in_front_of(A).tip();

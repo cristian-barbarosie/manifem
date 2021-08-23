@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.22
+//   mesh.h  2021.08.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -140,6 +140,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	{ template < class T > class Wrapper;
 		class Core;
 		class CellCore;  class MeshCore;
+		class ActionExponent;
 		inline static size_t assert_diff ( const size_t a, const size_t b )
 		{	assert ( a >= b );  return  a - b;  }
 		template < typename X, typename Y > inline static Y assert_cast ( X x )
@@ -741,7 +742,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::DividedIn &, const size_t n               );
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n,
-	              const tag::Spin &, std::vector < short int >         );
+	              const tag::Spin &, const tag::Util::ActionExponent & );
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
@@ -1522,7 +1523,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n );
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Spin &, std::vector < short int >                           );
+	             const tag::Spin &, const tag::Util::ActionExponent &                    );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	
@@ -5227,7 +5228,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
-                    const tag::Spin &, std::vector < short int > s       )
+                    const tag::Spin &, const tag::Util::ActionExponent & s )
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )

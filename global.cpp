@@ -1,5 +1,5 @@
 
-// global.cpp 2021.08.22
+// global.cpp 2021.08.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -60,7 +60,7 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
                    const tag::DividedIn &, size_t n,
-                   const tag::Spin &, std::vector < short int > s        )
+                   const tag::Spin &, const tag::Util::ActionExponent & s )
 
 // beware, A and B may be one and the same vertex !
 	
@@ -103,7 +103,9 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 	size_t nb_spins = mani_q->spins.size();
 	for ( size_t i = 0; i < nb_spins; i++ )
 	{	Field::ShortInt & sp = mani_q->spins[i];
-		sp.on_cell ( seg.core ) = s[i];          }
+		std::map<Function::Action,short int>::const_iterator it =
+			s.index_map.lower_bound(mani_q->actions[i]);
+		sp.on_cell ( seg.core ) = it->second;                     }
 	seg.add_to_mesh ( *this, tag::do_not_bother );
 
 	space.set_as_working_manifold();
