@@ -62,7 +62,7 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
                    const tag::DividedIn &, size_t n,
                    const tag::Spin &, const tag::Util::ActionExponent & s )
 
-// beware, A and B may be one and the same vertex !
+// beware, A.reverse() and B may be one and the same vertex !
 	
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold

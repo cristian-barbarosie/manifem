@@ -1,5 +1,5 @@
 
-// function.h 2021.08.23
+// function.h 2021.08.24
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1607,6 +1607,24 @@ inline tag::Util::ActionExponent operator+
 	return res;                                                                             }
 
 
+inline tag::Util::ActionExponent operator+=
+( tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
+{	std::map<Function::Action,short int>::const_iterator it = b.index_map.begin();
+	for ( ; it != b.index_map.end(); it++ )
+	{	const Function::Action & g = it->first;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map<Function::Action,short int>::iterator itt =
+			a.index_map.lower_bound(g);
+		if ( ( itt == a.index_map.end() ) or ( a.index_map.key_comp()(g,itt->first) ) )
+			// new action
+			a.index_map.emplace_hint ( itt, std::piecewise_construct,
+	      std::forward_as_tuple(g), std::forward_as_tuple(it->second) ); 
+		else  // action already there
+		{	itt->second += it->second;  // could be zero
+			if ( itt->second == 0 ) a.index_map.erase ( itt );  }                           }
+	return a;                                                                             }
+
+
 inline tag::Util::ActionExponent operator-
 ( const tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
 {	tag::Util::ActionExponent res = a;
@@ -1624,6 +1642,24 @@ inline tag::Util::ActionExponent operator-
 		{	itt->second -= it->second;  // could be zero
 			if ( itt->second == 0 ) res.index_map.erase ( itt );  }                           }
 	return res;                                                                             }
+
+
+inline tag::Util::ActionExponent operator-=
+( tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
+{	std::map<Function::Action,short int>::const_iterator it = b.index_map.begin();
+	for ( ; it != b.index_map.end(); it++ )
+	{	const Function::Action & g = it->first;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map<Function::Action,short int>::iterator itt =
+			a.index_map.lower_bound(g);
+		if ( ( itt == a.index_map.end() ) or ( a.index_map.key_comp()(g,itt->first) ) )
+			// new action
+			a.index_map.emplace_hint ( itt, std::piecewise_construct,
+	      std::forward_as_tuple(g), std::forward_as_tuple(-it->second) ); 
+		else  // action already there
+		{	itt->second -= it->second;  // could be zero
+			if ( itt->second == 0 ) a.index_map.erase ( itt );  }                           }
+	return a;                                                                             }
 
 
 inline tag::Util::ActionExponent operator*
