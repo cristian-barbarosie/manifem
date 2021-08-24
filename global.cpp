@@ -1,5 +1,5 @@
 
-// global.cpp 2021.08.23
+// global.cpp 2021.08.24
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -62,6 +62,8 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
                    const tag::DividedIn &, size_t n,
                    const tag::Spin &, const tag::Util::ActionExponent & s )
 
+// see paragraph 12.2 in the manual
+// in this version, the segment may be a loop around a cylinder or torus
 // beware, A.reverse() and B may be one and the same vertex !
 	
 {	Manifold space = Manifold::working;
@@ -363,6 +365,158 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	it++;  assert ( it == horizon.end() );
 
 } // end of Mesh::build with tag::quadrangle
+
+//----------------------------------------------------------------------------------//
+
+void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+                   const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
+                   const tag::Spin &                                                   )
+
+// see paragraph 12.3 in the manual
+// the tag:::spin tells maniFEM that we are on a quotient manifold
+// and that the segments provided (south, east, north, west) may have spin
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
+
+	// recover corners from the sides
+	Cell SW = south.first_vertex().reverse();
+	assert ( SW == west.last_vertex() );
+	Cell SE = east.first_vertex().reverse();
+	assert ( SE == south.last_vertex() );
+	Cell NE = north.first_vertex().reverse();
+	assert ( NE == east.last_vertex() );
+	Cell NW = west.first_vertex().reverse();
+	assert ( NW == north.last_vertex() );
+	size_t N_horiz = south.number_of ( tag::segments );
+	assert ( N_horiz == north.number_of ( tag::segments ) );
+	size_t N_vert = east.number_of ( tag::segments );
+	assert ( N_vert == west.number_of ( tag::segments ) );
+
+	// prepare horizon
+	std::list <Cell> horizon;
+	{ // just a block of code for hiding 'it'
+	CellIterator it = south.iterator ( tag::over_segments, tag::require_order );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  horizon.push_back ( seg );  }
+	} // just a block of code for hiding 'it'
+
+	// start mesh generation
+	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
+	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
+	it_east.reset(); it_east++;
+	it_west.reset(); it_west++;
+	for ( size_t i = 1; i < N_vert; ++i )
+	{	std::list<Cell>::iterator it = horizon.begin();
+		Cell seg = *it;
+		Cell A = seg.base().reverse();
+		Cell s4 = west.cell_behind ( A, tag::surely_exists );
+		Cell D = s4.base().reverse();
+		Cell ver_east = *it_east;
+		Cell ver_west = *it_west;
+		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
+		alpha = alpha*alpha*alpha;
+		it_south.reset(); it_south++;
+		it_north.reset(); it_north++;
+		for ( size_t j = 1; j < N_horiz; j++ )
+		{	Cell s1 = *it;  // 'it' points into the 'horizon' list
+			Cell B = s1.tip();
+			Cell C ( tag::vertex );  // create a new vertex
+			Cell ver_south = *it_south;
+			Cell ver_north = *it_north;
+			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
+			beta = beta*beta*beta;
+			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
+			space.interpolate ( C, bb*(1-frac_N), ver_south, aa*frac_E,     ver_east,     
+		                         bb*frac_N,     ver_north, aa*(1-frac_E), ver_west );
+			Cell s2 ( tag::segment, B.reverse(), C );  // create a new segment
+			Cell s3 ( tag::segment, C.reverse(), D );  // create a new segment
+			if ( cut_rectangles_in_half )
+			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
+				Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
+				Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
+				T1.add_to_mesh (*this);  // 'this' is the mesh we are building
+				T2.add_to_mesh (*this);                                 }
+			else // with quadrilaterals
+			{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
+				Q.add_to_mesh (*this);                                 }
+			// 's3' is on the ceiling, we keep it in the 'horizon' list
+			// it will be on the ground when we build the next layer of cells
+			*it = s3.reverse(); // 'it' points into the 'horizon' list
+			it++;
+			D = C;
+			s4 = s2.reverse();
+			it_south++;  it_north++;
+		} // end of for j
+		it_south++;  it_north++;
+		assert ( not it_south.in_range() );
+		assert ( not it_north.in_range() );
+		// last rectangle of this row, east side already exists
+		Cell s1 = *it;
+		Cell B = s1.tip();
+		Cell s2 = east.cell_in_front_of ( B, tag::surely_exists );
+		Cell C = s2.tip();
+		Cell s3 ( tag::segment, C.reverse(), D );  // create a new segment
+		if ( cut_rectangles_in_half )
+		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
+			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
+			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
+			T1.add_to_mesh (*this);
+			T2.add_to_mesh (*this);                                 }
+		else // with quadrilaterals
+		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
+			Q.add_to_mesh (*this);                                 }
+		*it = s3.reverse();
+		it_east++;  it_west++;
+		it++;  assert ( it == horizon.end() );
+	} // end of for i
+	it_east++;  it_west++;
+	assert ( not it_east.in_range() );
+	assert ( not it_west.in_range() );
+	// last row of rectangles is different, north sides already exist
+	std::list<Cell>::iterator it = horizon.begin();
+	Cell s4 = west.cell_in_front_of ( NW, tag::surely_exists );
+	Cell D = NW;
+	for (size_t j=1; j < N_horiz; j++)
+	{	Cell s1 = *it;
+		// s1 == south.cell_in_front_of (A);
+		Cell B = s1.tip();
+		Cell s3 = north.cell_behind ( D );
+		Cell C = s3.base().reverse();
+		Cell s2 ( tag::segment, B.reverse(), C );  // create a new segment
+		if ( cut_rectangles_in_half )
+		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
+			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
+			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
+			T1.add_to_mesh (*this);
+			T2.add_to_mesh (*this);                                 }
+		else // with quadrilaterals
+		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
+			Q.add_to_mesh (*this);                           }
+		it++;
+		D = C;
+		s4 = s2.reverse();                                          }
+	// and the last rectangle of the last row
+	Cell s1 = *it;
+	Cell B = s1.tip();
+	Cell s2 = east.cell_in_front_of (B);
+	Cell C = s2.tip();
+	assert ( C == NE );
+	Cell s3 = north.cell_behind ( D );
+	if ( cut_rectangles_in_half )
+	{	Cell BD ( tag::segment, B.reverse(), D );
+		Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );
+		Cell T2 ( tag::triangle, BD, s4, s1 );
+		T1.add_to_mesh (*this);
+		T2.add_to_mesh (*this);                                 }
+	else // with quadrilaterals
+	{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );
+		Q.add_to_mesh (*this);                                 }
+	it++;  assert ( it == horizon.end() );
+
+} // end of Mesh::build with tag::quadrangle and tag::spin
 
 //----------------------------------------------------------------------------------//
 
