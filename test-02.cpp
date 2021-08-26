@@ -4,42 +4,34 @@
 
 using namespace maniFEM;
 
-int main () {
+int main ()
 
-	// we choose our (geometric) space dimension :
-	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function x = xy[0],  y = xy[1];
+
+	// we introduce two equivalence relations on RR2
+	Function::Action g1 ( tag::transforms, xy, tag::into, (x+3.) && (y+0.1) );
+	Function::Action g2 ( tag::transforms, xy, tag::into, (x-0.1) && (y+1.) );
+
+	Manifold torus = RR2.quotient ( g1, g2 );
 	
-	// xyz is a map defined on our future mesh with values in RR3 :
-	Function xyz = RR3.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Cell A ( tag::vertex ), B ( tag::vertex );
+	Cell AB ( tag::segment, A.reverse(), B );
+	AB.spin() = g1;
+	std::cout << "AB.spin() == 0  ";
+	if ( AB.spin() == 0 ) std::cout << "true" << std::endl;
+	else std::cout << " false" << std::endl;
+	std::cout << "AB.spin() == g1  ";
+	if ( AB.spin() == g1 ) std::cout << "true" << std::endl;
+	else std::cout << " false" << std::endl;
+	std::cout << "AB.spin() == g2  ";
+	if ( AB.spin() == g2 ) std::cout << "true" << std::endl;
+	else std::cout << " false" << std::endl;
+	std::cout << "AB.spin() == g1+g2  ";
+	if ( AB.spin() == g1+g2 ) std::cout << "true" << std::endl;
+	else std::cout << " false" << std::endl;
 
-	// we can extract components of xyz using the [] operator :
-	Function x = xyz[0],  y = xyz[1],  z = xyz[2];
-
-	// Let's build a rectangular mesh. First, the four corners :
-	Cell SW ( tag::vertex );  x(SW) =  0.;  y(SW) =  0.;  z(SW) =  0.;
-	Cell SE ( tag::vertex );  x(SE) =  1.;  y(SE) =  0.;  z(SE) =  0.;
-	Cell NE ( tag::vertex );  x(NE) =  1.;  y(NE) =  1.;  z(NE) =  0.;
-	Cell NW ( tag::vertex );  x(NW) =  0.;  y(NW) =  1.;  z(NW) =  1.;
-	
-	// now build the four sides of the rectangle :
-	Mesh south ( tag::segment, SW.reverse(), SE, tag::divided_in, 10 );
-	Mesh east  ( tag::segment, SE.reverse(), NE, tag::divided_in, 10 );
-	Mesh north ( tag::segment, NE.reverse(), NW, tag::divided_in, 10 );
-	Mesh west  ( tag::segment, NW.reverse(), SW, tag::divided_in, 10 );
-
-	// and now the rectangle :
-	Mesh rect_mesh ( tag::rectangle, south, east, north, west );
-
-	CellIterator it1 = rect_mesh.iterator ( tag::over_vertices );
-	for ( it1.reset(); it1.in_range(); it1++ )
-	{	Cell P = *it1;
-		CellIterator it2 = rect_mesh.iterator ( tag::over_segments, tag::around, P.reverse() );
-		CellIterator it3 = rect_mesh.iterator ( tag::over_vertices, tag::around, P );
-		for ( it2.reset(), it3.reset(); it2.in_range(); it2++, it3++ )
-		{	assert ( it3.in_range() );
-			assert ( (*it2).base().reverse() == P );
-			assert ( (*it2).tip() == *it3 );         }
-		assert ( not it3.in_range() );                                                }
 
 	std::cout << "end of main" << std::endl << std::flush;
 }

@@ -1,5 +1,5 @@
 
-// global.cpp 2021.08.24
+// global.cpp 2021.08.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -60,7 +60,7 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
                    const tag::DividedIn &, size_t n,
-                   const tag::Spin &, const tag::Util::ActionExponent & s )
+                   const tag::Spin &, const tag::Util::CompositionOfActions & s )
 
 // see paragraph 12.2 in the manual
 // in this version, the segment may be a loop around a cylinder or torus
@@ -102,12 +102,13 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 		prev_point = P.reverse();                                     }
 
 	Cell seg ( tag::segment, prev_point, B );
-	size_t nb_spins = mani_q->spins.size();
-	for ( size_t i = 0; i < nb_spins; i++ )
-	{	Field::ShortInt & sp = mani_q->spins[i];
-		std::map<Function::Action,short int>::const_iterator it =
-			s.index_map.lower_bound(mani_q->actions[i]);
-		sp.on_cell ( seg.core ) = it->second;                     }
+	// size_t nb_spins = mani_q->spins.size();
+	// for ( size_t i = 0; i < nb_spins; i++ )
+	// {	Field::ShortInt & sp = mani_q->spins[i];
+	// 	std::map<Function::Action,short int>::const_iterator it =
+	// 		s.index_map.lower_bound(mani_q->actions[i]);
+	// 	sp.on_cell ( seg.core ) = it->second;                     }
+	seg.spin() = s;
 	seg.add_to_mesh ( *this, tag::do_not_bother );
 
 	space.set_as_working_manifold();
@@ -254,23 +255,24 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
-	it_east.reset(); it_east++;
-	it_west.reset(); it_west++;
+	it_east.reset();  it_east++;
+	it_west.reset();  it_west++;
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell seg = *it;
 		Cell A = seg.base().reverse();
-		Cell s4 = west.cell_behind ( A, tag::surely_exists );
-		Cell D = s4.base().reverse();
+		Cell DA = west.cell_behind ( A, tag::surely_exists );
+		Cell D = DA.base().reverse();
 		Cell ver_east = *it_east;
 		Cell ver_west = *it_west;
+		assert ( ver_west == A );
 		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
 		alpha = alpha*alpha*alpha;
-		it_south.reset(); it_south++;
-		it_north.reset(); it_north++;
+		it_south.reset();  it_south++;
+		it_north.reset();  it_north++;
 		for ( size_t j = 1; j < N_horiz; j++ )
-		{	Cell s1 = *it;  // 'it' points into the 'horizon' list
-			Cell B = s1.tip();
+		{	Cell AB = *it;  // 'it' points into the 'horizon' list of segments
+			Cell B = AB.tip();
 			Cell C ( tag::vertex );  // create a new vertex
 			Cell ver_south = *it_south;
 			Cell ver_north = *it_north;
@@ -279,44 +281,44 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
 			space.interpolate ( C, bb*(1-frac_N), ver_south, aa*frac_E,     ver_east,     
 		                         bb*frac_N,     ver_north, aa*(1-frac_E), ver_west );
-			Cell s2 ( tag::segment, B.reverse(), C );  // create a new segment
-			Cell s3 ( tag::segment, C.reverse(), D );  // create a new segment
+			Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
+			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-				Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
-				Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-				T1.add_to_mesh (*this);  // 'this' is the mesh we are building
-				T2.add_to_mesh (*this);                                 }
+				Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
+				Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+				BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
+				ABD.add_to_mesh (*this);                          }
 			else // with quadrilaterals
-			{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-				Q.add_to_mesh (*this);                                 }
-			// 's3' is on the ceiling, we keep it in the 'horizon' list
+			{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+				Q.add_to_mesh (*this);                      }
+			// CD is on the ceiling, we keep it in the 'horizon' list
 			// it will be on the ground when we build the next layer of cells
-			*it = s3.reverse(); // 'it' points into the 'horizon' list
+			*it = CD.reverse(); // 'it' points into the 'horizon' list
 			it++;
 			D = C;
-			s4 = s2.reverse();
+			DA = BC.reverse();
 			it_south++;  it_north++;
 		} // end of for j
 		it_south++;  it_north++;
 		assert ( not it_south.in_range() );
 		assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
-		Cell s1 = *it;
-		Cell B = s1.tip();
-		Cell s2 = east.cell_in_front_of ( B, tag::surely_exists );
-		Cell C = s2.tip();
-		Cell s3 ( tag::segment, C.reverse(), D );  // create a new segment
+		Cell AB = *it;
+		Cell B = AB.tip();
+		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
+		Cell C = BC.tip();
+		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
-			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-			T1.add_to_mesh (*this);
-			T2.add_to_mesh (*this);                                 }
+			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
+			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+			BCD.add_to_mesh (*this);
+			ABD.add_to_mesh (*this);                          }
 		else // with quadrilaterals
-		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-			Q.add_to_mesh (*this);                                 }
-		*it = s3.reverse();
+		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+			Q.add_to_mesh (*this);                     }
+		*it = CD.reverse();
 		it_east++;  it_west++;
 		it++;  assert ( it == horizon.end() );
 	} // end of for i
@@ -325,48 +327,48 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	assert ( not it_west.in_range() );
 	// last row of rectangles is different, north sides already exist
 	std::list<Cell>::iterator it = horizon.begin();
-	Cell s4 = west.cell_in_front_of ( NW, tag::surely_exists );
+	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
-	{	Cell s1 = *it;
-		// s1 == south.cell_in_front_of (A);
-		Cell B = s1.tip();
-		Cell s3 = north.cell_behind ( D );
-		Cell C = s3.base().reverse();
-		Cell s2 ( tag::segment, B.reverse(), C );  // create a new segment
+	{	Cell AB = *it;
+		Cell B = AB.tip();
+		Cell CD = north.cell_behind ( D );
+		Cell C = CD.base().reverse();
+		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
-			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-			T1.add_to_mesh (*this);
-			T2.add_to_mesh (*this);                                 }
+			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
+			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+			BCD.add_to_mesh (*this);
+			ABD.add_to_mesh (*this);                           }
 		else // with quadrilaterals
-		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-			Q.add_to_mesh (*this);                           }
+		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+			Q.add_to_mesh (*this);                     }
 		it++;
 		D = C;
-		s4 = s2.reverse();                                          }
+		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
-	Cell s1 = *it;
-	Cell B = s1.tip();
-	Cell s2 = east.cell_in_front_of (B);
-	Cell C = s2.tip();
+	Cell AB = *it;
+	Cell B = AB.tip();
+	Cell BC = east.cell_in_front_of (B);
+	Cell C = BC.tip();
 	assert ( C == NE );
-	Cell s3 = north.cell_behind ( D );
+	Cell CD = north.cell_behind ( D );
 	if ( cut_rectangles_in_half )
 	{	Cell BD ( tag::segment, B.reverse(), D );
-		Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );
-		Cell T2 ( tag::triangle, BD, s4, s1 );
-		T1.add_to_mesh (*this);
-		T2.add_to_mesh (*this);                                 }
+		Cell BCD ( tag::triangle, BD.reverse(), BC, CD );
+		Cell ABD ( tag::triangle, BD, DA, AB );
+		BCD.add_to_mesh (*this);
+		ABD.add_to_mesh (*this);                          }
 	else // with quadrilaterals
-	{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );
-		Q.add_to_mesh (*this);                                 }
+	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );
+		Q.add_to_mesh (*this);                     }
 	it++;  assert ( it == horizon.end() );
 
 } // end of Mesh::build with tag::quadrangle
 
 //----------------------------------------------------------------------------------//
+
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
@@ -375,9 +377,19 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 // see paragraph 12.3 in the manual
 // the tag:::spin tells maniFEM that we are on a quotient manifold
 // and that the segments provided (south, east, north, west) may have spin
+
+// beware, south may be equal to north.reverse, east may be equal to west.reverse
+// or they may be not equal but share the same vertices (and segments, reversed)
+// the correspondence may be not face-to-face,
+// e.g. the first vertex of south may show up somewhere in the middle of north
 	
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
 
 	// recover corners from the sides
 	Cell SW = south.first_vertex().reverse();
@@ -401,74 +413,129 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	{	Cell seg = *it;  horizon.push_back ( seg );  }
 	} // just a block of code for hiding 'it'
 
+	// we have to deal with possible spins
+	// all new segments on the same raw will have spin 
+	// equal to the spin of the corresponding segment of west
+	// all new segments on the same column will have spin
+	// equal to the spin of the corresponding segment of south
+	// last raw and last column are not subject to the above rule
+	// we must keep track of the spins of ver_south, ver_east, ver_north, ver_west
+	// (relatively to SW)
+	// we use four shadow vertices
+	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
+	Cell shadow_north ( tag::vertex ), shadow_west ( tag::vertex );
+	
+	tag::Util::CompositionOfActions spin_NW, spin_SE;
+	// spin_SW is zero by our choice, spin_NE is not needed
+	{ // just a block of code for hiding 'it'
+	CellIterator it = south.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  spin_SE += seg.spin();  }
+	} { // just a block of code for hiding 'it'
+	CellIterator it = south.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  spin_NW -= seg.spin();  }
+	} // just a block of code for hiding 'it'
+
 	// start mesh generation
 	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
-	it_east.reset(); it_east++;
-	it_west.reset(); it_west++;
+	it_east.reset();  it_east++;
+	it_west.reset();  it_west++;
+	tag::Util::CompositionOfActions spin_ver_east = spin_SE;
+	tag::Util::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell seg = *it;
 		Cell A = seg.base().reverse();
-		Cell s4 = west.cell_behind ( A, tag::surely_exists );
-		Cell D = s4.base().reverse();
+		Cell DA = west.cell_behind ( A, tag::surely_exists );
+		Cell D = DA.base().reverse();
+		tag::Util::CompositionOfActions spin_seg_west = -DA.spin();
+		spin_ver_west += spin_seg_west;
 		Cell ver_east = *it_east;
+		seg = east.cell_behind ( ver_east, tag::surely_exists );
+		spin_ver_east += seg.spin();
 		Cell ver_west = *it_west;
+		assert ( ver_west == A );
 		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
 		alpha = alpha*alpha*alpha;
-		it_south.reset(); it_south++;
-		it_north.reset(); it_north++;
+		std::vector < double > v = coords_q ( ver_east, tag::spin, spin_ver_east );
+		coords_Eu ( shadow_east ) = v;
+		v = coords_q ( ver_west, tag::spin, spin_ver_west );
+		coords_Eu ( shadow_west ) = v;
+		it_south.reset();  it_south++;
+		it_north.reset();  it_north++;
+		tag::Util::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
+		tag::Util::CompositionOfActions spin_ver_north = spin_NW;
 		for ( size_t j = 1; j < N_horiz; j++ )
-		{	Cell s1 = *it;  // 'it' points into the 'horizon' list
-			Cell B = s1.tip();
-			Cell C ( tag::vertex );  // create a new vertex
+		{	Cell AB = *it;  // 'it' points into the 'horizon' list of segments
+			Cell B = AB.tip();
 			Cell ver_south = *it_south;
+			Cell seg_south = south.cell_behind ( ver_south );
+			tag::Util::CompositionOfActions spin_seg_south = seg_south.spin();
+			assert ( AB.spin() == spin_seg_south );
+			spin_ver_south += spin_seg_south;
 			Cell ver_north = *it_north;
+			seg = north.cell_in_front_of ( ver_north );
+			spin_ver_north -= seg.spin();
+			Cell C ( tag::vertex );  // create a new vertex
 			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
 			beta = beta*beta*beta;
 			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
-			space.interpolate ( C, bb*(1-frac_N), ver_south, aa*frac_E,     ver_east,     
-		                         bb*frac_N,     ver_north, aa*(1-frac_E), ver_west );
-			Cell s2 ( tag::segment, B.reverse(), C );  // create a new segment
-			Cell s3 ( tag::segment, C.reverse(), D );  // create a new segment
+			v = coords_q ( ver_south, tag::spin, spin_ver_south );
+			coords_Eu ( shadow_south ) = v;
+			v = coords_q ( ver_north, tag::spin, spin_ver_north );
+			coords_Eu ( shadow_north ) = v;
+			mani_Eu.interpolate ( C, bb*(1-frac_N), shadow_south, aa*frac_E,     shadow_east,     
+		                           bb*frac_N,     shadow_north, aa*(1-frac_E), shadow_west );
+			Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
+			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
+			BC.spin() =  spin_seg_west;
+			CD.spin() = -spin_seg_south;
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-				Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
-				Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-				T1.add_to_mesh (*this);  // 'this' is the mesh we are building
-				T2.add_to_mesh (*this);                                 }
+				BD.spin() = spin_seg_west - spin_seg_south;
+				Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
+				Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+				BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
+				ABD.add_to_mesh (*this);                           }
 			else // with quadrilaterals
-			{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-				Q.add_to_mesh (*this);                                 }
-			// 's3' is on the ceiling, we keep it in the 'horizon' list
+			{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+				Q.add_to_mesh (*this);                     }
+			// CD is on the ceiling, we keep it in the 'horizon' list
 			// it will be on the ground when we build the next layer of cells
-			*it = s3.reverse(); // 'it' points into the 'horizon' list
+			*it = CD.reverse(); // 'it' points into the 'horizon' list
 			it++;
 			D = C;
-			s4 = s2.reverse();
+			DA = BC.reverse();
 			it_south++;  it_north++;
 		} // end of for j
 		it_south++;  it_north++;
 		assert ( not it_south.in_range() );
 		assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
-		Cell s1 = *it;
-		Cell B = s1.tip();
-		Cell s2 = east.cell_in_front_of ( B, tag::surely_exists );
-		Cell C = s2.tip();
-		Cell s3 ( tag::segment, C.reverse(), D );  // create a new segment
+		Cell AB = *it;
+		Cell B = AB.tip();
+		Cell ver_south = *it_south;
+		Cell seg_south = south.cell_behind ( ver_south );
+		assert ( AB.spin() == seg_south.spin() );
+		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
+		Cell C = BC.tip();
+		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
+		CD.spin() = -spin_seg_south;
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
-			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-			T1.add_to_mesh (*this);
-			T2.add_to_mesh (*this);                                 }
+			BD.spin() = spin_seg_west - spin_seg_south;
+			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
+			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+			BCD.add_to_mesh (*this);
+			ABD.add_to_mesh (*this);                            }
 		else // with quadrilaterals
-		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-			Q.add_to_mesh (*this);                                 }
-		*it = s3.reverse();
+		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+			Q.add_to_mesh (*this);                     }
+		*it = CD.reverse();
 		it_east++;  it_west++;
 		it++;  assert ( it == horizon.end() );
 	} // end of for i
@@ -477,43 +544,49 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	assert ( not it_west.in_range() );
 	// last row of rectangles is different, north sides already exist
 	std::list<Cell>::iterator it = horizon.begin();
-	Cell s4 = west.cell_in_front_of ( NW, tag::surely_exists );
+	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
+	tag::Util::CompositionOfActions spin_seg_downwards = DA.spin();
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
-	{	Cell s1 = *it;
-		// s1 == south.cell_in_front_of (A);
-		Cell B = s1.tip();
-		Cell s3 = north.cell_behind ( D );
-		Cell C = s3.base().reverse();
-		Cell s2 ( tag::segment, B.reverse(), C );  // create a new segment
+	{	Cell AB = *it;
+		assert ( AB.spin() == spin_seg_south );
+		Cell B = AB.tip();
+		Cell CD = north.cell_behind ( D );
+		Cell C = CD.base().reverse();
+		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
+		spin_seg_downwards += spin_seg_south + CD.spin();
+		BC.spin() = -spin_seg_downwards;
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );  // create a new triangle
-			Cell T2 ( tag::triangle, BD, s4, s1 );  // create a new triangle
-			T1.add_to_mesh (*this);
-			T2.add_to_mesh (*this);                                 }
+			BD.spin() = -spin_seg_downwards - spin_seg_south;
+			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
+			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+			BCD.add_to_mesh (*this);
+			ABD.add_to_mesh (*this);                          }
 		else // with quadrilaterals
-		{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );  // create a new rectangle
-			Q.add_to_mesh (*this);                           }
+		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+			Q.add_to_mesh (*this);                       }
 		it++;
 		D = C;
-		s4 = s2.reverse();                                          }
+		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
-	Cell s1 = *it;
-	Cell B = s1.tip();
-	Cell s2 = east.cell_in_front_of (B);
-	Cell C = s2.tip();
+	Cell AB = *it;
+	Cell B = AB.tip();
+	Cell BC = east.cell_in_front_of (B);
+	Cell C = BC.tip();
 	assert ( C == NE );
-	Cell s3 = north.cell_behind ( D );
+	Cell CD = north.cell_behind ( D );
+	assert ( AB.spin() + BC.spin() + CD.spin() + DA.spin() == 0 );
 	if ( cut_rectangles_in_half )
-	{	Cell BD ( tag::segment, B.reverse(), D );
-		Cell T1 ( tag::triangle, BD.reverse(), s2, s3 );
-		Cell T2 ( tag::triangle, BD, s4, s1 );
-		T1.add_to_mesh (*this);
-		T2.add_to_mesh (*this);                                 }
+	{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
+		BD.spin() = BC.spin() + CD.spin();
+		Cell BCD ( tag::triangle, BD.reverse(), BC, CD );
+		Cell ABD ( tag::triangle, BD, DA, AB );
+		BCD.add_to_mesh (*this);
+		ABD.add_to_mesh (*this);                          }
 	else // with quadrilaterals
-	{	Cell Q ( tag::rectangle, s1, s2, s3, s4 );
-		Q.add_to_mesh (*this);                                 }
+	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );
+		Q.add_to_mesh (*this);                     }
 	it++;  assert ( it == horizon.end() );
 
 } // end of Mesh::build with tag::quadrangle and tag::spin

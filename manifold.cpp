@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.08.23
+// manifold.cpp 2021.08.25
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -193,7 +193,7 @@ void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AB ) const
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AB ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed 
@@ -267,11 +267,11 @@ void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AB,
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AB,
   double u, Cell::Positive::Vertex * C,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AC,
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AC,
   double v, Cell::Positive::Vertex * D,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AD ) const
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AD ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
@@ -356,15 +356,15 @@ void Manifold::Euclid::interpolate
 ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A,
   double t, Cell::Positive::Vertex * B,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AB,
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AB,
   double u, Cell::Positive::Vertex * C,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AC,
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AC,
   double v, Cell::Positive::Vertex * D,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AD,
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AD,
   double w, Cell::Positive::Vertex * E,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AE,
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AE,
   double z, Cell::Positive::Vertex * F,
-  const tag::Spin &, const tag::Util::ActionExponent & exp_AF ) const
+  const tag::Spin &, const tag::Util::CompositionOfActions & exp_AF ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
@@ -455,7 +455,7 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	const tag::Spin &, const tag::Util::ActionExponent & exp                    ) const 
+	const tag::Spin &, const tag::Util::CompositionOfActions & exp                    ) const 
 {	assert ( false );  }
 
 
@@ -473,11 +473,11 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const tag::Util::ActionExponent & ) const
+		const tag::Spin &, const tag::Util::CompositionOfActions & ) const
 {	assert ( false );  }
 
 
@@ -496,15 +496,15 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const tag::Util::ActionExponent & ) const
+		const tag::Spin &, const tag::Util::CompositionOfActions & ) const
 {	assert ( false );  }
 
 
@@ -526,7 +526,7 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	const tag::Spin &, const tag::Util::ActionExponent & exp                    ) const 
+	const tag::Spin &, const tag::Util::CompositionOfActions & exp                    ) const 
 {	assert ( false );  }
 
 
@@ -542,11 +542,11 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const tag::Util::ActionExponent & ) const
+		const tag::Spin &, const tag::Util::CompositionOfActions & ) const
 {	assert ( false );  }
 
 
@@ -564,15 +564,15 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const tag::Util::ActionExponent & ) const
+		const tag::Spin &, const tag::Util::CompositionOfActions & ) const
 {	assert ( false );  }
 
 
@@ -592,7 +592,7 @@ void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	const tag::Spin &, const tag::Util::ActionExponent & exp                    ) const 
+	const tag::Spin &, const tag::Util::CompositionOfActions & exp                    ) const 
 {	assert ( false );  }
 
 
@@ -607,11 +607,11 @@ void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const tag::Util::ActionExponent & ) const
+		const tag::Spin &, const tag::Util::CompositionOfActions & ) const
 {	assert ( false );  }
 
 
@@ -628,15 +628,15 @@ void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const tag::Util::ActionExponent &,
+		const tag::Spin &, const tag::Util::CompositionOfActions &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const tag::Util::ActionExponent & ) const
+		const tag::Spin &, const tag::Util::CompositionOfActions & ) const
 {	assert ( false );  }
 
 

@@ -1,5 +1,5 @@
 
-// function.h 2021.08.24
+// function.h 2021.08.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -156,7 +156,7 @@ class Function
 	class TakenOnCell;  class TakenOnCellWithSpin;
 	inline Function::TakenOnCell operator() ( const Cell & cll ) const;
 	inline Function::TakenOnCellWithSpin operator()
-	( const Cell & cll, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( const Cell & cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 
 	inline Function deriv ( const Function & x ) const;  // derivative with respect to x
 
@@ -278,7 +278,7 @@ class Function::Scalar : public Function::Core
 
 	virtual double get_value_on_cell ( Cell::Core * ) const = 0;
 	virtual double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const = 0;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const = 0;
 
 	virtual double set_value_on_cell ( Cell::Core *, const double & ) = 0;
 	// assign a numeric value to the function on the cell and return that value
@@ -363,7 +363,7 @@ class Function::Constant : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -415,7 +415,7 @@ class Function::Sum : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -461,7 +461,7 @@ class Function::Product : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -510,7 +510,7 @@ class Function::Power : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -557,7 +557,7 @@ class Function::Sqrt : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -609,7 +609,7 @@ class Function::Sin : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -661,7 +661,7 @@ class Function::Cos : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -771,7 +771,7 @@ class Function::Step : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -808,7 +808,7 @@ class Function::Vector : public Function::Core
 
 	virtual std::vector<double> get_value_on_cell ( Cell::Core * ) const = 0;
 	virtual std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const = 0;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const = 0;
 
 	virtual std::vector<double> set_value_on_cell
 	( Cell::Core *, const std::vector<double> & ) = 0;
@@ -856,7 +856,7 @@ class Function::Aggregate : public Function::Vector
 	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Vector
 
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
@@ -985,7 +985,7 @@ class Function::Diffeomorphism::OneDim
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Scalar
 
 	double set_value_on_cell ( Cell::Core *, const double & );
@@ -1076,7 +1076,7 @@ class Function::Immersion : public Function::Vector, public Function::Map
 	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	// virtual from Function::Vector
 
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
@@ -1231,7 +1231,7 @@ class Function::Composition : public Function::Scalar
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Scalar
 
@@ -1311,7 +1311,7 @@ class Function::CoupledWithField::Scalar
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Scalar
 
@@ -1367,7 +1367,7 @@ class Function::CoupledWithField::Vector
 	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
 	// virtual from Function::Vector
 
@@ -1521,16 +1521,27 @@ class Function::Action
 	size_t id;
 	
 	Function coords, transf;
-	// here we keep the coordinates function together with the composed ones
+	// here we momentarily keep the coordinates function together with the composed ones
 	// just prior to the declaration of the respective quotient manifold
 	// the quotient manifold will then keep these coordinates
 	// after that, we can forget about them
+
+	inline Action ( )
+	: id { Function::Action::counter }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	{	Function::Action::counter++;  }
 
 	inline Action ( const tag::Transforms &, const Function f, const tag::Into &, const Function g )
 	: id { Function::Action::counter }, coords ( f ), transf ( g )
 	{	Function::Action::counter++;  }
 
-	inline operator tag::Util::ActionExponent() const;
+	inline Action ( const Function::Action & a )
+	: id { a.id }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	{	}
+
+	inline Action operator= ( const Function::Action & a )
+	{	this->id = a.id;  return *this;  }
+	
+	inline operator tag::Util::CompositionOfActions() const;
 
 	struct Applied { class ToFunction;  };	
 
@@ -1543,37 +1554,37 @@ inline bool operator== ( const Function::Action & a, const Function::Action & b 
 
 inline bool operator< ( const Function::Action & f, const Function::Action & g )
 {	return f.id < g.id;  }
-// needed for tag::Util::ActionExponent::index_map
+// needed for tag::Util::CompositionOfActions::index_map
 
 //-----------------------------------------------------------------------------------------//
 
 
-class tag::Util::ActionExponent
+class tag::Util::CompositionOfActions
 
 // a composition of actions, thus an element of the group
 // essentially, a multi-index, more precisely a map < Function::Action, short int >
 
-// the language used here suggests a multiplicative group
-// however, the final user will build actions in an additive notation, e.g.  2*g1 - g2
+// the final user will compose actions in an additive notation,
+// e.g.  2*g1 - g2  rather than  g1^2 g2^-1
 
 {	public :
 
 	std::map < Function::Action, short int > index_map;
 
-	inline ActionExponent ( )
+	inline CompositionOfActions ( )
 	{	}
 	
-	inline ActionExponent ( const Function::Action & g, short int i )
+	inline CompositionOfActions ( const Function::Action & g, short int i )
 	:	index_map { std::pair < Function::Action, short int > ( g, i ) }
 	{	}
 
-	inline ActionExponent ( const Function::Action & g, short int i,
+	inline CompositionOfActions ( const Function::Action & g, short int i,
                           const Function::Action & h, short int j )
 	:	index_map { std::pair < Function::Action, short int > ( g, i ),
 		            std::pair < Function::Action, short int > ( h, j )  }
 	{	}
 
-	inline ActionExponent ( const Function::Action & g1, short int i,
+	inline CompositionOfActions ( const Function::Action & g1, short int i,
                           const Function::Action & g2, short int j,
                           const Function::Action & g3, short int k )
 	:	index_map { std::pair < Function::Action, short int > ( g1, i ),
@@ -1581,16 +1592,43 @@ class tag::Util::ActionExponent
 		            std::pair < Function::Action, short int > ( g3, k )  }
 	{	}
 
-};  // end of class tag::Util::ActionExponent
+};  // end of class tag::Util::CompositionOfActions
 
 
-inline Function::Action::operator tag::Util::ActionExponent() const
-{	return tag::Util::ActionExponent ( *this, 1 );  }
+inline bool operator==
+( const tag::Util::CompositionOfActions & a, const tag::Util::CompositionOfActions & b )
+
+{	{ // just a block for hiding names
+	std::map<Function::Action,short int>::const_iterator it_a = a.index_map.begin();
+	for ( ; it_a != a.index_map.end(); it_a++ )
+	{	Function::Action aa = it_a->first;
+		std::map<Function::Action,short int>::const_iterator it_b = b.index_map.find ( aa );
+		if ( it_b == b.index_map.end() ) return false;
+		if ( it_a->second != it_b->second ) return false;                              }
+	} { // just a block for hiding names
+	std::map<Function::Action,short int>::const_iterator it_b = b.index_map.begin();
+	for ( ; it_b != b.index_map.end(); it_b++ )
+	{	Function::Action bb = it_b->first;
+		std::map<Function::Action,short int>::const_iterator it_a = a.index_map.find ( bb );
+		if ( it_a == a.index_map.end() ) return false;
+		assert ( it_a->second == it_b->second );                                       }
+	} // just a block for hiding names
+	return true;                                                                       }
+
+	
+inline bool operator== ( const tag::Util::CompositionOfActions & a, short int zero )
+// shorthand for quering the identity action :  id == 0
+{	assert ( zero == 0 );
+	return a.index_map.size() == 0;  }
+
+	
+inline Function::Action::operator tag::Util::CompositionOfActions() const
+{	return tag::Util::CompositionOfActions ( *this, 1 );  }
 
 
-inline tag::Util::ActionExponent operator+
-( const tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
-{	tag::Util::ActionExponent res = a;
+inline tag::Util::CompositionOfActions operator+
+( const tag::Util::CompositionOfActions & a, const tag::Util::CompositionOfActions & b )
+{	tag::Util::CompositionOfActions res = a;
 	std::map<Function::Action,short int>::const_iterator it = b.index_map.begin();
 	for ( ; it != b.index_map.end(); it++ )
 	{	const Function::Action & g = it->first;
@@ -1607,8 +1645,8 @@ inline tag::Util::ActionExponent operator+
 	return res;                                                                             }
 
 
-inline tag::Util::ActionExponent operator+=
-( tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
+inline tag::Util::CompositionOfActions operator+=
+( tag::Util::CompositionOfActions & a, const tag::Util::CompositionOfActions & b )
 {	std::map<Function::Action,short int>::const_iterator it = b.index_map.begin();
 	for ( ; it != b.index_map.end(); it++ )
 	{	const Function::Action & g = it->first;
@@ -1625,9 +1663,9 @@ inline tag::Util::ActionExponent operator+=
 	return a;                                                                             }
 
 
-inline tag::Util::ActionExponent operator-
-( const tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
-{	tag::Util::ActionExponent res = a;
+inline tag::Util::CompositionOfActions operator-
+( const tag::Util::CompositionOfActions & a, const tag::Util::CompositionOfActions & b )
+{	tag::Util::CompositionOfActions res = a;
 	std::map<Function::Action,short int>::const_iterator it = b.index_map.begin();
 	for ( ; it != b.index_map.end(); it++ )
 	{	const Function::Action & g = it->first;
@@ -1644,8 +1682,8 @@ inline tag::Util::ActionExponent operator-
 	return res;                                                                             }
 
 
-inline tag::Util::ActionExponent operator-=
-( tag::Util::ActionExponent & a, const tag::Util::ActionExponent & b )
+inline tag::Util::CompositionOfActions operator-=
+( tag::Util::CompositionOfActions & a, const tag::Util::CompositionOfActions & b )
 {	std::map<Function::Action,short int>::const_iterator it = b.index_map.begin();
 	for ( ; it != b.index_map.end(); it++ )
 	{	const Function::Action & g = it->first;
@@ -1662,25 +1700,48 @@ inline tag::Util::ActionExponent operator-=
 	return a;                                                                             }
 
 
-inline tag::Util::ActionExponent operator*
-( const short int k, const tag::Util::ActionExponent & a )
-{	if ( k == 0 ) return tag::Util::ActionExponent();
-	tag::Util::ActionExponent res = a;
+inline tag::Util::CompositionOfActions operator*
+( const short int k, const tag::Util::CompositionOfActions & a )
+{	if ( k == 0 ) return tag::Util::CompositionOfActions();
+	tag::Util::CompositionOfActions res = a;
 	std::map<Function::Action,short int>::iterator it = res.index_map.begin();
 	for ( ; it != res.index_map.end(); it++ ) it->second *= k;
 	return res;                                                                }
 
 
-inline tag::Util::ActionExponent operator-
-( const tag::Util::ActionExponent & a )
+inline tag::Util::CompositionOfActions operator-
+( const tag::Util::CompositionOfActions & a )
 {	return (-1) * a;  }
 
+//---------------------------------------------------------------------------------------
+
+	
+class tag::Util::SpinOfCell
+
+// temporary object returned by Cell::spin() and used for assingment of spins
+	
+{	public :
+
+	Cell cll;  // usually a segment
+
+	inline SpinOfCell ( const Cell & c )
+	:	cll { c }
+	{	}
+	
+	inline tag::Util::CompositionOfActions operator=
+	( const tag::Util::CompositionOfActions & a );  // defined in manifold.h
+	
+	inline operator tag::Util::CompositionOfActions ( );
+
+};
+
+//-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
 
 
 class Function::Action::Applied::ToFunction
 
-// a temporary object returned by operator* ( tag::Util::ActionExponent, Function )
+// a temporary object returned by operator* ( tag::Util::CompositionOfActions, Function )
 // useful for describing an action,
 // prior to the declaration of the respective quotient manifold
 
@@ -1828,7 +1889,7 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	//  virtual from Function::Scalar
 	
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -1884,7 +1945,7 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	//  virtual from Function::Scalar
 	
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -1986,7 +2047,7 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	//   defined by Function::Vector::MultiValued, delegates to base
 
 	std::vector < double > get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const tag::Util::ActionExponent & exp ) const;
+	( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const;
 	//  virtual from Function::Vector
 	
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
@@ -2176,7 +2237,7 @@ class Function::TakenOnCellWithSpin
 {	public :
 
   Function::Core * f;
-	const tag::Util::ActionExponent & spin;
+	const tag::Util::CompositionOfActions & spin;
 	
 	// Function::TakenOnCellWithSpin should only be used as temporary objects
 	// they should be immediately converted to a (reference to a) double or vector<double>
@@ -2184,7 +2245,7 @@ class Function::TakenOnCellWithSpin
 	
 	Cell::Core * const cll;
 
-	TakenOnCellWithSpin ( const Function & ff, const Cell & c, const tag::Util::ActionExponent & exp )
+	TakenOnCellWithSpin ( const Function & ff, const Cell & c, const tag::Util::CompositionOfActions & exp )
 	:	f { ff.core }, spin { exp }, cll { c.core }
 	{	}
 
@@ -2300,7 +2361,7 @@ inline Function::TakenOnCell Function::operator() ( const Cell & cll ) const
 
 
 inline Function::TakenOnCellWithSpin Function::operator()
-( const Cell & cll, const tag::Spin &, const tag::Util::ActionExponent & exp ) const
+( const Cell & cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
 {	return Function::TakenOnCellWithSpin ( *this, cll, exp );   }
 
 
