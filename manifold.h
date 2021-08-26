@@ -1250,14 +1250,57 @@ inline tag::Util::CompositionOfActions tag::Util::SpinOfCell::operator=
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Action & g = manif_q->actions[i];
 		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
-		if ( itt == res.index_map.end() )
+		if ( itt == a.index_map.end() )
 		{	manif_q->spins[i].on_cell(this->cll.core) = 0;
 			continue;                                      }
 		short int exp = itt->second;
+		assert ( exp != 0 );
 		manif_q->spins[i].on_cell(this->cll.core) = exp;
 		res.index_map.emplace ( std::piecewise_construct,
 			std::forward_as_tuple(g), std::forward_as_tuple(exp) );                     }
 	return res;                                                                       }
+
+
+inline tag::Util::CompositionOfActions tag::Util::SpinOfCell::operator+=
+( const tag::Util::CompositionOfActions & a )
+	
+{	Manifold::Quotient * manif_q = dynamic_cast
+		< Manifold::Quotient* > ( Manifold::working.core );
+	assert ( manif_q );
+
+	assert ( this->cll.dim() == 1 );  // usually is a segment
+
+	size_t n = manif_q->actions.size();
+	assert ( n == manif_q->spins.size() );
+	for ( size_t i = 0; i < n; i++ )
+	{	Function::Action & g = manif_q->actions[i];
+		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+		if ( itt == a.index_map.end() ) continue;
+		short int exp = itt->second;
+		assert ( exp != 0 );
+		manif_q->spins[i].on_cell(this->cll.core) += exp;                             }
+	return *this;                                                                       }
+
+
+inline tag::Util::CompositionOfActions tag::Util::SpinOfCell::operator-=
+( const tag::Util::CompositionOfActions & a )
+	
+{	Manifold::Quotient * manif_q = dynamic_cast
+		< Manifold::Quotient* > ( Manifold::working.core );
+	assert ( manif_q );
+
+	assert ( this->cll.dim() == 1 );  // usually is a segment
+
+	size_t n = manif_q->actions.size();
+	assert ( n == manif_q->spins.size() );
+	for ( size_t i = 0; i < n; i++ )
+	{	Function::Action & g = manif_q->actions[i];
+		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+		if ( itt == a.index_map.end() ) continue;
+		short int exp = itt->second;
+		assert ( exp != 0 );
+		manif_q->spins[i].on_cell(this->cll.core) -= exp;                             }
+	return *this;                                                                       }
 
 
 inline tag::Util::SpinOfCell Cell::spin ( )

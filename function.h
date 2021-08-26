@@ -1730,6 +1730,10 @@ class tag::Util::SpinOfCell
 	
 	inline tag::Util::CompositionOfActions operator=
 	( const tag::Util::CompositionOfActions & a );  // defined in manifold.h
+	inline tag::Util::CompositionOfActions operator+=
+	( const tag::Util::CompositionOfActions & a );  // defined in manifold.h
+	inline tag::Util::CompositionOfActions operator-=
+	( const tag::Util::CompositionOfActions & a );  // defined in manifold.h
 	
 	inline operator tag::Util::CompositionOfActions ( );
 

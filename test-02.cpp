@@ -4,6 +4,15 @@
 
 using namespace maniFEM;
 
+inline void print_spin ( tag::Util::CompositionOfActions a )
+
+{	std::cout << "{";
+	auto it = a.index_map.begin();
+	for ( ; it != a.index_map.end(); it++ )
+		std::cout << it->first.id << ":" << it->second << ",";
+	std::cout << "}" << std::endl;                           }
+
+
 int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
@@ -18,20 +27,23 @@ int main ()
 	
 	Cell A ( tag::vertex ), B ( tag::vertex );
 	Cell AB ( tag::segment, A.reverse(), B );
-	AB.spin() = g1;
-	std::cout << "AB.spin() == 0  ";
-	if ( AB.spin() == 0 ) std::cout << "true" << std::endl;
-	else std::cout << " false" << std::endl;
-	std::cout << "AB.spin() == g1  ";
-	if ( AB.spin() == g1 ) std::cout << "true" << std::endl;
-	else std::cout << " false" << std::endl;
-	std::cout << "AB.spin() == g2  ";
-	if ( AB.spin() == g2 ) std::cout << "true" << std::endl;
-	else std::cout << " false" << std::endl;
-	std::cout << "AB.spin() == g1+g2  ";
-	if ( AB.spin() == g1+g2 ) std::cout << "true" << std::endl;
-	else std::cout << " false" << std::endl;
 
+	std::cout << "AB.spin()   ";
+	print_spin ( AB.spin() );
+
+	AB.spin() = g1+g2;
+	std::cout << "g1+g2   ";
+	print_spin ( AB.spin() );
+	std::cout << "g1+2g2   ";
+	print_spin ( AB.spin() + g2 );
+
+	AB.spin() += g1;
+	std::cout << "2g1+g2   ";
+	print_spin ( AB.spin() );
+
+	AB.spin() -= AB.spin();
+	std::cout << "zero   ";
+	print_spin ( AB.spin() );
 
 	std::cout << "end of main" << std::endl << std::flush;
 }
