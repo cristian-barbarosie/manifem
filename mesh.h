@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.26
+//   mesh.h  2021.08.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -744,7 +744,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::DividedIn &, const size_t n               );
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n,
-	              const tag::Spin &, const tag::Util::CompositionOfActions & );
+	              const tag::Spin &, const Function::CompositionOfActions & );
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
@@ -1523,14 +1523,19 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n );
+	
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Spin &, const tag::Util::CompositionOfActions &                    );
+	             const tag::Spin &, const Function::CompositionOfActions &                    );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half );
+	
+	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
+	             const tag::Spin &                                                   );
 	
 	void build ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	             const Cell & NE, const Cell & NW, const size_t m, const size_t n,
@@ -5230,7 +5235,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
-                    const tag::Spin &, const tag::Util::CompositionOfActions & s )
+                    const tag::Spin &, const Function::CompositionOfActions & s )
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )

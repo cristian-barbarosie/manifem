@@ -421,7 +421,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// last raw and last column are not subject to the above rule
 	// we must keep track of the spins of ver_south, ver_east, ver_north, ver_west
 	// (relatively to SW)
-	// we use four shadow vertices
+	// we use four shadow vertices for interpolation
 	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
 	Cell shadow_north ( tag::vertex ), shadow_west ( tag::vertex );
 	
@@ -512,15 +512,16 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			DA = BC.reverse();
 			it_south++;  it_north++;
 		} // end of for j
+		Cell ver_south = *it_south;
+		Cell seg_south = south.cell_behind ( ver_south );
+		tag::Util::CompositionOfActions spin_seg_south = seg_south.spin();
 		it_south++;  it_north++;
 		assert ( not it_south.in_range() );
 		assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
 		Cell AB = *it;
 		Cell B = AB.tip();
-		Cell ver_south = *it_south;
-		Cell seg_south = south.cell_behind ( ver_south );
-		assert ( AB.spin() == seg_south.spin() );
+		assert ( AB.spin() == spin_seg_south );
 		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
 		Cell C = BC.tip();
 		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
@@ -549,16 +550,18 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
 	{	Cell AB = *it;
-		assert ( AB.spin() == spin_seg_south );
+		// assert ( AB.spin() == spin_seg_south );
 		Cell B = AB.tip();
 		Cell CD = north.cell_behind ( D );
 		Cell C = CD.base().reverse();
+		// CD.spin()  may be different from  spin_seg_south
 		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
-		spin_seg_downwards += spin_seg_south + CD.spin();
+		spin_seg_downwards += CD.spin() + AB.spin();
 		BC.spin() = -spin_seg_downwards;
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			BD.spin() = -spin_seg_downwards - spin_seg_south;
+			// spin_seg_south == AB.spin()
+			BD.spin() = -spin_seg_downwards - AB.spin();
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
 			BCD.add_to_mesh (*this);

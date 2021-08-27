@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.25
+// function.cpp 2021.08.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -102,7 +102,7 @@ double Function::Constant::get_value_on_cell ( Cell::Core * cll ) const
 { return this->val;  }
 
 double Function::Constant::get_value_on_cell
-( Cell::Core *, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core *, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 { return this->val;  }
 
@@ -121,7 +121,7 @@ double Function::Sum::get_value_on_cell ( Cell::Core * cll ) const
 	return sum;                                                           }
 
 double Function::Sum::get_value_on_cell
-	( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+	( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 { std::forward_list<Function>::const_iterator it = this->terms.begin();
 	double sum = 0.;
@@ -146,7 +146,7 @@ double Function::Product::get_value_on_cell ( Cell::Core * cll ) const
 	return prod;                                                             }
 	
 double Function::Product::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 { std::forward_list<Function>::const_iterator it = this->factors.begin();
 	double prod = 1.;
@@ -167,7 +167,7 @@ double Function::Power::get_value_on_cell ( Cell::Core * cll ) const
 	return std::pow ( base_scalar->get_value_on_cell(cll), this->exponent );  }
 	
 double Function::Power::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -184,7 +184,7 @@ double Function::Sqrt::get_value_on_cell ( Cell::Core * cll ) const
 	return std::sqrt ( base_scalar->get_value_on_cell(cll) );      }
 	
 double Function::Sqrt::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -201,7 +201,7 @@ double Function::Sin::get_value_on_cell ( Cell::Core * cll ) const
 	return std::sin ( base_scalar->get_value_on_cell(cll) );      }
 	
 double Function::Sin::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -218,7 +218,7 @@ double Function::Cos::get_value_on_cell ( Cell::Core * cll ) const
 	return std::cos ( base_scalar->get_value_on_cell(cll) );      }
 	
 double Function::Cos::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -243,7 +243,7 @@ double Function::Step::get_value_on_cell ( Cell::Core * cll ) const
 	return val_scalar->get_value_on_cell(cll);                                }
 	
 double Function::Step::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 {	Function::Scalar * arg_scalar = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( this->arg.core );
@@ -268,7 +268,7 @@ std::vector<double> Function::Aggregate::get_value_on_cell ( Cell::Core * cll ) 
 	return result;                                                                }
 
 std::vector<double> Function::Aggregate::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Vector
 { assert ( false );  }
 
@@ -282,7 +282,7 @@ double Function::CoupledWithField::Scalar::get_value_on_cell ( Cell::Core * cll 
 // { return this->field->on_cell(cll).reference();  }
 	
 double Function::CoupledWithField::Scalar::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
 { return this->field->on_cell(cll);  }
 // { return this->field->on_cell(cll).reference();  }
@@ -295,7 +295,7 @@ double Function::Diffeomorphism::OneDim::get_value_on_cell ( Cell::Core * cll ) 
 { assert ( false );  }  // virtual from Function::Scalar
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 { assert ( false );  }  // virtual from Function::Scalar
 	
 std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
@@ -304,7 +304,7 @@ std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
 // { return this->field->on_cell(cll).reference();  }
 	
 std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 { return this->field->on_cell(cll);  }  // virtual from Function::Vector
 // { return this->field->on_cell(cll).reference();  }
 	
@@ -312,7 +312,7 @@ std::vector<double> Function::Immersion::get_value_on_cell ( Cell::Core * cll ) 
 { assert ( false );  }  // virtual from Function::Vector
 
 std::vector<double> Function::Immersion::get_value_on_cell
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 { assert ( false );  }  // virtual from Function::Vector
 
 void Function::Composition::set_value ( double v )  // virtual from Function::Scalar
@@ -326,7 +326,7 @@ double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
 	return base_scalar->get_value_on_cell(cll);                   }
 
 double Function::Composition::get_value_on_cell  // virtual from Function::Scalar
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 { assert ( false );  }
 	
 void Function::Scalar::MultiValued::set_value ( double v )  // virtual from Function::Scalar
@@ -342,7 +342,7 @@ double Function::Scalar::MultiValued::get_value_on_cell ( Cell::Core * cll ) con
 
 
 double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual from Function::Scalar
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -362,7 +362,7 @@ double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual f
 
 double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
 // virtual from Function::Scalar
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -396,7 +396,7 @@ std::vector<double> Function::Vector::MultiValued::get_value_on_cell
 
 std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
 // virtual from Function::Vector
-( Cell::Core * cll, const tag::Spin &, const tag::Util::CompositionOfActions & exp ) const
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 	
 {	Function::Vector * base_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( this->base.core );
