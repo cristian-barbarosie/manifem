@@ -1211,100 +1211,104 @@ inline Manifold Manifold::quotient
 //-----------------------------------------------------------------------------------------
 
 
-inline tag::Util::SpinOfCell::operator Function::CompositionOfActions ( )
+inline Cell::Spin::operator Function::CompositionOfActions ( )
 
 {	Function::CompositionOfActions res;
 	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
 	assert ( manif_q );
 
-	assert ( this->cll.dim() == 1 );  // usually is a segment
+	assert ( this->cll->get_dim() == 1 );  // usually is a segment
 
 	size_t n = manif_q->actions.size();
 	assert ( n == manif_q->spins.size() );
+	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
-	{	short int exp = manif_q->spins[i].on_cell(this->cll.core);
+	{	short int exp = manif_q->spins[i].on_cell(pos_cll);
 		if ( exp == 0 ) continue;
+		if ( not this->cll->is_positive() ) exp = -exp;
 		Function::Action & g = manif_q->actions[i];
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::Action,short int>::iterator itt =
-			res.index_map.lower_bound ( g );
-		assert ( itt == res.index_map.end() );
+		std::map<Function::Action,short int>::iterator itt = res.index_map.lower_bound ( g );
+		assert ( ( itt == res.index_map.end() ) or ( res.index_map.key_comp()(g,itt->first) ) );
 		res.index_map.emplace_hint ( itt, std::piecewise_construct,
-			std::forward_as_tuple(g), std::forward_as_tuple(exp) );   }
-	return res;                                                      }
+			std::forward_as_tuple(g), std::forward_as_tuple(exp) );                                }
+	return res;                                                                                  }
 
 
-inline Function::CompositionOfActions tag::Util::SpinOfCell::operator=
+inline Function::CompositionOfActions Cell::Spin::operator=
 ( const Function::CompositionOfActions & a )
 	
-{	Function::CompositionOfActions res;
-	Manifold::Quotient * manif_q = dynamic_cast
+{	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
 	assert ( manif_q );
 
-	assert ( this->cll.dim() == 1 );  // usually is a segment
+	assert ( this->cll->get_dim() == 1 );  // usually is a segment
 
 	size_t n = manif_q->actions.size();
 	assert ( n == manif_q->spins.size() );
+	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Action & g = manif_q->actions[i];
 		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() )
-		{	manif_q->spins[i].on_cell(this->cll.core) = 0;
-			continue;                                      }
+		{	manif_q->spins[i].on_cell(this->cll) = 0;
+			continue;                                 }
 		short int exp = itt->second;
 		assert ( exp != 0 );
-		manif_q->spins[i].on_cell(this->cll.core) = exp;
-		res.index_map.emplace ( std::piecewise_construct,
-			std::forward_as_tuple(g), std::forward_as_tuple(exp) );                     }
-	return res;                                                                       }
+		if ( this->cll->is_positive() ) manif_q->spins[i].on_cell(pos_cll) = exp;
+		else manif_q->spins[i].on_cell(pos_cll) = -exp;                                     }
+	return *this;                                                                           }
 
 
-inline Function::CompositionOfActions tag::Util::SpinOfCell::operator+=
+inline Function::CompositionOfActions Cell::Spin::operator+=
 ( const Function::CompositionOfActions & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
 	assert ( manif_q );
 
-	assert ( this->cll.dim() == 1 );  // usually is a segment
+	assert ( this->cll->get_dim() == 1 );  // usually is a segment
 
 	size_t n = manif_q->actions.size();
 	assert ( n == manif_q->spins.size() );
+	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Action & g = manif_q->actions[i];
 		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() ) continue;
 		short int exp = itt->second;
 		assert ( exp != 0 );
-		manif_q->spins[i].on_cell(this->cll.core) += exp;                             }
-	return *this;                                                                       }
+		if ( not this->cll->is_positive() ) exp = -exp;
+		manif_q->spins[i].on_cell(pos_cll) += exp;                                         }
+	return *this;                                                                          }
 
 
-inline Function::CompositionOfActions tag::Util::SpinOfCell::operator-=
+inline Function::CompositionOfActions Cell::Spin::operator-=
 ( const Function::CompositionOfActions & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
 	assert ( manif_q );
 
-	assert ( this->cll.dim() == 1 );  // usually is a segment
+	assert ( this->cll->get_dim() == 1 );  // usually is a segment
 
 	size_t n = manif_q->actions.size();
 	assert ( n == manif_q->spins.size() );
+	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Action & g = manif_q->actions[i];
 		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() ) continue;
 		short int exp = itt->second;
 		assert ( exp != 0 );
-		manif_q->spins[i].on_cell(this->cll.core) -= exp;                             }
-	return *this;                                                                       }
+		if ( not this->cll->is_positive() ) exp = -exp;
+		manif_q->spins[i].on_cell(pos_cll) -= exp;                                         }
+	return *this;                                                                          }
 
 
-inline tag::Util::SpinOfCell Cell::spin ( )
-{	return tag::Util::SpinOfCell ( *this );  }
+inline Cell::Spin Cell::spin ( )
+{ return Cell::Spin ( *this );  }
 
 //-----------------------------------------------------------------------------------------
 

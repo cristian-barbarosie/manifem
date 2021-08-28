@@ -265,7 +265,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		Cell D = DA.base().reverse();
 		Cell ver_east = *it_east;
 		Cell ver_west = *it_west;
-		assert ( ver_west == A );
+		assert ( ver_west == D );
 		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
 		alpha = alpha*alpha*alpha;
 		it_south.reset();  it_south++;
@@ -382,6 +382,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 // or they may be not equal but share the same vertices (and segments, reversed)
 // the correspondence may be not face-to-face,
 // e.g. the first vertex of south may show up somewhere in the middle of north
+
+// beware, sides may be closed loops
 	
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current manifold
@@ -442,15 +444,19 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
+	// sides may be closed loops
+	// do we need to specify the starting vertex for the above iterators ?
+	// have SW, SE, NW and NE been correctly defined ?
 	it_east.reset();  it_east++;
 	it_west.reset();  it_west++;
 	tag::Util::CompositionOfActions spin_ver_east = spin_SE;
 	tag::Util::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
-	{	std::list<Cell>::iterator it = horizon.begin();
+	{	std::cout << "build" << std::endl;
+		std::list<Cell>::iterator it = horizon.begin();
 		Cell seg = *it;
 		Cell A = seg.base().reverse();
-		Cell DA = west.cell_behind ( A, tag::surely_exists );
+	  Cell DA = west.cell_behind ( A, tag::surely_exists );
 		Cell D = DA.base().reverse();
 		tag::Util::CompositionOfActions spin_seg_west = -DA.spin();
 		spin_ver_west += spin_seg_west;
@@ -458,7 +464,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		seg = east.cell_behind ( ver_east, tag::surely_exists );
 		spin_ver_east += seg.spin();
 		Cell ver_west = *it_west;
-		assert ( ver_west == A );
+		assert ( ver_west == D );
 		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
 		alpha = alpha*alpha*alpha;
 		std::vector < double > v = coords_q ( ver_east, tag::spin, spin_ver_east );

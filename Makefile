@@ -18,7 +18,7 @@ test_objects = iterator.o field.o function.o manifold.o mesh.o
 parag-%.o: examples-manual/parag-%.cpp
 	$(CC) $(CFLAGS) -o $@ $^
 
-manifem-exe-%: main-%.o $(manifem_objects)
+manifem-exe-%: parag-%.o $(manifem_objects)
 	$(CC) -o $@ -std=c++17 $^
 
 manifem-exe-test-%: test-%.o $(test_objects)

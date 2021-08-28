@@ -1560,7 +1560,7 @@ inline bool operator< ( const Function::Action & f, const Function::Action & g )
 //-----------------------------------------------------------------------------------------//
 
 
-class Function::CompositionOfActions
+class tag::Util::CompositionOfActions  // aka Function::CompositionOfActions
 
 // a composition of actions, thus an element of the group
 // essentially, a multi-index, more precisely a map < Function::Action, short int >
@@ -1717,17 +1717,25 @@ inline Function::CompositionOfActions operator-
 //---------------------------------------------------------------------------------------
 
 	
-class tag::Util::SpinOfCell
+class Cell::Spin
 
 // temporary object returned by Cell::spin() and used for assingment of spins
-	
+
+// only positive segments have space reserved for holding a spin
+// however, the arithmetic operators of this class are crafted in a manner
+// which allows getting and setting the spin of a negative segment, too
+// reversed arithmetic operations are performed on the reverse, positive, segment
+
 {	public :
 
-	Cell cll;  // usually a segment
+	Cell::Core * cll;  // usually a segment
+	// Cell::Spin should only be used as temporary objects
+	// they should be immediately converted to a (reference to a) double or vector<double>
+	// so an ordinary pointer is OK here
 
-	inline SpinOfCell ( const Cell & c )
-	:	cll { c }
-	{	}
+	inline Spin ( const Cell & c )
+	:	cll { c.core }
+	{ assert ( this->cll );  }
 	
 	inline Function::CompositionOfActions operator=
 	( const Function::CompositionOfActions & a );  // defined in manifold.h
@@ -2177,7 +2185,6 @@ class Function::TakenOnCell
 			return *this;                            }
 		else
 		{	(*this) = static_cast <std::vector<double>> (other);
-			std::cout << "operator=" << std::endl << std::flush;
 			return *this;                                          }  }
 	
 	inline operator double() const

@@ -139,8 +139,10 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Util
 	{ template < class T > class Wrapper;
 		class Core;
-		class CellCore;  class MeshCore;
-		class CompositionOfActions;  class SpinOfCell;
+		class CellCore;  // aka Cell::Core
+		class MeshCore;  // aka Mesh::Core
+		class CompositionOfActions;  // aka Function::CompositionOfActions
+		// defined in function.h
 		inline static size_t assert_diff ( const size_t a, const size_t b )
 		{	assert ( a >= b );  return  a - b;  }
 		template < typename X, typename Y > inline static Y assert_cast ( X x )
@@ -535,7 +537,8 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline void project ( ) const;  // both defined in manifold.h
 	inline void project ( const tag::Onto &, const Manifold m ) const;
 
-	inline tag::Util::SpinOfCell spin ( );  // defined in manifold.h
+	class Spin;  // defined in function.h
+	inline Spin spin ( );  // defined in manifold.h
 		
 #ifndef NDEBUG
 	inline void print_everything ( );
@@ -744,7 +747,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::DividedIn &, const size_t n               );
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n,
-	              const tag::Spin &, const Function::CompositionOfActions & );
+	              const tag::Spin &, const tag::Util::CompositionOfActions & );
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
@@ -757,6 +760,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// builds a rectangular mesh from four sides
 	// the number of divisions are already in the sides (must be the same for opposite sides)
 	// if last argument is true, each rectangular cell will be cut in two triangles
+
+	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	                                       const Mesh & north, const Mesh & west,
+	              const tag::Spin &,
+	              const tag::WithTriangles & wt = tag::not_with_triangles         );
+	// same as above, but take into account spins
+	// specific information about spins is included in the four segments
 
 	inline Mesh
 	( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
@@ -1526,7 +1536,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Spin &, const Function::CompositionOfActions &                    );
+	             const tag::Spin &, const tag::Util::CompositionOfActions &                    );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	
@@ -5235,7 +5245,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
-                    const tag::Spin &, const Function::CompositionOfActions & s )
+                    const tag::Spin &, const tag::Util::CompositionOfActions & s )
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
@@ -5259,22 +5269,49 @@ inline Mesh::Mesh
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
                     const Mesh & east, const Mesh & north, const Mesh & west,
                     const tag::WithTriangles & wt                             )
+
 // 'wt' defaults to 'tag::not_with_triangles',
 // so constructor can be called with only five arguments
+
 : Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
+
 {	this->build ( tag::quadrangle, south, east, north, west, wt != tag::not_with_triangles );  }
+
+
+inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
+                    const Mesh & east, const Mesh & north, const Mesh & west,
+                    const tag::Spin &,
+                    const tag::WithTriangles & wt                             )
+
+// 'wt' defaults to 'tag::not_with_triangles',
+// so constructor can be called with only six arguments
+
+// the tag::spin provides no specific information,
+// it just warns maniFEM that we are on a quotient manifold
+// and that it must take spins into account
+// specific information about spins is included in the four segments
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::quadrangle, south, east, north, west,
+                wt != tag::not_with_triangles, tag::spin  );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
                     const Cell & NE, const Cell & NW, const size_t m, const size_t n,
                     const tag::WithTriangles & wt                                     )
+
 // 'wt' defaults to 'tag::not_with_triangles',
 // so constructor can be called with only seven arguments
+
 : Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
+
 {	Mesh south ( tag::segment, SW.reverse ( tag::build_if_not_exists ), SE, tag::divided_in, m );
 	Mesh east  ( tag::segment, SE.reverse ( tag::build_if_not_exists ), NE, tag::divided_in, n );
 	Mesh north ( tag::segment, NE.reverse ( tag::build_if_not_exists ), NW, tag::divided_in, m );

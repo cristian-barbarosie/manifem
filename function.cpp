@@ -375,8 +375,9 @@ double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
 	for ( size_t i = 0; i < n; i++ )
 	{	std::map<Function::Action,short int>::const_iterator it =
 			exp.index_map.find ( this->actions[i] );
-		assert ( it != exp.index_map.end() );
+		if ( it == exp.index_map.end() ) continue;
 		short int exp_i = it->second;
+		assert ( exp_i != 0 );
 		double alpha_i = this->alpha[i];
 		if ( exp_i > 0 )
 		{	size_t abs_exp_i = exp_i;
@@ -411,8 +412,9 @@ std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
 	{	assert ( beta[i].size() == dim );
 		std::map<Function::Action,short int>::const_iterator it =
 			exp.index_map.find ( this->actions[i] );
-		assert ( it != exp.index_map.end() );
+		if ( it == exp.index_map.end() ) continue;
 		short int exp_i = it->second;
+		assert ( exp_i != 0 );
 		for ( size_t j = 0; j < dim; j++ )
 			val[j] += exp_i * this->beta[i][j];                       }
 	return val;                                                            }
