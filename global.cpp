@@ -369,6 +369,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
+void print_segment ( Cell seg );
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
@@ -440,21 +441,22 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	} // just a block of code for hiding 'it'
 
 	// start mesh generation
+	std::cout << "start mesh generation" << std::endl;
 	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
 	// sides may be closed loops
-	// do we need to specify the starting vertex for the above iterators ?
+	// so we need to specify the starting vertex for the above iterators
 	// have SW, SE, NW and NE been correctly defined ?
 	it_east.reset();  it_east++;
 	it_west.reset();  it_west++;
 	tag::Util::CompositionOfActions spin_ver_east = spin_SE;
 	tag::Util::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
-	{	std::cout << "build" << std::endl;
-		std::list<Cell>::iterator it = horizon.begin();
+	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell seg = *it;
+		std::cout << "seg  "; print_segment ( seg );
 		Cell A = seg.base().reverse();
 	  Cell DA = west.cell_behind ( A, tag::surely_exists );
 		Cell D = DA.base().reverse();
