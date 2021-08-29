@@ -1,5 +1,5 @@
 
-// function.h 2021.08.27
+// function.h 2021.08.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -169,12 +169,21 @@ class Function
 	enum From { from_void, from_sum, from_product, from_power, from_function };
 	#endif
 
+	static bool less_for_map ( const Function & f, const Function & g );
+	// needed for map 'jacobian' in class Function::Map
+	// and for map 'equations' in class Manifold::Parametric
+	// other solution :
+	//namespace std
+	//{	template <>
+	//	struct less<Function>  {  inline bool operator() ( const Function &, const Function & );  };  }
+
 	class Scalar;  class ArithmeticExpression;  class Constant;
 	class Vector;  class Aggregate;  class CoupledWithField;
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
 	class MultiValued;
 	class Equality;
+	struct Inequality  { class LessThanZero;  class LessThan;  class GreaterThan;  class Set;  };
 
 };  // end of  class Function
 
@@ -889,12 +898,6 @@ inline Function operator&& ( Function f, Function g )
 
 //-----------------------------------------------------------------------------------------//
 
-inline bool operator< ( const Function & f, const Function & g )
-{	return f.core < g.core;  }
-// needed for map 'jacobian' in class Function::Diffeomorphism::HighDim
-
-//-----------------------------------------------------------------------------------------//
-
 
 class Function::Map
 
@@ -915,13 +918,14 @@ class Function::Map
 	// derivatives of the master_coords with respect to geom_coords
 	// they should be composed with 'this' map in the calling code
 
-	std::map < Function, Function > jacobian;
+	std::map < Function, Function, bool (*) ( const Function &, const Function & ) > jacobian;
+	//  decltype(Function::less_for_map)*  equals  bool (*) ( const Function &, const Function & )
 	
 	Function det;  // positive scalar, dilation coefficient
 
 	inline Map ( const Function & gc, const Function & mc, const Function & bgc )
 	:	geom_coords ( gc ), master_coords ( mc ), back_geom_coords ( bgc ),
-		jacobian ( ), det( tag::non_existent )
+		jacobian ( & Function::less_for_map ), det( tag::non_existent )
 	{	}
 	
 };  // end of Function::Map
@@ -2347,9 +2351,100 @@ class Function::Equality
 };
 
 //-----------------------------------------------------------------------------------------//
+//  classes below allow for boolean epressions like  f < g < h  and   f > g > h 
+//-----------------------------------------------------------------------------------------//
+
+class Function::Inequality::LessThanZero
+
+// the result of an inequality comparison between a Function and zero
+
+{	public :
+
+	Function expr;
+	
+};
+
+//-----------------------------------------------------------------------------------------//
+
+class Function::Inequality::LessThan
+
+// the result of an inequality comparison between Functions
+
+{	public :
+
+	Function low, high;
+	
+};
+
+//-----------------------------------------------------------------------------------------//
+
+class Function::Inequality::GreaterThan
+
+// the result of an inequality comparison between Functions
+
+{	public :
+
+	Function low, high;
+	
+};
+
+//-----------------------------------------------------------------------------------------//
+
+class Function::Inequality::Set
+
+// a vector of inequalities
+
+{	public :
+
+	std::vector < Function::Inequality::LessThanZero > vec;
+	
+};
+
+//-----------------------------------------------------------------------------------------//
 
 inline Function::Equality operator== ( const Function & f, const Function & g )
 {	return Function::Equality { f, g };  }
+
+
+inline Function::Inequality::LessThan operator<= ( const Function & f, const Function & g )
+{	return Function::Inequality::LessThan { f, g };  }
+
+inline Function::Inequality::LessThan operator< ( const Function & f, const Function & g )
+{	return Function::Inequality::LessThan { f, g };  }
+
+inline Function::Inequality::GreaterThan operator>= ( const Function & f, const Function & g )
+{	return Function::Inequality::GreaterThan { g, f };  }
+
+inline Function::Inequality::GreaterThan operator> ( const Function & f, const Function & g )
+{	return Function::Inequality::GreaterThan { g, f };  }
+
+inline Function::Inequality::Set operator<=   //  f <= g <= h
+( const Function::Inequality::LessThan & fg, const Function & h )
+{	Function::Inequality::Set res;
+	res.vec.push_back ( fg );
+	res.vec.push_back ( fg.high < h );
+	return res;                       }
+
+inline Function::Inequality::Set operator<   //  f < g < h
+( const Function::Inequality::LessThan & fg, const Function & h )
+{	Function::Inequality::Set res;
+	res.vec.push_back ( fg );
+	res.vec.push_back ( fg.high < h );
+	return res;                       }
+
+inline Function::Inequality::Set operator>=   //  f >= g >= h
+( const Function::Inequality::GreaterThan & fg, const Function & h )
+{	Function::Inequality::Set res;
+	res.vec.push_back ( fg );
+	res.vec.push_back ( fg.low > h );
+	return res;                       }
+
+inline Function::Inequality::Set operator>   //  f > g > h
+( const Function::Inequality::GreaterThan & fg, const Function & h )
+{	Function::Inequality::Set res;
+	res.vec.push_back ( fg );
+	res.vec.push_back ( fg.low > h );
+	return res;                       }
 
 
 inline size_t Function::nb_of_components ( ) const

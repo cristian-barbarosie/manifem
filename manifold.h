@@ -1,5 +1,5 @@
 
-// manifold.h 2021.08.27
+// manifold.h 2021.08.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -34,8 +34,8 @@
 
 namespace maniFEM {
 
-namespace tag {
-	struct euclid { };  static const euclid Euclid;
+namespace tag
+{	struct euclid { };  static const euclid Euclid;
 	struct lagrange { };  static const lagrange Lagrange;
 	struct Implicit { };  static const Implicit implicit;
 	struct Parametric { };  static const Parametric parametric;
@@ -907,9 +907,14 @@ class Manifold::Parametric : public Manifold::Core
 
 	Manifold surrounding_space;
 
-	std::map < Function, Function > equations;
+	std::map < Function, Function, bool (*) ( const Function &, const Function & ) > equations;
+	//  decltype(Function::less_for_map)*  equals  bool (*) ( const Function &, const Function & )
 
-	inline Parametric ( ) : Manifold::Core(), surrounding_space ( tag::non_existent ) { }
+	inline Parametric ( )
+	: Manifold::Core(),
+		surrounding_space ( tag::non_existent ),
+		equations ( & Function::less_for_map )
+	{ }
 
 	inline Parametric ( const Manifold &, const Function::Equality & );
 

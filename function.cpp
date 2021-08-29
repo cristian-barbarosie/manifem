@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.27
+// function.cpp 2021.08.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -35,6 +35,13 @@ size_t Function::Action::counter { 0 };
 #ifndef NDEBUG
 std::map < const Function::Core*, std::string > Function::name;
 #endif
+
+//-----------------------------------------------------------------------------------------//
+
+bool Function::less_for_map ( const Function & f, const Function & g )  //static
+{	return f.core < g.core;  }
+// needed for map 'jacobian' in class Function::Map
+// and for map 'equations' in class Manifold::Parametric
 
 //-----------------------------------------------------------------------------------------//
 

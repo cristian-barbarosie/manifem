@@ -369,8 +369,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
-void print_segment ( Cell seg );
-void print_spin ( Function::CompositionOfActions a );
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
@@ -382,7 +380,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 // beware, south may be equal to north.reverse, east may be equal to west.reverse
 // or they may be not equal but share the same vertices (and segments, reversed)
-// the correspondence may be not face-to-face,
+// beware, the correspondence may be not face-to-face,
 // e.g. the first vertex of south may show up somewhere in the middle of north
 
 // beware, sides may be closed loops
@@ -429,7 +427,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
 	Cell shadow_north ( tag::vertex ), shadow_west ( tag::vertex );
 	
-	tag::Util::CompositionOfActions spin_NW, spin_SE;
+	Function::CompositionOfActions spin_NW, spin_SE;
 	// spin_SW is zero by our choice, spin_NE is not needed
 	{ // just a block of code for hiding 'it'
 	CellIterator it = south.iterator ( tag::over_segments );
@@ -440,10 +438,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  spin_NW -= seg.spin();  }
 	} // just a block of code for hiding 'it'
-	std::cout << "line 443, spin NW  "; print_spin ( spin_NW );
 
 	// start mesh generation
-	std::cout << "start mesh generation" << std::endl;
 	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
@@ -453,17 +449,15 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// have SW, SE, NW and NE been correctly defined ?
 	it_east.reset();  it_east++;
 	it_west.reset();  it_west++;
-	tag::Util::CompositionOfActions spin_ver_east = spin_SE;
-	tag::Util::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
+	Function::CompositionOfActions spin_ver_east = spin_SE;
+	Function::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell seg = *it;
-		std::cout << "line 459 seg  ";  print_segment ( seg );
 		Cell A = seg.base().reverse();
 	  Cell DA = west.cell_behind ( A, tag::surely_exists );
-		std::cout << "line 462  DA    ";  print_segment ( DA );
 		Cell D = DA.base().reverse();
-		tag::Util::CompositionOfActions spin_seg_west = -DA.spin();
+		Function::CompositionOfActions spin_seg_west = -DA.spin();
 		spin_ver_west += spin_seg_west;
 		Cell ver_east = *it_east;
 		seg = east.cell_behind ( ver_east, tag::surely_exists );
@@ -478,33 +472,26 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		coords_Eu ( shadow_west ) = v;
 		it_south.reset();  it_south++;
 		it_north.reset();  it_north++;
-		tag::Util::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
-		tag::Util::CompositionOfActions spin_ver_north = spin_NW;
+		Function::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
+		Function::CompositionOfActions spin_ver_north = spin_NW;
 		for ( size_t j = 1; j < N_horiz; j++ )
 		{	Cell AB = *it;  // 'it' points into the 'horizon' list of segments
-			std::cout << "line 482  AB  ";  print_segment ( AB );
 			Cell B = AB.tip();
 			Cell ver_south = *it_south;
 			Cell seg_south = south.cell_behind ( ver_south );
-			std::cout << "line 487 seg_south  ";  print_segment ( seg_south );
-			tag::Util::CompositionOfActions spin_seg_south = seg_south.spin();
+			Function::CompositionOfActions spin_seg_south = seg_south.spin();
 			assert ( AB.spin() == spin_seg_south );
 			spin_ver_south += spin_seg_south;
 			Cell ver_north = *it_north;
 			seg = north.cell_in_front_of ( ver_north );
-			std::cout << "line 493 seg_north ";  print_segment ( seg );
 			spin_ver_north -= seg.spin();
 			Cell C ( tag::vertex );  // create a new vertex
 			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
 			beta = beta*beta*beta;
 			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
 			v = coords_q ( ver_south, tag::spin, spin_ver_south );
-			std::cout << "shadow south (" << v[0] << " " << v[1] << "), ";
-			print_spin ( spin_ver_south );
 			coords_Eu ( shadow_south ) = v;
 			v = coords_q ( ver_north, tag::spin, spin_ver_north );
-			std::cout << "shadow north (" << v[0] << " " << v[1] << "), ";
-			print_spin ( spin_ver_north );
 			coords_Eu ( shadow_north ) = v;
 			mani_Eu.interpolate ( C, bb*(1-frac_N), shadow_south, aa*frac_E,     shadow_east,     
 		                           bb*frac_N,     shadow_north, aa*(1-frac_E), shadow_west );
@@ -512,8 +499,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 			BC.spin() =  spin_seg_west;
 			CD.spin() = -spin_seg_south;
-			std::cout << "line 509  BC  ";  print_segment ( BC );
-			std::cout << "line 510  CD  ";  print_segment ( CD );
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 				BD.spin() = spin_seg_west - spin_seg_south;
@@ -534,21 +519,18 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		} // end of for j
 		Cell ver_south = *it_south;
 		Cell seg_south = south.cell_behind ( ver_south );
-		std::cout << "line 531 seg_south   ";  print_segment ( seg_south );
-		tag::Util::CompositionOfActions spin_seg_south = seg_south.spin();
+		Function::CompositionOfActions spin_seg_south = seg_south.spin();
 		it_south++;  it_north++;
 		assert ( not it_south.in_range() );
 		assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
 		Cell AB = *it;
-		std::cout << "line 538   AB  ";  print_segment ( AB );
 		Cell B = AB.tip();
 		assert ( AB.spin() == spin_seg_south );
 		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
 		Cell C = BC.tip();
 		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 		CD.spin() = -spin_seg_south;
-		std::cout << "line 545  CD  ";  print_segment ( CD );
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			BD.spin() = spin_seg_west - spin_seg_south;
@@ -569,21 +551,18 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// last row of rectangles is different, north sides already exist
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
-	std::cout << "line 566 DA   ";  print_segment ( DA );
-	tag::Util::CompositionOfActions spin_seg_downwards = DA.spin();
+	Function::CompositionOfActions spin_seg_downwards = DA.spin();
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
 	{	Cell AB = *it;
 		// assert ( AB.spin() == spin_seg_south );
 		Cell B = AB.tip();
 		Cell CD = north.cell_behind ( D );
-		std::cout << "line 574  CD  ";  print_segment ( CD );
 		Cell C = CD.base().reverse();
 		// CD.spin()  may be different from  spin_seg_south
 		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
 		spin_seg_downwards += CD.spin() + AB.spin();
 		BC.spin() = -spin_seg_downwards;
-		std::cout << "line 580  BC  ";  print_segment ( BC );
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			// spin_seg_south == AB.spin()
@@ -600,14 +579,11 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
 	Cell AB = *it;
-	std::cout << "line 597  AB  ";  print_segment ( AB );
 	Cell B = AB.tip();
 	Cell BC = east.cell_in_front_of (B);
-	std::cout << "line 600  BC   ";  print_segment ( BC );
 	Cell C = BC.tip();
 	assert ( C == NE );
 	Cell CD = north.cell_behind ( D );
-	std::cout << "line 604  CD   ";  print_segment ( CD );
 	assert ( AB.spin() + BC.spin() + CD.spin() + DA.spin() == 0 );
 	if ( cut_rectangles_in_half )
 	{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
