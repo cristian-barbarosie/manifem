@@ -1,5 +1,5 @@
 
-// function.h 2021.08.29
+// function.h 2021.08.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -183,7 +183,9 @@ class Function
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
 	class MultiValued;
 	class Equality;
-	struct Inequality  { class LessThanZero;  class LessThan;  class GreaterThan;  class Set;  };
+	struct Inequality
+	{ class LessThanZero;  class LessThan;  class GreaterThan;
+		typedef tag::Util::InequalitySet Set;                    };
 
 };  // end of  class Function
 
@@ -2398,7 +2400,7 @@ class Function::Inequality::GreaterThan
 
 //-----------------------------------------------------------------------------------------//
 
-class Function::Inequality::Set
+class tag::Util::InequalitySet
 
 // a vector of inequalities
 
@@ -2406,7 +2408,7 @@ class Function::Inequality::Set
 
 	std::vector < Function::Inequality::LessThanZero > vec;
 
-	inline bool operator() ( const Cell & ) const;
+	inline bool on_cell ( const Cell & ) const;
 	
 };
 
@@ -2436,7 +2438,7 @@ inline Function::Inequality::Set operator&&
 // optimize !!
 
 
-inline bool Function::Inequality::Set::operator() ( const Cell & cll ) const
+inline bool Function::Inequality::Set::on_cell ( const Cell & cll ) const
 
 {	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
         it = this->vec.begin(); it != this->vec.end(); it++             )
@@ -2513,6 +2515,36 @@ inline Function::TakenOnCellWithSpin Function::operator()
 ( const Cell & cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 {	return Function::TakenOnCellWithSpin ( *this, cll, exp );   }
 
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+
+
+inline void Mesh::draw_ps ( std::string file_name,
+                            const tag::Unfold &, const tag::OverRegion &,
+                            const tag::Util::InequalitySet & c1,
+                            const tag::Util::InequalitySet & c2           )
+{	this->draw_ps ( file_name, tag::unfold, tag::over_region, c1 && c2 );  }
+
+//----------------------------------------------------------------------------------//
+
+inline void Mesh::draw_ps ( std::string file_name,
+                            const tag::Unfold &, const tag::OverRegion &,
+                            const tag::Util::InequalitySet & c1,
+                            const tag::Util::InequalitySet & c2,
+                            const tag::Util::InequalitySet & c3           )
+{	this->draw_ps ( file_name, tag::unfold, tag::over_region, c1 && c2 && c3 );  }
+
+//----------------------------------------------------------------------------------//
+
+inline void Mesh::draw_ps ( std::string file_name,
+                            const tag::Unfold &, const tag::OverRegion &,
+                            const tag::Util::InequalitySet & c1,
+                            const tag::Util::InequalitySet & c2,
+                            const tag::Util::InequalitySet & c3,
+                            const tag::Util::InequalitySet & c4           )
+{	this->draw_ps ( file_name, tag::unfold, tag::over_region, c1 && c2 && c3 && c4 );  }
+
+//----------------------------------------------------------------------------------//
 
 }  // namespace maniFEM
 

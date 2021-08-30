@@ -1,5 +1,5 @@
 
-// global.cpp 2021.08.26
+// global.cpp 2021.08.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -684,6 +684,22 @@ void Mesh::draw_ps ( std::string file_name )
 
 //----------------------------------------------------------------------------------//
 
+
+void Mesh::draw_ps ( std::string file_name, const tag::Unfold &,
+                     const tag::OverRegion &, const Function::Inequality::Set & constraints )
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	
+} // end of  Mesh::draw_ps with tag::unfold
+
+//----------------------------------------------------------------------------------//
 
 //  method below uses some postscript macros for (very) rudimentary 3d drawings
 //  available at https://github.com/cristian-barbarosie/manifem/blob/main/3d.ps

@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.27
+//   mesh.h  2021.08.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -135,6 +135,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
 	struct RandomOrientation { };  static const RandomOrientation random_orientation;
 	struct Spin { };  static const Spin spin;
+	struct Unfold { };  static const Unfold unfold;
+	struct OverRegion { };  static const OverRegion over_region;
 
 	struct Util
 	{ template < class T > class Wrapper;
@@ -143,6 +145,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class MeshCore;  // aka Mesh::Core
 		class CompositionOfActions;  // aka Function::CompositionOfActions
 		// defined in function.h
+		class InequalitySet;  // aka Function::Inequality::Set
+		// defined in function.f
 		inline static size_t assert_diff ( const size_t a, const size_t b )
 		{	assert ( a >= b );  return  a - b;  }
 		template < typename X, typename Y > inline static Y assert_cast ( X x )
@@ -1522,8 +1526,27 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// we are still in class Mesh
 	// methods draw_ps and export_msh defined in global.cpp
+	// inline versions of draw_ps defined in function.h
 
 	void draw_ps ( std::string file_name );
+	void draw_ps ( std::string file_name,
+	               const tag::Unfold &, const tag::OverRegion &,
+	               const tag::Util::InequalitySet & constraints );
+	inline void draw_ps ( std::string file_name,
+	                      const tag::Unfold &, const tag::OverRegion &,
+	                      const tag::Util::InequalitySet & c1,
+	                      const tag::Util::InequalitySet & c2           );
+	inline void draw_ps ( std::string file_name,
+	                      const tag::Unfold &, const tag::OverRegion &,
+	                      const tag::Util::InequalitySet & c1,
+	                      const tag::Util::InequalitySet & c2,
+	                      const tag::Util::InequalitySet & c3           );
+	inline void draw_ps ( std::string file_name,
+	                      const tag::Unfold &, const tag::OverRegion &,
+	                      const tag::Util::InequalitySet & c1,
+	                      const tag::Util::InequalitySet & c2,
+	                      const tag::Util::InequalitySet & c3,
+	                      const tag::Util::InequalitySet & c4           );
 	void draw_ps_3d ( std::string file_name );
 	void export_msh ( std::string f, Cell::Numbering & );
 	void export_msh ( std::string f, std::map < Cell, size_t > & );
