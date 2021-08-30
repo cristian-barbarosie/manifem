@@ -2351,7 +2351,9 @@ class Function::Equality
 };
 
 //-----------------------------------------------------------------------------------------//
-//  classes below allow for boolean epressions like  f < g < h  and   f > g > h 
+//  classes below allow for boolean epressions like
+//  f < g < h  --  equivalent to  ( f < g ) < h
+//  and   f > g > h  --  equivalent to  ( f > g ) > h
 //-----------------------------------------------------------------------------------------//
 
 class Function::Inequality::LessThanZero
@@ -2361,6 +2363,8 @@ class Function::Inequality::LessThanZero
 {	public :
 
 	Function expr;
+
+	inline operator Function::Inequality::Set() const;
 	
 };
 
@@ -2374,6 +2378,8 @@ class Function::Inequality::LessThan
 
 	Function low, high;
 	
+	inline operator Function::Inequality::LessThanZero() const;
+
 };
 
 //-----------------------------------------------------------------------------------------//
@@ -2386,6 +2392,8 @@ class Function::Inequality::GreaterThan
 
 	Function low, high;
 	
+	inline operator Function::Inequality::LessThanZero() const;
+
 };
 
 //-----------------------------------------------------------------------------------------//
@@ -2397,10 +2405,44 @@ class Function::Inequality::Set
 {	public :
 
 	std::vector < Function::Inequality::LessThanZero > vec;
+
+	inline bool operator() ( const Cell & ) const;
 	
 };
 
 //-----------------------------------------------------------------------------------------//
+
+inline Function::Inequality::LessThan::operator Function::Inequality::LessThanZero() const
+{	return Function::Inequality::LessThanZero { this->low - this->high };  }
+
+inline Function::Inequality::GreaterThan::operator Function::Inequality::LessThanZero() const
+{	return Function::Inequality::LessThanZero { this->low - this->high };  }
+
+inline Function::Inequality::LessThanZero::operator Function::Inequality::Set() const
+{	return Function::Inequality::Set { { *this } };  }
+
+
+inline Function::Inequality::Set operator&&
+( const Function::Inequality::Set & f, const Function::Inequality::Set & g )
+
+{	Function::Inequality::Set res;
+	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
+        it = f.vec.begin(); it != f.vec.end(); it++                     )
+		res.vec.push_back ( *it );
+	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
+        it = g.vec.begin(); it != g.vec.end(); it++                     )
+		res.vec.push_back ( *it );
+	return res;                                                                   }
+// optimize !!
+
+
+inline bool Function::Inequality::Set::operator() ( const Cell & cll ) const
+
+{	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
+        it = this->vec.begin(); it != this->vec.end(); it++             )
+		if ( ( it->expr ) ( cll ) > 0. ) return false;
+	return true;                                                             }
+
 
 inline Function::Equality operator== ( const Function & f, const Function & g )
 {	return Function::Equality { f, g };  }
