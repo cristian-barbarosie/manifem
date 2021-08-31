@@ -137,6 +137,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Spin { };  static const Spin spin;
 	struct Unfold { };  static const Unfold unfold;
 	struct OverRegion { };  static const OverRegion over_region;
+	struct OneGenerator { };  static const OneGenerator one_generator;
+	struct TwoGenerators { };  static const TwoGenerators two_generators;
 
 	struct Util
 	{ template < class T > class Wrapper;
@@ -1532,6 +1534,12 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::OverRegion &,
 	               const tag::Util::InequalitySet & constraints );
+	void draw_ps ( std::string file_name,
+	               const tag::Unfold &, const tag::OneGenerator &, const tag::OverRegion &,
+	               const tag::Util::InequalitySet & constraints                            );
+	void draw_ps ( std::string file_name,
+	               const tag::Unfold &, const tag::TwoGenerators &, const tag::OverRegion &,
+	               const tag::Util::InequalitySet & constraints                             );
 	inline void draw_ps ( std::string file_name,
 	                      const tag::Unfold &, const tag::OverRegion &,
 	                      const tag::Util::InequalitySet & c1,

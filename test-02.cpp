@@ -1,25 +1,23 @@
 
-#include <map>
+#include <vector>
 #include <iostream>
 
-class Function
-{	public:
-	static bool less_for_map ( const Function &, const Function & )
-	{	return true;  }
-};
-
-class A { };  class B { };
-
-B operator< ( const A & a, const B & b  ) { std::cout << "1"; return b; }
-B operator< ( const B & b, const B & )    { std::cout << "2"; return b; }
-A operator< ( const B & b, const A & a )  { std::cout << "3"; return a; }
 
 	
 int main ()
 
-{ A a;  B b;
-	b < a < b;  //  equivalent to  ( b < a ) < b
-	std::cout << "end of main" << std::endl << std::flush;
+{		size_t size_of_round = 0;
+		std::vector < std::vector < short int > > directions
+			{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+		int ii = 0, jj = 0;
+		// while ( true )
+		for ( size_t g = 0; g < 20; g++ )
+		{	size_of_round++;
+			for ( size_t d = 0; d < 4; d++ )
+			{	if ( d == 2 ) size_of_round++;
+				for ( size_t i = 0; i < size_of_round; i++ )
+				{	std::cout << ii << " " << jj << std::endl;
+					ii += directions[d][0];
+					jj += directions[d][1];                      }  }  }
 }
 
-// output 31

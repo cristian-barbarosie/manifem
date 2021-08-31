@@ -369,6 +369,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
+void print_segment ( Cell seg );
+void print_spin ( Function::CompositionOfActions a );
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
@@ -416,11 +418,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	} // just a block of code for hiding 'it'
 
 	// we have to deal with possible spins
-	// all new segments on the same raw will have spin 
-	// equal to the spin of the corresponding segment of west
-	// all new segments on the same column will have spin
-	// equal to the spin of the corresponding segment of south
-	// last raw and last column are not subject to the above rule
+	// we choose that, at each interpolation operation, i.e., for each new vertex,
+	// the new vertex will have spin zero relatively to SW
 	// we must keep track of the spins of ver_south, ver_east, ver_north, ver_west
 	// (relatively to SW)
 	// we use four shadow vertices for interpolation
@@ -440,6 +439,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	} // just a block of code for hiding 'it'
 
 	// start mesh generation
+	std::cout << std::endl << "start mesh generation" << std::endl;
 	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
@@ -454,8 +454,10 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell seg = *it;
+		std::cout << "line 458, seg ";  print_segment ( seg );
 		Cell A = seg.base().reverse();
 	  Cell DA = west.cell_behind ( A, tag::surely_exists );
+		std::cout << "line 463, DA ";  print_segment ( DA );
 		Cell D = DA.base().reverse();
 		Function::CompositionOfActions spin_seg_west = -DA.spin();
 		spin_ver_west += spin_seg_west;
@@ -476,9 +478,11 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		Function::CompositionOfActions spin_ver_north = spin_NW;
 		for ( size_t j = 1; j < N_horiz; j++ )
 		{	Cell AB = *it;  // 'it' points into the 'horizon' list of segments
+			std::cout << "line 484, AB ";  print_segment ( AB );
 			Cell B = AB.tip();
 			Cell ver_south = *it_south;
 			Cell seg_south = south.cell_behind ( ver_south );
+			std::cout << "line 488, seg_south ";  print_segment ( seg_south );
 			Function::CompositionOfActions spin_seg_south = seg_south.spin();
 			assert ( AB.spin() == spin_seg_south );
 			spin_ver_south += spin_seg_south;
@@ -499,6 +503,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 			BC.spin() =  spin_seg_west;
 			CD.spin() = -spin_seg_south;
+			std::cout << "line 509, BC ";  print_segment ( BC );
+			std::cout << "line 510, CD ";  print_segment ( CD );
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 				BD.spin() = spin_seg_west - spin_seg_south;
@@ -524,13 +530,17 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		assert ( not it_south.in_range() );
 		assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
+		std::cout << "last rectangle on row" << std::endl;
 		Cell AB = *it;
+	  std::cout << "line 537, AB ";  print_segment ( AB );
 		Cell B = AB.tip();
 		assert ( AB.spin() == spin_seg_south );
 		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
+	  std::cout << "line 541, BC ";  print_segment ( BC );
 		Cell C = BC.tip();
 		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 		CD.spin() = -spin_seg_south;
+	  std::cout << "line 545, CD ";  print_segment ( CD );
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			BD.spin() = spin_seg_west - spin_seg_south;
@@ -549,20 +559,25 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	assert ( not it_east.in_range() );
 	assert ( not it_west.in_range() );
 	// last row of rectangles is different, north sides already exist
+	std::cout << "last row" << std::endl;
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
+	std::cout << "line 566, DA ";  print_segment ( DA );
 	Function::CompositionOfActions spin_seg_downwards = DA.spin();
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
 	{	Cell AB = *it;
+		std::cout << "line 571, AB ";  print_segment ( AB );
 		// assert ( AB.spin() == spin_seg_south );
 		Cell B = AB.tip();
 		Cell CD = north.cell_behind ( D );
+		std::cout << "line 575, CD ";  print_segment ( CD );
 		Cell C = CD.base().reverse();
 		// CD.spin()  may be different from  spin_seg_south
 		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
 		spin_seg_downwards += CD.spin() + AB.spin();
 		BC.spin() = -spin_seg_downwards;
+		std::cout << "line 581, BC ";  print_segment ( BC );
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			// spin_seg_south == AB.spin()
@@ -578,12 +593,15 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		D = C;
 		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
+	std::cout << "last rectangle of the last row" << std::endl;
 	Cell AB = *it;
 	Cell B = AB.tip();
 	Cell BC = east.cell_in_front_of (B);
+	std::cout << "line 600, BC ";  print_segment ( BC );
 	Cell C = BC.tip();
 	assert ( C == NE );
 	Cell CD = north.cell_behind ( D );
+	std::cout << "line 604, CD ";  print_segment ( CD );
 	assert ( AB.spin() + BC.spin() + CD.spin() + DA.spin() == 0 );
 	if ( cut_rectangles_in_half )
 	{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
@@ -688,18 +706,171 @@ void Mesh::draw_ps ( std::string file_name )
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &,
                      const tag::OverRegion &, const Function::Inequality::Set & constraints )
 
+// we draw several translations (or, more generally, transformations)
+// of each segment, within the region described by the constraints
+	
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
-	Manifold::Quotient * mani_q = tag::Util::assert_cast
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+
+	// the action group may have one or two generators
+	size_t n = manif_q->actions.size();
+	assert ( n == manif_q->spins.size() );
+	if ( n == 1 ) this->draw_ps ( file_name, tag::unfold, tag::one_generator,
+	                              tag::over_region, constraints               );
+	else
+	{	assert ( n == 2 );
+		this->draw_ps ( file_name, tag::unfold, tag::two_generators,
+		                tag::over_region, constraints               );  }
+
+} // end of  Mesh::draw_ps with tag::unfold
+	
+//----------------------------------------------------------------------------------//
+
+
+void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneGenerator &,
+                     const tag::OverRegion &, const Function::Inequality::Set & constraints )
+
+{	assert ( false );  }
+
+//----------------------------------------------------------------------------------//
+
+
+void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoGenerators &,
+                     const tag::OverRegion &, const Function::Inequality::Set & constraints )
+
+// we draw several translations (or, more generally, transformations)
+// of each segment, within the region described by the constraints
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
 		< Manifold::Core*, Manifold::Quotient* > ( space.core );
 	assert ( manif_q );
 	Function coords_q = space.coordinates();
-	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
 	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	// the action group may have one or two generators
+	assert ( manif_q->actions.size() == 2 );
+	assert ( manif_q->spins.size() == 2 );
+	Function::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
 	
-} // end of  Mesh::draw_ps with tag::unfold
+	std::ofstream file_ps ( file_name );
+	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
+	file_ps << "you may also want to add, after '** dup scale', a shadow like" << std::endl;
+	file_ps << "gsave 0.8 setgray ** ** moveto ** ** lineto ** ** lineto ** ** lineto closepath fill grestore" << std::endl;
+	file_ps	<< "(erase the preamble from the end of file; erase also these four lines)" << std::endl;
+
+	double xmin = 1.e8, xmax = -1.e8, ymin = 1.e8, ymax = -1.e8, maxside;
+
+	{ // just a block for hiding variables
+	Cell shadow ( tag::vertex );
+	std::vector < double > coords_base, coords_tip;
+	std::vector < std::vector < short int > > directions
+		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+	CellIterator it = this->iterator ( tag::over_segments );
+  size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
+	for ( it.reset() ; it.in_range(); it++ )
+	{	Cell seg = *it;
+		Cell base = seg.base().reverse();
+		Cell tip  = seg.tip();
+		// we describe a sort of spiral
+		// if the first tries are out of the region, we give up after 100 unsuccsessful rounds
+		// at the end, we stop after 10 unsuccessful rounds
+		size_t size_of_round = 0;
+		short int ii = 0, jj = 0;
+		while ( true )
+		{	size_of_round++;
+			bool successful_round = false;
+			for ( size_t d = 0; d < 4; d++ )
+			{	if ( d == 2 ) size_of_round++;
+				for ( size_t i = 0; i < size_of_round; i++ )
+				{	Function::CompositionOfActions a = ii*g1 + jj*g2;
+					bool touches_region = false;
+					coords_base = coords_q ( base, tag::spin, a );
+					coords_Eu ( shadow ) = coords_base;
+					touches_region = touches_region or constraints.on_cell ( shadow );
+					a += seg.spin();
+					coords_tip = coords_q ( tip, tag::spin, a );
+					coords_Eu ( shadow ) = coords_tip;
+					touches_region = touches_region or constraints.on_cell ( shadow );
+					if ( touches_region )
+					{	successful_round = true;
+						double xx = coords_base[0], yy = coords_base[1];
+						file_ps << xx << " " << yy << " moveto" << std::endl;
+						if ( xx < xmin ) xmin = xx;
+						if ( xx > xmax ) xmax = xx;
+						if ( yy < ymin ) ymin = yy;
+						if ( yy > ymax ) ymax = yy;
+						xx = coords_tip[0];  yy = coords_tip[1];
+						file_ps << xx << " "  << yy << " lineto stroke" << std::endl;
+						if ( xx < xmin ) xmin = xx;
+						if ( xx > xmax ) xmax = xx;
+						if ( yy < ymin ) ymin = yy;
+						if ( yy > ymax ) ymax = yy;                                           }  
+					ii += directions[d][0];
+					jj += directions[d][1];                                                   }  }
+			if ( successful_round )
+			{	first_unsuccessful_tries = 0;
+				last_unsuccessful_tries = 0;   }
+			else  // either we have not started yet, or we are approaching the end
+			{	if ( first_unsuccessful_tries > 0 )  // not started yet
+				{	first_unsuccessful_tries++;
+					if ( first_unsuccessful_tries > 100 ) goto give_up;  }
+				else  // approaching end
+				{	last_unsuccessful_tries++;
+					if ( last_unsuccessful_tries > 10 ) goto give_up;   }   }
+		}  // while true
+	give_up: ;  // next segment, please
+	}  // end of loop over segments
+	} // just a block for hiding variables
+
+	if ( xmax-xmin < ymax-ymin ) maxside = ymax-ymin;
+	else maxside = xmax-xmin;
+	double border = 0.02*maxside;
+	double scale_factor = 500/maxside;
+	double translation_x = -scale_factor*xmin;
+	double translation_y = -scale_factor*ymin;
+
+	file_ps << "grestore" << std::endl;
+	file_ps << "grestore" << std::endl << std::endl;
+	file_ps << "showpage" << std::endl;
+	file_ps << "%%Trailer" << std::endl;
+	file_ps << "%EOF" << std::endl << std::endl;
+	file_ps << "%!PS-Adobe-3.0 EPSF-3.0" << std::endl;
+	file_ps << "%%Title:                     maniFEM" << std::endl;
+	file_ps << "%%BoundingBox:  0 0 " << " " << scale_factor*(xmax-xmin+2*border)
+	        << "   " << scale_factor*(ymax-ymin+2*border) << std::endl;
+	file_ps << "%%EndComments" << std::endl;
+	file_ps << "%%BeginSetup" << std::endl;
+	file_ps << "<< /PageSize [" << scale_factor*(xmax-xmin+2*border) << " "
+	        << scale_factor*(ymax-ymin+2*border) << "] >> setpagedevice" << std::endl;
+	file_ps << "%%EndSetup" << std::endl << std::endl;
+	
+	file_ps << "gsave" << std::endl;
+	// file_ps << "/m{moveto}def" << std::endl;
+	// file_ps << "/l{lineto}def" << std::endl;
+	// file_ps << "/s{stroke}def" << std::endl;
+	file_ps << translation_x + scale_factor*border << " "
+	        << translation_y + scale_factor*border << " translate" << std::endl;
+	file_ps << scale_factor << " dup scale" << std::endl << std::endl;
+
+	file_ps << "gsave " << 1.5 / scale_factor << " setlinewidth" << std::endl;
+	
+
+	if ( ! file_ps.good() )
+	{	std::cerr << "error writing postscript file" << std::endl;
+		exit (1);                                                   }
+
+} // end of  Mesh::draw_ps with tag::unfold and tag::two_generators
 
 //----------------------------------------------------------------------------------//
+
 
 //  method below uses some postscript macros for (very) rudimentary 3d drawings
 //  available at https://github.com/cristian-barbarosie/manifem/blob/main/3d.ps

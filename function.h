@@ -2409,6 +2409,8 @@ class tag::Util::InequalitySet
 	std::vector < Function::Inequality::LessThanZero > vec;
 
 	inline bool on_cell ( const Cell & ) const;
+	inline bool on_cell
+	( const Cell &, const tag::Spin &, const Function::CompositionOfActions & ) const;
 	
 };
 
@@ -2443,6 +2445,15 @@ inline bool Function::Inequality::Set::on_cell ( const Cell & cll ) const
 {	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
         it = this->vec.begin(); it != this->vec.end(); it++             )
 		if ( ( it->expr ) ( cll ) > 0. ) return false;
+	return true;                                                             }
+
+
+inline bool Function::Inequality::Set::on_cell
+( const Cell & cll, const tag::Spin &, const Function::CompositionOfActions & a ) const
+
+{	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
+        it = this->vec.begin(); it != this->vec.end(); it++             )
+		if ( ( it->expr ) ( cll, tag::spin, a ) > 0. ) return false;
 	return true;                                                             }
 
 
