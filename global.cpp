@@ -420,7 +420,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// we have to deal with possible spins
 	// we choose that, at each interpolation operation, i.e., for each new vertex,
 	// the new vertex will have spin zero relatively to SW
-	// we must keep track of the spins of ver_south, ver_east, ver_north, ver_west
+	// we must keep track of the spins of ver_south, ver_east, ver_north, ver_west, B, D
 	// (relatively to SW)
 	// we use four shadow vertices for interpolation
 	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
@@ -449,20 +449,21 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// have SW, SE, NW and NE been correctly defined ?
 	it_east.reset();  it_east++;
 	it_west.reset();  it_west++;
-	Function::CompositionOfActions spin_ver_east = spin_SE;
 	Function::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
+	Function::CompositionOfActions spin_ver_east = spin_SE;
+	Function::CompositionOfActions spin_B;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
-		Cell seg = *it;
-		std::cout << "line 458, seg ";  print_segment ( seg );
-		Cell A = seg.base().reverse();
+		Cell AB = *it;
+		std::cout << "line 458, AB ";  print_segment ( AB );
+		Cell A = AB.base().reverse();
 	  Cell DA = west.cell_behind ( A, tag::surely_exists );
 		std::cout << "line 463, DA ";  print_segment ( DA );
 		Cell D = DA.base().reverse();
 		Function::CompositionOfActions spin_seg_west = -DA.spin();
 		spin_ver_west += spin_seg_west;
 		Cell ver_east = *it_east;
-		seg = east.cell_behind ( ver_east, tag::surely_exists );
+		Cell seg = east.cell_behind ( ver_east, tag::surely_exists );
 		spin_ver_east += seg.spin();
 		Cell ver_west = *it_west;
 		assert ( ver_west == D );
@@ -476,16 +477,17 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		it_north.reset();  it_north++;
 		Function::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
 		Function::CompositionOfActions spin_ver_north = spin_NW;
+		Function::CompositionOfActions spin_D = spin_ver_west;
 		for ( size_t j = 1; j < N_horiz; j++ )
-		{	Cell AB = *it;  // 'it' points into the 'horizon' list of segments
-			std::cout << "line 484, AB ";  print_segment ( AB );
+		{	AB = *it;  // 'it' points into the 'horizon' list of segments
+			std::cout << "line 483, AB ";  print_segment ( AB );
 			Cell B = AB.tip();
+			spin_B += AB.spin();
+			std::cout << "line 486, spin_B ";  print_spin ( spin_B );
 			Cell ver_south = *it_south;
 			Cell seg_south = south.cell_behind ( ver_south );
-			std::cout << "line 488, seg_south ";  print_segment ( seg_south );
-			Function::CompositionOfActions spin_seg_south = seg_south.spin();
-			assert ( AB.spin() == spin_seg_south );
-			spin_ver_south += spin_seg_south;
+			std::cout << "line 489, seg_south ";  print_segment ( seg_south );
+			spin_ver_south += seg_south.spin();
 			Cell ver_north = *it_north;
 			seg = north.cell_in_front_of ( ver_north );
 			spin_ver_north -= seg.spin();
@@ -501,13 +503,15 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		                           bb*frac_N,     shadow_north, aa*(1-frac_E), shadow_west );
 			Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
 			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
-			BC.spin() =  spin_seg_west;
-			CD.spin() = -spin_seg_south;
+			BC.spin() = -spin_B;
+			CD.spin() =  spin_D;
+		  assert ( AB.spin() + BC.spin() + CD.spin() + DA.spin() == 0 );
+		  spin_D = 0;
 			std::cout << "line 509, BC ";  print_segment ( BC );
 			std::cout << "line 510, CD ";  print_segment ( CD );
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-				BD.spin() = spin_seg_west - spin_seg_south;
+				BD.spin() = spin_D - spin_B;
 				Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 				Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
 				BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
@@ -525,25 +529,25 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		} // end of for j
 		Cell ver_south = *it_south;
 		Cell seg_south = south.cell_behind ( ver_south );
-		Function::CompositionOfActions spin_seg_south = seg_south.spin();
 		it_south++;  it_north++;
 		assert ( not it_south.in_range() );
 		assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
 		std::cout << "last rectangle on row" << std::endl;
-		Cell AB = *it;
+		AB = *it;
 	  std::cout << "line 537, AB ";  print_segment ( AB );
 		Cell B = AB.tip();
-		assert ( AB.spin() == spin_seg_south );
 		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
 	  std::cout << "line 541, BC ";  print_segment ( BC );
 		Cell C = BC.tip();
 		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
-		CD.spin() = -spin_seg_south;
+		CD.spin() = - DA.spin() - AB.spin() - BC.spin();
 	  std::cout << "line 545, CD ";  print_segment ( CD );
+		assert ( spin_D == 0 );
+		spin_B = spin_ver_west;
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			BD.spin() = spin_seg_west - spin_seg_south;
+			BD.spin() = - AB.spin() - DA.spin();
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
 			BCD.add_to_mesh (*this);
@@ -563,25 +567,20 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
 	std::cout << "line 566, DA ";  print_segment ( DA );
-	Function::CompositionOfActions spin_seg_downwards = DA.spin();
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
 	{	Cell AB = *it;
 		std::cout << "line 571, AB ";  print_segment ( AB );
-		// assert ( AB.spin() == spin_seg_south );
 		Cell B = AB.tip();
 		Cell CD = north.cell_behind ( D );
 		std::cout << "line 575, CD ";  print_segment ( CD );
 		Cell C = CD.base().reverse();
-		// CD.spin()  may be different from  spin_seg_south
 		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
-		spin_seg_downwards += CD.spin() + AB.spin();
-		BC.spin() = -spin_seg_downwards;
+		BC.spin() = - CD.spin() - DA.spin() - AB.spin();
 		std::cout << "line 581, BC ";  print_segment ( BC );
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			// spin_seg_south == AB.spin()
-			BD.spin() = -spin_seg_downwards - AB.spin();
+			BD.spin() = - DA.spin() - AB.spin();
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
 			BCD.add_to_mesh (*this);
@@ -762,13 +761,15 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	
 	std::ofstream file_ps ( file_name );
 	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
-	file_ps << "you may also want to add, after '** dup scale', a shadow like" << std::endl;
-	file_ps << "gsave 0.8 setgray ** ** moveto ** ** lineto ** ** lineto ** ** lineto closepath fill grestore" << std::endl;
-	file_ps	<< "(erase the preamble from the end of file; erase also these four lines)" << std::endl;
-
+	file_ps << "you may also want to add, after '** dup scale', a clip and a shadow :" << std::endl;
+	file_ps << "_some_path_ clip" << std::endl;
+	file_ps << "gsave 0.8 setgray newpath ** ** moveto ** ** lineto ** ** "
+		<< "lineto ** ** lineto closepath fill grestore" << std::endl;
+	file_ps	<< "(erase the preamble from the end of file; erase also these five lines)";
+	file_ps << std::endl << std::endl;
+						 
 	double xmin = 1.e8, xmax = -1.e8, ymin = 1.e8, ymax = -1.e8, maxside;
 
-	{ // just a block for hiding variables
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
 	std::vector < std::vector < short int > > directions
@@ -828,7 +829,6 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 		}  // while true
 	give_up: ;  // next segment, please
 	}  // end of loop over segments
-	} // just a block for hiding variables
 
 	if ( xmax-xmin < ymax-ymin ) maxside = ymax-ymin;
 	else maxside = xmax-xmin;

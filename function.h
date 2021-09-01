@@ -1,5 +1,5 @@
 
-// function.h 2021.08.30
+// function.h 2021.09.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1566,7 +1566,7 @@ inline bool operator< ( const Function::Action & f, const Function::Action & g )
 //-----------------------------------------------------------------------------------------//
 
 
-class tag::Util::CompositionOfActions  // aka Function::CompositionOfActions
+class tag::Util::CompositionOfActions  // aka class Function::CompositionOfActions
 
 // a composition of actions, thus an element of the group
 // essentially, a multi-index, more precisely a map < Function::Action, short int >
@@ -1599,6 +1599,8 @@ class tag::Util::CompositionOfActions  // aka Function::CompositionOfActions
 		            std::pair < Function::Action, short int > ( g3, k )  }
 	{	}
 
+	inline Function::CompositionOfActions operator= ( const short int zero );
+
 };  // end of class Function::CompositionOfActions
 
 
@@ -1623,10 +1625,17 @@ inline bool operator==
 	return true;                                                                       }
 
 	
-inline bool operator== ( const Function::CompositionOfActions & a, short int zero )
+inline bool operator== ( const Function::CompositionOfActions & a, const short int zero )
 // shorthand for quering the identity action :  id == 0
 {	assert ( zero == 0 );
 	return a.index_map.size() == 0;  }
+
+inline Function::CompositionOfActions Function::CompositionOfActions::operator=
+( const short int zero )
+// shorthand for quering the identity action :  id = 0
+{	assert ( zero == 0 );
+	this->index_map.clear();
+	return *this;            }
 
 	
 inline Function::Action::operator Function::CompositionOfActions() const
