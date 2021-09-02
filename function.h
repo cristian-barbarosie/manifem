@@ -2390,6 +2390,7 @@ class Function::Inequality::LessThan
 	Function low, high;
 	
 	inline operator Function::Inequality::LessThanZero() const;
+	inline operator Function::Inequality::Set() const;
 
 };
 
@@ -2404,6 +2405,7 @@ class Function::Inequality::GreaterThan
 	Function low, high;
 	
 	inline operator Function::Inequality::LessThanZero() const;
+	inline operator Function::Inequality::Set() const;
 
 };
 
@@ -2428,8 +2430,14 @@ class tag::Util::InequalitySet
 inline Function::Inequality::LessThan::operator Function::Inequality::LessThanZero() const
 {	return Function::Inequality::LessThanZero { this->low - this->high };  }
 
+inline Function::Inequality::LessThan::operator Function::Inequality::Set() const
+{	return Function::Inequality::Set { { Function::Inequality::LessThanZero { this->low - this->high } } };  }
+
 inline Function::Inequality::GreaterThan::operator Function::Inequality::LessThanZero() const
 {	return Function::Inequality::LessThanZero { this->low - this->high };  }
+
+inline Function::Inequality::GreaterThan::operator Function::Inequality::Set() const
+{	return Function::Inequality::Set { { Function::Inequality::LessThanZero { this->low - this->high } } };  }
 
 inline Function::Inequality::LessThanZero::operator Function::Inequality::Set() const
 {	return Function::Inequality::Set { { *this } };  }

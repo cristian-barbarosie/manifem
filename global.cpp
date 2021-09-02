@@ -1,5 +1,5 @@
 
-// global.cpp 2021.08.30
+// global.cpp 2021.09.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -193,7 +193,7 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 			Cell horizontal_seg ( tag::segment, S.reverse(), previous_ver );
 		  Cell tri_1 ( tag::triangle, previous_seg.reverse(), new_seg, horizontal_seg );
 		  tri_1.add_to_mesh ( *this );
-			it_ground++; assert ( it_ground != ground.end() );
+			it_ground++;  assert ( it_ground != ground.end() );
 			Cell ground_seg = *it_ground;
 			if ( j == N ) previous_seg = seg_on_BC;
 			else
@@ -278,7 +278,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			Cell ver_north = *it_north;
 			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
 			beta = beta*beta*beta;
-			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
+			double sum = alpha + beta, aa = alpha/sum, bb = beta/sum;
 			space.interpolate ( C, bb*(1-frac_N), ver_south, aa*frac_E,     ver_east,     
 		                         bb*frac_N,     ver_north, aa*(1-frac_E), ver_west );
 			Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
@@ -298,11 +298,11 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			it++;
 			D = C;
 			DA = BC.reverse();
-			it_south++;  it_north++;
+			it_south++;  assert ( it_south.in_range() );
+			it_north++;  assert ( it_north.in_range() );
 		} // end of for j
-		it_south++;  it_north++;
-		assert ( not it_south.in_range() );
-		assert ( not it_north.in_range() );
+		it_south++;  assert ( not it_south.in_range() );
+		it_north++;  assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
 		Cell AB = *it;
 		Cell B = AB.tip();
@@ -319,12 +319,12 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
 			Q.add_to_mesh (*this);                     }
 		*it = CD.reverse();
-		it_east++;  it_west++;
+		it_east++;  assert ( it_east.in_range() );
+		it_west++;  assert ( it_west.in_range() );
 		it++;  assert ( it == horizon.end() );
 	} // end of for i
-	it_east++;  it_west++;
-	assert ( not it_east.in_range() );
-	assert ( not it_west.in_range() );
+	it_east++;  assert ( not it_east.in_range() );
+	it_west++;  assert ( not it_west.in_range() );
 	// last row of rectangles is different, north sides already exist
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
@@ -369,8 +369,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
-void print_segment ( Cell seg );
-void print_spin ( Function::CompositionOfActions a );
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
@@ -396,6 +394,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	Function coords_Eu = mani_Eu.coordinates();
 
 	// recover corners from the sides
+	// the process is different from the one in 'build' without spin
+	// sides may be closed loops
 	Cell SW = south.first_vertex().reverse();
 	assert ( SW == west.last_vertex() );
 	Cell SE = east.first_vertex().reverse();
@@ -439,7 +439,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	} // just a block of code for hiding 'it'
 
 	// start mesh generation
-	std::cout << std::endl << "start mesh generation" << std::endl;
 	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
 	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
@@ -447,18 +446,16 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// sides may be closed loops
 	// so we need to specify the starting vertex for the above iterators
 	// have SW, SE, NW and NE been correctly defined ?
-	it_east.reset();  it_east++;
-	it_west.reset();  it_west++;
+	it_east.reset ( tag::start_at, SE );  it_east++;
+	it_west.reset ( tag::start_at, SW );  it_west++;
 	Function::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
 	Function::CompositionOfActions spin_ver_east = spin_SE;
 	Function::CompositionOfActions spin_B;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell AB = *it;
-		std::cout << "line 458, AB ";  print_segment ( AB );
 		Cell A = AB.base().reverse();
 	  Cell DA = west.cell_behind ( A, tag::surely_exists );
-		std::cout << "line 463, DA ";  print_segment ( DA );
 		Cell D = DA.base().reverse();
 		Function::CompositionOfActions spin_seg_west = -DA.spin();
 		spin_ver_west += spin_seg_west;
@@ -473,20 +470,17 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		coords_Eu ( shadow_east ) = v;
 		v = coords_q ( ver_west, tag::spin, spin_ver_west );
 		coords_Eu ( shadow_west ) = v;
-		it_south.reset();  it_south++;
-		it_north.reset();  it_north++;
+	  it_south.reset ( tag::start_at, SW );  it_south++;
+	  it_north.reset ( tag::start_at, NW );  it_north++;
 		Function::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
 		Function::CompositionOfActions spin_ver_north = spin_NW;
 		Function::CompositionOfActions spin_D = spin_ver_west;
 		for ( size_t j = 1; j < N_horiz; j++ )
 		{	AB = *it;  // 'it' points into the 'horizon' list of segments
-			std::cout << "line 483, AB ";  print_segment ( AB );
 			Cell B = AB.tip();
 			spin_B += AB.spin();
-			std::cout << "line 486, spin_B ";  print_spin ( spin_B );
 			Cell ver_south = *it_south;
 			Cell seg_south = south.cell_behind ( ver_south );
-			std::cout << "line 489, seg_south ";  print_segment ( seg_south );
 			spin_ver_south += seg_south.spin();
 			Cell ver_north = *it_north;
 			seg = north.cell_in_front_of ( ver_north );
@@ -494,7 +488,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			Cell C ( tag::vertex );  // create a new vertex
 			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
 			beta = beta*beta*beta;
-			double sum = alpha + beta,  aa = alpha/sum,  bb = beta/sum;
+			double sum = alpha + beta, aa = alpha/sum, bb = beta/sum;
 			v = coords_q ( ver_south, tag::spin, spin_ver_south );
 			coords_Eu ( shadow_south ) = v;
 			v = coords_q ( ver_north, tag::spin, spin_ver_north );
@@ -507,8 +501,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			CD.spin() =  spin_D;
 		  assert ( AB.spin() + BC.spin() + CD.spin() + DA.spin() == 0 );
 		  spin_D = 0;
-			std::cout << "line 509, BC ";  print_segment ( BC );
-			std::cout << "line 510, CD ";  print_segment ( CD );
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 				BD.spin() = spin_D - spin_B;
@@ -525,24 +517,21 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			it++;
 			D = C;
 			DA = BC.reverse();
-			it_south++;  it_north++;
+			it_south++;  assert ( it_south.in_range() );
+			it_north++;  assert ( it_north.in_range() );
 		} // end of for j
 		Cell ver_south = *it_south;
-		Cell seg_south = south.cell_behind ( ver_south );
-		it_south++;  it_north++;
-		assert ( not it_south.in_range() );
-		assert ( not it_north.in_range() );
+		Cell seg_south = south.cell_behind ( ver_south, tag::surely_exists );
+		it_south++;  assert ( not it_south.in_range() );
+		it_north++;  assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
-		std::cout << "last rectangle on row" << std::endl;
+		std::cout << "last rectangle of row" << std::endl;
 		AB = *it;
-	  std::cout << "line 537, AB ";  print_segment ( AB );
 		Cell B = AB.tip();
 		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
-	  std::cout << "line 541, BC ";  print_segment ( BC );
 		Cell C = BC.tip();
 		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 		CD.spin() = - DA.spin() - AB.spin() - BC.spin();
-	  std::cout << "line 545, CD ";  print_segment ( CD );
 		assert ( spin_D == 0 );
 		spin_B = spin_ver_west;
 		if ( cut_rectangles_in_half )
@@ -556,28 +545,24 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
 			Q.add_to_mesh (*this);                     }
 		*it = CD.reverse();
-		it_east++;  it_west++;
+		it_east++;  assert ( it_east.in_range() );
+		it_west++;  assert ( it_west.in_range() );
 		it++;  assert ( it == horizon.end() );
 	} // end of for i
-	it_east++;  it_west++;
-	assert ( not it_east.in_range() );
-	assert ( not it_west.in_range() );
+	it_east++;  assert ( not it_east.in_range() );
+	it_west++;  assert ( not it_west.in_range() );
 	// last row of rectangles is different, north sides already exist
 	std::cout << "last row" << std::endl;
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
-	std::cout << "line 566, DA ";  print_segment ( DA );
 	Cell D = NW;
 	for (size_t j=1; j < N_horiz; j++)
 	{	Cell AB = *it;
-		std::cout << "line 571, AB ";  print_segment ( AB );
 		Cell B = AB.tip();
 		Cell CD = north.cell_behind ( D );
-		std::cout << "line 575, CD ";  print_segment ( CD );
 		Cell C = CD.base().reverse();
 		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
 		BC.spin() = - CD.spin() - DA.spin() - AB.spin();
-		std::cout << "line 581, BC ";  print_segment ( BC );
 		if ( cut_rectangles_in_half )
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			BD.spin() = - DA.spin() - AB.spin();
@@ -592,15 +577,13 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		D = C;
 		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
-	std::cout << "last rectangle of the last row" << std::endl;
+	std::cout << "last rectangle of last row" << std::endl;
 	Cell AB = *it;
 	Cell B = AB.tip();
 	Cell BC = east.cell_in_front_of (B);
-	std::cout << "line 600, BC ";  print_segment ( BC );
 	Cell C = BC.tip();
 	assert ( C == NE );
 	Cell CD = north.cell_behind ( D );
-	std::cout << "line 604, CD ";  print_segment ( CD );
 	assert ( AB.spin() + BC.spin() + CD.spin() + DA.spin() == 0 );
 	if ( cut_rectangles_in_half )
 	{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
@@ -761,11 +744,9 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	
 	std::ofstream file_ps ( file_name );
 	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
-	file_ps << "you may also want to add, after '** dup scale', a clip and a shadow :" << std::endl;
-	file_ps << "_some_path_ clip" << std::endl;
-	file_ps << "gsave 0.8 setgray newpath ** ** moveto ** ** lineto ** ** "
-		<< "lineto ** ** lineto closepath fill grestore" << std::endl;
-	file_ps	<< "(erase the preamble from the end of file; erase also these five lines)";
+	file_ps	<< "you can move the shadow by simply changing the initial point" << std::endl;
+	file_ps	<< "you may also want to define a different contour path" << std::endl;
+	file_ps	<< "please erase the preamble from the end of file; erase also these four lines";
 	file_ps << std::endl << std::endl;
 						 
 	double xmin = 1.e8, xmax = -1.e8, ymin = 1.e8, ymax = -1.e8, maxside;
@@ -781,7 +762,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 		Cell base = seg.base().reverse();
 		Cell tip  = seg.tip();
 		// we describe a sort of spiral
-		// if the first tries are out of the region, we give up after 100 unsuccsessful rounds
+		// if the first tries are out of the region, we give up after 50 unsuccsessful rounds
 		// at the end, we stop after 10 unsuccessful rounds
 		size_t size_of_round = 0;
 		short int ii = 0, jj = 0;
@@ -822,7 +803,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 			else  // either we have not started yet, or we are approaching the end
 			{	if ( first_unsuccessful_tries > 0 )  // not started yet
 				{	first_unsuccessful_tries++;
-					if ( first_unsuccessful_tries > 100 ) goto give_up;  }
+					if ( first_unsuccessful_tries > 50 ) goto give_up;  }
 				else  // approaching end
 				{	last_unsuccessful_tries++;
 					if ( last_unsuccessful_tries > 10 ) goto give_up;   }   }
@@ -837,7 +818,8 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	double translation_x = -scale_factor*xmin;
 	double translation_y = -scale_factor*ymin;
 
-	file_ps << "grestore" << std::endl;
+	file_ps << "0.5 setgray 0.03 setlinewidth" << std::endl;
+	file_ps << "newpath contour stroke" << std::endl;
 	file_ps << "grestore" << std::endl << std::endl;
 	file_ps << "showpage" << std::endl;
 	file_ps << "%%Trailer" << std::endl;
@@ -851,7 +833,31 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	file_ps << "<< /PageSize [" << scale_factor*(xmax-xmin+2*border) << " "
 	        << scale_factor*(ymax-ymin+2*border) << "] >> setpagedevice" << std::endl;
 	file_ps << "%%EndSetup" << std::endl << std::endl;
-	
+													
+	file_ps << "/contour" << std::endl << "{ ";
+	file_ps << "/xmin {" << xmin << "} def  /xmax {" << xmax
+          << "} def  /ymin {" << ymin << "} def  /ymax {"
+          << ymax << "} def  /border {" << border << "}  def" << std::endl;
+	file_ps << "xmin border add ymin border add border 180 270 arc" << std::endl;
+	file_ps << "xmax border sub ymin lineto" << std::endl;
+	file_ps << "xmax border sub ymin border add border -90 0 arc" << std::endl;
+	file_ps << "xmax ymax border sub lineto" << std::endl;
+	file_ps << "xmax border sub ymax border sub border 0 90 arc" << std::endl;
+	file_ps << "xmin border add ymax lineto" << std::endl;
+	file_ps << "xmin border add ymax border sub border 90 180 arc" << std::endl;
+	file_ps << "xmin ymin border add lineto" << std::endl;
+	file_ps << "} def" << std::endl << std::endl;
+
+	file_ps << "/shadow" << std::endl << "{ 0 0 moveto" << std::endl << "  ";
+	coords_Eu ( shadow ) = { 0., 0. };
+	coords_base = coords_q ( shadow, tag::spin, g1 );
+	file_ps << coords_base[0] << " " << coords_base[1] << " rlineto ";
+	coords_base = coords_q ( shadow, tag::spin, g2 );
+	file_ps << coords_base[0] << " " << coords_base[1] << " rlineto ";
+	coords_base = coords_q ( shadow, tag::spin, -g1 );
+	file_ps << coords_base[0] << " " << coords_base[1] << " rlineto ";
+	file_ps << "} def" << std::endl << std::endl;
+
 	file_ps << "gsave" << std::endl;
 	// file_ps << "/m{moveto}def" << std::endl;
 	// file_ps << "/l{lineto}def" << std::endl;
@@ -860,7 +866,11 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	        << translation_y + scale_factor*border << " translate" << std::endl;
 	file_ps << scale_factor << " dup scale" << std::endl << std::endl;
 
-	file_ps << "gsave " << 1.5 / scale_factor << " setlinewidth" << std::endl;
+	file_ps << 3. / scale_factor << " setlinewidth 0.5 setgray contour stroke" << std::endl;
+  file_ps << "0 setgray contour clip" << std::endl;
+  file_ps << "newpath 0.85 setgray shadow fill" << std::endl;
+
+  file_ps << 1.5 / scale_factor << " setlinewidth 0 setgray" << std::endl;
 	
 
 	if ( ! file_ps.good() )
@@ -872,7 +882,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 //----------------------------------------------------------------------------------//
 
 
-//  method below uses some postscript macros for (very) rudimentary 3d drawings
+//  method below relies on some postscript macros for (very) rudimentary 3d drawings
 //  available at https://github.com/cristian-barbarosie/manifem/blob/main/3d.ps
 
 void Mesh::draw_ps_3d ( std::string file_name )

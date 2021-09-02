@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.08.30
+//   mesh.h  2021.09.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -5277,6 +5277,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
                     const tag::Spin &, const tag::Util::CompositionOfActions & s )
+// due to the spin, A.reverse may be equal to B (mesh may be a closed loop)
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
