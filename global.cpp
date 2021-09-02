@@ -395,15 +395,57 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 	// recover corners from the sides
 	// the process is different from the one in 'build' without spin
-	// sides may be closed loops
-	Cell SW = south.first_vertex().reverse();
-	assert ( SW == west.last_vertex() );
-	Cell SE = east.first_vertex().reverse();
-	assert ( SE == south.last_vertex() );
-	Cell NE = north.first_vertex().reverse();
-	assert ( NE == east.last_vertex() );
-	Cell NW = west.first_vertex().reverse();
-	assert ( NW == north.last_vertex() );
+	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
+	// become meaningless
+	// search for SW :
+	Cell SW ( tag::non_existent );
+	{ // just a block of code for hiding 'it'
+	size_t counter = 0;
+	CellIterator it = south.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		if ( V.belongs_to ( west ) )
+		{	counter++;  SW = V;  }     }
+	assert ( counter == 1 );
+	assert ( SW.exists() );
+	} // just a block of code for hiding 'it'
+	// search for SE :
+	Cell SE ( tag::non_existent );
+	{ // just a block of code for hiding 'it'
+	size_t counter = 0;
+	CellIterator it = south.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		if ( V.belongs_to ( east ) )
+		{	counter++;  SE = V;  }     }
+	assert ( counter == 1 );
+	assert ( SE.exists() );
+	} // just a block of code for hiding 'it'
+	// search for NW :
+	Cell NW ( tag::non_existent );
+	{ // just a block of code for hiding 'it'
+	size_t counter = 0;
+	CellIterator it = north.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		if ( V.belongs_to ( west ) )
+		{	counter++;  NW = V;  }     }
+	assert ( counter == 1 );
+	assert ( NW.exists() );
+	} // just a block of code for hiding 'it'
+	// search for NE :
+	Cell NE ( tag::non_existent );
+	{ // just a block of code for hiding 'it'
+	size_t counter = 0;
+	CellIterator it = north.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		if ( V.belongs_to ( east ) )
+		{	counter++;  NE = V;  }     }
+	assert ( counter == 1 );
+	assert ( NE.exists() );
+	} // just a block of code for hiding 'it'
+	
 	size_t N_horiz = south.number_of ( tag::segments );
 	assert ( N_horiz == north.number_of ( tag::segments ) );
 	size_t N_vert = east.number_of ( tag::segments );
@@ -439,15 +481,10 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	} // just a block of code for hiding 'it'
 
 	// start mesh generation
-	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
-	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
 	// sides may be closed loops
-	// so we need to specify the starting vertex for the above iterators
 	// have SW, SE, NW and NE been correctly defined ?
-	it_east.reset ( tag::start_at, SE );  it_east++;
-	it_west.reset ( tag::start_at, SW );  it_west++;
+	Cell seg_east = east.cell_in_front_of ( SE, tag::surely_exists );
+	Cell seg_west = west.cell_behind ( SW, tag::surely_exists );
 	Function::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
 	Function::CompositionOfActions spin_ver_east = spin_SE;
 	Function::CompositionOfActions spin_B;  // spin_SW is zero by our choice
@@ -455,14 +492,14 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell AB = *it;
 		Cell A = AB.base().reverse();
-	  Cell DA = west.cell_behind ( A, tag::surely_exists );
+	  Cell DA = seg_west;
 		Cell D = DA.base().reverse();
-		Function::CompositionOfActions spin_seg_west = -DA.spin();
-		spin_ver_west += spin_seg_west;
-		Cell ver_east = *it_east;
-		Cell seg = east.cell_behind ( ver_east, tag::surely_exists );
-		spin_ver_east += seg.spin();
-		Cell ver_west = *it_west;
+		spin_ver_east += seg_east.spin();
+		Cell ver_east = seg_east.tip();
+		seg_east = east.cell_in_front_of ( ver_east, tag::surely_exists );
+		spin_ver_west -= seg_west.spin();
+		Cell ver_west = seg_west.base().reverse();
+		seg_west = west.cell_behind ( ver_west, tag::surely_exists );
 		assert ( ver_west == D );
 		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
 		alpha = alpha*alpha*alpha;
@@ -470,8 +507,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		coords_Eu ( shadow_east ) = v;
 		v = coords_q ( ver_west, tag::spin, spin_ver_west );
 		coords_Eu ( shadow_west ) = v;
-	  it_south.reset ( tag::start_at, SW );  it_south++;
-	  it_north.reset ( tag::start_at, NW );  it_north++;
+		Cell seg_south = south.cell_in_front_of ( SW, tag::surely_exists );
+		Cell seg_north = north.cell_behind ( NW, tag::surely_exists );
 		Function::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
 		Function::CompositionOfActions spin_ver_north = spin_NW;
 		Function::CompositionOfActions spin_D = spin_ver_west;
@@ -479,12 +516,12 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		{	AB = *it;  // 'it' points into the 'horizon' list of segments
 			Cell B = AB.tip();
 			spin_B += AB.spin();
-			Cell ver_south = *it_south;
-			Cell seg_south = south.cell_behind ( ver_south );
 			spin_ver_south += seg_south.spin();
-			Cell ver_north = *it_north;
-			seg = north.cell_in_front_of ( ver_north );
-			spin_ver_north -= seg.spin();
+			Cell ver_south = seg_south.tip();
+			seg_south = south.cell_in_front_of ( ver_south );
+			spin_ver_north -= seg_north.spin();
+			Cell ver_north = seg_north.base().reverse();
+			seg_north = north.cell_behind ( ver_north );
 			Cell C ( tag::vertex );  // create a new vertex
 			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
 			beta = beta*beta*beta;
@@ -517,15 +554,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			it++;
 			D = C;
 			DA = BC.reverse();
-			it_south++;  assert ( it_south.in_range() );
-			it_north++;  assert ( it_north.in_range() );
 		} // end of for j
-		Cell ver_south = *it_south;
-		Cell seg_south = south.cell_behind ( ver_south, tag::surely_exists );
-		it_south++;  assert ( not it_south.in_range() );
-		it_north++;  assert ( not it_north.in_range() );
 		// last rectangle of this row, east side already exists
-		std::cout << "last rectangle of row" << std::endl;
 		AB = *it;
 		Cell B = AB.tip();
 		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
@@ -545,14 +575,9 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
 			Q.add_to_mesh (*this);                     }
 		*it = CD.reverse();
-		it_east++;  assert ( it_east.in_range() );
-		it_west++;  assert ( it_west.in_range() );
 		it++;  assert ( it == horizon.end() );
 	} // end of for i
-	it_east++;  assert ( not it_east.in_range() );
-	it_west++;  assert ( not it_west.in_range() );
 	// last row of rectangles is different, north sides already exist
-	std::cout << "last row" << std::endl;
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
 	Cell D = NW;
@@ -577,7 +602,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		D = C;
 		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
-	std::cout << "last rectangle of last row" << std::endl;
 	Cell AB = *it;
 	Cell B = AB.tip();
 	Cell BC = east.cell_in_front_of (B);

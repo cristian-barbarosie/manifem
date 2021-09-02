@@ -62,8 +62,17 @@ int main ( )
 	// and that it must take spins into account
 	// specific information about spins is included in the two segments
 
+	std::vector < Cell > vec;
+	CellIterator it = torus.iterator ( tag::over_cells, tag::of_dim, 2, tag::around, A );
+	for ( it.reset(); it.in_range(); it++ )
+		vec.push_back ( *it );
+	std::vector<Cell>::iterator itv;
+	for ( itv = vec.begin(); itv != vec.end(); itv++ )
+	{	Cell sq = *itv;  sq.remove_from_mesh ( torus );  }
+
 	// it makes no sense to export 'torus' in msh format
-	// we can build an unfolded mesh with no spins :
-	// Mesh unfolded = torus.unfold();
-	// unfolded.export_msh ("unfolded-torus.msh");
+	// we can draw an unfolded mesh
+	torus.draw_ps ( "torus.eps", tag::unfold,
+	                // tag::over_region, -0.45 < x < 1.55, -0.45 < y < 1.55 );
+	                tag::over_region, x*x + y*y < 3. );
 }
