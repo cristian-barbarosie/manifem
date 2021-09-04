@@ -1,7 +1,7 @@
 
 // example presented in paragraph 2.4 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// builds a circle by joining four segments on an implicit manifold
+// an arc of hiperbola on an implicit manifold
 
 #include "maniFEM.h"
 
@@ -12,23 +12,17 @@ int main () {
 
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy[0], y = xy[1];
+	Function x = xy[0],  y = xy[1];
 
-	RR2.implicit ( x*x + y*y == 1. );
+	RR2.implicit ( x*y == 1. );
 
-	Cell N ( tag::vertex );  x(N) =  0.;  y(N) =  1.;
-	Cell W ( tag::vertex );  x(W) = -1.;  y(W) =  0.;
-	Cell S ( tag::vertex );  x(S) =  0.;  y(S) = -1.;
-	Cell E ( tag::vertex );  x(E) =  1.;  y(E) =  0.;
+	Cell A ( tag::vertex );  x(A) =  0.5;   y(A) =  2.;
+	Cell B ( tag::vertex );  x(B) =  3.;    y(B) =  0.333333333333;
 
-	Mesh NW ( tag::segment, N.reverse(), W, tag::divided_in, 5 );
-	Mesh WS ( tag::segment, W.reverse(), S, tag::divided_in, 5 );
-	Mesh SE ( tag::segment, S.reverse(), E, tag::divided_in, 5 );
-	Mesh EN ( tag::segment, E.reverse(), N, tag::divided_in, 5 );
-	Mesh circle ( tag::join, NW, WS, SE, EN );
+	Mesh arc_of_hiperbola ( tag::segment, A.reverse(), B, tag::divided_in, 7 );
 
-	circle.draw_ps ("circle.eps");
-	circle.export_msh ("circle.msh");
+	arc_of_hiperbola.draw_ps ("hiperbola.eps");
+	arc_of_hiperbola.export_msh ("hiperbola.msh");
 	
-	cout << "produced files circle.eps and circle.msh" << endl;
+	cout << "produced files hiperbola.eps and hiperbola.msh" << endl;
 }

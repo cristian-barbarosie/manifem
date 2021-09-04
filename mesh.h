@@ -765,12 +765,15 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::WithTriangles & wt = tag::not_with_triangles         );
 	// builds a rectangular mesh from four sides
 	// the number of divisions are already in the sides (must be the same for opposite sides)
-	// if last argument is true, each rectangular cell will be cut in two triangles
+	// if last argument is 'with_triangles', each rectangular cell will be cut in two triangles
 
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
 	              const tag::Spin &,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         );
+	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	                                       const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Spin &                  );
 	// same as above, but take into account spins
 	// specific information about spins is included in the four segments
 
@@ -779,7 +782,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	  const Cell & NE, const Cell & NW, const size_t m, const size_t n,
 	  const tag::WithTriangles & wt = tag::not_with_triangles           );
 	// builds a rectangular mesh from four vertices
-	// if last argument is true, each rectangular cell will be cut in two triangles
+	// if last argument is 'with_triangles', each rectangular cell will be cut in two triangles
 
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh & );
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh &, const Mesh & );
@@ -5331,6 +5334,23 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 
 {	this->build ( tag::quadrangle, south, east, north, west,
                 wt != tag::not_with_triangles, tag::spin  );  }
+
+
+inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
+                    const Mesh & east, const Mesh & north, const Mesh & west,
+                    const tag::WithTriangles & wt, const tag::Spin &         )
+
+// the tag::spin provides no specific information,
+// it just warns maniFEM that we are on a quotient manifold
+// and that it must take spins into account
+// specific information about spins is included in the four segments
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	assert ( wt == tag::with_triangles );
+	this->build ( tag::quadrangle, south, east, north, west, true, tag::spin );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,

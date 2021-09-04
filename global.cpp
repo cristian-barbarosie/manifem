@@ -1,5 +1,5 @@
 
-// global.cpp 2021.09.01
+// global.cpp 2021.09.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -369,6 +369,40 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
+namespace {  // anonymous namespace, mimics static linkage
+
+Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
+
+// we look for a common vertex, where seg1 ends and seg2 begins (in this order)
+// this does not apply to closed loops of course, so we give them a different treatment
+
+{	std::vector < Cell > vec;
+	CellIterator it = seg1.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		if ( V.belongs_to ( seg2 ) ) vec.push_back ( V );  }
+	assert ( vec.size() > 0 );
+	if ( vec.size() == 1 )  // one common vertex only, so we have no doubt
+		return vec[0];
+	assert ( vec.size() == 2 );  // it makes no sense to have more than two
+	// we are looking for the one where seg1 ends and seg2 begins
+	Cell V = vec[0];
+	if ( seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() )
+	{	// seg1 does not end in V, so this is not the vertex we are looking for
+		// perhaps the other one ?
+		V = vec[1];
+		assert ( not seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() );
+		// seg1 ends in V
+		assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
+		// seg2 begins in V
+		return V;                                                                 }
+	// else : seg1 ends in V
+	assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
+	// seg2 begins in V
+	return V;                                                                      }
+
+} // end of anonymous namespace
+
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
@@ -397,54 +431,10 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// the process is different from the one in 'build' without spin
 	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
 	// become meaningless
-	// search for SW :
-	Cell SW ( tag::non_existent );
-	{ // just a block of code for hiding 'it'
-	size_t counter = 0;
-	CellIterator it = south.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell V = *it;
-		if ( V.belongs_to ( west ) )
-		{	counter++;  SW = V;  }     }
-	assert ( counter == 1 );
-	assert ( SW.exists() );
-	} // just a block of code for hiding 'it'
-	// search for SE :
-	Cell SE ( tag::non_existent );
-	{ // just a block of code for hiding 'it'
-	size_t counter = 0;
-	CellIterator it = south.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell V = *it;
-		if ( V.belongs_to ( east ) )
-		{	counter++;  SE = V;  }     }
-	assert ( counter == 1 );
-	assert ( SE.exists() );
-	} // just a block of code for hiding 'it'
-	// search for NW :
-	Cell NW ( tag::non_existent );
-	{ // just a block of code for hiding 'it'
-	size_t counter = 0;
-	CellIterator it = north.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell V = *it;
-		if ( V.belongs_to ( west ) )
-		{	counter++;  NW = V;  }     }
-	assert ( counter == 1 );
-	assert ( NW.exists() );
-	} // just a block of code for hiding 'it'
-	// search for NE :
-	Cell NE ( tag::non_existent );
-	{ // just a block of code for hiding 'it'
-	size_t counter = 0;
-	CellIterator it = north.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell V = *it;
-		if ( V.belongs_to ( east ) )
-		{	counter++;  NE = V;  }     }
-	assert ( counter == 1 );
-	assert ( NE.exists() );
-	} // just a block of code for hiding 'it'
+	Cell SW = find_common_vertex ( west, south );
+	Cell SE = find_common_vertex ( south, east );
+	Cell NE = find_common_vertex ( east, north );
+	Cell NW = find_common_vertex ( north, west );
 	
 	size_t N_horiz = south.number_of ( tag::segments );
 	assert ( N_horiz == north.number_of ( tag::segments ) );
@@ -842,12 +832,13 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	double translation_x = -scale_factor*xmin;
 	double translation_y = -scale_factor*ymin;
 
-	file_ps << "0.5 setgray 0.03 setlinewidth" << std::endl;
-	file_ps << "newpath contour stroke" << std::endl;
+	file_ps << std::endl << "0.5 setgray 0.03 setlinewidth" << std::endl;
+	file_ps << "newpath contour stroke" << std::endl << std::endl;
 	file_ps << "grestore" << std::endl << std::endl;
 	file_ps << "showpage" << std::endl;
 	file_ps << "%%Trailer" << std::endl;
 	file_ps << "%EOF" << std::endl << std::endl;
+
 	file_ps << "%!PS-Adobe-3.0 EPSF-3.0" << std::endl;
 	file_ps << "%%Title:                     maniFEM" << std::endl;
 	file_ps << "%%BoundingBox:  0 0 " << " " << scale_factor*(xmax-xmin+2*border)

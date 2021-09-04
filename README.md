@@ -2,13 +2,14 @@
 ManiFEM is a C++ library for solving partial differential equations through the finite element method.
 The name comes from "finite elements on manifolds". 
 ManiFEM was designed with the goal of coping with very general meshes,
-in particular meshes on Riemannian manifolds, even manifolds which cannot be embedded in R^3, like the torus R^2/Z^2.
+in particular meshes on Riemannian manifolds, even manifolds which cannot be embedded in R^3,
+like the torus R^2/Z^2.
 Also, maniFEM was written with the goal of being conceptually clear and easy to read.
 We hope it will prove particularly useful for people who want fine control over the mesh, 
 e.g. for implementing their own meshing or remeshing algorithms.
 
-ManiFEM uses [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for storing matrices and for
-solving systems of linear equations.
+ManiFEM uses [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for storing matrices
+and for solving systems of linear equations.
 
 ManiFEM is just a collection of C++ classes. It has no user-friendly interface nor graphic capabilities. 
 The user should have some understanding of programming and of C++. 
@@ -20,7 +21,8 @@ Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
 In its current version, release 21.08, maniFEM works well for mesh generation. 
 Quotient manifolds (section 7 in the manual) and anisotropic Riemann metrics (paragraph 3.24 in the manual) are not yet implemented. 
 Variational formulations (section 5 in the manual) are not yet implemented. 
-Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now. 
+Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now.
+A changelog is available at the end of the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf).
 To check which version of maniFEM is installed in your computer, see at the beginning of the file `maniFEM.h`.
 
 A component of maniFEM, [MetricTree](https://github.com/cristian-barbarosie/MetricTree), can be used independently.
@@ -35,7 +37,7 @@ and download all files to some directory in your computer.
 Latest code might be unstable; the releases are stable.
 To check which version of maniFEM is installed in your computer, see at the beginning of the file `maniFEM.h`.
 You can then run the examples in the manual : just `make run-1.1` for the example in paragraph 1.1, 
-`make run-2.5` for the example in paragraph 2.5, and so on.
+`make run-2.6` for the example in paragraph 2.6, and so on.
 You will need a recent C++ compiler (we use `g++`) and the `make` utility. 
 Under linux it should be easy to install them. 
 It is not that easy to install and use them under Windows, but it is certainly possible, for instance by using 

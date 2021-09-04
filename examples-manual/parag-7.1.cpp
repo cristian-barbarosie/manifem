@@ -24,8 +24,4 @@ int main ( )
 	// with this vertex, we build a segment
 	Mesh seg ( tag::segment, A.reverse(), A, tag::divided_in, 10, tag::spin, g );
 
-	Cell prev = seg.cell_behind(A).base().reverse();
-	Cell next = seg.cell_in_front_of(A).tip();
-	std::cout << x ( prev ) << " " << x ( A ) << " " << x ( next ) << std::endl;
-	
 }

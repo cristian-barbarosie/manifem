@@ -1,4 +1,4 @@
-// example presented in paragraph 7.4 of the manual
+// example presented in paragraph 7.6 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // mesh the flat torus RR2/ZZ2
 
@@ -36,10 +36,18 @@ int main ( )
 	// and that it must take spins into account
 	// specific information about spins is included in the two segments
 
+	// we drill a small hole around A
+	std::vector < Cell > vec;
+	CellIterator it = torus.iterator ( tag::over_cells, tag::of_dim, 2, tag::around, A );
+	for ( it.reset(); it.in_range(); it++ ) vec.push_back ( *it );
+	std::vector<Cell>::iterator itv;
+	for ( itv = vec.begin(); itv != vec.end(); itv++ )
+	{	Cell sq = *itv;  sq.remove_from_mesh ( torus );  }
+
 	// it makes no sense to export 'torus' in msh format
 	// we can draw an unfolded mesh
 	torus.draw_ps ( "torus.eps", tag::unfold,
-	                tag::over_region, -0.5 < x < 1.5, -0.2 < y < 1.2 );
+	                tag::over_region, x*x + 2.*y*y < 3.5 );
 
 	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;
 }

@@ -1,7 +1,7 @@
 
-// exercise in paragraph 2.7 of the manual
+// example presented in paragraph 2.7 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// a "bumpy" hemisphere meshed with triangles
+// builds a "bumpy" hemisphere by joining twelve rectangles
 
 #include "maniFEM.h"
 #include "math.h"
@@ -25,7 +25,7 @@ int main ()
 	Cell E     ( tag::vertex );  x(E)     =  1.;  y(E)     =  0.;  z(E)     =  0.;
 	Cell N     ( tag::vertex );  x(N)     =  0.;  y(N)     =  1.;  z(N)     =  0.;
 	Cell W     ( tag::vertex );  x(W)     = -1.;  y(W)     =  0.;  z(W)     =  0.;
-	Cell up    ( tag::vertex );  x(up)    =  0.;  y(up)    =  0.;  z(up)    = 1.;
+	Cell up    ( tag::vertex );  x(up)    =  0.;  y(up)    =  0.;  z(up)    =  1.;
 	// no need to project these
 	Cell mSW   ( tag::vertex );  x(mSW)   = -1.;  y(mSW)   = -1.;  z(mSW)   =  0.;
 	Cell mSE   ( tag::vertex );  x(mSE)   =  1.;  y(mSE)   = -1.;  z(mSE)   =  0.;
@@ -77,37 +77,35 @@ int main ()
 	
 	// now the twelve rectangles :
 	Mesh rect_S_SE  ( tag::rectangle,
-            S_mSE, mSE_mSEup, mSup_mSEup.reverse(), S_mSup.reverse(), tag::with_triangles );
+                    S_mSE, mSE_mSEup, mSup_mSEup.reverse(), S_mSup.reverse() );
 	Mesh rect_S_SW  ( tag::rectangle,
-            S_mSup, mSup_mSWup, mSW_mSWup.reverse(), S_mSW.reverse(), tag::with_triangles );
+                    S_mSup, mSup_mSWup, mSW_mSWup.reverse(), S_mSW.reverse() );
 	Mesh rect_E_SE  ( tag::rectangle,
-            E_mEup, mEup_mSEup, mSE_mSEup.reverse(), E_mSE.reverse(), tag::with_triangles );
+                    E_mEup, mEup_mSEup, mSE_mSEup.reverse(), E_mSE.reverse() );
 	Mesh rect_E_NE  ( tag::rectangle,
-            E_mNE, mNE_mNEup, mEup_mNEup.reverse(), E_mEup.reverse(), tag::with_triangles );
+                    E_mNE, mNE_mNEup, mEup_mNEup.reverse(), E_mEup.reverse() );
 	Mesh rect_N_NE  ( tag::rectangle,
-            N_mNup, mNup_mNEup, mNE_mNEup.reverse(), N_mNE.reverse(), tag::with_triangles );
+                    N_mNup, mNup_mNEup, mNE_mNEup.reverse(), N_mNE.reverse() );
 	Mesh rect_N_NW  ( tag::rectangle,
-            N_mNW, mNW_mNWup, mNup_mNWup.reverse(), N_mNup.reverse(), tag::with_triangles );
+                    N_mNW, mNW_mNWup, mNup_mNWup.reverse(), N_mNup.reverse() );
+	// yes, this sounds a lot like Carry Grant ...
 	Mesh rect_W_SW  ( tag::rectangle,
-            W_mSW, mSW_mSWup, mWup_mSWup.reverse(), W_mWup.reverse(), tag::with_triangles );
+                    W_mSW, mSW_mSWup, mWup_mSWup.reverse(), W_mWup.reverse() );
 	Mesh rect_W_NW  ( tag::rectangle,
-            W_mWup, mWup_mNWup, mNW_mNWup.reverse(), W_mNW.reverse(), tag::with_triangles );
+                     W_mWup, mWup_mNWup, mNW_mNWup.reverse(), W_mNW.reverse() );
 	Mesh rect_up_SW ( tag::rectangle,
-            up_mWup, mWup_mSWup, mSup_mSWup.reverse(), up_mSup.reverse(), tag::with_triangles );
+                    up_mWup, mWup_mSWup, mSup_mSWup.reverse(), up_mSup.reverse() );
 	Mesh rect_up_SE ( tag::rectangle,
-            up_mSup, mSup_mSEup, mEup_mSEup.reverse(), up_mEup.reverse(), tag::with_triangles );
+                    up_mSup, mSup_mSEup, mEup_mSEup.reverse(), up_mEup.reverse() );
 	Mesh rect_up_NE ( tag::rectangle,
-            up_mEup, mEup_mNEup, mNup_mNEup.reverse(), up_mNup.reverse(), tag::with_triangles );
+                    up_mEup, mEup_mNEup, mNup_mNEup.reverse(), up_mNup.reverse() );
 	Mesh rect_up_NW ( tag::rectangle,
-            up_mNup, mNup_mNWup, mWup_mNWup.reverse(), up_mWup.reverse(), tag::with_triangles );
+                    up_mNup, mNup_mNWup, mWup_mNWup.reverse(), up_mWup.reverse() );
 											 
 	// and finally join the rectangles :
 	Mesh bumpy ( tag::join, list<Mesh>
 		{ rect_S_SE, rect_S_SW, rect_E_SE, rect_E_NE, rect_N_NE, rect_N_NW,
 		  rect_W_SW, rect_W_NW, rect_up_SW, rect_up_SE, rect_up_NE, rect_up_NW } );
-
-	// now, this does not look exactly like example 2.8 in the manual ...
-	// it's not a mistake - it's a challenge to the reader to discover why
 	
 	bumpy.export_msh ("bumpy.msh");
 	
