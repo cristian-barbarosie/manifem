@@ -1,5 +1,5 @@
 
-// manifold.h 2021.08.29
+// manifold.h 2021.09.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1218,7 +1218,7 @@ inline Manifold Manifold::quotient
 
 inline Cell::Spin::operator Function::CompositionOfActions ( )
 
-{	Function::CompositionOfActions res;
+{	Function::CompositionOfActions res ( 0 );
 	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
 	assert ( manif_q );

@@ -1,5 +1,5 @@
 
-// function.h 2021.09.01
+// function.h 2021.09.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1578,8 +1578,8 @@ class tag::Util::CompositionOfActions  // aka class Function::CompositionOfActio
 
 	std::map < Function::Action, short int > index_map;
 
-	inline CompositionOfActions ( )
-	{	}
+	inline CompositionOfActions ( short int i )
+	{	assert ( i == 0 );  }
 	
 	inline CompositionOfActions ( const Function::Action & g, short int i )
 	:	index_map { std::pair < Function::Action, short int > ( g, i ) }
@@ -1718,7 +1718,7 @@ inline Function::CompositionOfActions operator-=
 
 inline Function::CompositionOfActions operator*
 ( const short int k, const Function::CompositionOfActions & a )
-{	if ( k == 0 ) return Function::CompositionOfActions();
+{	if ( k == 0 ) return Function::CompositionOfActions ( 0 );
 	Function::CompositionOfActions res = a;
 	std::map<Function::Action,short int>::iterator it = res.index_map.begin();
 	for ( ; it != res.index_map.end(); it++ ) it->second *= k;

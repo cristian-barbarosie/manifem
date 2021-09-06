@@ -1,5 +1,5 @@
 
-// global.cpp 2021.09.03
+// global.cpp 2021.09.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -126,9 +126,9 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 	assert ( space.exists() );  // we use the current manifold
 
 	// sides must be split in the same number of segments :
-	size_t N = AB.number_of ( tag::cells_of_dim, 1 );
-	assert ( N == BC.number_of ( tag::cells_of_dim, 1 ) );
-	assert ( N == CA.number_of ( tag::cells_of_dim, 1 ) );
+	size_t N = AB.number_of ( tag::segments );
+	assert ( N == BC.number_of ( tag::segments ) );
+	assert ( N == CA.number_of ( tag::segments ) );
 
 	Cell A = AB.first_vertex().reverse();
 	Cell B = BC.first_vertex().reverse();
@@ -141,36 +141,39 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 	// useful for the next layer of triangles
 	std::list < Cell > ground, ceiling;
 	{ // just a block of code for hiding 'it'
-		CellIterator it = AB.iterator ( tag::over_segments, tag::require_order );
+	CellIterator it = AB.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ ) ground.push_back ( *it );
 	} // just a block of code for hiding 'it'
 
-	// we shall use six points, two on AB, two on BC, two on CA
+	// we shall use six vertices, two on AB, two on BC, two on CA
 	// like shadows of the point currently buing built
-	Cell Q_AB = A, P_BC = B, Q_CA = A;
-	Cell seg_on_BC = BC.cell_in_front_of(B);
+	Cell Q_AB_ini = A, P_BC = B, Q_CA = A;
+	Cell seg_on_BC = BC.cell_in_front_of ( B );
 
 	for ( size_t i = 1; i < N; i++ ) // "vertical" movement
 	{	// advance one level upwards and slightly right (parallel to CA)
-		Q_AB = AB.cell_in_front_of(Q_AB).tip();
-		P_BC = seg_on_BC.tip();
-		Cell TA = CA.cell_behind(Q_CA);
-		Cell P_CA = Q_CA = TA.base().reverse();
-		Cell P_AB = A;  Cell Q_BC = C;
-		Cell Q_AB_c = Q_AB;  // keep a copy of Q_AB
 		std::list<Cell>::iterator it_ground = ground.begin();
+		Cell ground_seg = *it_ground;
+		assert ( ground_seg.base().reverse() == Q_CA );
+		Cell ground_ver = ground_seg.tip();
+		Cell seg_on_AB = AB.cell_in_front_of ( Q_AB_ini );
+		Q_AB_ini = seg_on_AB.tip();
+		Cell Q_AB = Q_AB_ini;
+		assert ( seg_on_BC == BC.cell_in_front_of ( P_BC ) );
+		P_BC = seg_on_BC.tip();
+		Cell seg_on_CA = CA.cell_behind(Q_CA);
+		Cell P_CA = Q_CA = seg_on_CA.base().reverse();
+		Cell P_AB = A, Q_BC = C;
 		// build the first triangle on this layer
-		Cell AP = *it_ground;
-		Cell ground_ver = AP.tip();
 		Cell previous_seg ( tag::segment, ground_ver.reverse(), P_CA );
-		Cell tri ( tag::triangle, AP, previous_seg, TA );
+		Cell tri ( tag::triangle, ground_seg, previous_seg, seg_on_CA );
 		tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
 		Cell previous_ver = Q_CA;
 		ceiling.clear();
 		for ( size_t j = i+1; j <= N; j++ ) // "horizontal" movement
 		{	// advance one step horizontally (parallel to AB)
 			P_AB = AB.cell_in_front_of(P_AB).tip();
-			Q_AB_c = AB.cell_in_front_of(Q_AB_c).tip();
+			Q_AB = AB.cell_in_front_of(Q_AB).tip();
 			Q_BC = BC.cell_behind(Q_BC).base().reverse();
 			P_CA = CA.cell_behind(P_CA).base().reverse();
 			Cell S ( tag::non_existent );  // temporary non-existent cell
@@ -183,39 +186,253 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 				double frac_AB = 1. / double(i),
 				       frac_BC = 1. / double(N-j),
 				       frac_CA = 1. / double(j-i);
-				double s = frac_AB + frac_BC + frac_CA;  s *= 2.;
+				double s = 2.* ( frac_AB + frac_BC + frac_CA );
 				frac_AB /= s;  frac_BC /= s;  frac_CA /= s;
 				S = Cell ( tag::vertex );
-				space.interpolate ( S, frac_AB, P_AB,  frac_AB, Q_AB_c,
+				space.interpolate ( S, frac_AB, P_AB,  frac_AB, Q_AB,
 														   frac_BC, P_BC,  frac_BC, Q_BC,
-														   frac_CA, P_CA,  frac_CA, Q_CA  );  }
+														   frac_CA, P_CA,  frac_CA, Q_CA );  }
 			Cell new_seg ( tag::segment, ground_ver.reverse(), S );
 			Cell horizontal_seg ( tag::segment, S.reverse(), previous_ver );
 		  Cell tri_1 ( tag::triangle, previous_seg.reverse(), new_seg, horizontal_seg );
-		  tri_1.add_to_mesh ( *this );
+		  tri_1.add_to_mesh ( *this );  // 'this' is the mesh we are building
 			it_ground++;  assert ( it_ground != ground.end() );
-			Cell ground_seg = *it_ground;
+			ground_seg = *it_ground;
 			if ( j == N ) previous_seg = seg_on_BC;
 			else
 			{	ground_ver = ground_seg.tip();
 				previous_seg = Cell ( tag::segment, ground_ver.reverse(), S );  }
 		  Cell tri_2 ( tag::triangle, ground_seg, previous_seg, new_seg.reverse() );
-			tri_2.add_to_mesh ( *this );
+			tri_2.add_to_mesh ( *this );  // 'this' is the mesh we are building
 			previous_ver = S;
 			// add horizontal_seg.reverse() to future ground
 			ceiling.push_back ( horizontal_seg.reverse() );                              	  }
-		seg_on_BC = BC.cell_in_front_of(P_BC);
+		assert ( seg_on_BC.tip() == P_BC );
+		seg_on_BC = BC.cell_in_front_of ( P_BC );
 		ground = ceiling;                                                                    }
 		// improve by moving ceiling to ground, leaving ceiling empty !
 
 	// last triangle
-	Cell TA = CA.cell_behind(Q_CA);
+	Cell seg_on_CA = CA.cell_behind ( Q_CA );
 	assert ( not ground.empty() );
-	Cell AP = *(ground.begin());
-	Cell tri ( tag::triangle, seg_on_BC, TA, AP );
-	tri.add_to_mesh ( *this );
+	Cell ground_seg = *(ground.begin());
+	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
+	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
 		
 } // end of Mesh::build with tag::triangle
+
+//----------------------------------------------------------------------------------//
+
+
+namespace {  // anonymous namespace, mimics static linkage
+
+Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
+
+// we look for a common vertex, where seg1 ends and seg2 begins (in this order)
+// this does not apply to closed loops of course, so we give them a different treatment
+
+{	std::vector < Cell > vec;
+	CellIterator it = seg1.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		if ( V.belongs_to ( seg2 ) ) vec.push_back ( V );  }
+	assert ( vec.size() > 0 );
+	if ( vec.size() == 1 )  // one common vertex only, so we have no doubt
+		return vec[0];
+	assert ( vec.size() == 2 );  // it makes no sense to have more than two
+	// we are looking for the one where seg1 ends and seg2 begins
+	Cell V = vec[0];
+	if ( seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() )
+	{	// seg1 does not end in V, so this is not the vertex we are looking for
+		// perhaps the other one ?
+		V = vec[1];
+		assert ( not seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() );
+		// seg1 ends in V
+		assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
+		// seg2 begins in V
+		return V;                                                                 }
+	// else : seg1 ends in V
+	assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
+	// seg2 begins in V
+	return V;                                                                      }
+
+} // end of anonymous namespace
+
+
+void Mesh::build ( const tag::Triangle &,
+                   const Mesh & AB, const Mesh & BC, const Mesh & CA,
+                   const tag::Spin &                                 )
+
+// see paragraph 12.4 in the manual
+// the tag:::spin tells maniFEM that we are on a quotient manifold
+// and that the segments provided (AB, BC, CA) may have spin
+	
+// beware, sides may be closed loops
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+
+	// sides must be split in the same number of segments :
+	size_t N = AB.number_of ( tag::segments );
+	assert ( N == BC.number_of ( tag::segments ) );
+	assert ( N == CA.number_of ( tag::segments ) );
+
+	// recover corners from the sides
+	// the process is different from the one in 'build' without spin
+	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
+	// become meaningless
+	Cell A = find_common_vertex ( CA, AB );
+	Cell B = find_common_vertex ( AB, BC );
+	Cell C = find_common_vertex ( BC, CA );
+
+	// we keep a list of horizontal segments (parallel to AB)
+	// useful for the next layer of triangles
+	std::list < Cell > ground, ceiling;
+	{ // just a block of code for hiding 'it'
+		CellIterator it = AB.iterator ( tag::over_segments, tag::require_order );
+	for ( it.reset(); it.in_range(); it++ ) ground.push_back ( *it );
+	} // just a block of code for hiding 'it'
+
+	// we shall use six vertices, two on AB, two on BC, two on CA
+	// like shadows of the point currently buing built
+	Cell Q_AB_ini = A, P_BC = B, Q_CA = A;
+	Cell seg_on_BC = BC.cell_in_front_of ( B );
+	// we use six shadow vertices for interpolation
+	Cell shadow_P_AB ( tag::vertex ), shadow_Q_AB ( tag::vertex ),
+	     shadow_P_BC ( tag::vertex ), shadow_Q_BC ( tag::vertex ),
+	     shadow_P_CA ( tag::vertex ), shadow_Q_CA ( tag::vertex );
+
+  // we keep spins of vertices relative to A
+	Function::CompositionOfActions spin_B = 0, spin_C = 0;
+	{ // just a block of code for hiding 'it'
+	CellIterator it = AB.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  spin_B += seg.spin();  }
+	} { // just a block of code for hiding 'it'
+	CellIterator it = CA.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  spin_C -= seg.spin();  }
+	} { // just a block of code for hiding 'it'
+	Function::CompositionOfActions spin_test = spin_B;
+	CellIterator it = BC.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  spin_test += seg.spin();  }
+	assert ( spin_test == spin_C );
+	} // just a block of code for hiding 'it'
+	
+	Function::CompositionOfActions spin_Q_AB_ini = 0, spin_P_BC = spin_B, spin_Q_CA = 0;
+
+	for ( size_t i = 1; i < N; i++ ) // "vertical" movement
+	{	// advance one level upwards and slightly right (parallel to CA)
+		std::list<Cell>::iterator it_ground = ground.begin();
+		Cell ground_seg = *it_ground;
+		assert ( ground_seg.base().reverse() == Q_CA );
+		Cell ground_ver = ground_seg.tip();
+		Function::CompositionOfActions spin_ground_ver = spin_Q_CA + ground_seg.spin();
+		Cell seg_on_AB = AB.cell_in_front_of ( Q_AB_ini );
+		Q_AB_ini = seg_on_AB.tip();
+		spin_Q_AB_ini += seg_on_AB.spin();
+		Cell Q_AB = Q_AB_ini;
+		Function::CompositionOfActions spin_Q_AB = spin_Q_AB_ini;
+		assert ( seg_on_BC == BC.cell_in_front_of ( P_BC ) );
+		P_BC = seg_on_BC.tip();
+		spin_P_BC += seg_on_BC.spin();
+		Cell seg_on_CA = CA.cell_behind(Q_CA);
+		Cell P_CA = Q_CA = seg_on_CA.base().reverse();
+		spin_Q_CA -= seg_on_CA.spin();
+		Function::CompositionOfActions spin_P_CA = spin_Q_CA;
+		std::vector < double > v = coords_q ( Q_CA, tag::spin, spin_Q_CA );
+		coords_Eu ( shadow_Q_CA ) = v;
+		v = coords_q ( P_BC, tag::spin, spin_P_BC );
+		coords_Eu ( shadow_P_BC ) = v;
+		Cell P_AB = A, Q_BC = C;
+		Function::CompositionOfActions spin_P_AB = 0, spin_Q_BC = spin_C;
+		// build the first triangle on this layer
+		Cell previous_seg ( tag::segment, ground_ver.reverse(), P_CA );
+		previous_seg.spin() = - ground_seg.spin() - seg_on_CA.spin();
+		Cell tri ( tag::triangle, ground_seg, previous_seg, seg_on_CA );
+		tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
+		Cell previous_ver = Q_CA;
+		Function::CompositionOfActions spin_prev_ver = spin_Q_CA;
+		ceiling.clear();
+		for ( size_t j = i+1; j <= N; j++ ) // "horizontal" movement
+		{	// advance one step horizontally (parallel to AB)
+			seg_on_AB = AB.cell_in_front_of ( P_AB );
+			P_AB = seg_on_AB.tip();
+			spin_P_AB += seg_on_AB.spin();
+			seg_on_AB = AB.cell_in_front_of ( Q_AB );
+			Q_AB = seg_on_AB.tip();
+			spin_Q_AB += seg_on_AB.spin();
+			seg_on_BC = BC.cell_behind ( Q_BC );
+			Q_BC = seg_on_BC.base().reverse();
+			spin_Q_BC -= seg_on_BC.spin();
+			seg_on_CA = CA.cell_behind ( P_CA );
+			P_CA = seg_on_CA.base().reverse();
+			spin_P_CA -= seg_on_CA.spin();
+			Cell S ( tag::non_existent );  // temporary non-existent cell
+			Function::CompositionOfActions spin_S = 0;
+			if ( j == N )  { S = P_BC; spin_S = spin_P_BC;  }
+			else
+			{	// we prepare for building a new point S and we need fractions
+				// distance to AB : i
+				// distance to BC : N-j
+				// distance to CA : j-i
+				double frac_AB = 1. / double(i),
+				       frac_BC = 1. / double(N-j),
+				       frac_CA = 1. / double(j-i);
+				double s = 2.* ( frac_AB + frac_BC + frac_CA );
+				frac_AB /= s;  frac_BC /= s;  frac_CA /= s;
+				S = Cell ( tag::vertex );
+				v = coords_q ( P_AB, tag::spin, spin_P_AB );
+				coords_Eu ( shadow_P_AB ) = v;
+				v = coords_q ( Q_AB, tag::spin, spin_Q_AB );
+				coords_Eu ( shadow_Q_AB ) = v;
+				v = coords_q ( Q_BC, tag::spin, spin_Q_BC );
+				coords_Eu ( shadow_Q_BC ) = v;
+				v = coords_q ( P_CA, tag::spin, spin_P_CA );
+				coords_Eu ( shadow_P_CA ) = v;
+				mani_Eu.interpolate ( S, frac_AB, shadow_P_AB,  frac_AB, shadow_Q_AB,
+													       frac_BC, shadow_P_BC,  frac_BC, shadow_Q_BC,
+													       frac_CA, shadow_P_CA,  frac_CA, shadow_Q_CA );  }
+			Cell new_seg ( tag::segment, ground_ver.reverse(), S );
+			new_seg.spin() = spin_S - spin_ground_ver;
+			Cell horizontal_seg ( tag::segment, S.reverse(), previous_ver );
+			horizontal_seg.spin() = spin_prev_ver - spin_S;
+			assert ( horizontal_seg.spin() + new_seg.spin() - previous_seg.spin() == 0 );
+		  Cell tri_1 ( tag::triangle, previous_seg.reverse(), new_seg, horizontal_seg );
+		  tri_1.add_to_mesh ( *this );  // 'this' is the mesh we are building
+			it_ground++;  assert ( it_ground != ground.end() );
+			ground_seg = *it_ground;
+			if ( j == N ) previous_seg = seg_on_BC;
+			else
+			{	ground_ver = ground_seg.tip();
+				previous_seg = Cell ( tag::segment, ground_ver.reverse(), S );
+				previous_seg.spin() = spin_S - spin_ground_ver;                }
+			assert ( ground_seg.spin() + previous_seg.spin() - new_seg.spin() == 0 );
+		  Cell tri_2 ( tag::triangle, ground_seg, previous_seg, new_seg.reverse() );
+			tri_2.add_to_mesh ( *this );  // 'this' is the mesh we are building
+			previous_ver = S;  spin_prev_ver = spin_S;
+			// add horizontal_seg.reverse() to future ground
+			ceiling.push_back ( horizontal_seg.reverse() );                              	  }
+		assert ( seg_on_BC.tip() == P_BC );
+		seg_on_BC = BC.cell_in_front_of ( P_BC );
+		ground = ceiling;                                                                    }
+		// improve by moving ceiling to ground, leaving ceiling empty !
+
+	// last triangle
+	Cell seg_on_CA = CA.cell_behind ( Q_CA );
+	assert ( not ground.empty() );
+	Cell ground_seg = *(ground.begin());
+	assert ( seg_on_BC.spin() + seg_on_CA.spin() + ground_seg.spin() == 0 );
+	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
+	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
+		
+} // end of Mesh::build with tag::triangle and tag::spin
 
 //----------------------------------------------------------------------------------//
 
@@ -339,7 +556,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-			BCD.add_to_mesh (*this);
+			BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
 			ABD.add_to_mesh (*this);                           }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
@@ -358,7 +575,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	{	Cell BD ( tag::segment, B.reverse(), D );
 		Cell BCD ( tag::triangle, BD.reverse(), BC, CD );
 		Cell ABD ( tag::triangle, BD, DA, AB );
-		BCD.add_to_mesh (*this);
+		BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
 		ABD.add_to_mesh (*this);                          }
 	else // with quadrilaterals
 	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );
@@ -368,40 +585,6 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 } // end of Mesh::build with tag::quadrangle
 
 //----------------------------------------------------------------------------------//
-
-namespace {  // anonymous namespace, mimics static linkage
-
-Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
-
-// we look for a common vertex, where seg1 ends and seg2 begins (in this order)
-// this does not apply to closed loops of course, so we give them a different treatment
-
-{	std::vector < Cell > vec;
-	CellIterator it = seg1.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell V = *it;
-		if ( V.belongs_to ( seg2 ) ) vec.push_back ( V );  }
-	assert ( vec.size() > 0 );
-	if ( vec.size() == 1 )  // one common vertex only, so we have no doubt
-		return vec[0];
-	assert ( vec.size() == 2 );  // it makes no sense to have more than two
-	// we are looking for the one where seg1 ends and seg2 begins
-	Cell V = vec[0];
-	if ( seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() )
-	{	// seg1 does not end in V, so this is not the vertex we are looking for
-		// perhaps the other one ?
-		V = vec[1];
-		assert ( not seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() );
-		// seg1 ends in V
-		assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
-		// seg2 begins in V
-		return V;                                                                 }
-	// else : seg1 ends in V
-	assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
-	// seg2 begins in V
-	return V;                                                                      }
-
-} // end of anonymous namespace
 
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
@@ -458,7 +641,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
 	Cell shadow_north ( tag::vertex ), shadow_west ( tag::vertex );
 	
-	Function::CompositionOfActions spin_NW, spin_SE;
+	Function::CompositionOfActions spin_NW = 0, spin_SE = 0;
 	// spin_SW is zero by our choice, spin_NE is not needed
 	{ // just a block of code for hiding 'it'
 	CellIterator it = south.iterator ( tag::over_segments );
@@ -475,9 +658,9 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// have SW, SE, NW and NE been correctly defined ?
 	Cell seg_east = east.cell_in_front_of ( SE, tag::surely_exists );
 	Cell seg_west = west.cell_behind ( SW, tag::surely_exists );
-	Function::CompositionOfActions spin_ver_west;  // spin_SW is zero by our choice
+	Function::CompositionOfActions spin_ver_west = 0;  // spin_SW is zero by our choice
 	Function::CompositionOfActions spin_ver_east = spin_SE;
-	Function::CompositionOfActions spin_B;  // spin_SW is zero by our choice
+	Function::CompositionOfActions spin_B = 0;  // spin_SW is zero by our choice
 	for ( size_t i = 1; i < N_vert; ++i )
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell AB = *it;
@@ -499,7 +682,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		coords_Eu ( shadow_west ) = v;
 		Cell seg_south = south.cell_in_front_of ( SW, tag::surely_exists );
 		Cell seg_north = north.cell_behind ( NW, tag::surely_exists );
-		Function::CompositionOfActions spin_ver_south;  // spin_SW is zero by our choice
+		Function::CompositionOfActions spin_ver_south = 0;  // spin_SW is zero by our choice
 		Function::CompositionOfActions spin_ver_north = spin_NW;
 		Function::CompositionOfActions spin_D = spin_ver_west;
 		for ( size_t j = 1; j < N_horiz; j++ )
@@ -559,7 +742,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			BD.spin() = - AB.spin() - DA.spin();
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-			BCD.add_to_mesh (*this);
+			BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
 			ABD.add_to_mesh (*this);                            }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
@@ -583,7 +766,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			BD.spin() = - DA.spin() - AB.spin();
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-			BCD.add_to_mesh (*this);
+			BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
 			ABD.add_to_mesh (*this);                          }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
@@ -604,7 +787,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		BD.spin() = BC.spin() + CD.spin();
 		Cell BCD ( tag::triangle, BD.reverse(), BC, CD );
 		Cell ABD ( tag::triangle, BD, DA, AB );
-		BCD.add_to_mesh (*this);
+		BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
 		ABD.add_to_mesh (*this);                          }
 	else // with quadrilaterals
 	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );

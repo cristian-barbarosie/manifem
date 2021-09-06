@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.09.02
+//   mesh.h  2021.09.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1570,20 +1570,23 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Spin &, const tag::Util::CompositionOfActions &                    );
+	             const tag::Spin &, const tag::Util::CompositionOfActions &             );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
-	
+
+	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+	             const tag::Spin &                                                        );
+
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half );
 	
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
-	             const tag::Spin &                                                   );
+	             const tag::Spin &                                                  );
 	
 	void build ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	             const Cell & NE, const Cell & NW, const size_t m, const size_t n,
-	             bool cut_rectangles_in_half                                       );
+	             bool cut_rectangles_in_half                                      );
 	
 #ifndef NDEBUG
 	inline void print_everything ( );

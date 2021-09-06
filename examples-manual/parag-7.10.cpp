@@ -27,10 +27,12 @@ int main ( )
 	Mesh seg_horiz ( tag::segment, A.reverse(), A, tag::divided_in, 10, tag::spin, g1 ),
 	     seg_vert  ( tag::segment, A.reverse(), A, tag::divided_in, 10, tag::spin, g2 );
 
-	// two segments are enough to define a rectangle
-	Mesh torus ( tag::rectangle,
+	// two segments are enough to define a parallelogram
+	Mesh torus ( tag::quadrangle,
                seg_horiz, seg_vert, seg_horiz.reverse(), seg_vert.reverse(),
 	             tag::with_triangles, tag::spin                               );
+	// recall that tags rectangle, quadrangle and quadrilateral are interchangeable
+	// see comments at the end of paragraph 1.3 in the manual
 
 	std::vector < Cell > vec;
 	CellIterator it = torus.iterator ( tag::over_cells, tag::of_dim, 2, tag::around, A );
