@@ -1,5 +1,5 @@
 
-// global.cpp 2021.09.05
+// global.cpp 2021.09.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -301,7 +301,7 @@ void Mesh::build ( const tag::Triangle &,
 	// we shall use six vertices, two on AB, two on BC, two on CA
 	// like shadows of the point currently buing built
 	Cell Q_AB_ini = A, P_BC = B, Q_CA = A;
-	Cell seg_on_BC = BC.cell_in_front_of ( B );
+	Cell seg_P_BC = BC.cell_in_front_of ( B );
 	// we use six shadow vertices for interpolation
 	Cell shadow_P_AB ( tag::vertex ), shadow_Q_AB ( tag::vertex ),
 	     shadow_P_BC ( tag::vertex ), shadow_Q_BC ( tag::vertex ),
@@ -334,17 +334,17 @@ void Mesh::build ( const tag::Triangle &,
 		assert ( ground_seg.base().reverse() == Q_CA );
 		Cell ground_ver = ground_seg.tip();
 		Function::CompositionOfActions spin_ground_ver = spin_Q_CA + ground_seg.spin();
-		Cell seg_on_AB = AB.cell_in_front_of ( Q_AB_ini );
-		Q_AB_ini = seg_on_AB.tip();
-		spin_Q_AB_ini += seg_on_AB.spin();
+		Cell seg_Q_AB = AB.cell_in_front_of ( Q_AB_ini );
+		Q_AB_ini = seg_Q_AB.tip();
+		spin_Q_AB_ini += seg_Q_AB.spin();
 		Cell Q_AB = Q_AB_ini;
 		Function::CompositionOfActions spin_Q_AB = spin_Q_AB_ini;
-		assert ( seg_on_BC == BC.cell_in_front_of ( P_BC ) );
-		P_BC = seg_on_BC.tip();
-		spin_P_BC += seg_on_BC.spin();
-		Cell seg_on_CA = CA.cell_behind(Q_CA);
-		Cell P_CA = Q_CA = seg_on_CA.base().reverse();
-		spin_Q_CA -= seg_on_CA.spin();
+		assert ( seg_P_BC == BC.cell_in_front_of ( P_BC ) );
+		P_BC = seg_P_BC.tip();
+		spin_P_BC += seg_P_BC.spin();
+		Cell seg_Q_CA = CA.cell_behind(Q_CA);
+		Cell P_CA = Q_CA = seg_Q_CA.base().reverse();
+		spin_Q_CA -= seg_Q_CA.spin();
 		Function::CompositionOfActions spin_P_CA = spin_Q_CA;
 		std::vector < double > v = coords_q ( Q_CA, tag::spin, spin_Q_CA );
 		coords_Eu ( shadow_Q_CA ) = v;
@@ -354,26 +354,26 @@ void Mesh::build ( const tag::Triangle &,
 		Function::CompositionOfActions spin_P_AB = 0, spin_Q_BC = spin_C;
 		// build the first triangle on this layer
 		Cell previous_seg ( tag::segment, ground_ver.reverse(), P_CA );
-		previous_seg.spin() = - ground_seg.spin() - seg_on_CA.spin();
-		Cell tri ( tag::triangle, ground_seg, previous_seg, seg_on_CA );
+		previous_seg.spin() = - ground_seg.spin() - seg_Q_CA.spin();
+		Cell tri ( tag::triangle, ground_seg, previous_seg, seg_Q_CA );
 		tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
 		Cell previous_ver = Q_CA;
 		Function::CompositionOfActions spin_prev_ver = spin_Q_CA;
 		ceiling.clear();
 		for ( size_t j = i+1; j <= N; j++ ) // "horizontal" movement
 		{	// advance one step horizontally (parallel to AB)
-			seg_on_AB = AB.cell_in_front_of ( P_AB );
-			P_AB = seg_on_AB.tip();
-			spin_P_AB += seg_on_AB.spin();
-			seg_on_AB = AB.cell_in_front_of ( Q_AB );
-			Q_AB = seg_on_AB.tip();
-			spin_Q_AB += seg_on_AB.spin();
-			seg_on_BC = BC.cell_behind ( Q_BC );
-			Q_BC = seg_on_BC.base().reverse();
-			spin_Q_BC -= seg_on_BC.spin();
-			seg_on_CA = CA.cell_behind ( P_CA );
-			P_CA = seg_on_CA.base().reverse();
-			spin_P_CA -= seg_on_CA.spin();
+			Cell seg_P_AB = AB.cell_in_front_of ( P_AB );
+			P_AB = seg_P_AB.tip();
+			spin_P_AB += seg_P_AB.spin();
+			seg_Q_AB = AB.cell_in_front_of ( Q_AB );
+			Q_AB = seg_Q_AB.tip();
+			spin_Q_AB += seg_Q_AB.spin();
+			Cell seg_Q_BC = BC.cell_behind ( Q_BC );
+			Q_BC = seg_Q_BC.base().reverse();
+			spin_Q_BC -= seg_Q_BC.spin();
+			Cell seg_P_CA = CA.cell_behind ( P_CA );
+			P_CA = seg_P_CA.base().reverse();
+			spin_P_CA -= seg_P_CA.spin();
 			Cell S ( tag::non_existent );  // temporary non-existent cell
 			Function::CompositionOfActions spin_S = 0;
 			if ( j == N )  { S = P_BC; spin_S = spin_P_BC;  }
@@ -408,7 +408,7 @@ void Mesh::build ( const tag::Triangle &,
 		  tri_1.add_to_mesh ( *this );  // 'this' is the mesh we are building
 			it_ground++;  assert ( it_ground != ground.end() );
 			ground_seg = *it_ground;
-			if ( j == N ) previous_seg = seg_on_BC;
+			if ( j == N ) previous_seg = seg_P_BC;
 			else
 			{	ground_ver = ground_seg.tip();
 				previous_seg = Cell ( tag::segment, ground_ver.reverse(), S );
@@ -419,8 +419,8 @@ void Mesh::build ( const tag::Triangle &,
 			previous_ver = S;  spin_prev_ver = spin_S;
 			// add horizontal_seg.reverse() to future ground
 			ceiling.push_back ( horizontal_seg.reverse() );                              	  }
-		assert ( seg_on_BC.tip() == P_BC );
-		seg_on_BC = BC.cell_in_front_of ( P_BC );
+		assert ( seg_P_BC.tip() == P_BC );
+		seg_P_BC = BC.cell_in_front_of ( P_BC );
 		ground = ceiling;                                                                    }
 		// improve by moving ceiling to ground, leaving ceiling empty !
 
@@ -428,8 +428,8 @@ void Mesh::build ( const tag::Triangle &,
 	Cell seg_on_CA = CA.cell_behind ( Q_CA );
 	assert ( not ground.empty() );
 	Cell ground_seg = *(ground.begin());
-	assert ( seg_on_BC.spin() + seg_on_CA.spin() + ground_seg.spin() == 0 );
-	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
+	assert ( seg_P_BC.spin() + seg_on_CA.spin() + ground_seg.spin() == 0 );
+	Cell tri ( tag::triangle, seg_P_BC, seg_on_CA, ground_seg );
 	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
 		
 } // end of Mesh::build with tag::triangle and tag::spin
@@ -1066,7 +1066,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
 	file_ps << 3. / scale_factor << " setlinewidth 0.5 setgray contour stroke" << std::endl;
   file_ps << "0 setgray contour clip" << std::endl;
-  file_ps << "newpath 0.85 setgray shadow fill" << std::endl;
+  file_ps << "newpath 0.6 0.8 1. setrgbcolor shadow fill" << std::endl;
 
   file_ps << 1.5 / scale_factor << " setlinewidth 0 setgray" << std::endl;
 	

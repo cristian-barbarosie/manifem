@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.09.05
+//   mesh.h  2021.09.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -757,6 +757,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
+	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+	              const tag::Spin &                                                        );
 	// builds a triangular mesh from three sides
 	// the number of divisions defined by the divisions of the sides (must be the same)
 	
@@ -5302,6 +5304,21 @@ inline Mesh::Mesh
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 {	this->build ( tag::triangle, AB, BC, CA );  }
+
+
+inline Mesh::Mesh
+( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA, const tag::Spin & )
+
+// the tag::spin provides no specific information,
+// it just warns maniFEM that we are on a quotient manifold
+// and that it must take spins into account
+// specific information about spins is included in the three segments
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::triangle, AB, BC, CA, tag::spin );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
