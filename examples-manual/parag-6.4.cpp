@@ -1,4 +1,8 @@
 
+// example presented in paragraph 6.4 of the manual
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+// automatic numbering of vertices
+
 
 #include "maniFEM.h"
 #include "math.h"

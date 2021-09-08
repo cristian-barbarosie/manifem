@@ -1,8 +1,7 @@
 
 // example presented in paragraph 10.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// in a mesh of squares, cuts some of the squares in two triangles
-
+// in a mesh of squares, cut some of the squares in two triangles
 
 #include "maniFEM.h"
 #include <fstream>

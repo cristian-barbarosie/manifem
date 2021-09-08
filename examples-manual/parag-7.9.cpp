@@ -1,3 +1,4 @@
+
 // example presented in paragraph 7.9 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // a skew torus made of two triangular patches

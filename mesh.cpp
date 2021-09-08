@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.08.04
+// mesh.cpp 2021.09.07
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3922,7 +3922,11 @@ void Mesh::Connected::OneDim::remove_from_my_cells
 {	assert ( d == cll->get_dim() );
 	assert ( d <= 1 );
 	if ( d == 1 )
-	{	assert ( this->nb_of_segs >= 2 );
+	{	assert ( this->nb_of_segs >= 1 );
+		// more often than not, this->nb_of_segs >= 2
+		// thus, after eliminating the 'cll' segment, 'this' mesh wont become empty
+		// however, destructors of meshes also call this method
+		// in which case the mesh may become empty
 		this->nb_of_segs--;
 		// if we remove a segment from a closed loop, it will become open chain :
 		if ( this->last_ver == this->first_ver.reverse() )
@@ -3930,7 +3934,7 @@ void Mesh::Connected::OneDim::remove_from_my_cells
 			this->first_ver = cll->tip().reverse();  }
 		else  // open chain
 		{	assert ( ( cll->base() == this->first_ver ) or
-			         ( cll->tip() == this->last_ver )        );
+			         ( cll->tip() == this->last_ver )      );
 			if ( cll->base() == this->first_ver )
 				this->first_ver = cll->tip().reverse();
 			else  // cll->tip() == this->last_ver

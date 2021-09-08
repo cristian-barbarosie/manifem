@@ -1,6 +1,7 @@
+
 // example presented in paragraph 7.6 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// mesh the flat torus RR2/ZZ2
+// drill a hole in the flat torus RR2/ZZ2
 
 #include "maniFEM.h"
 using namespace maniFEM;

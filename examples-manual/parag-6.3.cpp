@@ -64,7 +64,6 @@ int main ()
 	assert ( counter == numbering.size() );
 	} // just a block of code
 
-	std::cout << "main 1" << std::endl;
 	size_t size_matrix = ABCD.number_of ( tag::vertices );
 	assert ( size_matrix == numbering.size() );
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
@@ -72,7 +71,6 @@ int main ()
 	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
 	vector_b.setZero();
 
-	std::cout << "main 2" << std::endl;
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
 	CellIterator it = ABCD.iterator ( tag::over_cells_of_max_dim );
@@ -97,7 +95,6 @@ int main ()
 		}  }
 	} // just a block of code 
 
-	std::cout << "main 3" << std::endl;
 	Function heat_source = y*y;
 	// impose Neumann boundary conditions du/dn = 1.
 	{ // just a block of code for hiding 'it'
@@ -117,7 +114,6 @@ int main ()
 		vector_b[j] += fe_bdry.integrate ( heat_source * psiW );   }
 	} // just a block of code 
 	
-	std::cout << "main 4" << std::endl;
 	// impose Dirichlet boundary conditions  u = 0
 	{ // just a block of code for hiding 'it'
 	CellIterator it = AB.iterator ( tag::over_vertices );

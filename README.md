@@ -5,21 +5,23 @@ ManiFEM was designed with the goal of coping with very general meshes,
 in particular meshes on Riemannian manifolds, even manifolds which cannot be embedded in R^3,
 like the torus R^2/Z^2.
 Also, maniFEM was written with the goal of being conceptually clear and easy to read.
-We hope it will prove particularly useful for people who want fine control over the mesh, 
+We hope it will be particularly useful for people who want fine control over the mesh, 
 e.g. for implementing their own meshing or remeshing algorithms.
 
 ManiFEM uses [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for storing matrices
 and for solving systems of linear equations.
 
-ManiFEM is just a collection of C++ classes. It has no user-friendly interface nor graphic capabilities. 
+ManiFEM is just a collection of C++ classes.
+It has no user-friendly interface nor graphic capabilities. 
 The user should have some understanding of programming and of C++. 
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
 
 Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
 [FEniCS/Dolphin](https://fenicsproject.org/)
 
-In its current version, release 21.08, maniFEM works well for mesh generation. 
-Quotient manifolds (section 7 in the manual) and anisotropic Riemann metrics (paragraph 3.24 in the manual) are not yet implemented. 
+In its current version, release 21.09, maniFEM works well for mesh generation,
+including meshes on quotient manifolds. 
+Anisotropic Riemann metrics (paragraph 3.24 in the manual) are not yet implemented. 
 Variational formulations (section 5 in the manual) are not yet implemented. 
 Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now.
 A changelog is available at the end of the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf).
@@ -30,7 +32,7 @@ A component of maniFEM, [MetricTree](https://github.com/cristian-barbarosie/Metr
 ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com), [Sérgio Lopes](mailto:slopes@adm.isel.pt)
 and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com); see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
 
-To learn maniFEM, you should read the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.08).
+To learn maniFEM, you should read the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.09).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.

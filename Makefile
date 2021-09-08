@@ -6,7 +6,8 @@ CC = g++
 #	CFLAGS = -c -I . -I $(HOME)/include/ -std=c++17
 CFLAGS = -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
 # CFLAGS = -DMANIFEM_COLLECT_CM -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
-#	CFLAGS = -DNDEBUG -c -O4 -I . -I $(HOME)/include/ -std=c++17
+# CFLAGS = -DMANIFEM_COLLECT_CM -DNDEBUG -O4 -c -I . -I $(HOME)/include/ -std=c++17
+# CFLAGS = -DNDEBUG -c -O4 -I . -I $(HOME)/include/ -std=c++17
 # CFLAGS = -DNDEBUG -c -I . -I $(HOME)/include/ -std=c++17
 
 manifem_objects = iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o progressive.o
@@ -25,6 +26,9 @@ manifem-exe-test-%: test-%.o $(test_objects)
 	$(CC) -o $@ -std=c++17 $^
 
 manifem-exe-12.10: parag-12.10.o
+	$(CC) -o $@ -std=c++17 $^
+
+manifem-exe-test-12.10: test-12.10.o
 	$(CC) -o $@ -std=c++17 $^
 
 run-%: manifem-exe-%

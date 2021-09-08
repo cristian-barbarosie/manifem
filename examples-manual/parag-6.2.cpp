@@ -1,4 +1,8 @@
 
+// example presented in paragraph 6.2 of the manual
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+// rudimentary use of finite elements
+// solve the Laplace operator with Dirichlet boundary conditions
 
 #include "maniFEM.h"
 #include "math.h"

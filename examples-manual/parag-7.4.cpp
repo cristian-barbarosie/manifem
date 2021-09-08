@@ -1,3 +1,4 @@
+
 // example presented in paragraph 7.4 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // mesh the flat torus RR2/ZZ2

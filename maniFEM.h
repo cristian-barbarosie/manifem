@@ -1,6 +1,6 @@
 
 //   this file is part of maniFEM, a C++ library for meshes and finite elements on manifolds
-//   development version, may be unstable
+//   release 21.09
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -25,4 +25,4 @@
 #include "manifold.h"
 #include "mesh.h"
 
-//23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+

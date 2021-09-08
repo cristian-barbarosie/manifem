@@ -1,6 +1,7 @@
+
 // example presented in paragraph 7.5 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// mesh a dough-nut
+// mesh a doughnut
 
 #include "maniFEM.h"
 using namespace maniFEM;

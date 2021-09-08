@@ -1,7 +1,7 @@
 
 // example presented in paragraph 9.2 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// builds a ring-shaped mesh
+// build a ring-shaped mesh
 
 #include "maniFEM.h"
 using namespace maniFEM;

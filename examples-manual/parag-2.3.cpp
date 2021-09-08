@@ -1,7 +1,7 @@
 
 // example presented in paragraph 2.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// builds an L-shaped mesh with mixed traingles and rectangles
+// an L-shaped mesh with mixed triangles and rectangles
 
 #include "maniFEM.h"
 
