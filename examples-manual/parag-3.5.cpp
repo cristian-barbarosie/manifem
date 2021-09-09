@@ -15,7 +15,7 @@ int main ()
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
 
-	cout << "this example takes some time" << endl;
+	cout << "this example takes time" << endl;
 
 	Function r = power ( x*x + y*y, 0.25 );
 	RR2.implicit ( x*sin(r) == y*cos(r) );

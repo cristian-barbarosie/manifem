@@ -22,7 +22,7 @@ parag-%.o: examples-manual/parag-%.cpp
 manifem-exe-%: parag-%.o $(manifem_objects)
 	$(CC) -o $@ -std=c++17 $^
 
-manifem-exe-test-%: test-%.o $(test_objects)
+manifem-exe-test-%: test-%.o $(manifem_objects)
 	$(CC) -o $@ -std=c++17 $^
 
 manifem-exe-12.10: parag-12.10.o

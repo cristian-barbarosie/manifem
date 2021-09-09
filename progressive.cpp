@@ -690,6 +690,8 @@ inline void switch_orientation ( Cell cll )
 void switch_orientation ( Mesh msh )
 // hidden in anonymous namespace
 
+// 'msh' is a closed loop
+	
 // since 'msh' has just been created, we may choose not to use 'reverse'
 // instead, call switch_orientation on each cell
 
@@ -1264,6 +1266,31 @@ inline bool check_touching
 
 //-------------------------------------------------------------------------------------------------
 
+
+inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, const Cell stop )
+// hidden in anonymous namespace
+
+// 'start' and 'stop' are positive vertices (may be one and the same)
+
+{	assert ( start.dim() == 0 );
+	assert ( stop.dim() == 0 );
+	assert ( start.is_positive() );
+	assert ( stop.is_positive() );
+
+	Mesh::Connected::OneDim * msh_core = tag::Util::assert_cast
+		< Mesh::Core*, Mesh::Connected::OneDim* > ( msh.core );
+	msh_core->first_ver = start.reverse();
+	msh_core->last_ver = stop;
+	// now we can use an iterator
+
+	CellIterator it = msh.iterator ( tag::over_segments, tag::require_order );
+	size_t n = 0;
+	for ( it.reset(); it.in_range(); it++ ) n++;
+	msh_core->nb_of_segs = n;                                                   }
+	
+//-------------------------------------------------------------------------------------------------
+
+
 void progressive_construct ( Mesh & msh,
 	const tag::StartAt &, const Cell & start,
 	const tag::Towards &, std::vector<double> & tangent,
@@ -1326,10 +1353,13 @@ void progressive_construct ( Mesh & msh,
 		AB.add_to_mesh ( msh, tag::do_not_bother );
 		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 		counter++;  A = B;                                                                            }
-
+	
+		update_info_connected_one_dim ( msh, start, stop );
+		
 } // end of  progressive_construct
 
 //-------------------------------------------------------------------------------------------------
+
 
 void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & start,
                              const tag::StopAt &, const Cell & stop                )
@@ -1341,10 +1371,12 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 // the only solution is to start walking in both directions simultaneously
 // the first one to reach 'stop' wins
 
-// 'start' and 'stop' are vertices (may be one and the same)
+// 'start' and 'stop' are positive vertices (may be one and the same)
 
 {	assert ( start.dim() == 0 );
 	assert ( stop.dim() == 0 );
+	assert ( start.is_positive() );
+	assert ( stop.is_positive() );
 
 	desired_len_at_point = desired_length ( start );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
@@ -1358,7 +1390,7 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	Function x = Manifold::working.coordinates()[i];
 		x ( ver1 ) = x ( start );  x ( ver2 ) = x ( start );  }
-	int winner;  //  will be 1 or -1
+	int winner = 0;  //  will be 1 or -1
 	while ( true )
 	{	double augm_length = desired_length(ver1) * 1.5,
 		       augm_len_sq = augm_length * augm_length;
@@ -1394,36 +1426,15 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 			if ( prod > 0. )  { winner = -1;  break;  }           }
 	}  // end of  while true
 
+	assert ( ( winner == 1 ) or ( winner == -1 ) );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ ) best_tangent[i] *= winner;
 	progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
 	                        tag::stop_at, stop   );
+
 }  // end of progressive_construct
 
 //-------------------------------------------------------------------------------------------------
 
-inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, const Cell stop )
-// hidden in anonymous namespace
-
-// 'start' and 'stop' are positive vertices (may be one and the same)
-
-{	assert ( start.dim() == 0 );
-	assert ( stop.dim() == 0 );
-	assert ( start.is_positive() );
-	assert ( stop.is_positive() );
-
-	Mesh::Connected::OneDim * msh_core = tag::Util::assert_cast
-		< Mesh::Core*, Mesh::Connected::OneDim* > ( msh.core );
-	msh_core->first_ver = start.reverse();
-	msh_core->last_ver = stop;
-	// now we can use an iterator
-
-	CellIterator it = msh.iterator ( tag::over_segments, tag::require_order );
-	size_t n = 0;
-	for ( it.reset(); it.in_range(); it++ ) n++;
-	msh_core->nb_of_segs = n;                                                   }
-	
-
-//-------------------------------------------------------------------------------------------------
 
 void progressive_construct
 ( Mesh & msh, const tag::StartAt &, const Cell & start, const tag::InherentOrientation & )
@@ -1434,12 +1445,11 @@ void progressive_construct
 {	assert ( start.dim() == 0 );
 	assert ( start.is_positive() );
 
-	std::cout << "progressive.cpp 1440" << std::endl;
 	desired_len_at_point = desired_length ( start );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
 
-	Mesh msh1 ( tag::whose_core_is,
+	Mesh new_msh ( tag::whose_core_is,
 	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
 	    tag::freshly_created, tag::is_positive                                               );
 	// the number of segments does not count, and we don't know it yet
@@ -1448,56 +1458,29 @@ void progressive_construct
 	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
 	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 	// in iterator.cpp
-	progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
-                          tag::stop_at, stop );
-	std::cout << "progressive.cpp 1456" << std::endl;
-	update_info_connected_one_dim ( msh1, start, stop );
+	progressive_construct ( new_msh, tag::start_at, start, tag::towards, best_tangent,
+                          tag::stop_at, start                                       );
+	update_info_connected_one_dim ( new_msh, start, start );
 	// define number of segments, first vertex, last vertex
-	std::cout << "progressive.cpp 1459, msh1 has " << msh1.number_of ( tag::segments ) << " segments" << std::endl;
-	
-	std::cout << "progressive.cpp 1460" << std::endl;
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
-	// the number of segments does not count, and we don't know it yet
-	Mesh msh2 ( tag::whose_core_is,
-	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	    tag::freshly_created, tag::is_positive                                               );
-	// the number of segments does not count, and we don't know it yet
-	// we compute it after the mesh is built, by counting segments
-	// but we count segments using an iterator, and the iterator won't work
-	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-	// in iterator.cpp
-	progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
-                          tag::stop_at, stop                                      );
 
-
-	//	update_info_connected_one_dim ( msh2, stop, start );
-
-
-	
-	std::cout << "progressive.cpp 1481, msh2 has " << msh2.number_of ( tag::segments ) << " segments" << std::endl;
-	switch_orientation ( msh2 );
-	std::cout << "progressive.cpp 1476" << std::endl;
-	update_info_connected_one_dim ( msh2, stop, start );
-	Mesh whole ( tag::join, msh1, msh2 );
-
-	if ( correctly_oriented ( whole ) ) msh = msh1;
-	else  {  switch_orientation ( msh2 );  msh = msh2;  }
+	if ( not correctly_oriented ( new_msh ) ) switch_orientation ( new_msh );
+	msh = new_msh;
 }
 	
 //-------------------------------------------------------------------------------------------------
 
 void progressive_construct
-( Mesh & msh, const tag::StartAt &, const Cell & start, const tag::StopAt &, const Cell & stop,
-  const tag::InherentOrientation & )
+( Mesh & msh, const tag::StartAt &, const Cell & start,
+  const tag::StopAt &, const Cell & stop, const tag::InherentOrientation & )
 // hidden in anonymous namespace
 
-// 'start' and 'stop' are positive (different) vertices
+// 'start' and 'stop' are (different) positive vertices
 
 {	assert ( start.dim() == 0 );
 	assert ( stop.dim() == 0 );
 	assert ( start.is_positive() );
 	assert ( stop.is_positive() );
+	assert ( start != stop );
 
 	desired_len_at_point = desired_length ( start );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
@@ -2295,8 +2278,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
 	desired_length = length;
 	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop );
-	update_info_connected_one_dim ( *this, start, stop );  	                   }
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop );   }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -2320,11 +2302,9 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
 		if ( progress_nb_of_coords == 2 )
-			progressive_construct ( *this, tag::start_at, start,
-			                        tag::stop_at, start, tag::inherent_orientation );
+			progressive_construct ( *this, tag::start_at, start, tag::inherent_orientation );
 		else  // random orientation
-			progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );
-		update_info_connected_one_dim ( *this, start, start );  	                    }
+			progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );       }
 	else
 	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
 		bool check_and_switch = ( progress_nb_of_coords == 3 );
@@ -2355,7 +2335,8 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
 		progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );  // random orientation
-		update_info_connected_one_dim ( *this, start, start );                      }
+		// update_info_connected_one_dim ( *this, start, start );
+	}
 	else
 	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
 		progressive_construct ( *this, tag::start_with_non_existent_mesh,
@@ -2383,8 +2364,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	desired_length = length;
 	
 	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,
-	                        tag::inherent_orientation                        );
-	update_info_connected_one_dim ( *this, start, stop );                       }
+	                        tag::inherent_orientation                        );  }
 
 //-------------------------------------------------------------------------------------------------
 
