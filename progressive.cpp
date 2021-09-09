@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.08.02
+// progressive.cpp 2021.09.09
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -57,8 +57,8 @@ Function desired_length = 0.;
 double progress_long_dist, progress_sq_long_dist;
 double desired_len_at_point, sq_desired_len_at_point;
 
-Mesh mesh_under_constr ( tag::non_existent, tag::is_positive );
-Mesh progress_interface ( tag::non_existent, tag::is_positive );
+Mesh mesh_under_constr ( tag::non_existent );
+Mesh progress_interface ( tag::non_existent );
 // empty temporary meshes
 // these variables will be set when we start the meshing process,
 // in the body of the progressive Mesh constructor
@@ -1426,11 +1426,73 @@ inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, co
 //-------------------------------------------------------------------------------------------------
 
 void progressive_construct
+( Mesh & msh, const tag::StartAt &, const Cell & start, const tag::InherentOrientation & )
+// hidden in anonymous namespace
+
+// meshing process starts and stops at the same vertex
+
+{	assert ( start.dim() == 0 );
+	assert ( start.is_positive() );
+
+	std::cout << "progressive.cpp 1440" << std::endl;
+	desired_len_at_point = desired_length ( start );
+	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
+
+	Mesh msh1 ( tag::whose_core_is,
+	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+	    tag::freshly_created, tag::is_positive                                               );
+	// the number of segments does not count, and we don't know it yet
+	// we compute it after the mesh is built, by counting segments
+	// but we count segments using an iterator, and the iterator won't work
+	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+	// in iterator.cpp
+	progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
+                          tag::stop_at, stop );
+	std::cout << "progressive.cpp 1456" << std::endl;
+	update_info_connected_one_dim ( msh1, start, stop );
+	// define number of segments, first vertex, last vertex
+	std::cout << "progressive.cpp 1459, msh1 has " << msh1.number_of ( tag::segments ) << " segments" << std::endl;
+	
+	std::cout << "progressive.cpp 1460" << std::endl;
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
+	// the number of segments does not count, and we don't know it yet
+	Mesh msh2 ( tag::whose_core_is,
+	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+	    tag::freshly_created, tag::is_positive                                               );
+	// the number of segments does not count, and we don't know it yet
+	// we compute it after the mesh is built, by counting segments
+	// but we count segments using an iterator, and the iterator won't work
+	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+	// in iterator.cpp
+	progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
+                          tag::stop_at, stop                                      );
+
+
+	//	update_info_connected_one_dim ( msh2, stop, start );
+
+
+	
+	std::cout << "progressive.cpp 1481, msh2 has " << msh2.number_of ( tag::segments ) << " segments" << std::endl;
+	switch_orientation ( msh2 );
+	std::cout << "progressive.cpp 1476" << std::endl;
+	update_info_connected_one_dim ( msh2, stop, start );
+	Mesh whole ( tag::join, msh1, msh2 );
+
+	if ( correctly_oriented ( whole ) ) msh = msh1;
+	else  {  switch_orientation ( msh2 );  msh = msh2;  }
+}
+	
+//-------------------------------------------------------------------------------------------------
+
+void progressive_construct
 ( Mesh & msh, const tag::StartAt &, const Cell & start, const tag::StopAt &, const Cell & stop,
   const tag::InherentOrientation & )
 // hidden in anonymous namespace
 
-// 'start' and 'stop' are positive vertices (may be one and the same)
+// 'start' and 'stop' are positive (different) vertices
 
 {	assert ( start.dim() == 0 );
 	assert ( stop.dim() == 0 );
@@ -1441,7 +1503,6 @@ void progressive_construct
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
 
-	// the number of segments does not count, and we don't know it yet
 	Mesh msh1 ( tag::whose_core_is,
 	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
 	    tag::freshly_created, tag::is_positive                                               );
@@ -1469,6 +1530,7 @@ void progressive_construct
 	// in iterator.cpp
 	progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
                           tag::stop_at, stop                                      );
+
 	switch_orientation ( msh2 );
 	update_info_connected_one_dim ( msh2, stop, start );
 	Mesh whole ( tag::join, msh1, msh2 );
@@ -2029,7 +2091,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 
 // since no boundary is provided, we assume the working manifold is compact
 	
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	temporary_vertex = Cell ( tag::vertex );
@@ -2046,7 +2108,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
              const tag::DesiredLength &, const Function &  length                 )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	Manifold tmp_manif = Manifold::working;
@@ -2067,7 +2129,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
              const tag::RandomOrientation &                                                 )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	temporary_vertex = Cell ( tag::vertex );
@@ -2083,7 +2145,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
              const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	Manifold tmp_manif = Manifold::working;
@@ -2104,7 +2166,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
              const tag::InherentOrientation &                                               )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	assert ( Manifold::working.coordinates().nb_of_components() == this->dim() + 1 );
@@ -2121,7 +2183,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
              const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	assert ( Manifold::working.coordinates().nb_of_components() == this->dim() + 1 );
@@ -2241,13 +2303,13 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::DesiredLength &, const Function & length                 )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
 	desired_length = length;
-	
+
 	if ( get_topological_dim() == 1 )
 	{	this->core = new Mesh::Connected::OneDim
 			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
@@ -2276,7 +2338,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
 
-:	Mesh ( tag::non_existent, tag::is_positive )
+:	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 	
 {	temporary_vertex = Cell ( tag::vertex );

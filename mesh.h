@@ -1,6 +1,5 @@
 
-//   mesh.h  2021.09.06
-
+//   mesh.h  2021.09.09
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
@@ -658,7 +657,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// low-level constructors :
 
-	inline Mesh ( const tag::NonExistent &, const tag::IsPositive & )
+	inline Mesh ( const tag::NonExistent & )
 	#ifdef MANIFEM_COLLECT_CM	
 	:	tag::Util::Wrapper < Mesh::Core > ( tag::empty ),
 	#else  // no MANIFEM_COLLECT_CM	
@@ -5439,7 +5438,7 @@ inline size_t join_meshes ( Mesh * const that, const container & l )
 template < typename container >
 inline Mesh::Mesh ( const tag::Join &, const container & l )
 
-: Mesh ( tag::non_existent, tag::is_positive )
+: Mesh ( tag::non_existent )
 
 // if any of the meshes is not a Mesh::Connected::OneDim, 'this' will be Mesh::Fuzzy
 {	container ll = l;
