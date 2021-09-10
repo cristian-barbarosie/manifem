@@ -1,5 +1,5 @@
 
-// manifold.h 2021.09.05
+// manifold.h 2021.09.09
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -124,11 +124,11 @@ class Manifold
 			delta ( coord.nb_of_components() );
 		for ( size_t i = 0; i < coord.nb_of_components(); i++ )
 			delta[i] = vB[i] - vA[i];
-		return inner_prod ( A, delta, delta );                        }
+		return this->inner_prod ( A, delta, delta );               }
 	
 	// distance, computed from the inner product
 	inline double distance ( const Cell & A, const Cell & B ) const
-	{	return std::sqrt ( dist_sq ( A, B ) );  }
+	{	return std::sqrt ( this->dist_sq ( A, B ) );  }
 	
 	// metric in the manifold (an inner product on the tangent space) (metric not used)
 	static double default_inner_prod ( const Cell & P, const std::vector<double> & v,
@@ -669,8 +669,8 @@ class Manifold::Euclid::SqDist
 };  // end of  class Manifold::Euclid::SqDist
 
 // when we first declare a Manifold::Euclid, coord_field and coord_func will be nullptr
-// immediately after declaring the manifold (in main), we must declare the coordinates
-// to be of type Lagrange degree 1 for instance
+// immediately after declaring the manifold (in main),
+// we must declare the coordinates to be of type Lagrange degree 1 for instance
 //    	Manifold RR2 ( tag::Euclid, 2);
 //      Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 

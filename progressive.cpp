@@ -65,24 +65,29 @@ Mesh progress_interface ( tag::non_existent );
 
 //-------------------------------------------------------------------------------------------------
 
-inline double approx_sqrt ( double arg, const tag::Around &, double centre, double sqrt_of_centre )
+	
+inline double approx_sqrt ( double arg, const tag::Around &, double centre, double ini )
 // hidden in anonymous namespace
 	
-// we assume all segments have length around the same value, here called 'sqrt_of_centre'
-// so the result should not be too far from 'sqrt_of_centre'
+// we assume all segments have length around the same value, here called 'ini'
+// so the result should not be too far from 'ini'
+
+// centre == ini*ini
 	
-{	double res = 0.5 / sqrt_of_centre * ( arg + centre );
+{	double res = 0.5 * ( ini + arg / ini );
+	res = 0.5 * ( res + arg / res );
 	#ifndef NDEBUG
-	if ( ( res < 0.25*sqrt_of_centre ) or ( res > 4.*sqrt_of_centre ) )
+	if ( ( res < 0.25*ini ) or ( res > 4.*ini ) )
 	{	std::cout << "bad approximation of square root" << std::endl;
-		std::cout << arg << " " << centre << std::endl;
-		std::cout << res << " " << sqrt_of_centre << std::endl;
+		std::cout << arg << " " << ini*ini << std::endl;
+		std::cout << res << " " << ini << std::endl;
 		exit(1);                                                         }
 	#endif  // debug
 	return res;
 }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline size_t get_topological_dim ( )
 // hidden in anonymous namespace
@@ -104,6 +109,7 @@ inline size_t get_topological_dim ( )
 	assert ( false );                                                               } 
 
 //-------------------------------------------------------------------------------------------------
+
 
 std::vector < double > compute_tangent_vec
 (	Cell start, bool check_orth, std::vector < double > given_vec )
@@ -181,6 +187,7 @@ std::vector < double > compute_tangent_vec
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline std::vector < double > compute_tangent_vec
 (	const tag::AtPoint &, Cell start, const tag::OrthogonalTo &, std::vector < double > given_vec )
 // hidden in anonymous namespace
@@ -195,6 +202,7 @@ inline std::vector < double > compute_tangent_vec
 	
 //-------------------------------------------------------------------------------------------------
 
+
 inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell start )
 // hidden in anonymous namespace
 
@@ -205,6 +213,7 @@ inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell s
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void progress_add_point
 ( const Cell & P, MetricTree<Cell,Manifold::Euclid::SqDist> & cloud )
 // hidden in anonymous namespace
@@ -214,6 +223,7 @@ inline void progress_add_point
 // optimize !
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline bool positive_orientation
 (	const Cell & A, const Cell & B, const Cell & AB, const Cell & BC )
@@ -239,12 +249,13 @@ inline bool positive_orientation
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline double progress_cos_sq_60
 (	const Cell & A, const Cell & B, const Cell & C, const Cell & AB, const Cell & BC )
 // hidden in anonymous namespace
 
 // return cosine square of 180 - ABC (or 0. if wrong orientation)
-// check that  cos_sq > 0.03  to ensure angle ABC is below 80 deg
+// calling function should check  cos_sq > 0.03  to ensure angle ABC is below 80 deg
 
 {	assert ( A == AB.base().reverse() );
 	assert ( B == AB.tip() );
@@ -271,13 +282,14 @@ inline double progress_cos_sq_60
 
 //-------------------------------------------------------------------------------------------------
 			
+
 inline double progress_cos_sq_120
 (	const Cell & A, const Cell & B, const Cell & C, const Cell & AB, const Cell & BC )
 // hidden in anonymous namespace
 
 // return cosine square of 180 - ABC (or 2. if wrong orientation)
-// for instance, calling function should check cos_sq < 0.671 to ensure angle ABC is below 145 deg
-// or check cos_sq < -0.17365 to ensure angle ABC is below 80 deg
+// calling function should check  cos_sq < 0.671  to ensure angle ABC is below 145 deg
+// or check  cos_sq < -0.17365  to ensure angle ABC is below 80 deg [?!]
 
 {	assert ( A == AB.base().reverse() );
 	assert ( B == AB.tip() );
@@ -313,6 +325,7 @@ inline double progress_cos_sq_120
 
 //-------------------------------------------------------------------------------------------------
 			
+
 inline bool opposite_signs ( const double a, const double b )
 // hidden in anonymous namespace
 {	if ( a < 0. )  return b >= 0.;
@@ -320,6 +333,7 @@ inline bool opposite_signs ( const double a, const double b )
 	return b <= 0.;                  }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline Cell search_start_ver_c1 ( )
 // hidden in anonymous namespace
@@ -388,12 +402,14 @@ inline Cell search_start_ver_c1 ( )
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline double ext_prod_R2 ( const double vx, const double vy, const double wx, const double wy )
 // hidden in anonymous namespace
 {	return vx*wy - wx*vy;  }
 
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline bool origin_outside ( const double & Ax, const double & Ay,
                              const double & Bx, const double & By,
@@ -406,6 +422,7 @@ inline bool origin_outside ( const double & Ax, const double & Ay,
 	or opposite_signs ( - ext_prod_R2 ( Ax-Cx, Ay-Cy, Cx, Cy ), ext_prod_R2 ( Ax-Cx, Ay-Cy, Bx-Cx, By-Cy ) ); }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline Cell search_start_ver_c2 ( )
 // hidden in anonymous namespace
@@ -505,6 +522,7 @@ inline Cell search_start_ver_c2 ( )
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline Cell search_start_ver ( )
 // hidden in anonymous namespace
 
@@ -520,6 +538,7 @@ inline Cell search_start_ver ( )
 }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline void redistribute_vertices ( const Mesh & msh,
   const Cell & start, const Cell & stop, double last_length, size_t n )
@@ -563,6 +582,7 @@ inline void redistribute_vertices ( const Mesh & msh,
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline double get_z_baric ( const Cell & tri )
 // hidden in anonymous namespace
 
@@ -576,6 +596,7 @@ inline double get_z_baric ( const Cell & tri )
 	return  zz/3.;                                                               }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline bool tri_correctly_oriented ( const Cell & tri )
 // hidden in anonymous namespace
@@ -604,6 +625,7 @@ inline bool tri_correctly_oriented ( const Cell & tri )
 
 //-------------------------------------------------------------------------------------------------
 
+
 bool correctly_oriented ( const Mesh msh )
 // hidden in anonymous namespace
 
@@ -617,7 +639,7 @@ bool correctly_oriented ( const Mesh msh )
 	assert ( m_euclid );
 
 	// for surfaces, we should search the vertex with zmax and check the orientation
-	// of all surrounding triangles (we need an iterator over cells above)
+	// of all surrounding triangles (we need an iterator over cells around that vertex)
 	if ( msh.dim() != 1 )
 	{	assert ( msh.dim() == 2 );
 		assert ( progress_nb_of_coords == 3 );
@@ -665,11 +687,12 @@ bool correctly_oriented ( const Mesh msh )
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void switch_orientation ( Cell cll )
 // hidden in anonymous namespace
 
 // this is always called from switch_orientation ( Mesh )
-// we should deal with segments separately, as well as with negative cells !
+// we should deal with segments separately, as well as with negative cells
 	
 {	Mesh msh = cll.boundary();
 	std::vector < Cell > vec_of_cells;
@@ -686,6 +709,7 @@ inline void switch_orientation ( Cell cll )
 // nb_of_segs remains the same, as well as first_ver and last_ver
 
 //-------------------------------------------------------------------------------------------------
+
 
 void switch_orientation ( Mesh msh )
 // hidden in anonymous namespace
@@ -710,6 +734,7 @@ void switch_orientation ( Mesh msh )
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void improve_tangent ( const Cell & A, std::vector < double > & nor )
 // hidden in anonymous namespace
 
@@ -731,6 +756,7 @@ inline void improve_tangent ( const Cell & A, std::vector < double > & nor )
 		nor[i] = x ( temporary_vertex ) - x(A);          }                               }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline void improve_normal
 ( const Cell & A, const Cell & B, std::vector < double > & AB_coord, std::vector < double > & nor )
@@ -766,6 +792,7 @@ inline void improve_normal
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  nor[i] *= norm;                  }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline void build_one_normal ( Cell & B, Cell & C, Cell & new_seg )
 // hidden in anonymous namespace
@@ -815,6 +842,7 @@ inline void build_one_normal ( Cell & B, Cell & C, Cell & new_seg )
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void build_each_normal
 ( Cell & B, Cell & C, Cell & new_seg, std::vector < double > & old_e, std::vector < double > & old_f )
 // hidden in anonymous namespace
@@ -851,6 +879,7 @@ inline void build_each_normal
 }  // end of build_each_normal
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline Cell build_normals ( const Cell & start )
 // hidden in anonymous namespace
@@ -903,6 +932,7 @@ inline Cell build_normals ( const Cell & start )
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void progress_fill_60
 (	Cell & AB, Cell & BC, const Cell & CA, const Cell & B,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud     )
@@ -927,6 +957,7 @@ inline void progress_fill_60
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void glue_two_segs_common
 ( Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD, Cell & AD, Cell & BC )
 // hidden in anonymous namespace
@@ -948,6 +979,7 @@ inline void glue_two_segs_common
 }  // end of void glue_two_segs_common
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline Cell glue_two_segs_S
 (	Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD,
@@ -979,6 +1011,7 @@ inline Cell glue_two_segs_S
 	return AD;                                                                    }
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline Cell glue_two_segs_Z
 (	Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD,
@@ -1012,6 +1045,7 @@ inline Cell glue_two_segs_Z
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void progress_fill_last_triangle
 (	const Cell & A, const Cell & B, const Cell & C, Cell & AB, Cell & BC, Cell & CA,
 	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud                                )
@@ -1032,6 +1066,7 @@ inline void progress_fill_last_triangle
 	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );         }
 
 //-------------------------------------------------------------------------------------------------
+
 
 void progress_relocate
 (	const Cell & P, size_t n, std::vector<double> & normal_dir,
@@ -1119,6 +1154,7 @@ void progress_relocate
 }  // end of  progress_relocate
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline bool check_touching
 (	Cell & ver, std::set<Cell> & set_of_ver, Cell & point_120, Cell & stop_point_120,
@@ -1469,6 +1505,7 @@ void progressive_construct
 	
 //-------------------------------------------------------------------------------------------------
 
+
 void progressive_construct
 ( Mesh & msh, const tag::StartAt &, const Cell & start,
   const tag::StopAt &, const Cell & stop, const tag::InherentOrientation & )
@@ -1523,6 +1560,7 @@ void progressive_construct
 }
 	
 //-------------------------------------------------------------------------------------------------
+
 
 void progressive_construct
 (	Mesh & msh, const tag::StartAt &, Cell start,
@@ -1863,6 +1901,7 @@ search_for_start :  // execution only reaches this point through 'goto'
 
 //-------------------------------------------------------------------------------------------------
 
+
 inline void progressive_construct
 (	Mesh & msh, const tag::StartWithNonExistentMesh &,
 	const tag::StartAt, const Cell & start,
@@ -1930,6 +1969,7 @@ inline void progressive_construct
 
 //-------------------------------------------------------------------------------------------------
 	
+
 inline void progressive_construct
 (	Mesh & msh, const tag::StartWithNonExistentMesh &,
 	const tag::InherentOrientation &, bool check_and_switch )
@@ -1945,6 +1985,7 @@ inline void progressive_construct
 }  // end of progressive_construct
 
 //-------------------------------------------------------------------------------------------------
+
 
 inline void progressive_construct
 (	Mesh & msh, const tag::StartAt &, const Cell & start,
@@ -1985,6 +2026,7 @@ inline void progressive_construct
 	assert ( start.reverse().core->belongs_to
 			( interf_rev.core, tag::same_dim, tag::oriented ) );
 
+	std::cout << "wait a minute ..." << std::endl;
 	// build the mesh on the other side of 'interface'
 	for ( size_t i = 0; i < 3; i++ )  nor[i] *= -1.;
 	Mesh msh2 ( tag::whose_core_is,   // of dimesion two
@@ -1993,7 +2035,6 @@ inline void progressive_construct
 	progressive_construct ( msh2, tag::start_at, start.reverse(), tag::towards, nor,
 	                        tag::boundary, interf_rev                                );	
 	// join everything to get a mesh on the entire manifold
-	std::cout << "wait a minute ..." << std::endl;
 	Mesh glob ( tag::join, msh, msh2 );
 
 	if ( not correctly_oriented ( glob ) )
@@ -2002,6 +2043,7 @@ inline void progressive_construct
 
 //-------------------------------------------------------------------------------------------------
 	
+
 void progressive_construct
 (	Mesh & msh, const tag::StartAt &, const Cell & start,
 	const tag::Boundary &, Mesh interface                 )
@@ -2034,6 +2076,7 @@ void progressive_construct
 	
 //-------------------------------------------------------------------------------------------------
 
+
 void progressive_construct
 (	Mesh & msh, const tag::Boundary &, Mesh interface )
 // hidden in anonymous namespace
@@ -2048,6 +2091,7 @@ void progressive_construct
 	progressive_construct ( msh, tag::start_at, *it, tag::boundary, interface );  }
 
 //-------------------------------------------------------------------------------------------------
+
 
 void progressive_construct
 (	Mesh & msh, const tag::Boundary &, Mesh interface,
@@ -2070,6 +2114,7 @@ void progressive_construct
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length )
 
 // since no boundary is provided, we assume the working manifold is compact
@@ -2085,8 +2130,8 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 	                        tag::inherent_orientation, true          );           }
 	// last argument true means : check orientation, switch it if necessary
 
-
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
              const tag::DesiredLength &, const Function &  length                 )
@@ -2109,6 +2154,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
              const tag::RandomOrientation &                                                 )
 
@@ -2124,6 +2170,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 	// last argument false means : do not check orientation, leave it random
 
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
              const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
@@ -2146,6 +2193,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
              const tag::InherentOrientation &                                               )
 
@@ -2162,6 +2210,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 	// last argument true means : check orientation, switch it if necessary
 
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
              const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
@@ -2183,6 +2232,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif
 	Manifold::working = tmp_manif;                                                    }
 
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> tangent,
@@ -2223,6 +2273,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> tangent,
              const tag::DesiredLength &, const Function & length                  )
@@ -2260,6 +2311,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length                 )
@@ -2281,6 +2333,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop );   }
 
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::DesiredLength &, const Function & length                 )
@@ -2315,6 +2368,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
 
@@ -2345,6 +2399,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
@@ -2368,6 +2423,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
              const tag::DesiredLength &, const Function & length              )
 
@@ -2385,6 +2441,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	progressive_construct ( *this, tag::boundary, interface );                   }
 	
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
              const tag::DesiredLength &, const Function & length, const tag::IntrinsicOrientation & )
@@ -2405,6 +2462,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	
 //-------------------------------------------------------------------------------------------------
 
+
 Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
              const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
 
@@ -2422,6 +2480,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	progressive_construct ( *this, tag::boundary, interface, tag::inherent_orientation, true );  }
 	
 //-------------------------------------------------------------------------------------------------
+
 
 Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
              const tag::StartAt &, const Cell & start,

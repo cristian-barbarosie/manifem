@@ -70,6 +70,9 @@ int main ( )
 
 	Mesh circle ( tag::progressive, tag::start_at, A, tag::desired_length, 0.03 );
 
-	circle.export_msh ("circle.msh");
+	CellIterator it = circle.iterator ( tag::over_segments, tag::require_order );
+	it.reset();  assert ( it.in_range() );
+	Cell seg = *it;
+	Function::CompositionOfActions s = seg.spin();
 	
 }
