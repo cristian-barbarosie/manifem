@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.09.09
+// progressive.cpp 2021.09.11
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -30,14 +30,152 @@
 #include "maniFEM.h"
 #include "metric-tree.h"
 
-namespace maniFEM { namespace tag
+namespace maniFEM {
+
+namespace tag
 
 {	struct OrthogonalTo { };  static const OrthogonalTo orthogonal_to;
 	struct StartWithNonExistentMesh { };
 	static const StartWithNonExistentMesh start_with_non_existent_mesh;
-	struct AtPoint { };  static const AtPoint at_point ;                 }  }
+	struct AtPoint { };  static const AtPoint at_point ;                 }
 
-using namespace maniFEM;
+//-----------------------------------------------------------------------------------------
+
+// we want to deal with Euclidian manifolds and implicit submanifolds, on one side
+// quotient manifolds on the other side
+// not easy to reach both goals while keeping some of the common code ... common
+
+// for quotient manifolds, we use a dirty trick
+// we provide as Point not just a Cell but a Cell together with a spin
+// each call to SqDist will set the "winning" spin of the second Point B
+// relatively to the first one A
+// (the spin of a future segment AB where the minimum distance is achieved)
+	
+	
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Type::Euclidian
+
+{	public :
+
+	class sq_dist;
+	typedef Cell cell_with_spin;
+	typedef MetricTree < Cell, sq_dist > metric_tree;
+
+};
+	
+//-------------------------------------------------------------------------------------------------
+
+	
+class Manifold::Type::Euclidian::sq_dist
+
+// a callable object returning the square of the distance between two points
+// used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
+
+{	public :
+
+	inline double operator() ( const Cell & A, const Cell & B )
+	{	double res = 0.;
+		const size_t nc = Manifold::working.coordinates().nb_of_components();
+		for ( size_t i = 0; i < nc; i++ )
+		{	Function x = Manifold::working.coordinates()[i];
+			double tmp = x(B) - x(A);
+			res += tmp*tmp;                                  }
+		return res;                                                            }
+
+};  // end of  class Manifold::Type::Euclidian::sq_dist
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Type::Quotient
+
+{	public :
+
+	class sq_dist;	
+	typedef std::pair < Cell, Function::CompositionOfActions > cell_with_spin;
+	typedef MetricTree < cell_with_spin, sq_dist > metric_tree;
+};
+	
+//-------------------------------------------------------------------------------------------------
+
+	
+class Manifold::Type::Quotient::sq_dist
+
+// a callable object returning the square of the distance between two points
+// used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
+
+{	public :
+
+	inline double dist2
+	( const Cell & A, const Cell & B, const Function::CompositionOfActions & spin,
+		const Function & coords_Eu, const Function & coords_q                       )
+	{	double res = 0.;
+		std::vector < double > coord_A = coords_Eu ( A ),
+		                       coord_B = coords_q ( B, tag::spin, spin );
+		const size_t nc = coord_A.size();
+		assert ( nc == coord_B.size() );
+		for ( size_t i = 0; i < nc; i++ )
+		{	double tmp = coord_B[i] - coord_A[i];
+			res += tmp*tmp;                      }
+		return res;                                                        }
+
+	// we provide as Point not just a Cell but a Cell together with a spin
+	// each call to SqDist will set the "winning" spin of the second Point B
+	// relatively to the first one A
+	// (the spin of a future segment AB where the minimum distance is achieved)
+
+	inline double operator() ( std::pair < Cell, Function::CompositionOfActions > A,
+	                           std::pair < Cell, Function::CompositionOfActions > & B )
+	{	Manifold space = Manifold::working;
+		assert ( space.exists() );  // we use the current (quotient) manifold
+		Manifold::Quotient * manif_q = tag::Util::assert_cast
+			< Manifold::Core*, Manifold::Quotient* > ( space.core );
+		assert ( manif_q );
+		Function coords_q = space.coordinates();
+		Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+		Function coords_Eu = mani_Eu.coordinates();
+		assert ( coords_Eu.nb_of_components() == 2 );
+		Function x = coords_Eu[0],  y = coords_Eu[1];
+
+		// the action group may have one or two generators
+		assert ( manif_q->actions.size() == 2 );
+		assert ( manif_q->spins.size() == 2 );
+		Function::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
+	
+		std::vector < std::vector < short int > > directions
+			{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+		// declare global, here and in global.cpp draw_ps
+		
+		size_t unsuccessful_tries = 0;
+		// we describe a sort of spiral
+		// at the end, we stop after 10 unsuccessful rounds
+		size_t size_of_round = 0;
+		short int ii = 0, jj = 0;
+		// we choose a high value of 'dist', it will be overridden for ii == jj == 0
+		double dist = this->dist2 ( A.first, B.first, 0, coords_Eu, coords_q ) + 1.;
+		while ( unsuccessful_tries < 10 )
+		{	size_of_round++;
+			for ( size_t d = 0; d < 4; d++ )
+			{	if ( d == 2 ) size_of_round++;
+				for ( size_t i = 0; i < size_of_round; i++ )
+				{	Function::CompositionOfActions a = ii*g1 + jj*g2;
+					double di = this->dist2 ( A.first, B.first, a, coords_Eu, coords_q );
+					if ( di < dist )
+					{	dist = di;
+						B.second = a;
+						unsuccessful_tries = 0;  }
+					ii += directions[d][0];
+					jj += directions[d][1];                                            }  }
+			unsuccessful_tries++;
+		}  // end of  while unsuccessful_tries < 10
+
+	return dist;                                                                       }
+
+};  // end of  class Manifold::Type::Quotient::sq_dist
+
+//-----------------------------------------------------------------------------------------
 
 
 // global variables and functions for this file, not visible for other object files
@@ -65,7 +203,7 @@ Mesh progress_interface ( tag::non_existent );
 
 //-------------------------------------------------------------------------------------------------
 
-	
+
 inline double approx_sqrt ( double arg, const tag::Around &, double centre, double ini )
 // hidden in anonymous namespace
 	
@@ -214,8 +352,9 @@ inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell s
 //-------------------------------------------------------------------------------------------------
 
 
-inline void progress_add_point
-( const Cell & P, MetricTree<Cell,Manifold::Euclid::SqDist> & cloud )
+template < class manif_type >
+inline void progress_add_point ( const typename manif_type::cell_with_spin & P,
+                                 typename manif_type::metric_tree & cloud      )
 // hidden in anonymous namespace
 
 {	assert ( P.dim() == 0 );
@@ -455,7 +594,6 @@ inline Cell search_start_ver_c2 ( )
 	desired_len_at_point = desired_length ( tmp_A );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	
-	size_t counter = 0;
 	size_t size_of_cube = 5;
 	while ( true )
 	{	double s = size_of_cube * desired_len_at_point;
@@ -469,7 +607,6 @@ inline Cell search_start_ver_c2 ( )
 				x ( tmp_A ) = distr(random_generator);
 				x ( tmp_B ) = distr(random_generator);
 				x ( tmp_C ) = distr(random_generator);             }
-			counter++;
 			double vA1 = m_impl->level_function_1 ( tmp_A ),
 			       vA2 = m_impl->level_function_2 ( tmp_A );
 			double vB1 = m_impl->level_function_1 ( tmp_B ),
@@ -517,7 +654,7 @@ inline Cell search_start_ver_c2 ( )
 						vC1 = vAB1;  vC2 = vAB2;                                                 }
 					else  // nasty nonlinear level functions ...
 						goto restart;                                                               }  }
-		size_of_cube *= 2;                                                                                 }
+		size_of_cube *= 2;                                                                          }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -933,22 +1070,23 @@ inline Cell build_normals ( const Cell & start )
 //-------------------------------------------------------------------------------------------------
 
 
+template < class manif_type >
 inline void progress_fill_60
 (	Cell & AB, Cell & BC, const Cell & CA, const Cell & B,
-	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud     )
+	typename manif_type::metric_tree & cloud               )
 // hidden in anonymous namespace
 
 {	AB.remove_from_mesh ( progress_interface );
 	BC.remove_from_mesh ( progress_interface );
+	// optimize map access in statements below !!
 	assert ( AB.core->hook.find(tag::normal_vector) != AB.core->hook.end() );
 	assert ( BC.core->hook.find(tag::normal_vector) != BC.core->hook.end() );
-	// optimize map access in two statements below !!
 	delete static_cast < std::vector < double > * > ( AB.core->hook[tag::normal_vector] );
 	delete static_cast < std::vector < double > * > ( BC.core->hook[tag::normal_vector] );
 	AB.core->hook.erase ( tag::normal_vector );
 	BC.core->hook.erase ( tag::normal_vector );
-	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
-	               ( B.core->hook[tag::node_in_cloud] )                               );
+	cloud.remove ( static_cast < typename manif_type::metric_tree::Node * >
+	               ( B.core->hook[tag::node_in_cloud] )                    );
 	B.core->hook.erase ( tag::node_in_cloud );  // optimize !
 	Cell new_tri ( tag::triangle, AB, BC, CA );
 	
@@ -967,10 +1105,11 @@ inline void glue_two_segs_common
 	Cell CB = BC.reverse();
 	AD.add_to_mesh ( progress_interface );
 	CB.add_to_mesh ( progress_interface );
+	// optimize map access in statements below !!
 	assert ( AB.core->hook.find(tag::normal_vector) != AB.core->hook.end() );
 	assert ( CD.core->hook.find(tag::normal_vector) != CD.core->hook.end() );
-	delete static_cast < std::vector < double > * > ( AB.core->hook[tag::normal_vector] );  // optimize !
-	delete static_cast < std::vector < double > * > ( CD.core->hook[tag::normal_vector] );  // optimize !
+	delete static_cast < std::vector < double > * > ( AB.core->hook[tag::normal_vector] );
+	delete static_cast < std::vector < double > * > ( CD.core->hook[tag::normal_vector] );
 	AB.core->hook.erase ( tag::normal_vector );
 	CD.core->hook.erase ( tag::normal_vector );
 	// build normals for two newly added segments AD and CB
@@ -981,28 +1120,29 @@ inline void glue_two_segs_common
 //-------------------------------------------------------------------------------------------------
 
 
+template < class manif_type >
 inline Cell glue_two_segs_S
 (	Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD,
-	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud             )
+	typename manif_type::metric_tree & cloud                       )
 // hidden in anonymous namespace
 
 // see paragraph 12.8 in the manual
 
 // progress_interface.cell_in_front_of(B) may have tip C
-// that is, BC may belong already to 'progress_progress_interface'
+// that is, BC may belong already to 'progress_interface'
 
-{	Cell AD ( tag::segment, A.reverse(), D );
-	Cell AC ( tag::segment, A.reverse(), C );
+{	Cell AD ( tag::segment, A.reverse(), D );  // spin !!
+	Cell AC ( tag::segment, A.reverse(), C );  // spin !!
 	Cell BC = progress_interface.cell_in_front_of(B);
 	if ( BC.tip() == C )
-	{	progress_fill_60 ( AB, BC, AC.reverse(), B, cloud );
+	{	progress_fill_60 < manif_type > ( AB, BC, AC.reverse(), B, cloud );
 		AC.add_to_mesh ( progress_interface );
 		build_one_normal ( A, C, AC );  // based on previous segment
-		progress_fill_60 ( AC, CD, AD.reverse(), C, cloud );
+		progress_fill_60 < manif_type > ( AC, CD, AD.reverse(), C, cloud );
 		AD.add_to_mesh ( progress_interface );
 		build_one_normal ( A, D, AD );  }  // based on previous segment
 	else
-	{	BC = Cell ( tag::segment, B.reverse(), C );
+	{	BC = Cell ( tag::segment, B.reverse(), C );  // spin !!
 		Cell ABC ( tag::triangle, AB, BC, AC.reverse() );
 		Cell ACD ( tag::triangle, AC, CD, AD.reverse() );
 		ABC.add_to_mesh ( mesh_under_constr );
@@ -1013,9 +1153,10 @@ inline Cell glue_two_segs_S
 //-------------------------------------------------------------------------------------------------
 
 
+template < class manif_type >
 inline Cell glue_two_segs_Z
 (	Cell & A, Cell & B, Cell & AB, Cell & C, Cell & D, Cell & CD,
-	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud      )
+	typename manif_type::metric_tree & cloud                      )
 // hidden in anonymous namespace
 
 // see paragraph 12.8 in the manual
@@ -1023,18 +1164,18 @@ inline Cell glue_two_segs_Z
 // progress_interface.cell_behind(A) may have base D
 // that is, DA may belong already to 'progress_interface'
 
-{	Cell BC ( tag::segment, B.reverse(), C );
-	Cell DB ( tag::segment, D.reverse(), B );
+{	Cell BC ( tag::segment, B.reverse(), C );  // spin !!
+	Cell DB ( tag::segment, D.reverse(), B );  // spin !!
 	Cell DA = progress_interface.cell_behind(A);
 	if ( DA.base().reverse() == D )
-	{	progress_fill_60 ( DA, AB, DB.reverse(), A, cloud );
+	{	progress_fill_60 < manif_type > ( DA, AB, DB.reverse(), A, cloud );
 		DB.add_to_mesh ( progress_interface );
 		build_one_normal ( D, B, DB );  // based on previous segment
-		progress_fill_60 ( CD, DB, BC, D, cloud );
+		progress_fill_60 < manif_type > ( CD, DB, BC, D, cloud );
 		BC.reverse().add_to_mesh ( progress_interface );
 		build_one_normal ( B, C, BC );  }  // based on previous segment
 	else
-	{	DA = Cell ( tag::segment, D.reverse(), A );
+	{	DA = Cell ( tag::segment, D.reverse(), A );  // spin !!
 		Cell ABD ( tag::triangle, AB, DB.reverse(), DA );
 		Cell BCD ( tag::triangle, BC, CD, DB );
 		ABD.add_to_mesh ( mesh_under_constr );
@@ -1046,21 +1187,23 @@ inline Cell glue_two_segs_Z
 //-------------------------------------------------------------------------------------------------
 
 
+template < class manif_type >
 inline void progress_fill_last_triangle
 (	const Cell & A, const Cell & B, const Cell & C, Cell & AB, Cell & BC, Cell & CA,
-	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud                                )
+	typename manif_type::metric_tree & cloud                                         )
 // hidden in anonymous namespace
 
-{	progress_fill_60 ( AB, BC, CA, B, cloud );
+{	progress_fill_60 < manif_type > ( AB, BC, CA, B, cloud );
 	CA.remove_from_mesh ( progress_interface );
+	// optimize map access in statements below !!
 	assert ( CA.core->hook.find(tag::normal_vector) != CA.core->hook.end() );
-	delete static_cast < std::vector < double > * > ( CA.core->hook[tag::normal_vector] );  // optimize !
+	delete static_cast < std::vector < double > * > ( CA.core->hook[tag::normal_vector] );
 	CA.core->hook.erase ( tag::normal_vector );
-	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
-	               ( A.core->hook[tag::node_in_cloud] )                              );
+	cloud.remove ( static_cast < typename manif_type::metric_tree::Node * >
+	               ( A.core->hook[tag::node_in_cloud] )                     );
 	A.core->hook.erase ( tag::node_in_cloud );  // optimize !
-	cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
-	               ( C.core->hook[tag::node_in_cloud] )                              );
+	cloud.remove ( static_cast < typename manif_type::metric_tree::Node * >
+	               ( C.core->hook[tag::node_in_cloud] )                     );
 	C.core->hook.erase ( tag::node_in_cloud );  // optimize !
 	if ( A.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( A );
 	if ( C.is_inner_to ( mesh_under_constr ) ) mesh_under_constr.baricenter ( C );         }
@@ -1068,9 +1211,11 @@ inline void progress_fill_last_triangle
 //-------------------------------------------------------------------------------------------------
 
 
+template < class manif_type >
 void progress_relocate
 (	const Cell & P, size_t n, std::vector<double> & normal_dir,
-	std::set<Cell> & set_of_ver, MetricTree<Cell,Manifold::Euclid::SqDist> & cloud )
+	std::set < typename manif_type::cell_with_spin > & set_of_ver,
+	typename manif_type::metric_tree & cloud                      )
 // hidden in anonymous namespace
 
 // re-compute the placement of a newly created vertex
@@ -1078,19 +1223,21 @@ void progress_relocate
 // vertex has been located according to two segments, from angles_120 :   n == 2
 // or according to only one segment, if built from a brand new triangle : n == 1
 	
-// we compute here 'set_of_ver' (which is the set of all vertices in the cloud
-// close enough to 'ver') and keep it for future use in 'check_touching'
+// we compute here 'set_of_ver'
+// (which is the set of all vertices in the cloud close enough to 'ver')
+// and keep it for future use in 'check_touching'
 
 {	// make a list (using a set) of nearby points
 	// build a vector of segments from it
 	// relocate point P by averaging all normals
 
-	std::list < Cell > list_of_ver =
+	std::list < typename manif_type::cell_with_spin > list_of_ver =
 		cloud.find_close_neighbours_of ( P, progress_long_dist );
 	// P has not been added to the cloud yet, so it will not show up in 'list_of_ver'
 	set_of_ver.clear();
-	for ( std::list<Cell>::const_iterator it = list_of_ver.begin();
-        it != list_of_ver.end(); it++                                    )
+	for ( typename std::list < typename  manif_type::cell_with_spin >
+					::const_iterator it = list_of_ver.begin();
+        it != list_of_ver.end(); it++                               )
 		set_of_ver.insert ( *it );
 
 	std::vector < Cell > vector_of_seg;
@@ -1100,7 +1247,7 @@ void progress_relocate
 	{	Cell A = *it;
 		Cell AB = progress_interface.cell_in_front_of ( A );
 		if ( set_of_ver.find ( AB.tip() ) != set_of_ver.end() )
-		{	vector_of_seg.push_back ( AB );                        }  }
+			vector_of_seg.push_back ( AB );                        }
 
 	if ( vector_of_seg.empty() ) return;
 
@@ -1124,7 +1271,7 @@ void progress_relocate
 			normal_dir[i] *= -1.;                             }
 	  improve_normal ( A, B, tangent_dir, normal_dir );  // modifies normal_dir
 		kept_seg.core->hook[tag::normal_vector] = static_cast < void * >
-			( new std::vector < double > { normal_dir } );  // optimize !
+			( new std::vector < double > { normal_dir } );  // optimize !!
 		Cell ret = build_normals ( kept_seg );
 		assert ( ret == kept_seg );                                           }
 
@@ -1156,9 +1303,11 @@ void progress_relocate
 //-------------------------------------------------------------------------------------------------
 
 
+template < class manif_type >
 inline bool check_touching
-(	Cell & ver, std::set<Cell> & set_of_ver, Cell & point_120, Cell & stop_point_120,
-	MetricTree<Cell,Manifold::Euclid::SqDist> & cloud                                 )
+(	Cell & ver, std::set < typename manif_type::cell_with_spin > & set_of_ver,
+	Cell & point_120, Cell & stop_point_120,
+	typename manif_type::metric_tree & cloud                                  )
 // hidden in anonymous namespace
 
 // analyse position of recently built vertex 'ver' relatively to other vertices on the interface
@@ -1167,8 +1316,9 @@ inline bool check_touching
 
 // return true if a touch was detected and the corresponding pieces have been merged
 
-// we take advantage of 'set_of_ver' which is the set of all vertices in the cloud
-// close enough to 'ver', previously computed in 'relocate'
+// we take advantage of 'set_of_ver'
+// which is the set of all vertices in the cloud close enough to 'ver',
+// previously computed in 'progress_relocate'
 // we can destroy it here, it won't be used anymore
 	
 // see paragraph 12.8 in the manual
@@ -1198,7 +1348,8 @@ inline bool check_touching
 	{	Cell new_ver = *it;
 		if ( new_ver == next_next_ver )
 		{	Cell new_seg ( tag::segment, ver.reverse(), new_ver );
-		  progress_fill_60 ( next_seg, next_next_seg, new_seg.reverse(), next_ver, cloud );
+		  progress_fill_60 < manif_type >
+				( next_seg, next_next_seg, new_seg.reverse(), next_ver, cloud );
 			new_seg.add_to_mesh ( progress_interface );
 			build_one_normal ( ver, new_ver, new_seg );  // based on previous segment
 			assert ( point_120 != next_ver );
@@ -1207,7 +1358,8 @@ inline bool check_touching
 			set_of_ver.erase ( it );  goto start_again;                                       }
 		if ( new_ver == prev_prev_ver )
 		{	Cell new_seg ( tag::segment, new_ver.reverse(), ver );
-			progress_fill_60 ( prev_prev_seg, prev_seg, new_seg.reverse(), prev_ver, cloud );
+			progress_fill_60 < manif_type >
+				( prev_prev_seg, prev_seg, new_seg.reverse(), prev_ver, cloud );
 			new_seg.add_to_mesh ( progress_interface );
 			build_one_normal ( new_ver, ver, new_seg );  // based on previous segment
 			if ( point_120 == prev_ver )
@@ -1252,23 +1404,24 @@ inline bool check_touching
 		if ( Manifold::working.dist_sq ( one, next_ver ) < progress_sq_long_dist )
 		{	// std::cout << "touching interface S fill" << std::endl << std::flush;
 			//  progress_interface.cell_in_front_of(next_ver) may have tip 'one'
-			Cell ver_two = glue_two_segs_S
+			Cell ver_two = glue_two_segs_S < manif_type >
 				( ver, next_ver, next_seg, one, two, one_two, cloud );
 			Cell ver_three ( tag::segment, ver.reverse(), three );
-			progress_fill_60 ( ver_two, two_three, ver_three.reverse(), two, cloud );
+			progress_fill_60 < manif_type >
+				( ver_two, two_three, ver_three.reverse(), two, cloud );
 			ver_three.add_to_mesh ( progress_interface );
 			build_one_normal ( ver, three, ver_three );  // based on previous segment
 			return true;                                                                }
 		if ( Manifold::working.dist_sq ( two, prev_ver ) < progress_sq_long_dist )
 		{	// std::cout << "touching interface Z fill" << std::endl << std::flush;
 			//  progress_interface.cell_behind(prev_ver) may have base 'three'
-			Cell two_ver = glue_two_segs_Z
+			Cell two_ver = glue_two_segs_Z < manif_type >
 				( prev_ver, ver, prev_seg, two, three, two_three, cloud );
 			Cell one_ver ( tag::segment, one.reverse(), ver );
-			progress_fill_60 ( one_two, two_ver, one_ver.reverse(), two, cloud );
+			progress_fill_60 < manif_type > ( one_two, two_ver, one_ver.reverse(), two, cloud );
 			one_ver.add_to_mesh ( progress_interface );
 			build_one_normal ( one, ver, one_ver );  // based on previous segment
-			return true;                                                            }    }
+			return true;                                                                         }  }
 	else  // two vertices
 	{	// if 'two' is not next to 'one' within the interface, switch them
 		Cell seg = progress_interface.cell_in_front_of (one);
@@ -1288,13 +1441,13 @@ inline bool check_touching
 		if ( Manifold::working.dist_sq ( one, next_ver ) < progress_sq_long_dist )
 		{	// std::cout << "touching interface S" << std::endl << std::flush;
 			//  progress_interface.cell_in_front_of(next_ver) may have tip 'one'
-			glue_two_segs_S ( ver, next_ver, next_seg, one, two, one_two, cloud );
-			return true;                                                             }
+			glue_two_segs_S < manif_type > ( ver, next_ver, next_seg, one, two, one_two, cloud );
+			return true;                                                                         }
 		if ( Manifold::working.dist_sq ( two, prev_ver ) < progress_sq_long_dist )
 		{	// std::cout << "touching interface Z" << std::endl << std::flush;
 			//  progress_interface.cell_behind(prev_ver) may have base 'two'
-			glue_two_segs_Z ( prev_ver, ver, prev_seg, one, two, one_two, cloud );
-			return true;                                                            }  }
+			glue_two_segs_Z < manif_type > ( prev_ver, ver, prev_seg, one, two, one_two, cloud );
+			return true;                                                                         }  }
 
 	return false;  // almost touch, no merge
 	
@@ -1465,7 +1618,7 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 	assert ( ( winner == 1 ) or ( winner == -1 ) );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ ) best_tangent[i] *= winner;
 	progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
-	                        tag::stop_at, stop   );
+	                        tag::stop_at, stop                                    );
 
 }  // end of progressive_construct
 
@@ -1562,6 +1715,10 @@ void progressive_construct
 //-------------------------------------------------------------------------------------------------
 
 
+// manif_type is useful for distinguishing between
+// a quotient manifold and other types of manifold
+
+template < class manif_type >
 void progressive_construct
 (	Mesh & msh, const tag::StartAt &, Cell start,
 	const tag::Towards &, std::vector<double> & normal,
@@ -1585,7 +1742,7 @@ void progressive_construct
 	} // just a block of code 
 	mesh_under_constr = msh;
 	Cell vertex_recently_built ( tag::non_existent );
-	std::set < Cell > set_of_nearby_vertices;
+	std::set < typename manif_type::cell_with_spin > set_of_nearby_vertices;
 	// vertices close to vertex_recently_built
 
 	if ( start.dim() != 1 )
@@ -1596,10 +1753,10 @@ void progressive_construct
 	assert ( msh.dim() == 2 );
 	assert ( start.belongs_to ( progress_interface, tag::same_dim, tag::oriented ) );
 	
-	Manifold::Euclid::SqDist square_dist;
+	typename manif_type::sq_dist square_dist;
 	desired_len_at_point = desired_length ( start.tip() );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-	MetricTree<Cell,Manifold::Euclid::SqDist> cloud ( square_dist, desired_len_at_point, 6. );
+	typename manif_type::metric_tree cloud ( square_dist, desired_len_at_point, 6. );
 	// first argument : a callable object returning the square of the distance
 	// between two points, measured in the surrounding, Euclidian, space
 	// second argument : distance for rank zero nodes, which is a mere hint
@@ -1610,7 +1767,8 @@ void progressive_construct
 	{ // just a block of code for hiding variables
 	size_t n = 0;
   CellIterator it = progress_interface.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++, n++ ) progress_add_point ( *it, cloud );
+	for ( it.reset(); it.in_range(); it++, n++ )
+		progress_add_point < manif_type > ( *it, cloud );
 	} // just a block of code for hiding variables
 
 	{ // just a block of code for hiding variables
@@ -1677,7 +1835,7 @@ angles_60 :
 			Cell ver_next_to_B = seg_next_to_B.tip();
 			set_of_nearby_vertices.erase ( point_60 );
 			if ( ver_next_to_B == A )  // this is the last triangle in this piece of progress_interface
-			{	progress_fill_last_triangle
+			{	progress_fill_last_triangle < manif_type >
 					( A, point_60, B, prev_seg, next_seg, seg_next_to_B, cloud );
 				#ifndef NDEBUG
 				std::cout << "shrinking triangle " << ++current_name << std::endl;
@@ -1685,7 +1843,7 @@ angles_60 :
 				#endif
 				goto search_for_start;  	                                                        }
 			Cell AB ( tag::segment, A.reverse(), B );
-			progress_fill_60 ( prev_seg, next_seg, AB.reverse(), point_60, cloud );
+			progress_fill_60 < manif_type > ( prev_seg, next_seg, AB.reverse(), point_60, cloud );
 			AB.add_to_mesh ( progress_interface );
 			build_one_normal ( A, B, AB );  // based on previous segment
 			#ifndef NDEBUG
@@ -1713,8 +1871,9 @@ angles_60 :
 	{ // just a block of code for hiding 'touch'
 	Function x = Manifold::working.coordinates()[0];
 	Function y = Manifold::working.coordinates()[1];
-	bool touch = check_touching ( vertex_recently_built, set_of_nearby_vertices,
-                                point_120, stop_point_120, cloud               );
+	bool touch = check_touching < manif_type >
+		( vertex_recently_built, set_of_nearby_vertices,
+      point_120, stop_point_120, cloud              );
 	vertex_recently_built = Cell ( tag::non_existent );
 	if ( touch )
 	{	// if ( current_name == 296 ) return;
@@ -1761,12 +1920,15 @@ angles_60 :
 				if ( Manifold::working.dist_sq ( A, B ) <
 						 Manifold::working.dist_sq ( point_120, ver_next_to_B ) )
 				{	Cell AB ( tag::segment, A.reverse(), B );
-					progress_fill_60 ( prev_seg, next_seg, AB.reverse(), point_120, cloud );
-					progress_fill_60 ( seg_next_to_B, seg_prev_to_A, AB, ver_prev_to_A, cloud ); }
+					progress_fill_60 < manif_type >
+						( prev_seg, next_seg, AB.reverse(), point_120, cloud );
+					progress_fill_60 < manif_type >
+						( seg_next_to_B, seg_prev_to_A, AB, ver_prev_to_A, cloud );  }
 				else
 				{	Cell seg ( tag::segment, point_120.reverse(), ver_next_to_B );
-					progress_fill_60 ( next_seg, seg_next_to_B, seg.reverse(), B, cloud );
-					progress_fill_60 ( seg_prev_to_A, prev_seg, seg, A, cloud );            }
+					progress_fill_60 < manif_type >
+						( next_seg, seg_next_to_B, seg.reverse(), B, cloud );
+					progress_fill_60 < manif_type > ( seg_prev_to_A, prev_seg, seg, A, cloud );  }
 				goto search_for_start;                                                             }
 			Cell P ( tag::vertex );  vertex_recently_built = P;
 			// now we want to place this new vertex accordingly
@@ -1803,16 +1965,16 @@ angles_60 :
 			next_seg.core->hook.erase ( tag::normal_vector );
 			AP.add_to_mesh ( progress_interface );
 			PB.add_to_mesh ( progress_interface );
-			cloud.remove ( static_cast < MetricTree<Cell,Manifold::Euclid::SqDist>::Node * >
-			               ( point_120.core->hook[tag::node_in_cloud] )                      );
+			cloud.remove ( static_cast < typename manif_type::metric_tree::Node * >
+			               ( point_120.core->hook[tag::node_in_cloud] )            );
 			point_120.core->hook.erase ( tag::node_in_cloud );  // optimize !
 			build_one_normal ( A, P, AP );  // based on previous segment
 			build_one_normal ( P, B, PB );  // based on previous segment
-			progress_relocate ( P, 2, sum_of_nor, set_of_nearby_vertices, cloud );
+			progress_relocate < manif_type > ( P, 2, sum_of_nor, set_of_nearby_vertices, cloud );
 			// find more vertices close to P and take them all into account; modifies sum_of_nor
 			assert ( prev_seg.tip() == point_120 );
 			if ( point_120 .is_inner_to ( mesh_under_constr ) ) msh.baricenter ( point_120 );
-			progress_add_point ( P, cloud );
+			progress_add_point < manif_type > ( P, cloud );
 			#ifndef NDEBUG
 			std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
 			if ( current_name == stopping_criterion ) return;
@@ -1859,9 +2021,9 @@ angles_60 :
 	PB.add_to_mesh ( progress_interface );
 	build_one_normal ( point_120, P, AP );  // based on previous segment
 	build_one_normal ( P, B, PB );  // based on previous segment
-	progress_relocate ( P, 1, f, set_of_nearby_vertices, cloud );
+	progress_relocate < manif_type > ( P, 1, f, set_of_nearby_vertices, cloud );
 	// find more vertices close to P and take them all into account; modifies f
-	progress_add_point ( P, cloud );
+	progress_add_point < manif_type > ( P, cloud );
 	stop_point_120 = progress_interface.cell_in_front_of(B).tip();
 
 	#ifndef NDEBUG
@@ -1959,8 +2121,8 @@ inline void progressive_construct
 		CA.reverse().add_to_mesh ( interf, tag::do_not_bother );
 		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 		update_info_connected_one_dim ( interf, B, B );
-		progressive_construct ( msh, tag::start_at, AB.reverse(), tag::towards, normal,
-		                        tag::boundary, interf                                  );         }
+		progressive_construct < Manifold::Type::Euclidian >
+			( msh, tag::start_at, AB.reverse(), tag::towards, normal, tag::boundary, interf );     }
 	// end of  else  with  msh.dim() == 2
 	
 	if ( not check_and_switch ) return;
@@ -2012,8 +2174,8 @@ inline void progressive_construct
 	std::vector < double > nor =
 		compute_tangent_vec ( tag::at_point, A, tag::orthogonal_to, tan );
 
-	progressive_construct ( msh, tag::start_at, start, tag::towards, nor,
-	                        tag::boundary, interface                       );
+	progressive_construct < Manifold::Type::Euclidian >
+		( msh, tag::start_at, start, tag::towards, nor, tag::boundary, interface );
 
 	if ( not check_and_switch ) return;
 
@@ -2032,8 +2194,8 @@ inline void progressive_construct
 	Mesh msh2 ( tag::whose_core_is,   // of dimesion two
 		new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
 		tag::freshly_created, tag::is_positive                                      );
-	progressive_construct ( msh2, tag::start_at, start.reverse(), tag::towards, nor,
-	                        tag::boundary, interf_rev                                );	
+	progressive_construct < Manifold::Type::Euclidian >
+		( msh2, tag::start_at, start.reverse(), tag::towards, nor, tag::boundary, interf_rev );	
 	// join everything to get a mesh on the entire manifold
 	Mesh glob ( tag::join, msh, msh2 );
 
@@ -2070,9 +2232,8 @@ void progressive_construct
 	Function y = Manifold::working.coordinates()[1];
 	std::vector < double > nor { y(A) - y(B), x(B) - x(A) };   // rotate with 90 deg
 
-	progressive_construct ( msh, tag::start_at, start, tag::towards, nor,
-	                        tag::boundary, interface                      );	
-}
+	progressive_construct < Manifold::Type::Euclidian >
+		( msh, tag::start_at, start, tag::towards, nor, tag::boundary, interface );           }
 	
 //-------------------------------------------------------------------------------------------------
 
@@ -2199,7 +2360,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 
 :	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
-
+ 	
 {	assert ( Manifold::working.coordinates().nb_of_components() == this->dim() + 1 );
 	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
@@ -2497,9 +2658,58 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
 	desired_length = length;
 
-	progressive_construct ( *this, tag::start_at, start, tag::towards, normal,
-	                        tag::boundary, interface                           );  }
+	progressive_construct < Manifold::Type::Euclidian >
+		( *this, tag::start_at, start, tag::towards, normal, tag::boundary, interface );  }
 	
 //-------------------------------------------------------------------------------------------------
 
 
+void print_spin ( Function::CompositionOfActions a )
+
+{	Manifold::Quotient * manif_q = dynamic_cast
+		< Manifold::Quotient* > ( Manifold::working.core );
+	assert ( manif_q );
+	Function xy = manif_q->base_space.coordinates();
+	Function x = xy[0], y = xy[1];
+	size_t n = manif_q->actions.size();
+	assert ( n == manif_q->spins.size() );
+	std::cout << "(";
+	for ( size_t i = 0; i < n; i++ )
+	{	Function::Action & g = manif_q->actions[i];
+		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+		if ( itt == a.index_map.end() )
+		{	std::cout << "0,"; continue;  }
+		short int exp = itt->second;
+		assert ( exp != 0 );
+		std::cout << exp << ",";                                                            }
+	std::cout << ")" << std::endl;                                                           }
+
+
+void test_sq_dist ()
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	Cell A ( tag::vertex );  x(A) = 0.; y(A) = 0.;
+	Cell B ( tag::vertex );  x(B) = 0.1;  y(B) = 0.7;
+
+	Manifold::Type::Quotient::sq_dist sd;
+
+	std::pair < Cell, Function::CompositionOfActions > AA { A, 0 };
+	std::pair < Cell, Function::CompositionOfActions > BB { B, 0 };
+	double dist2 = sd ( AA, BB );
+	std::cout << dist2 << std::endl;
+	print_spin ( BB.second );
+}
+
+
+
+}  // end of  namespace maniFEM

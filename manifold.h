@@ -208,6 +208,9 @@ class Manifold
 
 	class Euclid;  class Implicit;  class Parametric;  class Quotient;
 
+	struct Type  // used in progressive.cpp
+	{	class Euclidian;  class Quotient;  };
+
 };  // end of  class Manifold
 
 
@@ -641,32 +644,10 @@ class Manifold::Euclid : public Manifold::Core
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core, here execution forbidden
 
-	class SqDist;
-	// a callable object returning the square of the distance between two points
-	// used for MetricTree, see paragraph 12.10 in the manual
-
 };  // end of class Manifold::Euclid
 
 //-----------------------------------------------------------------------------------------
 
-
-class Manifold::Euclid::SqDist
-
-// a callable object returning the square of the distance between two points
-// used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
-
-{	public :
-
-	inline double operator() ( const Cell & A, const Cell & B )
-	{	double res = 0.;
-		const size_t nc = Manifold::working.coordinates().nb_of_components();
-		for ( size_t i = 0; i < nc; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			double tmp = x(B) - x(A);
-			res += tmp*tmp;                                  }
-		return res;                                                            }
-
-};  // end of  class Manifold::Euclid::SqDist
 
 // when we first declare a Manifold::Euclid, coord_field and coord_func will be nullptr
 // immediately after declaring the manifold (in main),

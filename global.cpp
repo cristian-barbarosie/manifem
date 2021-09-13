@@ -952,6 +952,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	std::vector < double > coords_base, coords_tip;
 	std::vector < std::vector < short int > > directions
 		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
 	CellIterator it = this->iterator ( tag::over_segments );
   size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
 	for ( it.reset() ; it.in_range(); it++ )

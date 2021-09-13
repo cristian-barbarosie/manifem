@@ -118,6 +118,7 @@ class MetricTree
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 inline MetricTree<Point,SqDist>::MetricTree ( SqDist sd, double d0, double r )
 :	squared_distance ( sd ), ratio { r }, dist_rank_zero { d0 }, sq_dist_rank_zero { d0 * d0 },
@@ -126,6 +127,7 @@ inline MetricTree<Point,SqDist>::MetricTree ( SqDist sd, double d0, double r )
 {	}
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 inline double MetricTree<Point,SqDist>::get_dist ( int r )
@@ -140,6 +142,7 @@ inline double MetricTree<Point,SqDist>::get_dist ( int r )
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 inline double MetricTree<Point,SqDist>::get_sq_dist ( int r )
 {	if ( r == 0 ) return this->sq_dist_rank_zero;
@@ -152,6 +155,7 @@ inline double MetricTree<Point,SqDist>::get_sq_dist ( int r )
 	return this->sq_dist_neg_rank[rr];                    }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 inline void MetricTree<Point,SqDist>::register_rank ( int r )
@@ -168,6 +172,7 @@ inline void MetricTree<Point,SqDist>::register_rank ( int r )
 			this->sq_dist_neg_rank.push_back ( this->sq_dist_neg_rank.back() / this->sq_ratio );  }  }   }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 class MetricTree<Point,SqDist>::Node
@@ -208,6 +213,7 @@ class MetricTree<Point,SqDist>::Node
 
 //-----------------------------------------------------------------------------------------------//
 
+
 namespace {
 double cloud_power ( double x, int exp )
 {	if ( exp == 0 )  return 1.;
@@ -218,6 +224,7 @@ double cloud_power ( double x, int exp )
 }  //  end of anonymous namespace
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 void MetricTree<Point,SqDist>::Node::promote ( MetricTree<Point,SqDist> * cloud )
@@ -250,6 +257,7 @@ void MetricTree<Point,SqDist>::Node::promote ( MetricTree<Point,SqDist> * cloud 
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 typename MetricTree<Point,SqDist>::Node * MetricTree<Point,SqDist>::add ( const Point & P )
 
@@ -260,6 +268,7 @@ typename MetricTree<Point,SqDist>::Node * MetricTree<Point,SqDist>::add ( const 
 	this->add(N);  return N;                                                           }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 void MetricTree<Point,SqDist>::add ( MetricTree<Point,SqDist>::Node * nod )
@@ -274,6 +283,7 @@ void MetricTree<Point,SqDist>::add ( MetricTree<Point,SqDist>::Node * nod )
 	this->add ( nod );                             }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 void MetricTree<Point,SqDist>::Node::adopt
@@ -298,6 +308,7 @@ void MetricTree<Point,SqDist>::Node::adopt
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 inline void MetricTree<Point,SqDist>::Node::raw_adopt
 (	typename MetricTree<Point,SqDist>::Node * nod, MetricTree<Point,SqDist> * cloud )
@@ -309,6 +320,7 @@ inline void MetricTree<Point,SqDist>::Node::raw_adopt
 	nod->loc_in_parents_list = this->children.begin();  }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 inline void MetricTree<Point,SqDist>::promote_children_of
@@ -337,6 +349,7 @@ inline void MetricTree<Point,SqDist>::promote_children_of
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 void MetricTree<Point,SqDist>::Node::adopt_children_of
 ( MetricTree<Point,SqDist>::Node * nod, MetricTree<Point,SqDist> * cloud )
@@ -361,6 +374,7 @@ void MetricTree<Point,SqDist>::Node::adopt_children_of
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 inline void MetricTree<Point,SqDist>::remove
 ( MetricTree<Point,SqDist>::Node * nod )
@@ -368,6 +382,7 @@ inline void MetricTree<Point,SqDist>::remove
 {	nod->remove_from ( this );  }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 void MetricTree<Point,SqDist>::Node::remove_from
@@ -420,6 +435,7 @@ void MetricTree<Point,SqDist>::Node::remove_from
 
 //-----------------------------------------------------------------------------------------------//
 
+
 template < typename Point, typename SqDist >
 inline std::list < Point > MetricTree<Point,SqDist>::find_close_neighbours_of
 ( const Point & P, double dd )
@@ -450,6 +466,7 @@ void MetricTree<Point,SqDist>::Node::get_close_neighbours_of
 		(*it)->get_close_neighbours_of ( P, dd, ll, cloud );                         }
 
 //-----------------------------------------------------------------------------------------------//
+
 
 template < typename Point, typename SqDist >
 	size_t MetricTree<Point,SqDist>::Node::nb_of_nodes ( )
