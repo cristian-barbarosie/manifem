@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.09.09
+//   mesh.h  2021.09.14
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
@@ -1536,6 +1536,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void draw_ps ( std::string file_name );
 	void draw_ps ( std::string file_name,
+	               const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	               const tag::OverRegion &, const tag::Util::InequalitySet & constraints       );
+	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::OverRegion &,
 	               const tag::Util::InequalitySet & constraints );
 	void draw_ps ( std::string file_name,
@@ -1544,6 +1547,21 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::TwoGenerators &, const tag::OverRegion &,
 	               const tag::Util::InequalitySet & constraints                             );
+	inline void draw_ps ( std::string file_name,
+	           const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
+	                                    const tag::Util::InequalitySet & c2                );
+	inline void draw_ps ( std::string file_name,
+	           const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
+	                                    const tag::Util::InequalitySet & c2,
+	                                    const tag::Util::InequalitySet & c3                );
+	inline void draw_ps ( std::string file_name,
+	           const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
+	                                    const tag::Util::InequalitySet & c2,
+	                                    const tag::Util::InequalitySet & c3,
+	                                    const tag::Util::InequalitySet & c4                );
 	inline void draw_ps ( std::string file_name,
 	                      const tag::Unfold &, const tag::OverRegion &,
 	                      const tag::Util::InequalitySet & c1,
