@@ -97,6 +97,11 @@ class Manifold::Type::Quotient
 	typedef std::pair < Cell, Function::CompositionOfActions > cell_with_spin;
 	typedef MetricTree < cell_with_spin, sq_dist > metric_tree;
 };
+
+// in the above, we don't really need a MetricTree of cells_with_spin
+// MetricTree < Cell, sq_dist >  would do as well
+// we only need the spin for searching close neighbours of a given vertex
+// in that situation, we need 'sq_dist' to keep the "winning" spin, see below
 	
 //-------------------------------------------------------------------------------------------------
 
@@ -160,11 +165,11 @@ class Manifold::Type::Quotient::sq_dist
 			for ( size_t d = 0; d < 4; d++ )
 			{	if ( d == 2 ) size_of_round++;
 				for ( size_t i = 0; i < size_of_round; i++ )
-				{	Function::CompositionOfActions a = ii*g1 + jj*g2;
-					double di = this->dist2 ( A.first, B.first, a, coords_Eu, coords_q );
+				{	Function::CompositionOfActions s = ii*g1 + jj*g2;
+					double di = this->dist2 ( A.first, B.first, s, coords_Eu, coords_q );
 					if ( di < dist )
 					{	dist = di;
-						B.second = a;
+						B.second = s;
 						unsuccessful_tries = 0;  }
 					ii += directions[d][0];
 					jj += directions[d][1];                                            }  }
