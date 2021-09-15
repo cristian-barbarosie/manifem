@@ -1536,7 +1536,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void draw_ps ( std::string file_name );
 	void draw_ps ( std::string file_name,
-	               const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	               const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
 	               const tag::OverRegion &, const tag::Util::InequalitySet & constraints       );
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::OverRegion &,
@@ -1548,16 +1548,16 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	               const tag::Unfold &, const tag::TwoGenerators &, const tag::OverRegion &,
 	               const tag::Util::InequalitySet & constraints                             );
 	inline void draw_ps ( std::string file_name,
-	           const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	           const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2                );
 	inline void draw_ps ( std::string file_name,
-	           const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	           const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2,
 	                                    const tag::Util::InequalitySet & c3                );
 	inline void draw_ps ( std::string file_name,
-	           const tag::Unfold &, const std::vector < Function::CompositionOfActions > &,
+	           const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2,
 	                                    const tag::Util::InequalitySet & c3,

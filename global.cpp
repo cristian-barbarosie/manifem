@@ -1,5 +1,5 @@
 
-// global.cpp 2021.09.06
+// global.cpp 2021.09.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -953,6 +953,8 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	std::vector < std::vector < short int > > directions
 		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
 	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
+	// and perhaps in other places
+
 	CellIterator it = this->iterator ( tag::over_segments );
   size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
 	for ( it.reset() ; it.in_range(); it++ )
@@ -1071,7 +1073,146 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
   file_ps << 1.5 / scale_factor << " setlinewidth 0 setgray" << std::endl;
 	
+	if ( ! file_ps.good() )
+	{	std::cerr << "error writing postscript file" << std::endl;
+		exit (1);                                                   }
 
+} // end of  Mesh::draw_ps with tag::unfold and tag::two_generators
+
+//----------------------------------------------------------------------------------//
+
+
+void Mesh::draw_ps ( std::string file_name,
+         const tag::Unfold &, const std::vector < Function::CompositionOfActions > & v,
+         const tag::OverRegion &, const Function::Inequality::Set & constraints        )
+
+// we draw several translations (or, more generally, transformations)
+// of each segment, within the region described by the constraints
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	// the action group may have one or two generators
+	assert ( manif_q->actions.size() == 2 );
+	assert ( manif_q->spins.size() == 2 );
+	Function::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
+	
+	std::ofstream file_ps ( file_name );
+	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
+	file_ps	<< "you can move the shadow by simply changing the initial point" << std::endl;
+	file_ps	<< "you may also want to define a different contour path" << std::endl;
+	file_ps	<< "please erase the preamble from the end of file; erase also these four lines";
+	file_ps << std::endl << std::endl;
+						 
+	double xmin = 1.e8, xmax = -1.e8, ymin = 1.e8, ymax = -1.e8, maxside;
+
+	Cell shadow ( tag::vertex );
+	std::vector < double > coords_base, coords_tip;
+	std::vector < std::vector < short int > > directions
+		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
+	// and perhaps in other places
+
+	CellIterator it = this->iterator ( tag::over_segments );
+	for ( it.reset() ; it.in_range(); it++ )
+	{	Cell seg = *it;
+		Cell base = seg.base().reverse();
+		Cell tip  = seg.tip();
+		for ( std::vector < Function::CompositionOfActions > ::const_iterator
+						it_v = v.begin(); it_v != v.end(); it_v++                     )
+		{	Function::CompositionOfActions a = *it_v;
+			bool touches_region = false;
+			coords_base = coords_q ( base, tag::spin, a );
+			coords_Eu ( shadow ) = coords_base;
+			touches_region = touches_region or constraints.on_cell ( shadow );
+			a += seg.spin();
+			coords_tip = coords_q ( tip, tag::spin, a );
+			coords_Eu ( shadow ) = coords_tip;
+			touches_region = touches_region or constraints.on_cell ( shadow );
+			if ( touches_region )
+			{	double xx = coords_base[0], yy = coords_base[1];
+				file_ps << xx << " " << yy << " moveto" << std::endl;
+				if ( xx < xmin ) xmin = xx;
+				if ( xx > xmax ) xmax = xx;
+				if ( yy < ymin ) ymin = yy;
+				if ( yy > ymax ) ymax = yy;
+				xx = coords_tip[0];  yy = coords_tip[1];
+				file_ps << xx << " "  << yy << " lineto stroke" << std::endl;
+				if ( xx < xmin ) xmin = xx;
+				if ( xx > xmax ) xmax = xx;
+				if ( yy < ymin ) ymin = yy;
+				if ( yy > ymax ) ymax = yy;                                           }  }  }
+
+	if ( xmax-xmin < ymax-ymin ) maxside = ymax-ymin;
+	else maxside = xmax-xmin;
+	double border = 0.02*maxside;
+	double scale_factor = 500/maxside;
+	double translation_x = -scale_factor*xmin;
+	double translation_y = -scale_factor*ymin;
+
+	file_ps << std::endl << "0.5 setgray 0.03 setlinewidth" << std::endl;
+	file_ps << "newpath contour stroke" << std::endl << std::endl;
+	file_ps << "grestore" << std::endl << std::endl;
+	file_ps << "showpage" << std::endl;
+	file_ps << "%%Trailer" << std::endl;
+	file_ps << "%EOF" << std::endl << std::endl;
+
+	file_ps << "%!PS-Adobe-3.0 EPSF-3.0" << std::endl;
+	file_ps << "%%Title:                     maniFEM" << std::endl;
+	file_ps << "%%BoundingBox:  0 0 " << " " << scale_factor*(xmax-xmin+2*border)
+	        << "   " << scale_factor*(ymax-ymin+2*border) << std::endl;
+	file_ps << "%%EndComments" << std::endl;
+	file_ps << "%%BeginSetup" << std::endl;
+	file_ps << "<< /PageSize [" << scale_factor*(xmax-xmin+2*border) << " "
+	        << scale_factor*(ymax-ymin+2*border) << "] >> setpagedevice" << std::endl;
+	file_ps << "%%EndSetup" << std::endl << std::endl;
+													
+	file_ps << "/contour" << std::endl << "{ ";
+	file_ps << "/xmin {" << xmin << "} def  /xmax {" << xmax
+          << "} def  /ymin {" << ymin << "} def  /ymax {"
+          << ymax << "} def  /border {" << border << "}  def" << std::endl;
+	file_ps << "xmin border add ymin border add border 180 270 arc" << std::endl;
+	file_ps << "xmax border sub ymin lineto" << std::endl;
+	file_ps << "xmax border sub ymin border add border -90 0 arc" << std::endl;
+	file_ps << "xmax ymax border sub lineto" << std::endl;
+	file_ps << "xmax border sub ymax border sub border 0 90 arc" << std::endl;
+	file_ps << "xmin border add ymax lineto" << std::endl;
+	file_ps << "xmin border add ymax border sub border 90 180 arc" << std::endl;
+	file_ps << "xmin ymin border add lineto" << std::endl;
+	file_ps << "} def" << std::endl << std::endl;
+
+	file_ps << "/shadow" << std::endl << "{ 0 0 moveto" << std::endl << "  ";
+	coords_Eu ( shadow ) = { 0., 0. };
+	coords_base = coords_q ( shadow, tag::spin, 0 );
+	file_ps << coords_base[0] << " " << coords_base[1] << " rlineto ";
+	coords_base = coords_q ( shadow, tag::spin, 0 );
+	file_ps << coords_base[0] << " " << coords_base[1] << " rlineto ";
+	coords_base = coords_q ( shadow, tag::spin, 0 );
+	file_ps << coords_base[0] << " " << coords_base[1] << " rlineto ";
+	file_ps << "} def" << std::endl << std::endl;
+
+	file_ps << "gsave" << std::endl;
+	// file_ps << "/m{moveto}def" << std::endl;
+	// file_ps << "/l{lineto}def" << std::endl;
+	// file_ps << "/s{stroke}def" << std::endl;
+	file_ps << translation_x + scale_factor*border << " "
+	        << translation_y + scale_factor*border << " translate" << std::endl;
+	file_ps << scale_factor << " dup scale" << std::endl << std::endl;
+
+	file_ps << 3. / scale_factor << " setlinewidth 0.5 setgray contour stroke" << std::endl;
+  file_ps << "0 setgray contour clip" << std::endl;
+  file_ps << "newpath 0.6 0.8 1. setrgbcolor shadow fill" << std::endl;
+
+  file_ps << 1.5 / scale_factor << " setlinewidth 0 setgray" << std::endl;
+	
 	if ( ! file_ps.good() )
 	{	std::cerr << "error writing postscript file" << std::endl;
 		exit (1);                                                   }

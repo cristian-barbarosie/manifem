@@ -1,5 +1,5 @@
 
-// function.h 2021.09.05
+// function.h 2021.09.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2547,6 +2547,33 @@ inline Function::TakenOnCellWithSpin Function::operator()
 //----------------------------------------------------------------------------------//
 
 
+inline void Mesh::draw_ps ( std::string file_name,
+         const tag::Unfold &, const std::vector < Function::CompositionOfActions > & v,
+         const tag::OverRegion &, const tag::Util::InequalitySet & c1,
+                                  const tag::Util::InequalitySet & c2                  )
+{	this->draw_ps ( file_name, tag::unfold, v, tag::over_region, c1 && c2 );  }
+
+//----------------------------------------------------------------------------------//
+														
+inline void Mesh::draw_ps ( std::string file_name,
+         const tag::Unfold &, const std::vector < Function::CompositionOfActions > & v,
+         const tag::OverRegion &, const tag::Util::InequalitySet & c1,
+                                  const tag::Util::InequalitySet & c2,
+                                  const tag::Util::InequalitySet & c3                  )
+{	this->draw_ps ( file_name, tag::unfold, v, tag::over_region, c1 && c2 && c3 );  }
+
+//----------------------------------------------------------------------------------//
+														
+inline void Mesh::draw_ps ( std::string file_name,
+         const tag::Unfold &, const std::vector < Function::CompositionOfActions > & v,
+         const tag::OverRegion &, const tag::Util::InequalitySet & c1,
+                                  const tag::Util::InequalitySet & c2,
+                                  const tag::Util::InequalitySet & c3,
+                                  const tag::Util::InequalitySet & c4                  )
+{	this->draw_ps ( file_name, tag::unfold, v, tag::over_region, c1 && c2 && c3 && c4 );  }
+
+//----------------------------------------------------------------------------------//
+														
 inline void Mesh::draw_ps ( std::string file_name,
                             const tag::Unfold &, const tag::OverRegion &,
                             const tag::Util::InequalitySet & c1,
