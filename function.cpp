@@ -1,5 +1,5 @@
 
-// function.cpp 2021.08.29
+// function.cpp 2021.09.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -95,23 +95,27 @@ Function Function::Vector::MultiValued::JumpIsSum::component ( size_t i )
 // build a new Function::Scalar::MultiValued::JumpIsSum
 {	assert ( false );  }
 
-// forbid execution of Function::Vector::MultiValued::JumpIsLinear::component
+Function Function::Vector::MultiValued::JumpIsLinear::component ( size_t i )
+// difficult case ! it's impossible to compute separately the value of
+// a component of such a multifunction, the jump depends on all other components
+{	assert ( false );  }
+
 
 //-----------------------------------------------------------------------------------------//
 	
 
 void Function::Constant::set_value ( double v )
 // virtual from Function::Scalar
-{ this->val = v;  }
+{ this->value = v;  }
 
 double Function::Constant::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
-{ return this->val;  }
+{ return this->value;  }
 
 double Function::Constant::get_value_on_cell
 ( Cell::Core *, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 // virtual from Function::Scalar
-{ return this->val;  }
+{ return this->value;  }
 
 void Function::Sum::set_value ( double v )
 // virtual from Function::Scalar
@@ -336,16 +340,24 @@ double Function::Composition::get_value_on_cell  // virtual from Function::Scala
 ( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
 { assert ( false );  }
 	
+//-----------------------------------------------------------------------------------------//
+
+
 void Function::Scalar::MultiValued::set_value ( double v )  // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	base_scalar->set_value ( v );                                 }
+
+//-----------------------------------------------------------------------------------------//
+
 
 double Function::Scalar::MultiValued::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	return base_scalar->get_value_on_cell(cll);                   }
+
+//-----------------------------------------------------------------------------------------//
 
 
 double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual from Function::Scalar
@@ -365,6 +377,8 @@ double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual f
 		assert ( it != exp.index_map.end() );
 		val += it->second * this->beta[i];                         }
 	return val;                                                          }
+
+//-----------------------------------------------------------------------------------------//
 
 
 double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
@@ -394,12 +408,16 @@ double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
 			for ( size_t j = 0; j < abs_exp_i; j++ ) val /= alpha_i;  }  }
 	return val + this->gamma;                                             }
 
+//-----------------------------------------------------------------------------------------//
+
 
 std::vector<double> Function::Vector::MultiValued::get_value_on_cell
 ( Cell::Core * cll ) const  // virtual from Function::Vector
 {	Function::Vector * base_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( this->base.core );
 	return base_vector->get_value_on_cell(cll);                   }
+
+//-----------------------------------------------------------------------------------------//
 
 
 std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
@@ -426,6 +444,48 @@ std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
 			val[j] += exp_i * this->beta[i][j];                       }
 	return val;                                                            }
 
+//-----------------------------------------------------------------------------------------//
+
+
+std::vector<double> Function::Vector::MultiValued::JumpIsLinear::get_value_on_cell
+// virtual from Function::Vector
+( Cell::Core * cll, const tag::Spin &, const Function::CompositionOfActions & exp ) const
+	
+{	Function::Vector * base_vector = tag::Util::assert_cast
+		< Function::Core*, Function::Vector* > ( this->base.core );
+	Manifold::Quotient * manif = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( Manifold::working.core );
+	size_t n = this->actions.size();
+	size_t dim = base_vector->nb_of_components();
+	assert ( manif->actions == this->actions );
+	assert ( this->A.size() == n );
+	assert ( this->b.size() == n );
+	std::vector < double > val = base_vector->get_value_on_cell ( cll );
+	for ( size_t i = 0; i < n; i++ )
+	{	assert ( this->A[i].size() == dim );
+		std::map<Function::Action,short int>::const_iterator it =
+			exp.index_map.find ( this->actions[i] );
+		if ( it == exp.index_map.end() ) continue;
+		short int exp_i = it->second;
+		if ( exp_i > 0 )
+		{	size_t abs_exp_i = exp_i;
+			for ( size_t j = 0; j < abs_exp_i; j++ )
+			{	std::vector < double > temp ( dim, 0. );
+				for ( size_t k = 0; k < dim; k++ )
+				for ( size_t l = 0; l < dim; l++ )
+					temp[k] += this->A[i][k][l]*val[l];
+				for ( size_t k = 0; k < dim; k++ ) val[k] = temp[k] + this->b[i][k];  }  }
+		if ( exp_i < 0 )
+		{	size_t abs_exp_i = -exp_i;
+			for ( size_t j = 0; j < abs_exp_i; j++ )
+				{	std::vector < double > temp ( dim, 0. );
+				for ( size_t k = 0; k < dim; k++ )
+				for ( size_t l = 0; l < dim; l++ )
+					temp[k] += this->Ainv[i][k][l]*(val[l]-this->b[i][l]);
+				val = std::move ( temp );                                }  }              }
+	return val;                                                                         }
+
+//-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
 	
 
@@ -481,9 +541,9 @@ std::vector < double > Function::Vector::MultiValued::set_value_on_cell
 
 std::string Function::Constant::repr ( const Function::From & from ) const
 {	std::stringstream ss;
-	ss << this->val; 
+	ss << this->value; 
 	std::string s = ss.str();
-	if ( ( this->val < 0. ) and ( from != Function::from_void ) ) s = "(" + s + ")";
+	if ( ( this->value < 0. ) and ( from != Function::from_void ) ) s = "(" + s + ")";
 	return s;                         }
 
 std::string Function::Sum::repr ( const Function::From & from ) const
@@ -560,9 +620,9 @@ Function maniFEM::operator+ ( const Function & f, const Function & g )
 
 	// if one of them is zero :
   Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
-	if ( f_const )  if ( f_const->val == 0. )  return g;
+	if ( f_const )  if ( f_const->value == 0. )  return g;
   Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g.core );
-	if ( g_const )  if ( g_const->val == 0. )  return f;
+	if ( g_const )  if ( g_const->value == 0. )  return f;
 	
 	// if one of them is a sum, or both :
   Function::Sum * f_sum = dynamic_cast < Function::Sum * > ( f.core );
@@ -584,6 +644,7 @@ Function maniFEM::operator+ ( const Function & f, const Function & g )
 
 //-----------------------------------------------------------------------------------------//
 
+
 Function maniFEM::operator* ( const Function & f, const Function & g )
 
 {	// both should be scalar
@@ -593,15 +654,57 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 	// if any one of them is zero or one :
   Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
 	if ( f_const )
-	{	if ( f_const->val == 0. ) return f;
-		if ( f_const->val == 1. ) return g;  }
+	{	if ( f_const->value == 0. ) return f;
+		if ( f_const->value == 1. ) return g;
+		// is g a product ?
+		Function::Product * g_prod = dynamic_cast < Function::Product * > ( g.core );
+		if ( g_prod )
+		{	Function::Product * result = new Function::Product;  // empty product
+			bool constant_not_yet_used = true;
+			// we make a copy of the list of factors so to keep the original order
+			std::forward_list < Function > list_fact;
+			std::forward_list<Function>::iterator it_g;
+			for ( it_g = g_prod->factors.begin(); it_g != g_prod->factors.end(); it_g++ )
+				list_fact.push_front ( *it_g );
+			for ( it_g = list_fact.begin(); it_g != list_fact.end(); it_g++ )
+			{	Function fact = *it_g;
+				if ( constant_not_yet_used )
+				{	Function::Constant * fact_const =
+						dynamic_cast < Function::Constant * > ( fact.core );
+					if ( fact_const )
+					{	constant_not_yet_used = false;
+						result->factors.push_front ( f * fact );  }
+					else result->factors.push_front ( fact );              }
+				else result->factors.push_front ( fact );                   }
+			return Function ( tag::whose_core_is, result );                               }  }
   Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g.core );
 	if ( g_const )
-	{	if ( g_const->val == 0. ) return g;
-		if ( g_const->val == 1. ) return f;  }
+	{	if ( g_const->value == 0. ) return g;
+		if ( g_const->value == 1. ) return f;
+		// is f a product ?
+		Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
+		if ( f_prod )
+		{	Function::Product * result = new Function::Product;  // empty product
+			bool constant_not_yet_used = true;
+			// we make a copy of the list of factors so to keep the original order
+			std::forward_list < Function > list_fact;
+			std::forward_list<Function>::iterator it_f;
+			for ( it_f = f_prod->factors.begin(); it_f != f_prod->factors.end(); it_f++ )
+				list_fact.push_front ( *it_f );
+			for ( it_f = list_fact.begin(); it_f != list_fact.end(); it_f++ )
+			{	Function fact = *it_f;
+				if ( constant_not_yet_used )
+				{	Function::Constant * fact_const =
+						dynamic_cast < Function::Constant * > ( fact.core );
+					if ( fact_const )
+					{	constant_not_yet_used = false;
+						result->factors.push_front ( g * fact );  }
+					else result->factors.push_front ( fact );              }
+				else result->factors.push_front ( fact );                   }
+			return Function ( tag::whose_core_is, result );                               }  }
 
 	// if both are constant :
-	if ( f_const and g_const ) return Function ( f_const->val * g_const->val );
+	if ( f_const and g_const ) return Function ( f_const->value * g_const->value );
 	
 	// if one of them is a product, or both :
   Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
@@ -611,17 +714,18 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 	if ( g_prod )  // g is a product
 	{	std::forward_list<Function>::iterator it_g;
 		for ( it_g = g_prod->factors.begin(); it_g != g_prod->factors.end(); it_g++ )
-			result->factors.push_front ( *it_g );                             }
+			result->factors.push_front ( *it_g );                                       }
 	else  result->factors.push_front ( g );
 	if ( f_prod )  // f is a product
 	{	std::forward_list<Function>::iterator it_f;
 		for ( it_f = f_prod->factors.begin(); it_f != f_prod->factors.end(); it_f++ )
-			result->factors.push_front ( *it_f );                             }
+			result->factors.push_front ( *it_f );                                       }
 	else  result->factors.push_front ( f );
 
-	return Function ( tag::whose_core_is, result );                              }
+	return Function ( tag::whose_core_is, result );                                   }
 
 //-----------------------------------------------------------------------------------------//
+
 
 Function maniFEM::power ( const Function & f, double e )
 
@@ -633,9 +737,9 @@ Function maniFEM::power ( const Function & f, double e )
 	
   Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
 	if ( f_const )
-	{	if ( f_const->val == 0. ) return Function ( 0. );
-		if ( f_const->val == 1. ) return Function ( 1. );
-		return Function ( pow ( f_const->val, e ) );       }
+	{	if ( f_const->value == 0. ) return Function ( 0. );
+		if ( f_const->value == 1. ) return Function ( 1. );
+		return Function ( pow ( f_const->value, e ) );       }
 
   Function::Power * f_pow = dynamic_cast < Function::Power * > ( f.core );
 	if ( f_pow ) return power ( f_pow->base, f_pow->exponent * e );
@@ -652,6 +756,7 @@ Function maniFEM::power ( const Function & f, double e )
 	return Function ( tag::whose_core_is, new Function::Power ( f, e ) );              }
 
 //-----------------------------------------------------------------------------------------//
+
 
 Function Function::Constant::deriv ( Function ) const
 //  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression

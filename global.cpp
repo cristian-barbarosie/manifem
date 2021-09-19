@@ -1,5 +1,5 @@
 
-// global.cpp 2021.09.15
+// global.cpp 2021.09.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1067,7 +1067,6 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	        << translation_y + scale_factor*border << " translate" << std::endl;
 	file_ps << scale_factor << " dup scale" << std::endl << std::endl;
 
-	file_ps << 3. / scale_factor << " setlinewidth 0.5 setgray contour stroke" << std::endl;
   file_ps << "0 setgray contour clip" << std::endl;
   file_ps << "newpath 0.6 0.8 1. setrgbcolor shadow fill" << std::endl;
 
@@ -1100,11 +1099,6 @@ void Mesh::draw_ps ( std::string file_name,
 	assert ( coords_Eu.nb_of_components() == 2 );
 	Function x = coords_Eu[0],  y = coords_Eu[1];
 
-	// the action group may have one or two generators
-	assert ( manif_q->actions.size() == 2 );
-	assert ( manif_q->spins.size() == 2 );
-	Function::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
-	
 	std::ofstream file_ps ( file_name );
 	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
 	file_ps	<< "you can move the shadow by simply changing the initial point" << std::endl;
@@ -1116,10 +1110,6 @@ void Mesh::draw_ps ( std::string file_name,
 
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
-	std::vector < std::vector < short int > > directions
-		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
-	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
-	// and perhaps in other places
 
 	CellIterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
@@ -1207,7 +1197,6 @@ void Mesh::draw_ps ( std::string file_name,
 	        << translation_y + scale_factor*border << " translate" << std::endl;
 	file_ps << scale_factor << " dup scale" << std::endl << std::endl;
 
-	file_ps << 3. / scale_factor << " setlinewidth 0.5 setgray contour stroke" << std::endl;
   file_ps << "0 setgray contour clip" << std::endl;
   file_ps << "newpath 0.6 0.8 1. setrgbcolor shadow fill" << std::endl;
 
