@@ -1,5 +1,6 @@
 
-//   mesh.h  2021.09.14
+//   mesh.h  2021.09.21
+
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
@@ -78,6 +79,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct NotOriented { };  static const NotOriented not_oriented;
 	struct DeepCopyOf { };  static const DeepCopyOf deep_copy_of;
 	struct BuildCellsIfNec { };  static const BuildCellsIfNec build_cells_if_necessary;
+	struct BuildNewVertices { };  static const BuildNewVertices build_new_vertices;
+	struct UseExistingVertices { };  static const UseExistingVertices use_existing_vertices;
 	struct Progressive { };  static const Progressive progressive;
 	struct StartAt { };  static const StartAt start_at;
 	struct StopAt { };  static const StopAt stop_at;
@@ -120,6 +123,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct ReserveSize { };  static const ReserveSize reserve_size;
 	struct Pretty { };  static const Pretty pretty;
 	struct Adapt { };  static const Adapt adapt;
+	struct Identify { };  static const Identify identify;
 	struct With { };  static const With with;
 	struct OfDegree { };  static const OfDegree of_degree;
 	struct MeshIsBdry { };  static const MeshIsBdry mesh_is_bdry;
@@ -692,7 +696,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// build a negative mesh from a positive one
 	// without worrying whether reverse cells exist or not
 	inline Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::FreshlyCreated &,
-	              const tag::IsNegative &, const tag::DoNotBuildCells &                     )
+	              const tag::IsNegative &, const tag::DoNotBuildCells &                 )
 	#ifdef MANIFEM_COLLECT_CM	
 	: tag::Util::Wrapper < Mesh::Core > ( tag::whose_core_is, c,
 	                                      tag::previously_existing, tag::surely_not_null ),
@@ -705,7 +709,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// build a negative mesh from a positive one
 	// without worrying whether reverse cells exist or not
 	inline Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::PreviouslyExisting &,
-	              const tag::IsNegative &, const tag::DoNotBuildCells &                          )
+	              const tag::IsNegative &, const tag::DoNotBuildCells &                     )
 	#ifdef MANIFEM_COLLECT_CM	
 	: tag::Util::Wrapper < Mesh::Core > ( tag::whose_core_is, c,
                                         tag::previously_existing, tag::surely_not_null ),
@@ -799,19 +803,19 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length );
 
-	Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
-         const tag::DesiredLength &, const Function & length                  );
+	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+         const tag::DesiredLength &, const Function & length                   );
 
 	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
 	       const tag::RandomOrientation &                                                 );
 
-	Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
+	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
 	       const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & );
 
 	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
 	       const tag::InherentOrientation &                                               );
 
-	Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
+	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
 	       const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & );
 
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
@@ -873,7 +877,52 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Mesh & operator= ( Mesh && c );
 
 	// we are still in class Mesh
+
+	// methods 'fold' defined in global.cpp -- 'wrap' is a synonym
+	// they take a mesh having as external boundary a parallelogram
+	// and identify one or two pairs of opposite sides
+	// see paragraph 7.14 in the manual
 	
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::BuildNewVertices &                                                  );
+
+	inline Mesh wrap
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	  const tag::BuildNewVertices &                                                   )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::build_new_vertices );  }
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::UseExistingVertices &                                               );
+
+	inline Mesh wrap
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	  const tag::UseExistingVertices &                                                )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::use_existing_vertices );  }
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::BuildNewVertices &                                                  );
+
+	inline Mesh wrap
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	  const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	  const tag::BuildNewVertices &                                                  )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
+		                    tag::identify, msh3, tag::with, msh4, tag::build_new_vertices );  }
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::UseExistingVertices &                                               );
+	
+	inline Mesh wrap
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	  const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	  const tag::UseExistingVertices &                                               )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
+		                    tag::identify, msh3, tag::with, msh4, tag::use_existing_vertices );  }
+
+	// we are still in class Mesh
+
 	inline void copy_all_cells_to ( Mesh & msh ) const;
 
 	inline bool exists () const  { return this->core != nullptr;  }

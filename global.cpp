@@ -799,6 +799,173 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 //----------------------------------------------------------------------------------//
 
 
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
+                      const tag::With &, const Mesh & msh2,
+                  const tag::BuildNewVertices &            )
+
+// take a mesh having as external boundary a parallelogram
+// and identify one pair of opposite sides
+
+// a quotient manifold with one action generator will be built
+	
+{	// we use the current (Euclidian) manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0], y = coord[1];
+
+	// first we need to identify a translation which moves msh1 into msh2
+
+	Cell A = msh1.first_vertex();
+	Cell B = msh1.last_vertex();
+	Cell C = msh2.first_vertex();
+	Cell D = msh2.last_vertex();
+
+	double dx = x(D) - x(A), dy = y(D) - y(A);
+	double norm = std::sqrt ( dx*dx + dy*dy );
+	assert ( std::abs ( dx - ( x(C) - x(B) ) ) < 1.e-4 * norm );
+	assert ( std::abs ( dy - ( y(C) - y(B) ) ) < 1.e-4 * norm );
+
+	// the desired translation is ( dx, dy )
+	Function::Action g ( tag::transforms, coord, tag::into, (x+dx) && ( y+dy) );
+	Manifold manif_q = space.quotient ( g );
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > corresp_ver;
+
+	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
+	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::backwards );
+	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
+	{	assert ( it2.in_range() );
+		Cell V = *it1;  Cell W = *it2;
+		assert ( std::abs ( dx - ( x(W) - x(V) ) ) < 1.e-4 * norm );
+		assert ( std::abs ( dy - ( y(W) - y(V) ) ) < 1.e-4 * norm );
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::iterator it_map = corresp_ver.lower_bound ( W );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Function::CompositionOfActions > { V, g } ) );      }
+		// corresp_ver [ W ] = { V, g };
+	assert ( not it2.in_range() );
+						 
+	CellIterator it_ver = this->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		if ( V.belongs_to ( msh2 ) ) continue;
+		Cell new_V ( tag::vertex );
+		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
+		std::pair < Cell, Function::CompositionOfActions > p { new_V, 0 };
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Function::CompositionOfActions > { new_V, 0 } ) );  }
+		// corresp_ver [ V ] = p;
+
+	std::map < Cell, Cell > corresp_seg;
+	CellIterator it_seg = this->iterator ( tag::over_segments );
+	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+	{	Cell seg = *it_seg;
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
+		assert ( it_base_rev != corresp_ver.end() );
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::iterator it_tip = corresp_ver.find ( seg.tip() );
+		assert ( it_tip != corresp_ver.end() );
+		Cell new_seg ( tag::segment,
+		               it_base_rev->second.first.reverse(), it_tip->second.first );
+		new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
+		// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
+		//	                corresp_ver [ seg.base().reverse() ] .second  ;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		     std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
+		// corresp_seg [ seg ] = new_seg;               
+
+	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+	
+	CellIterator it_cll = this->iterator ( tag::over_cells_of_dim, 2 );
+	for ( it_cll.reset(); it_cll.in_range(); it_cll++ )
+	{	Cell cll = *it_cll;
+		Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
+			( tag::whose_boundary_is,
+				Mesh ( tag::whose_core_is,
+			         new Mesh::Connected::OneDim ( tag::with,
+			           cll.boundary().number_of ( tag::segments ),
+	               tag::segments, tag::one_dummy_wrapper       ),
+	         tag::freshly_created                                 ),
+				tag::one_dummy_wrapper                                     );
+		Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
+		CellIterator it_bdry = cll.boundary() .iterator ( tag::over_segments );
+		for ( it_bdry.reset(); it_bdry.in_range(); it_bdry++ )
+		{	Cell seg = *it_bdry;
+			// no need for glue_on_bdry_of :
+			// new_cll has just been created, it has no meshes above
+			// we call add_to_mesh instead (as if the mesh were not a boundary)
+			corresp_seg [ seg ] .core->add_to_mesh
+				( new_cll.boundary().core, tag::do_not_bother );  }
+		assert ( not it_bdry.in_range() );
+		it_bdry.reset();  assert ( it_bdry.in_range() );
+		Cell seg = *it_bdry;
+		Cell V = seg.tip();
+		Mesh::Connected::OneDim * bdry = tag::Util::assert_cast
+			< Mesh::Core*, Mesh::Connected::OneDim* > ( new_cll.boundary().core );
+		bdry->first_ver = V.reverse();  // negative
+		bdry->last_ver = V;
+		new_cll.add_to_mesh ( result );
+	} 
+
+	return result;
+	
+}
+
+//----------------------------------------------------------------------------------//
+
+
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
+                      const tag::With &, const Mesh & msh2,
+                  const tag::Identify &, const Mesh & msh3,
+                      const tag::With &, const Mesh & msh4,
+                  const tag::BuildNewVertices &            )
+
+// take a mesh having as external boundary a parallelogram
+// and identify two pairs of opposite sides
+
+// a quotient manifold with two action generators will be built
+	
+{	// we use the current manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0],  y = coord[1];
+
+	// we need to identify two translations, one which moves msh1 into msh2
+	// and another one which moves msh3 into msh4
+
+
+	// we use a map
+	// for a faster code, we could use Cell::Core::hook
+	std::map < Cell, Cell > corresp;
+
+}
+
+//----------------------------------------------------------------------------------//
+
+
 // gs -q -dNOPAUSE -dBATCH -sDEVICE=png16 -sOUTPUTFILE=out.png in.ps
 
 

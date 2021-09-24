@@ -2299,8 +2299,8 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
-             const tag::DesiredLength &, const Function &  length                 )
+Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+             const tag::DesiredLength &, const Function &  length                  )
 
 :	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
@@ -2338,7 +2338,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
+Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
              const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
 
 :	Mesh ( tag::non_existent )
@@ -2378,7 +2378,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold, Manifold manif,
+Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
              const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
 
 :	Mesh ( tag::non_existent )
