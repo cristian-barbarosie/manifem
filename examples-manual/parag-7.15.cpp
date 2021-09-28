@@ -1,5 +1,5 @@
 
-// example presented in paragraph 7.14 of the manual
+// example presented in paragraph 7.15 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // folds a square
 
@@ -33,11 +33,14 @@ int main ( )
 	RR2.set_as_working_manifold();
 	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
 
-	Mesh cyl = square.fold
-		( tag::identify, BC, tag::with, DA.reverse(), tag::use_existing_vertices );
+	Mesh torus = square.fold ( tag::identify, AB, tag::with, CD.reverse(),
+	                           tag::identify, BC, tag::with, DA.reverse(),
+	                           tag::use_existing_vertices                 );
 
-	cyl.draw_ps ( "cylinder.eps", tag::unfold,
-                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
+	
+	torus.draw_ps ( "torus.eps", tag::unfold,
+                  tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	std::cout << "produced file cylinder.eps - please edit before viewing" << std::endl;	
+	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;	
 }
