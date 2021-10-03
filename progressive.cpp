@@ -540,7 +540,7 @@ inline Cell search_start_ver_c1 ( )
 						{	Function x = Manifold::working.coordinates()[i];
 							x ( tmp_ver_2 ) = x ( tmp_ver );                 }
 						v2 = v;                                               }
-					else assert( false );                                                }  }
+					else assert( false );                                               }  }
 		size_of_cube *= 2;                                                                                 }
 }
 

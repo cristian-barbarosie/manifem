@@ -1,5 +1,5 @@
 
-// function.cpp 2021.09.17
+// function.cpp 2021.10.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -650,7 +650,7 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 {	// both should be scalar
 	assert ( dynamic_cast < Function::Scalar* > ( f.core ) );
 	assert ( dynamic_cast < Function::Scalar* > ( g.core ) );
-	
+
 	// if any one of them is zero or one :
   Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
 	if ( f_const )
@@ -676,6 +676,7 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 						result->factors.push_front ( f * fact );  }
 					else result->factors.push_front ( fact );              }
 				else result->factors.push_front ( fact );                   }
+			if ( constant_not_yet_used ) result->factors.push_front ( f );
 			return Function ( tag::whose_core_is, result );                               }  }
   Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g.core );
 	if ( g_const )
@@ -701,6 +702,7 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 						result->factors.push_front ( g * fact );  }
 					else result->factors.push_front ( fact );              }
 				else result->factors.push_front ( fact );                   }
+			if ( constant_not_yet_used ) result->factors.push_front ( g );
 			return Function ( tag::whose_core_is, result );                               }  }
 
 	// if both are constant :
@@ -741,17 +743,17 @@ Function maniFEM::power ( const Function & f, double e )
 		if ( f_const->value == 1. ) return Function ( 1. );
 		return Function ( pow ( f_const->value, e ) );       }
 
-  Function::Power * f_pow = dynamic_cast < Function::Power * > ( f.core );
-	if ( f_pow ) return power ( f_pow->base, f_pow->exponent * e );
+  // Function::Power * f_pow = dynamic_cast < Function::Power * > ( f.core );
+	// if ( f_pow ) return power ( f_pow->base, f_pow->exponent * e );
 
-  Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
-	if ( f_prod )  // f is a product
-	{ Function::Product * result = new Function::Product;  // empty product
-		std::forward_list<Function>::iterator it;
-		for ( it = f_prod->factors.begin(); it != f_prod->factors.end(); it++ )
-		{	Function g = *it;
-			result->factors.push_front ( power ( g, e ) );  }
-		return Function ( tag::whose_core_is, result );                              }
+  // Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
+	// if ( f_prod )  // f is a product
+	// { Function::Product * result = new Function::Product;  // empty product
+	// 	std::forward_list<Function>::iterator it;
+	// 	for ( it = f_prod->factors.begin(); it != f_prod->factors.end(); it++ )
+	// 	{	Function g = *it;
+	// 		result->factors.push_front ( power ( g, e ) );  }
+	// 	return Function ( tag::whose_core_is, result );                              }
 
 	return Function ( tag::whose_core_is, new Function::Power ( f, e ) );              }
 
