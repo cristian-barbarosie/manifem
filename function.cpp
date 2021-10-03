@@ -743,6 +743,11 @@ Function maniFEM::power ( const Function & f, double e )
 		if ( f_const->value == 1. ) return Function ( 1. );
 		return Function ( pow ( f_const->value, e ) );       }
 
+	// simplifications below are quite tempting,
+	// but they lead to misterious errors
+	// for instance, if we replace power(x*x,0.5) by power(x,0.5)*power(x,0.5)
+	// we will get in trouble if x is negative
+	
   // Function::Power * f_pow = dynamic_cast < Function::Power * > ( f.core );
 	// if ( f_pow ) return power ( f_pow->base, f_pow->exponent * e );
 
