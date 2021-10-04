@@ -42,15 +42,13 @@ int main ( )
 		( smooth_min ( 300.*power((x+y)*(x+y),e) + power((x-y-1.)*(x-y-1.),e),
 		               300.*power((x-y)*(x-y),e) + power((x+y+1.)*(x+y+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
-
 	Mesh loop1 ( tag::progressive, tag::desired_length, 0.05 );
 
 	double a = 0.15, b = 0.82;
 	Manifold curve2 = RR2.implicit 
 		( smooth_min ( 300.*power((x-a+y+b)*(x-a+y+b),e) + power((x-a-y-b-1.)*(x-a-y-b-1.),e),
-		               300.*power((x-2-a-y-b)*(x-2-a-y-b),e) + power((x-2-a+y+b+1.)*(x-2-a+y+b+1.),e),
+		               300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
-
 	Mesh loop2 ( tag::progressive, tag::desired_length, 0.05 );
 
 	b = 1.4;
@@ -58,24 +56,21 @@ int main ( )
 		( smooth_min ( 300.*power((x+y+b)*(x+y+b),e) + power((x-y-b-1.)*(x-y-b-1.),e),
 		               300.*power((x-y-b)*(x-y-b),e) + power((x+y+b+1.)*(x+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
-
-	Mesh loop3 ( tag::progressive, tag::desired_length, 0.05 );
+	Mesh loop3 ( tag::progressive, tag::desired_length, 0.05 );  // not used
 
 	b = 0.82-1.4;
 	Manifold curve4 = RR2.implicit 
 		( smooth_min ( 300.*power((x-a+y+b)*(x-a+y+b),e) + power((x-a-y-b-1.)*(x-a-y-b-1.),e),
-		               300.*power((x-2-a-y-b)*(x-2-a-y-b),e) + power((x-2-a+y+b+1.)*(x-2-a+y+b+1.),e),
+		               300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
-
-	Mesh loop4 ( tag::progressive, tag::desired_length, 0.05 );
+	Mesh loop4 ( tag::progressive, tag::desired_length, 0.05 );  // not used
 
 	a -= 2.3;  b = 0.82;
 	Manifold curve5 = RR2.implicit 
 		( smooth_min ( 300.*power((x-a+y+b)*(x-a+y+b),e) + power((x-a-y-b-1.)*(x-a-y-b-1.),e),
-		               300.*power((x-2-a-y-b)*(x-2-a-y-b),e) + power((x-2-a+y+b+1.)*(x-2-a+y+b+1.),e),
+		               300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
-
-	Mesh loop5 ( tag::progressive, tag::desired_length, 0.05 );
+	Mesh loop5 ( tag::progressive, tag::desired_length, 0.05 );  // not used
 
 	Mesh loop ( tag::join, loop1.reverse(), loop2.reverse(), zig_zag );
 
@@ -90,6 +85,9 @@ int main ( )
 													tag::identify, CD, tag::with, HI.reverse(),
 													tag::use_existing_vertices                 );
 
+	std::cout << "produced folded mesh, now drawing, please wait" << std::endl;
 	VV.draw_ps ( "VV.eps", tag::unfold, tag::over_region, -1.5 < x < 2.5, -3 < y < 0.5 );
+	std::cout << "produced file VV.eps - please edit before viewing" << std::endl;	
+	
 }
 
