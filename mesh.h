@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.09.21
+//   mesh.h  2021.10.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -794,10 +794,17 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
 	inline Mesh ( const tag::Join &,
 	              const Mesh &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
+	inline Mesh ( const tag::Join &, const std::vector < Mesh > & l );
 
 	template < typename container >
 	inline Mesh ( const tag::Join &, const container & l );
 
+	template < typename container >
+	static inline size_t join ( Mesh * const that, const container & l );
+
+	template < typename container >
+	static inline void join_meshes ( Mesh * const that, const container & l );
+		
 	// we are still in class Mesh
 	// constructors with tag::Progressive are defined in progressive.cpp
 	
@@ -920,6 +927,34 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	  const tag::UseExistingVertices &                                               )
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
 		                    tag::identify, msh3, tag::with, msh4, tag::use_existing_vertices );  }
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
+	            const tag::BuildNewVertices &                                                  );
+
+	inline Mesh wrap
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	  const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	  const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
+	  const tag::BuildNewVertices &                                                  )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
+		                    tag::identify, msh3, tag::with, msh4,
+		                    tag::identify, msh5, tag::with, msh6, tag::build_new_vertices );  }
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
+	            const tag::UseExistingVertices &                                               );
+	
+	inline Mesh wrap
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	  const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	  const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
+	  const tag::UseExistingVertices &                                               )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
+		                    tag::identify, msh3, tag::with, msh4,
+		                    tag::identify, msh5, tag::with, msh6, tag::use_existing_vertices );  }
 
 	// we are still in class Mesh
 
@@ -5458,27 +5493,25 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 
 
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2 )
-: Mesh ( tag::join, std::list { m1, m2 } )  { }
+: Mesh ( tag::join, std::vector { m1, m2 } )  { }
 
 	
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3 )
-: Mesh ( tag::join, std::list { m1, m2, m3 } )  { }
+: Mesh ( tag::join, std::vector { m1, m2, m3 } )  { }
 
 
 inline Mesh::Mesh
 ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3, const Mesh & m4 )
-: Mesh ( tag::join, std::list { m1, m2, m3, m4 } )  { }
+: Mesh ( tag::join, std::vector { m1, m2, m3, m4 } )  { }
 
 
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3,
                                        const Mesh & m4, const Mesh & m5 )
-: Mesh ( tag::join, std::list { m1, m2, m3, m4, m5 } )  { }
+: Mesh ( tag::join, std::vector { m1, m2, m3, m4, m5 } )  { }
 
 
-namespace {  // anonymous namespace, mimics static linkage
-	
-template < typename container >
-inline size_t join_meshes ( Mesh * const that, const container & l )
+template < typename container >  // static
+inline size_t Mesh::join ( Mesh * const that, const container & l )
 
 {	// check the dimensions
 	#ifndef NDEBUG
@@ -5498,14 +5531,9 @@ inline size_t join_meshes ( Mesh * const that, const container & l )
 			cll.add_to_mesh ( *that, tag::do_not_bother );  }          }
 	return n;                                                                 }
 
-}  // anonymous namespace
 
-
-
-template < typename container >
-inline Mesh::Mesh ( const tag::Join &, const container & l )
-
-: Mesh ( tag::non_existent )
+template < typename container >  // static
+inline void Mesh::join_meshes ( Mesh * const that, const container & l )
 
 // if any of the meshes is not a Mesh::Connected::OneDim, 'this' will be Mesh::Fuzzy
 {	container ll = l;
@@ -5530,16 +5558,27 @@ inline Mesh::Mesh ( const tag::Join &, const container & l )
 	// if some meshes have not moved to d (are still in ll), the mesh will be disconnected
 	if ( ll.size() ) goto fuzzy;
   mm = new Mesh::Connected::OneDim ( tag::one_dummy_wrapper );
-  this->core = mm;
-	mm->nb_of_segs = join_meshes ( this, l );
+  that->core = mm;
+	mm->nb_of_segs = Mesh::join ( that, l );
   mm->first_ver = d.front().first_vertex();
   mm->last_ver = d.back().last_vertex();
 	return;
 	fuzzy :
-	this->core = new Mesh::Fuzzy ( tag::of_dim, l.front().core->get_dim_plus_one(),
+	that->core = new Mesh::Fuzzy ( tag::of_dim, l.front().core->get_dim_plus_one(),
 	                               tag::minus_one, tag::one_dummy_wrapper           );
-  join_meshes ( this, l );
+	Mesh::join ( that, l );
 	return;                                                                                  }
+
+
+inline Mesh::Mesh ( const tag::Join &, const std::vector < Mesh > & l )
+: Mesh ( tag::non_existent )
+{	Mesh::join_meshes ( this, l );  }
+
+
+template < typename container >
+inline Mesh::Mesh ( const tag::Join &, const container & l )
+: Mesh ( tag::non_existent )
+{	Mesh::join_meshes ( this, l );  }
 	
 
 //-----------------------------------------------------------------------------//
