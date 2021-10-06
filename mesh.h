@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.10.03
+//   mesh.h  2021.10.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -872,7 +872,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	       const tag::StopAt &, const Cell & stop,
-	       const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & );
+	       const tag::DesiredLength &, const Function & length,
+	       const tag::InherentOrientation &                                    );
 
 	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	              const tag::DesiredLength &, const Function & length,
@@ -886,10 +887,20 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// we are still in class Mesh
 
 	// methods 'fold' defined in global.cpp -- 'wrap' is a synonym
-	// they take a mesh having as external boundary a parallelogram
+	// some of them take a mesh having as external boundary a parallelogram
 	// and identify one or two pairs of opposite sides
 	// see paragraph 7.14 in the manual
 	
+	Mesh fold ( const tag::BuildNewVertices & );
+
+	inline Mesh wrap ( const tag::BuildNewVertices & )
+	{	return this->fold ( tag::build_new_vertices );  }
+
+	Mesh fold ( const tag::UseExistingVertices & );
+
+	inline Mesh wrap ( const tag::UseExistingVertices & )
+	{	return this->fold ( tag::use_existing_vertices );  }
+
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::BuildNewVertices &                                                  );
 

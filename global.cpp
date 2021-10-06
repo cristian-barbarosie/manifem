@@ -1,5 +1,5 @@
 
-// global.cpp 2021.10.04
+// global.cpp 2021.10.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -804,67 +804,167 @@ Mesh fold_common
 ( const Mesh & msh,
 	const std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > & corresp_ver )
 
-{	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, Cell > corresp_seg;
+{	if ( msh.dim() == 1 )
+	{	Mesh result ( tag::fuzzy, tag::of_dim, 1 );
+		CellIterator it_seg = msh.iterator ( tag::over_segments );
+		for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+		{	Cell seg = *it_seg;
+			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+				::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
+			assert ( it_base_rev != corresp_ver.end() );
+			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+				::const_iterator it_tip = corresp_ver.find ( seg.tip() );
+			assert ( it_tip != corresp_ver.end() );
+			Cell new_seg ( tag::segment,
+			               it_base_rev->second.first.reverse(), it_tip->second.first );
+			new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
+			// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
+			//	                corresp_ver [ seg.base().reverse() ] .second  ;
+			new_seg.add_to_mesh ( result );                                            }
+			
+		return result;                                                                 }
 
-	CellIterator it_seg = msh.iterator ( tag::over_segments );
-	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
-	{	Cell seg = *it_seg;
-		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
-			::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
-		assert ( it_base_rev != corresp_ver.end() );
-		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
-			::const_iterator it_tip = corresp_ver.find ( seg.tip() );
-		assert ( it_tip != corresp_ver.end() );
-		Cell new_seg ( tag::segment,
-		               it_base_rev->second.first.reverse(), it_tip->second.first );
-		new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
-		// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
-		//	                corresp_ver [ seg.base().reverse() ] .second  ;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
-		assert ( ( it_map == corresp_seg.end() ) or
-		         ( corresp_seg.key_comp()(seg,it_map->first) ) );
-		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
-		     std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
+	else
+	{	assert ( msh.dim() == 2 );
+		// we use a map -- for a faster code, we could use Cell::Core::hook
+		std::map < Cell, Cell > corresp_seg;
+
+		CellIterator it_seg = msh.iterator ( tag::over_segments );
+		for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+		{	Cell seg = *it_seg;
+			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+				::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
+			assert ( it_base_rev != corresp_ver.end() );
+			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+				::const_iterator it_tip = corresp_ver.find ( seg.tip() );
+			assert ( it_tip != corresp_ver.end() );
+			Cell new_seg ( tag::segment,
+			               it_base_rev->second.first.reverse(), it_tip->second.first );
+			new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
+			// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
+			//	                corresp_ver [ seg.base().reverse() ] .second  ;
+			// inspired in item 24 of the book : Scott Meyers, Effective STL
+			std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
+			assert ( ( it_map == corresp_seg.end() ) or
+			         ( corresp_seg.key_comp()(seg,it_map->first) ) );
+			corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+			  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
 		// corresp_seg [ seg ] = new_seg;               
 
-	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+		Mesh result ( tag::fuzzy, tag::of_dim, 2 );
 
-	CellIterator it_cll = msh.iterator ( tag::over_cells_of_dim, 2 );
-	for ( it_cll.reset(); it_cll.in_range(); it_cll++ )
-	{	Cell cll = *it_cll;
-		std::list < Cell > faces;
-		CellIterator it_bdry = cll.boundary() .iterator ( tag::over_segments );
-		for ( it_bdry.reset(); it_bdry.in_range(); it_bdry++ )
-		{	Cell seg = *it_bdry;
-			// no need for glue_on_bdry_of :
-			// new_cll has just been created, it has no meshes above
-			// we call add_to_mesh instead (as if the mesh were not a boundary)
-			if ( seg.is_positive() )
-				faces .push_back ( corresp_seg [ seg ] );
-			else
-				faces .push_back ( corresp_seg [ seg.reverse() ] .reverse() );       }
-		assert ( faces.size() == 3 );
-		std::list < Cell > :: const_iterator it_faces = faces.begin();
-		assert ( it_faces != faces.end() );
-		Cell f1 = * it_faces;
-		it_faces ++;  assert ( it_faces != faces.end() );
-		Cell f2 = * it_faces;
-		it_faces ++;  assert ( it_faces != faces.end() );
-		Cell f3 = * it_faces;
-		it_faces ++;  assert ( it_faces == faces.end() );
-		// em attic/manifem.cpp esta uma versao que deveria funcionar mas nao funciona
-		Cell new_cll ( tag::triangle, f1, f2, f3 );
-		new_cll.add_to_mesh ( result );                                                 	} 
+		CellIterator it_cll = msh.iterator ( tag::over_cells_of_dim, 2 );
+		for ( it_cll.reset(); it_cll.in_range(); it_cll++ )
+		{	Cell cll = *it_cll;
+			std::list < Cell > faces;
+			CellIterator it_bdry = cll.boundary() .iterator ( tag::over_segments );
+			for ( it_bdry.reset(); it_bdry.in_range(); it_bdry++ )
+			{	Cell seg = *it_bdry;
+				// no need for glue_on_bdry_of :
+				// new_cll has just been created, it has no meshes above
+				// we call add_to_mesh instead (as if the mesh were not a boundary)
+				if ( seg.is_positive() )
+					faces .push_back ( corresp_seg [ seg ] );
+				else
+					faces .push_back ( corresp_seg [ seg.reverse() ] .reverse() );       }
+			assert ( faces.size() == 3 );
+			std::list < Cell > :: const_iterator it_faces = faces.begin();
+			assert ( it_faces != faces.end() );
+			Cell f1 = * it_faces;
+			it_faces ++;  assert ( it_faces != faces.end() );
+			Cell f2 = * it_faces;
+			it_faces ++;  assert ( it_faces != faces.end() );
+			Cell f3 = * it_faces;
+			it_faces ++;  assert ( it_faces == faces.end() );
+			// em attic/manifem.cpp esta uma versao que deveria funcionar mas nao funciona
+			Cell new_cll ( tag::triangle, f1, f2, f3 );
+			new_cll.add_to_mesh ( result );                                                 	} 
 
-	return result;                                                                          }
+		return result;                                                                          }
 
+}  // end of  fold_common
+	
 }  // anonymous namespace
 
 //----------------------------------------------------------------------------------//
 
 
+Mesh Mesh::fold ( const tag::BuildNewVertices & )
+
+// take a mesh and fold it around the current working manifold,
+// which must be a quotient manifold
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > corresp_ver;
+
+	CellIterator it_ver = this->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		Cell new_V ( tag::vertex );
+		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Function::CompositionOfActions > { new_V, 0 } ) );  }
+		// corresp_ver [ V ] = { new_V, 0 };
+
+	return fold_common ( *this, corresp_ver );                                         }
+
+//----------------------------------------------------------------------------------//
+
+	
+Mesh Mesh::fold ( const tag::UseExistingVertices & )
+
+// take a mesh and fold it around the current working manifold,
+// which must be a quotient manifold
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > corresp_ver;
+
+	CellIterator it_ver = this->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Function::CompositionOfActions > { V, 0 } ) );  }
+		// corresp_ver [ V ] = { V, 0 };
+
+	return fold_common ( *this, corresp_ver );                                         }
+
+//----------------------------------------------------------------------------------//
+
+	
 Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
                       const tag::With &, const Mesh & msh2,
                   const tag::BuildNewVertices &            )
