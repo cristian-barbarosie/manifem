@@ -1,5 +1,5 @@
 
-// manifold.h 2021.09.17
+// manifold.h 2021.10.07
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -178,12 +178,14 @@ class Manifold
 
 	// P = sum c_k P_k,  sum c_k == 1
 	inline void interpolate
-	( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points ) const;
+	( const Cell & P, const std::vector < double > & coefs,
+	  const std::vector < Cell > & points                  ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1
 	inline void interpolate
-	( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points,
-	  const tag::Spin &, const Function::CompositionOfActions & exp         ) const;
+	( const Cell & P, const std::vector < double > & coefs,
+	  const std::vector < Cell > & points, const tag::Spin &,
+	  const std::vector < Function::CompositionOfActions >  ) const;
 
 	inline void project ( const Cell & ) const;
 	
@@ -285,8 +287,8 @@ class Manifold::Core
 		const tag::Spin &, const Function::CompositionOfActions & ) const = 0;
 
 	// P = sum c_k P_k,  sum c_k == 1
-	virtual void interpolate ( Cell::Positive::Vertex * P, std::vector < double > & coefs,
-														 std::vector < Cell::Positive::Vertex * > & points ) const = 0;
+	virtual void interpolate ( Cell::Positive::Vertex * P, const std::vector < double > & coefs,
+														 const std::vector < Cell::Positive::Vertex * > & points ) const = 0;
 
 }; // end of class Manifold::Core
 
@@ -527,7 +529,7 @@ inline void Manifold::interpolate
 
 // P = sum c_k P_k,  sum c_k == 1
 inline void Manifold::interpolate
-( const Cell & P, std::vector < double > & coefs, std::vector < Cell > & points ) const
+( const Cell & P, const std::vector < double > & coefs, const std::vector < Cell > & points ) const
 	
 {	assert ( points.size() == coefs.size() );
 	for ( size_t i = 0; i < points.size(); i++ )  // if debug !!
@@ -630,9 +632,9 @@ class Manifold::Euclid : public Manifold::Core
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
   void interpolate ( Cell::Positive::Vertex * P,
-		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const;
+		const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const;
 	void pretty_interpolate ( const Cell & P,
-		std::vector < double > & coefs, std::vector < Cell > & points ) const;
+		const std::vector < double > & coefs, const std::vector < Cell > & points ) const;
 	
   Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d ) ;
   // virtual from Manifold::Core
@@ -723,7 +725,7 @@ class Manifold::Implicit : public Manifold::Core
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
   void interpolate ( Cell::Positive::Vertex * P,
-		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const;
+		const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const;
 	
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden
@@ -944,7 +946,7 @@ class Manifold::Parametric : public Manifold::Core
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
-		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const;
+		const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const;
 	
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden
@@ -1093,7 +1095,7 @@ class Manifold::Quotient : public Manifold::Core
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
-		std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const;
+		const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const;
 	
 	
 };  // end of class Manifold::Quotient

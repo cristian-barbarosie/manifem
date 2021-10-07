@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.08.27
+// manifold.cpp 2021.10.07
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -399,7 +399,7 @@ void Manifold::Euclid::interpolate
 // P = sum c_k P_k,  sum c_k == 1
 
 void Manifold::Euclid::pretty_interpolate ( const Cell & P,
-	std::vector < double > & coefs, std::vector < Cell > & points ) const
+	const std::vector < double > & coefs, const std::vector < Cell > & points ) const
 
 {	Function coord = this->get_coord_func();
 	size_t n = coord.nb_of_components();
@@ -414,7 +414,7 @@ void Manifold::Euclid::pretty_interpolate ( const Cell & P,
 
 
 void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
-	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
+	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	
@@ -510,7 +510,7 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
-	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
+	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
 {	this->surrounding_space.core->interpolate ( P, coefs, points );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                            }
@@ -578,7 +578,7 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
-	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
+	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
 {	this->surrounding_space.core->interpolate ( P, coefs, points );
 	this->project ( P );                                            }
 
@@ -642,7 +642,7 @@ void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
-	std::vector < double > & coefs, std::vector < Cell::Positive::Vertex * > & points ) const
+	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
 {	this->base_space.core->interpolate ( P, coefs, points );   }
 
 //-----------------------------------------------------------------------------------------
