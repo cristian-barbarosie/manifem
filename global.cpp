@@ -1,5 +1,5 @@
 
-// global.cpp 2021.10.06
+// global.cpp 2021.10.10
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -798,9 +798,52 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
+
 namespace { // anonymous namespace, mimics static linkage
 
-Mesh fold_common
+Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg )
+
+{	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+
+	CellIterator it_cll = msh.iterator ( tag::over_cells_of_dim, 2 );
+	for ( it_cll.reset(); it_cll.in_range(); it_cll++ )
+	{	Cell cll = *it_cll;
+		std::list < Cell > faces;
+		CellIterator it_bdry = cll.boundary() .iterator ( tag::over_segments );
+		for ( it_bdry.reset(); it_bdry.in_range(); it_bdry++ )
+		{	Cell seg = *it_bdry;
+			// no need for glue_on_bdry_of :
+			// new_cll has just been created, it has no meshes above
+			// we call add_to_mesh instead (as if the mesh were not a boundary)
+			if ( seg.is_positive() )
+			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg.find ( seg );
+				assert ( it != corresp_seg.end() );
+				faces .push_back ( it->second );                                       }
+				// faces .push_back ( corresp_seg [ seg ] );
+			else
+			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg.find ( seg.reverse() );
+				assert ( it != corresp_seg.end() );
+				faces .push_back ( it->second .reverse() );                                      } }
+				// faces .push_back ( corresp_seg [ seg.reverse() ] .reverse() );       }
+		assert ( faces.size() == 3 );
+		std::list < Cell > :: const_iterator it_faces = faces.begin();
+		assert ( it_faces != faces.end() );
+		Cell f1 = * it_faces;
+		it_faces ++;  assert ( it_faces != faces.end() );
+		Cell f2 = * it_faces;
+		it_faces ++;  assert ( it_faces != faces.end() );
+		Cell f3 = * it_faces;
+		it_faces ++;  assert ( it_faces == faces.end() );
+		// em attic/manifem.cpp esta' uma versao que deveria funcionar mas nao funciona
+		Cell new_cll ( tag::triangle, f1, f2, f3 );
+		new_cll.add_to_mesh ( result );                                                 	} 
+
+	return result;
+
+}  // end of  fold_common_1
+
+	
+Mesh fold_common_2
 ( const Mesh & msh,
 	const std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > & corresp_ver )
 
@@ -851,38 +894,250 @@ Mesh fold_common
 			  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
 		// corresp_seg [ seg ] = new_seg;               
 
-		Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+		return fold_common_1 ( msh, corresp_seg );                                    }
 
-		CellIterator it_cll = msh.iterator ( tag::over_cells_of_dim, 2 );
-		for ( it_cll.reset(); it_cll.in_range(); it_cll++ )
-		{	Cell cll = *it_cll;
-			std::list < Cell > faces;
-			CellIterator it_bdry = cll.boundary() .iterator ( tag::over_segments );
-			for ( it_bdry.reset(); it_bdry.in_range(); it_bdry++ )
-			{	Cell seg = *it_bdry;
-				// no need for glue_on_bdry_of :
-				// new_cll has just been created, it has no meshes above
-				// we call add_to_mesh instead (as if the mesh were not a boundary)
-				if ( seg.is_positive() )
-					faces .push_back ( corresp_seg [ seg ] );
-				else
-					faces .push_back ( corresp_seg [ seg.reverse() ] .reverse() );       }
-			assert ( faces.size() == 3 );
-			std::list < Cell > :: const_iterator it_faces = faces.begin();
-			assert ( it_faces != faces.end() );
-			Cell f1 = * it_faces;
-			it_faces ++;  assert ( it_faces != faces.end() );
-			Cell f2 = * it_faces;
-			it_faces ++;  assert ( it_faces != faces.end() );
-			Cell f3 = * it_faces;
-			it_faces ++;  assert ( it_faces == faces.end() );
-			// em attic/manifem.cpp esta uma versao que deveria funcionar mas nao funciona
-			Cell new_cll ( tag::triangle, f1, f2, f3 );
-			new_cll.add_to_mesh ( result );                                                 	} 
+}  // end of  fold_common_2
 
-		return result;                                                                          }
+	
+Mesh fold_common_3
+( const Mesh & msh,
+  const std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > & corresp_ver,
+  const Mesh & side_1, const Mesh & side_2                                                  )
 
-}  // end of  fold_common
+{	assert ( msh.dim() == 2 );
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, Cell > corresp_seg;
+
+	CellIterator it_seg = msh.iterator ( tag::over_segments );
+	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+	{	Cell seg = *it_seg;
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
+		assert ( it_base_rev != corresp_ver.end() );
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::const_iterator it_tip = corresp_ver.find ( seg.tip() );
+		assert ( it_tip != corresp_ver.end() );
+		if ( seg .belongs_to ( side_2, tag::not_oriented ) ) continue;
+			// use corresponding segment on side_1
+		Cell new_seg ( tag::segment,
+		               it_base_rev->second.first.reverse(), it_tip->second.first );
+		new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
+		// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
+		//	                corresp_ver [ seg.base().reverse() ] .second  ;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
+		// corresp_seg [ seg ] = new_seg;               
+
+	CellIterator it_seg_1 = side_1.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	CellIterator it_seg_2 = side_2.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	for ( it_seg_1.reset(), it_seg_2.reset(); it_seg_1.in_range(); it_seg_1++, it_seg_2++ )
+	{	assert ( it_seg_2 .in_range() );
+		Cell seg_1 = *it_seg_1;
+		Cell seg_2 = *it_seg_2;
+		std::map < Cell, Cell > ::iterator it = corresp_seg.find ( seg_1 );
+		assert ( it != corresp_seg.end() );
+		Cell new_seg_1 = it->second .reverse();
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg_2 );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg_2,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg_2 ), std::forward_as_tuple ( new_seg_1 ) );     }
+		// corresp_seg [ seg_2 ] = corresp_seg [ seg_1 ];               
+	assert ( not it_seg_2 .in_range() );
+		
+	return fold_common_1 ( msh, corresp_seg );
+
+}  // end of  fold_common_3
+	
+
+Mesh fold_common_4
+( const Mesh & msh,
+  const std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > & corresp_ver,
+  const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4        )
+
+{	assert ( msh.dim() == 2 );
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, Cell > corresp_seg;
+
+	CellIterator it_seg = msh.iterator ( tag::over_segments );
+	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+	{	Cell seg = *it_seg;
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
+		assert ( it_base_rev != corresp_ver.end() );
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::const_iterator it_tip = corresp_ver.find ( seg.tip() );
+		assert ( it_tip != corresp_ver.end() );
+		if ( seg .belongs_to ( side_2, tag::not_oriented ) ) continue;
+			// use corresponding segment on side_1
+		if ( seg .belongs_to ( side_4, tag::not_oriented ) ) continue;
+			// use corresponding segment on side_3
+		Cell new_seg ( tag::segment,
+		               it_base_rev->second.first.reverse(), it_tip->second.first );
+		new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
+		// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
+		//	                corresp_ver [ seg.base().reverse() ] .second  ;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
+		// corresp_seg [ seg ] = new_seg;               
+
+	CellIterator it_seg_1 = side_1.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	CellIterator it_seg_2 = side_2.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	for ( it_seg_1.reset(), it_seg_2.reset(); it_seg_1.in_range(); it_seg_1++, it_seg_2++ )
+	{	assert ( it_seg_2 .in_range() );
+		Cell seg_1 = *it_seg_1;
+		Cell seg_2 = *it_seg_2;
+		std::map < Cell, Cell > ::iterator it = corresp_seg.find ( seg_1 );
+		assert ( it != corresp_seg.end() );
+		Cell new_seg_1 = it->second .reverse();
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg_2 );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg_2,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg_2 ), std::forward_as_tuple ( new_seg_1 ) );     }
+		// corresp_seg [ seg_2 ] = corresp_seg [ seg_1 ];               
+	assert ( not it_seg_2 .in_range() );
+		
+	CellIterator it_seg_3 = side_3.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	CellIterator it_seg_4 = side_4.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	for ( it_seg_3.reset(), it_seg_4.reset(); it_seg_3.in_range(); it_seg_3++, it_seg_4++ )
+	{	assert ( it_seg_4 .in_range() );
+		Cell seg_3 = *it_seg_3;
+		Cell seg_4 = *it_seg_4;
+		std::map < Cell, Cell > ::iterator it = corresp_seg.find ( seg_3 );
+		assert ( it != corresp_seg.end() );
+		Cell new_seg_3 = it->second .reverse();
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg_4 );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg_4,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg_4 ), std::forward_as_tuple ( new_seg_3 ) );     }
+		// corresp_seg [ seg_4 ] = corresp_seg [ seg_3 ];               
+	assert ( not it_seg_4 .in_range() );
+		
+	return fold_common_1 ( msh, corresp_seg );
+
+}  // end of  fold_common_4
+	
+
+Mesh fold_common_5
+( const Mesh & msh,
+  const std::map < Cell, std::pair < Cell, Function::CompositionOfActions > > & corresp_ver,
+  const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4,
+  const Mesh & side_5, const Mesh & side_6                                                  )
+
+{	assert ( msh.dim() == 2 );
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, Cell > corresp_seg;
+
+	CellIterator it_seg = msh.iterator ( tag::over_segments );
+	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+	{	Cell seg = *it_seg;
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
+		assert ( it_base_rev != corresp_ver.end() );
+		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
+			::const_iterator it_tip = corresp_ver.find ( seg.tip() );
+		assert ( it_tip != corresp_ver.end() );
+		if ( seg .belongs_to ( side_2, tag::not_oriented ) ) continue;
+			// use corresponding segment on side_1
+		if ( seg .belongs_to ( side_4, tag::not_oriented ) ) continue;
+			// use corresponding segment on side_3
+		if ( seg .belongs_to ( side_6, tag::not_oriented ) ) continue;
+			// use corresponding segment on side_5
+		Cell new_seg ( tag::segment,
+		               it_base_rev->second.first.reverse(), it_tip->second.first );
+		new_seg.spin() = it_tip->second.second - it_base_rev->second.second;
+		// new_seg.spin() = corresp_ver [ seg.tip()            ] .second -
+		//	                corresp_ver [ seg.base().reverse() ] .second  ;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
+		// corresp_seg [ seg ] = new_seg;               
+
+	CellIterator it_seg_1 = side_1.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	CellIterator it_seg_2 = side_2.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	for ( it_seg_1.reset(), it_seg_2.reset(); it_seg_1.in_range(); it_seg_1++, it_seg_2++ )
+	{	assert ( it_seg_2 .in_range() );
+		Cell seg_1 = *it_seg_1;
+		Cell seg_2 = *it_seg_2;
+		std::map < Cell, Cell > ::iterator it = corresp_seg.find ( seg_1 );
+		assert ( it != corresp_seg.end() );
+		Cell new_seg_1 = it->second .reverse();
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg_2 );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg_2,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg_2 ), std::forward_as_tuple ( new_seg_1 ) );     }
+		// corresp_seg [ seg_2 ] = corresp_seg [ seg_1 ];               
+	assert ( not it_seg_2 .in_range() );
+		
+	CellIterator it_seg_3 = side_3.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	CellIterator it_seg_4 = side_4.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	for ( it_seg_3.reset(), it_seg_4.reset(); it_seg_3.in_range(); it_seg_3++, it_seg_4++ )
+	{	assert ( it_seg_4 .in_range() );
+		Cell seg_3 = *it_seg_3;
+		Cell seg_4 = *it_seg_4;
+		std::map < Cell, Cell > ::iterator it = corresp_seg.find ( seg_3 );
+		assert ( it != corresp_seg.end() );
+		Cell new_seg_3 = it->second .reverse();
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg_4 );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg_4,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg_4 ), std::forward_as_tuple ( new_seg_3 ) );     }
+		// corresp_seg [ seg_4 ] = corresp_seg [ seg_3 ];               
+	assert ( not it_seg_4 .in_range() );
+		
+	CellIterator it_seg_5 = side_5.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	CellIterator it_seg_6 = side_6.iterator
+		( tag::over_segments, tag::require_order, tag::force_positive );
+	for ( it_seg_5.reset(), it_seg_6.reset(); it_seg_5.in_range(); it_seg_5++, it_seg_6++ )
+	{	assert ( it_seg_6 .in_range() );
+		Cell seg_5 = *it_seg_5;
+		Cell seg_6 = *it_seg_6;
+		std::map < Cell, Cell > ::iterator it = corresp_seg.find ( seg_5 );
+		assert ( it != corresp_seg.end() );
+		Cell new_seg_5 = it->second .reverse();
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg_6 );
+		assert ( ( it_map == corresp_seg.end() ) or
+		         ( corresp_seg.key_comp()(seg_6,it_map->first) ) );
+		corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
+		  std::forward_as_tuple ( seg_6 ), std::forward_as_tuple ( new_seg_5 ) );     }
+		// corresp_seg [ seg_6 ] = corresp_seg [ seg_5 ];               
+	assert ( not it_seg_6 .in_range() );
+		
+	return fold_common_1 ( msh, corresp_seg );
+
+}  // end of  fold_common_5
 	
 }  // anonymous namespace
 
@@ -923,7 +1178,7 @@ Mesh Mesh::fold ( const tag::BuildNewVertices & )
 		    ( std::pair < Cell, Function::CompositionOfActions > { new_V, 0 } ) );  }
 		// corresp_ver [ V ] = { new_V, 0 };
 
-	return fold_common ( *this, corresp_ver );                                         }
+	return fold_common_2 ( *this, corresp_ver );                                         }
 
 //----------------------------------------------------------------------------------//
 
@@ -960,17 +1215,17 @@ Mesh Mesh::fold ( const tag::UseExistingVertices & )
 		    ( std::pair < Cell, Function::CompositionOfActions > { V, 0 } ) );  }
 		// corresp_ver [ V ] = { V, 0 };
 
-	return fold_common ( *this, corresp_ver );                                         }
+	return fold_common_2 ( *this, corresp_ver );                                         }
 
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
-                      const tag::With &, const Mesh & msh2,
-                  const tag::BuildNewVertices &            )
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::BuildNewVertices &              )
 
-// take a mesh having as external boundary a parallelogram
-// and identify one pair of opposite sides
+// take a mesh whose external boundary has two parallel segments
+// and identify these two segments
 
 // a quotient manifold will be built with one action generator
 	
@@ -982,12 +1237,12 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	// we split 'coord' into its components
 	Function x = coord[0], y = coord[1];
 
-	// first we need to identify a translation which moves msh1 into msh2
+	// first we need to identify a translation which moves side_1 into side_2
 
-	Cell A = msh1.first_vertex().reverse();
-	Cell B = msh1.last_vertex();
-	Cell C = msh2.last_vertex();
-	Cell D = msh2.first_vertex().reverse();
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
 
 	double dx = x(D) - x(A), dy = y(D) - y(A);
 	double norm = std::sqrt ( dx*dx + dy*dy );
@@ -1004,7 +1259,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	CellIterator it_ver = this->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
-		if ( V.belongs_to ( msh2 ) ) continue;
+		if ( V.belongs_to ( side_2 ) ) continue;
 		Cell new_V ( tag::vertex );
 		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
@@ -1017,9 +1272,9 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		    ( std::pair < Cell, Function::CompositionOfActions > { new_V, 0 } ) );  }
 		// corresp_ver [ V ] = { new_V, 0 };
 
-	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
-	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -1041,17 +1296,17 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		// corresp_ver [ W ] = { new_V, g };
 	assert ( not it2.in_range() );
 						 
-	return fold_common ( *this, corresp_ver );                                         }
+	return fold_common_3 ( *this, corresp_ver, side_1, side_2 );                         }
 
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
-                      const tag::With &, const Mesh & msh2,
-                  const tag::UseExistingVertices &         )
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::UseExistingVertices &           )
 
-// take a mesh having as external boundary a parallelogram
-// and identify one pair of opposite sides
+// take a mesh whose external boundary has two parallel segments
+// and identify these two segments
 
 // a quotient manifold will be built with one action generator
 	
@@ -1063,12 +1318,12 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	// we split 'coord' into its components
 	Function x = coord[0], y = coord[1];
 
-	// first we need to identify a translation which moves msh1 into msh2
+	// first we need to identify a translation which moves side_1 into side_2
 
-	Cell A = msh1.first_vertex().reverse();
-	Cell B = msh1.last_vertex();
-	Cell C = msh2.last_vertex();
-	Cell D = msh2.first_vertex().reverse();
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
 
 	double dx = x(D) - x(A), dy = y(D) - y(A);
 	double norm = std::sqrt ( dx*dx + dy*dy );
@@ -1085,7 +1340,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	CellIterator it_ver = this->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
-		if ( V.belongs_to ( msh2 ) ) continue;
+		if ( V.belongs_to ( side_2 ) ) continue;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 			::iterator it_map = corresp_ver.lower_bound ( V );
@@ -1096,9 +1351,9 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		    ( std::pair < Cell, Function::CompositionOfActions > { V, 0 } ) );  }
 		// corresp_ver [ V ] = { V, 0 };
 
-	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
-	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -1115,16 +1370,16 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		// corresp_ver [ W ] = { V, g };
 	assert ( not it2.in_range() );
 						 
-	return fold_common ( *this, corresp_ver );                                         }
+	return fold_common_3 ( *this, corresp_ver, side_1, side_2 );                         }
 
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
-                      const tag::With &, const Mesh & msh2,
-                  const tag::Identify &, const Mesh & msh3,
-                      const tag::With &, const Mesh & msh4,
-                  const tag::BuildNewVertices &            )
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::BuildNewVertices &              )
 
 // take a mesh having as external boundary a parallelogram
 // and identify two pairs of opposite sides
@@ -1139,23 +1394,23 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	// we split 'coord' into its components
 	Function x = coord[0],  y = coord[1];
 
-	// we need to identify two translations, one which moves msh1 into msh2
-	// and another one which moves msh3 into msh4
+	// we need to identify two translations, one which moves side_1 into side_2
+	// and another one which moves side_3 into side_4
 
-	Cell A = msh1.first_vertex().reverse();
-	Cell B = msh1.last_vertex();
-	Cell C = msh2.last_vertex();
-	Cell D = msh2.first_vertex().reverse();
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
 
 	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
 	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
 	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
 	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
 
-	A = msh3.first_vertex().reverse();
-	B = msh3.last_vertex();
-	C = msh4.last_vertex();
-	D = msh4.first_vertex().reverse();
+	A = side_3.first_vertex().reverse();
+	B = side_3.last_vertex();
+	C = side_4.last_vertex();
+	D = side_4.first_vertex().reverse();
 
 	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
 	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
@@ -1173,8 +1428,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	CellIterator it_ver = this->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
-		if ( V.belongs_to ( msh2 ) ) continue;
-		if ( V.belongs_to ( msh4 ) ) continue;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
 		Cell new_V ( tag::vertex );
 		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
@@ -1187,15 +1442,15 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		    ( std::pair < Cell, Function::CompositionOfActions > { new_V, 0 } ) );  }
 		// corresp_ver [ V ] = { new_V, 0 };
 
-	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
-	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
 		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
 		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
-		if ( V.belongs_to ( msh4 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 			::iterator it_V = corresp_ver.find ( V );
 		assert ( it_V != corresp_ver.end() );
@@ -1213,15 +1468,15 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	assert ( not it2.in_range() );
 
 	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
-	assert ( msh3.number_of ( tag::segments ) == msh4.number_of ( tag::segments ) );
-	CellIterator it3 = msh3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = msh4.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
+	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
 		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
 		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
-		if ( W .belongs_to ( msh2 ) )
+		if ( W .belongs_to ( side_2 ) )
 		{	std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 				::iterator it_W = corresp_ver.find ( W );
 			assert ( it_W == corresp_ver.end() );
@@ -1259,16 +1514,16 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	    ( std::pair < Cell, Function::CompositionOfActions > { origin, g12 + g34 } ) );
 	// corresp_ver [ corner ] = { origin, g12 + g34 };
 	
-	return fold_common ( *this, corresp_ver );                                           }
+	return fold_common_4 ( *this, corresp_ver, side_1, side_2, side_3, side_4 );        }
 
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
-                      const tag::With &, const Mesh & msh2,
-                  const tag::Identify &, const Mesh & msh3,
-                      const tag::With &, const Mesh & msh4,
-                  const tag::UseExistingVertices &            )
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::UseExistingVertices &           )
 
 // take a mesh having as external boundary a parallelogram
 // and identify two pairs of opposite sides
@@ -1283,23 +1538,23 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	// we split 'coord' into its components
 	Function x = coord[0],  y = coord[1];
 
-	// we need to identify two translations, one which moves msh1 into msh2
-	// and another one which moves msh3 into msh4
+	// we need to identify two translations, one which moves side_1 into side_2
+	// and another one which moves side_3 into side_4
 
-	Cell A = msh1.first_vertex().reverse();
-	Cell B = msh1.last_vertex();
-	Cell C = msh2.last_vertex();
-	Cell D = msh2.first_vertex().reverse();
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
 
 	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
 	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
 	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
 	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
 
-	A = msh3.first_vertex().reverse();
-	B = msh3.last_vertex();
-	C = msh4.last_vertex();
-	D = msh4.first_vertex().reverse();
+	A = side_3.first_vertex().reverse();
+	B = side_3.last_vertex();
+	C = side_4.last_vertex();
+	D = side_4.first_vertex().reverse();
 
 	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
 	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
@@ -1317,8 +1572,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	CellIterator it_ver = this->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
-		if ( V.belongs_to ( msh2 ) ) continue;
-		if ( V.belongs_to ( msh4 ) ) continue;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 			::iterator it_map = corresp_ver.lower_bound ( V );
@@ -1329,15 +1584,15 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		    ( std::pair < Cell, Function::CompositionOfActions > { V, 0 } ) );  }
 		// corresp_ver [ V ] = { V, 0 };
 
-	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
-	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
 		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
 		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
-		if ( V.belongs_to ( msh4 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 			::iterator it_W = corresp_ver.lower_bound ( W );
@@ -1350,15 +1605,15 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	assert ( not it2.in_range() );
 
 	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
-	assert ( msh3.number_of ( tag::segments ) == msh4.number_of ( tag::segments ) );
-	CellIterator it3 = msh3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = msh4.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
+	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
 		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
 		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
-		if ( W .belongs_to ( msh2 ) )
+		if ( W .belongs_to ( side_2 ) )
 		{	std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 				::iterator it_W = corresp_ver.find ( W );
 			assert ( it_W == corresp_ver.end() );
@@ -1391,17 +1646,17 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	    ( std::pair < Cell, Function::CompositionOfActions > { origin, g12 + g34 } ) );
 	// corresp_ver [ corner ] = { origin, g12 + g34 };
 	
-	return fold_common ( *this, corresp_ver );                                         }
+	return fold_common_4 ( *this, corresp_ver, side_1, side_2, side_3, side_4 );        }
 
 //----------------------------------------------------------------------------------//
 
 
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
-                      const tag::With &, const Mesh & msh2,
-                  const tag::Identify &, const Mesh & msh_3,
-                      const tag::With &, const Mesh & msh_4,
-                  const tag::Identify &, const Mesh & msh_5,
-                      const tag::With &, const Mesh & msh_6,
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side3,
+                      const tag::With &, const Mesh & side4,
+                  const tag::Identify &, const Mesh & side5,
+                      const tag::With &, const Mesh & side6,
                   const tag::BuildNewVertices &             )
 
 // take a mesh having as external boundary a hexahedron
@@ -1417,58 +1672,58 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	// we split 'coord' into its components
 	Function x = coord[0],  y = coord[1];
 
-	// we need to identify two translations, one which moves msh1 into msh2
-	// and another one which moves msh3 into msh4
+	// we need to identify two translations, one which moves side_1 into side_2
+	// and another one which moves side3 into side4
 
-	Cell A = msh1.first_vertex().reverse();
-	Cell B = msh1.last_vertex();
-	Cell C = msh2.last_vertex();
-	Cell D = msh2.first_vertex().reverse();
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
 
 	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
 	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
 	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
 	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
 
-	Mesh msh3 ( tag::non_existent ), msh4 ( tag::non_existent );
-	// we want msh1 and msh3 to touch
-	if ( A.belongs_to ( msh_3 ) or B.belongs_to ( msh_3 ) )
-	{	msh3 = msh_3; msh4 = msh_4;  }
+	Mesh side_3 ( tag::non_existent ), side_4 ( tag::non_existent );
+	// we want side_1 and side_3 to touch
+	if ( A.belongs_to ( side3 ) or B.belongs_to ( side3 ) )
+	{	side_3 = side3; side_4 = side4;  }
 	else
-	{	assert ( A.belongs_to ( msh_4 ) or B.belongs_to ( msh_4 ) );
-		msh3 = msh_4; msh4 = msh_3;                                 }
+	{	assert ( A.belongs_to ( side4 ) or B.belongs_to ( side4 ) );
+		side_3 = side4; side_4 = side3;                              }
 
-	A = msh3.first_vertex().reverse();
-	B = msh3.last_vertex();
-	C = msh4.last_vertex();
-	D = msh4.first_vertex().reverse();
+	A = side_3.first_vertex().reverse();
+	B = side_3.last_vertex();
+	C = side_4.last_vertex();
+	D = side_4.first_vertex().reverse();
 
 	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
 	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
 	assert ( std::abs ( dx34 - ( x(C) - x(B) ) ) < 1.e-4 * norm34 );
 	assert ( std::abs ( dy34 - ( y(C) - y(B) ) ) < 1.e-4 * norm34 );
 
-	Mesh msh5 ( tag::non_existent ), msh6 ( tag::non_existent );
-	// we want msh3 and msh5 to touch
-	if ( A.belongs_to ( msh_5 ) or B.belongs_to ( msh_5 ) )
-	{	msh5 = msh_5; msh6 = msh_6;  }
+	Mesh side_5 ( tag::non_existent ), side_6 ( tag::non_existent );
+	// we want side_3 and side_5 to touch
+	if ( A.belongs_to ( side5 ) or B.belongs_to ( side5 ) )
+	{	side_5 = side5; side_6 = side6;  }
 	else
-	{	assert ( A.belongs_to ( msh_6 ) or B.belongs_to ( msh_6 ) );
-		msh5 = msh_6; msh6 = msh_5;                                 }
+	{	assert ( A.belongs_to ( side6 ) or B.belongs_to ( side6 ) );
+		side_5 = side6; side_6 = side5;                              }
 
-	A = msh5.first_vertex().reverse();
-	B = msh5.last_vertex();
-	C = msh6.last_vertex();
-	D = msh6.first_vertex().reverse();
+	A = side_5.first_vertex().reverse();
+	B = side_5.last_vertex();
+	C = side_6.last_vertex();
+	D = side_6.first_vertex().reverse();
 
 	double dx56 = x(D) - x(A), dy56 = y(D) - y(A);
 	double norm56 = std::sqrt ( dx56*dx56 + dy56*dy56 );
 	assert ( std::abs ( dx56 - ( x(C) - x(B) ) ) < 1.e-4 * norm56 );
 	assert ( std::abs ( dy56 - ( y(C) - y(B) ) ) < 1.e-4 * norm56 );
 
-	// we are confident that msh3 lies between msh1 and msh5
+	// we are confident that side_3 lies between side_1 and side_5
 	// orientations may vary, we do not care
-	// likewise, msh4 lies between msh2 and msh6
+	// likewise, side_4 lies between side_2 and side_6
 
 	// d56 is either  d12 + d34  or  d12 - d34  or  -d12 - d34  or  -d12 + d34
 	std::vector < std::vector < double > > signs { { 1, 1 }, { 1, -1 }, { -1, -1 }, { -1, 1 } };
@@ -1496,9 +1751,9 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	CellIterator it_ver = this->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
-		if ( V.belongs_to ( msh2 ) ) continue;
-		if ( V.belongs_to ( msh4 ) ) continue;
-		if ( V.belongs_to ( msh6 ) ) continue;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
+		if ( V.belongs_to ( side_6 ) ) continue;
 		Cell new_V ( tag::vertex );
 		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
@@ -1513,19 +1768,19 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 
 	Cell V16 ( tag::non_existent ), V24 ( tag::non_existent );
 	Cell V13 ( tag::non_existent ), V25 ( tag::non_existent );
-	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
-	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
 		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
 		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
-		if ( V.belongs_to ( msh3 ) )
-		{	assert ( W.belongs_to ( msh5 ) );
+		if ( V.belongs_to ( side_3 ) )
+		{	assert ( W.belongs_to ( side_5 ) );
 			V13 = V;  V25 = W;               }
-		if ( V.belongs_to ( msh6 ) )
-		{	assert ( W.belongs_to ( msh4 ) );
+		if ( V.belongs_to ( side_6 ) )
+		{	assert ( W.belongs_to ( side_4 ) );
 			V16 = V;  V24 = W;  continue;    }
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 			::iterator it_V = corresp_ver.find ( V );
@@ -1546,16 +1801,16 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	assert ( V13.exists() );  assert ( V25.exists() );
 
 	Cell V35 ( tag::non_existent ), V46 ( tag::non_existent );
-	assert ( msh3.number_of ( tag::segments ) == msh4.number_of ( tag::segments ) );
-	CellIterator it3 = msh3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = msh4.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
+	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
 		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
 		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
-		if ( V .belongs_to ( msh5 ) )
-		{	assert ( W.belongs_to ( msh2 ) );
+		if ( V .belongs_to ( side_5 ) )
+		{	assert ( W.belongs_to ( side_2 ) );
 			V35 = V;
 			assert ( W == V24 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1565,8 +1820,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 				::iterator it_V = corresp_ver.find ( V );
 			assert ( it_V != corresp_ver.end() );
 			assert ( it_V->second .second == 0 );                                }
-		if ( V .belongs_to ( msh1 ) )
-		{	assert ( W.belongs_to ( msh6 ) );
+		if ( V .belongs_to ( side_1 ) )
+		{	assert ( W.belongs_to ( side_6 ) );
 			V46 = W;
 			assert ( V == V13 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1593,16 +1848,16 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	assert ( not it4.in_range() );
 	assert ( V35.exists() );  assert ( V46.exists() );
 
-	assert ( msh5.number_of ( tag::segments ) == msh6.number_of ( tag::segments ) );
-	CellIterator it5 = msh5.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it6 = msh6.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_5.number_of ( tag::segments ) == side_6.number_of ( tag::segments ) );
+	CellIterator it5 = side_5.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it6 = side_6.iterator ( tag::over_vertices, tag::require_order );
 	for ( it5.reset(), it6.reset(); it5.in_range(); it5++, it6++ )
 	{	assert ( it6.in_range() );
 		Cell V = *it5;  Cell W = *it6;
 		assert ( std::abs ( dx56 - ( x(W) - x(V) ) ) < 1.e-4 * norm56 );
 		assert ( std::abs ( dy56 - ( y(W) - y(V) ) ) < 1.e-4 * norm56 );
-		if ( V .belongs_to ( msh2 ) )
-		{	assert ( W.belongs_to ( msh4 ) );
+		if ( V .belongs_to ( side_2 ) )
+		{	assert ( W.belongs_to ( side_4 ) );
 			assert ( V == V25 );
 			assert ( W == V46 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1619,8 +1874,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 			assert ( it_V->second .first == new_V13 );
 			assert ( it_V->second .second == g12 );
 			continue;                                                             }
-		if ( V .belongs_to ( msh3 ) )
-		{	assert ( W.belongs_to ( msh1 ) );
+		if ( V .belongs_to ( side_3 ) )
+		{	assert ( W.belongs_to ( side_1 ) );
 			assert ( V == V35 );
 			assert ( W == V16 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1657,17 +1912,17 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		// corresp_ver [ W ] = { new_V, g56 };
 	assert ( not it6.in_range() );
 
-	return fold_common ( *this, corresp_ver );                                           }
+	return fold_common_5 ( *this, corresp_ver, side_1, side_2, side_3, side_4, side_5, side_6 ); }
 
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
-                      const tag::With &, const Mesh & msh2,
-                  const tag::Identify &, const Mesh & msh_3,
-                      const tag::With &, const Mesh & msh_4,
-                  const tag::Identify &, const Mesh & msh_5,
-                      const tag::With &, const Mesh & msh_6,
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side3,
+                      const tag::With &, const Mesh & side4,
+                  const tag::Identify &, const Mesh & side5,
+                      const tag::With &, const Mesh & side6,
                   const tag::UseExistingVertices &          )
 
 // take a mesh having as external boundary a hexahedron
@@ -1683,58 +1938,58 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	// we split 'coord' into its components
 	Function x = coord[0],  y = coord[1];
 
-	// we need to identify two translations, one which moves msh1 into msh2
-	// and another one which moves msh3 into msh4
+	// we need to identify two translations, one which moves side_1 into side_2
+	// and another one which moves side_3 into side_4
 
-	Cell A = msh1.first_vertex().reverse();
-	Cell B = msh1.last_vertex();
-	Cell C = msh2.last_vertex();
-	Cell D = msh2.first_vertex().reverse();
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
 
 	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
 	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
 	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
 	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
 
-	Mesh msh3 ( tag::non_existent ), msh4 ( tag::non_existent );
-	// we want msh1 and msh3 to touch
-	if ( A.belongs_to ( msh_3 ) or B.belongs_to ( msh_3 ) )
-	{	msh3 = msh_3; msh4 = msh_4;  }
+	Mesh side_3 ( tag::non_existent ), side_4 ( tag::non_existent );
+	// we want side_1 and side_3 to touch
+	if ( A.belongs_to ( side3 ) or B.belongs_to ( side3 ) )
+	{	side_3 = side3; side_4 = side4;  }
 	else
-	{	assert ( A.belongs_to ( msh_4 ) or B.belongs_to ( msh_4 ) );
-		msh3 = msh_4; msh4 = msh_3;                                 }
+	{	assert ( A.belongs_to ( side4 ) or B.belongs_to ( side4 ) );
+		side_3 = side4; side_4 = side3;                                 }
 
-	A = msh3.first_vertex().reverse();
-	B = msh3.last_vertex();
-	C = msh4.last_vertex();
-	D = msh4.first_vertex().reverse();
+	A = side_3.first_vertex().reverse();
+	B = side_3.last_vertex();
+	C = side_4.last_vertex();
+	D = side_4.first_vertex().reverse();
 
 	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
 	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
 	assert ( std::abs ( dx34 - ( x(C) - x(B) ) ) < 1.e-4 * norm34 );
 	assert ( std::abs ( dy34 - ( y(C) - y(B) ) ) < 1.e-4 * norm34 );
 
-	Mesh msh5 ( tag::non_existent ), msh6 ( tag::non_existent );
-	// we want msh3 and msh5 to touch
-	if ( A.belongs_to ( msh_5 ) or B.belongs_to ( msh_5 ) )
-	{	msh5 = msh_5; msh6 = msh_6;  }
+	Mesh side_5 ( tag::non_existent ), side_6 ( tag::non_existent );
+	// we want side_3 and side_5 to touch
+	if ( A.belongs_to ( side5 ) or B.belongs_to ( side5 ) )
+	{	side_5 = side5; side_6 = side6;  }
 	else
-	{	assert ( A.belongs_to ( msh_6 ) or B.belongs_to ( msh_6 ) );
-		msh5 = msh_6; msh6 = msh_5;                                 }
+	{	assert ( A.belongs_to ( side6 ) or B.belongs_to ( side6 ) );
+		side_5 = side6; side_6 = side5;                                 }
 
-	A = msh5.first_vertex().reverse();
-	B = msh5.last_vertex();
-	C = msh6.last_vertex();
-	D = msh6.first_vertex().reverse();
+	A = side_5.first_vertex().reverse();
+	B = side_5.last_vertex();
+	C = side_6.last_vertex();
+	D = side_6.first_vertex().reverse();
 
 	double dx56 = x(D) - x(A), dy56 = y(D) - y(A);
 	double norm56 = std::sqrt ( dx56*dx56 + dy56*dy56 );
 	assert ( std::abs ( dx56 - ( x(C) - x(B) ) ) < 1.e-4 * norm56 );
 	assert ( std::abs ( dy56 - ( y(C) - y(B) ) ) < 1.e-4 * norm56 );
 
-	// we are confident that msh3 lies between msh1 and msh5
+	// we are confident that side_3 lies between side_1 and side_5
 	// orientations may vary, we do not care
-	// likewise, msh4 lies between msh2 and msh6
+	// likewise, side_4 lies between side_2 and side_6
 
 	// d56 is either  d12 + d34  or  d12 - d34  or  -d12 - d34  or  -d12 + d34
 	std::vector < std::vector < double > > signs { { 1, 1 }, { 1, -1 }, { -1, -1 }, { -1, 1 } };
@@ -1762,9 +2017,9 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	CellIterator it_ver = this->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
-		if ( V.belongs_to ( msh2 ) ) continue;
-		if ( V.belongs_to ( msh4 ) ) continue;
-		if ( V.belongs_to ( msh6 ) ) continue;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
+		if ( V.belongs_to ( side_6 ) ) continue;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
 			::iterator it_map = corresp_ver.lower_bound ( V );
@@ -1777,19 +2032,19 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 
 	Cell V16 ( tag::non_existent ), V24 ( tag::non_existent );
 	Cell V13 ( tag::non_existent ), V25 ( tag::non_existent );
-	assert ( msh1.number_of ( tag::segments ) == msh2.number_of ( tag::segments ) );
-	CellIterator it1 = msh1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = msh2.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
 		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
 		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
-		if ( V.belongs_to ( msh3 ) )
-		{	assert ( W.belongs_to ( msh5 ) );
+		if ( V.belongs_to ( side_3 ) )
+		{	assert ( W.belongs_to ( side_5 ) );
 			V13 = V;  V25 = W;               }
-		if ( V.belongs_to ( msh6 ) )
-		{	assert ( W.belongs_to ( msh4 ) );
+		if ( V.belongs_to ( side_6 ) )
+		{	assert ( W.belongs_to ( side_4 ) );
 			V16 = V;  V24 = W;  continue;    }
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1805,16 +2060,16 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	assert ( V13.exists() );  assert ( V25.exists() );
 
 	Cell V35 ( tag::non_existent ), V46 ( tag::non_existent );
-	assert ( msh3.number_of ( tag::segments ) == msh4.number_of ( tag::segments ) );
-	CellIterator it3 = msh3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = msh4.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
+	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
 		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
 		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
-		if ( V .belongs_to ( msh5 ) )
-		{	assert ( W.belongs_to ( msh2 ) );
+		if ( V .belongs_to ( side_5 ) )
+		{	assert ( W.belongs_to ( side_2 ) );
 			V35 = V;
 			assert ( W == V24 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1824,8 +2079,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 				::iterator it_V = corresp_ver.find ( V );
 			assert ( it_V != corresp_ver.end() );
 			assert ( it_V->second .second == 0 );                                }
-		if ( V .belongs_to ( msh1 ) )
-		{	assert ( W.belongs_to ( msh6 ) );
+		if ( V .belongs_to ( side_1 ) )
+		{	assert ( W.belongs_to ( side_6 ) );
 			V46 = W;
 			assert ( V == V13 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1847,16 +2102,16 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 	assert ( not it4.in_range() );
 	assert ( V35.exists() );  assert ( V46.exists() );
 
-	assert ( msh5.number_of ( tag::segments ) == msh6.number_of ( tag::segments ) );
-	CellIterator it5 = msh5.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it6 = msh6.iterator ( tag::over_vertices, tag::require_order );
+	assert ( side_5.number_of ( tag::segments ) == side_6.number_of ( tag::segments ) );
+	CellIterator it5 = side_5.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it6 = side_6.iterator ( tag::over_vertices, tag::require_order );
 	for ( it5.reset(), it6.reset(); it5.in_range(); it5++, it6++ )
 	{	assert ( it6.in_range() );
 		Cell V = *it5;  Cell W = *it6;
 		assert ( std::abs ( dx56 - ( x(W) - x(V) ) ) < 1.e-4 * norm56 );
 		assert ( std::abs ( dy56 - ( y(W) - y(V) ) ) < 1.e-4 * norm56 );
-		if ( V .belongs_to ( msh2 ) )
-		{	assert ( W.belongs_to ( msh4 ) );
+		if ( V .belongs_to ( side_2 ) )
+		{	assert ( W.belongs_to ( side_4 ) );
 			assert ( V == V25 );
 			assert ( W == V46 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1873,8 +2128,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 			assert ( it_V->second .first == V13 );
 			assert ( it_V->second .second == g12 );
 			continue;                                                             }
-		if ( V .belongs_to ( msh3 ) )
-		{	assert ( W.belongs_to ( msh1 ) );
+		if ( V .belongs_to ( side_3 ) )
+		{	assert ( W.belongs_to ( side_1 ) );
 			assert ( V == V35 );
 			assert ( W == V16 );
 			std::map < Cell, std::pair < Cell, Function::CompositionOfActions > >
@@ -1905,8 +2160,8 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & msh1,
 		    ( std::pair < Cell, Function::CompositionOfActions > { V, g56 } ) );  }
 		// corresp_ver [ W ] = { V, g56 };
 	assert ( not it6.in_range() );
-	
-	return fold_common ( *this, corresp_ver );                                         }
+
+	return fold_common_5 ( *this, corresp_ver, side_1, side_2, side_3, side_4, side_5, side_6 ); }
 
 //----------------------------------------------------------------------------------//
 

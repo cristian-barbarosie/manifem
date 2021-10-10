@@ -39,5 +39,16 @@ int main ( )
 	cyl.draw_ps ( "cylinder.eps", tag::unfold,
                 tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	std::cout << "produced file cylinder.eps - please edit before viewing" << std::endl;	
+	CellIterator it = cyl.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell P = *it;
+		if ( P.belongs_to ( inner ) ) continue;
+		if ( P.belongs_to ( AB ) ) continue;
+		if ( P.belongs_to ( CD ) ) continue;
+		cyl.baricenter ( P, tag::spin );        }
+
+	cyl.draw_ps ( "cylinder-smooth.eps", tag::unfold,
+               tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+
+	std::cout << "produced files cylinder.eps and cylinder-smooth.eps - please edit before viewing" << std::endl;	
 }

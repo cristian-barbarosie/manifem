@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.10.07
+// manifold.cpp 2021.10.10
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -196,9 +196,9 @@ void Manifold::Euclid::interpolate
   const tag::Spin &, const Function::CompositionOfActions & exp_AB ) const
 //  virtual from Manifold::Core
 
-// we could inline these, as interpolate_euclid, to gain speed 
-	
-{	Function coord = this->get_coord_func();
+{	assert ( false );
+
+	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
@@ -274,9 +274,9 @@ void Manifold::Euclid::interpolate
   const tag::Spin &, const Function::CompositionOfActions & exp_AD ) const
 //  virtual from Manifold::Core
 
-// we could inline these, as interpolate_euclid, to gain speed	
-	
-{	Function coord = this->get_coord_func();
+{	assert ( false );
+
+	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
@@ -366,10 +366,10 @@ void Manifold::Euclid::interpolate
   double z, Cell::Positive::Vertex * F,
   const tag::Spin &, const Function::CompositionOfActions & exp_AF ) const
 //  virtual from Manifold::Core
-
-// we could inline these, as interpolate_euclid, to gain speed	
 	
-{	Function coord = this->get_coord_func();
+{	assert ( false );
+
+	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
 	{	assert ( coord.nb_of_components() == 1 );
@@ -738,41 +738,5 @@ void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 void Manifold::Quotient::project ( Cell::Positive::Vertex * P_c ) const  { }
 
 //-----------------------------------------------------------------------------------------
-
-
-// for one-dimensional meshes, if you call 'baricenter' on an extremity
-// nothing will happen
-
-// in contrast, for two or more dimensions, 'baricenter' will act even
-// on a vertex on the boundary of 'this' mesh
-// depending on the current working manifold, the resulting coordinates
-// will be projected on the boundary or not
-
-void Mesh::baricenter ( const Cell & ver )
-
-// 'ver' is a vertex in 'this' mesh
-
-{	assert ( ver.dim() == 0 );
-	std::vector < Cell > neighbours;  // vertices
-	size_t n = 0;
-	if ( this->dim() == 1 )
-	{	Cell front = this->cell_in_front_of ( ver, tag::may_not_exist );
-		if ( not front.exists() ) return;
-		assert ( front.base() == ver.reverse() );
-		neighbours.push_back ( front.tip() );
-		Cell back = this->cell_behind ( ver, tag::may_not_exist );
-		if ( not back.exists() ) return;
-		assert ( back.tip() == ver );
-		neighbours.push_back ( back.base().reverse() );
-		n = 2;                                                           }
-	else
-	{	assert ( this->dim() >= 2 );
-		CellIterator it = this->iterator ( tag::over_vertices, tag::around, ver );
-		for ( it.reset(); it.in_range(); it++ )
-		{	n++;  neighbours.push_back ( *it );  }                                   }
-	assert ( n == neighbours.size() );
-	assert ( n >= 2 );
-	std::vector < double > coefs ( n, 1./n );
-	Manifold::working.interpolate ( ver, coefs, neighbours );                      }
 
 

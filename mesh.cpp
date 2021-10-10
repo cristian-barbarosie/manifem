@@ -23,6 +23,7 @@
 
 #include "mesh.h"
 #include "iterator.h"
+#include "manifold.h"
 
 using namespace maniFEM;
 
@@ -4766,5 +4767,175 @@ Mesh::Core * Mesh::NotZeroDim::build_deep_copy ( )
 //-----------------------------------------------------------------------------//
 
 
+// for one-dimensional meshes, if you call 'baricenter' on an extremity
+// nothing will happen
+
+// in contrast, for two or more dimensions, 'baricenter' will act even
+// on a vertex on the boundary of 'this' mesh
+// depending on the current working manifold, the resulting coordinates
+// will be projected on the boundary or not
+
+void Mesh::baricenter ( const Cell & ver )
+
+// 'ver' is a vertex in 'this' mesh
+
+{	assert ( ver.dim() == 0 );
+	std::vector < Cell > neighbours;  // vertices
+	size_t n = 0;
+	if ( this->dim() == 1 )
+	{	Cell front = this->cell_in_front_of ( ver, tag::may_not_exist );
+		if ( not front.exists() ) return;
+		assert ( front.base() == ver.reverse() );
+		neighbours.push_back ( front.tip() );
+		Cell back = this->cell_behind ( ver, tag::may_not_exist );
+		if ( not back.exists() ) return;
+		assert ( back.tip() == ver );
+		neighbours.push_back ( back.base().reverse() );
+		n = 2;                                                           }
+	else
+	{	assert ( this->dim() >= 2 );
+		CellIterator it = this->iterator ( tag::over_vertices, tag::around, ver );
+		for ( it.reset(); it.in_range(); it++ )
+		{	n++;  neighbours.push_back ( *it );  }                                   }
+	assert ( n == neighbours.size() );
+	assert ( n >= 2 );
+	std::vector < double > coefs ( n, 1. / double(n) );
+	Manifold::working.interpolate ( ver, coefs, neighbours );                      }
+
+
+void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
+
+// 'ver' is a vertex in 'this' mesh
+// tag::spin is a mere indication that we are on a quotient manifold
+// and, as such, neighbour segments may have spin
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+
+	assert ( ver.dim() == 0 );
+	std::vector < Cell > neighbours;  // vertices
+	size_t n = 0;
+	if ( this->dim() == 1 )
+	{	Cell front = this->cell_in_front_of ( ver, tag::may_not_exist );
+		if ( not front.exists() ) return;
+		assert ( front.base() == ver.reverse() );
+		Cell back = this->cell_behind ( ver, tag::may_not_exist );
+		if ( not back.exists() ) return;
+		assert ( back.tip() == ver );
+		Cell shadow_front ( tag::vertex );
+		Cell shadow_back ( tag::vertex );
+		if ( coords_Eu.nb_of_components() == 1 )
+		{	double new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+			coords_Eu ( shadow_front ) = new_co;
+			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			coords_Eu ( shadow_back ) = new_co;                                            }
+		else
+		{	assert ( coords_Eu.nb_of_components() > 1 );
+			std::vector < double > new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+			coords_Eu ( shadow_front ) = new_co;
+			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			coords_Eu ( shadow_back ) = new_co;                                                }
+		neighbours.push_back ( shadow_front );
+		neighbours.push_back ( shadow_back );
+		n = 2;                                                                                 }
+	else
+	{	assert ( this->dim() >= 2 );
+		CellIterator it = this->iterator ( tag::over_segments, tag::around, ver.reverse() );
+		for ( it.reset(); it.in_range(); it++ )
+		{	n++;
+			Cell seg = *it;
+			Cell shadow ( tag::vertex );
+			if ( coords_Eu.nb_of_components() == 1 )
+			{	double new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+				coords_Eu ( shadow ) = new_co;                                 }
+			else
+			{	assert ( coords_Eu.nb_of_components() > 1 );
+				std::vector < double > new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+				coords_Eu ( shadow ) = new_co;                                                }
+			neighbours.push_back ( shadow );                                                  }  }
+	std::vector < double > co = coords_Eu ( ver );
+	assert ( n == neighbours.size() );
+	assert ( n >= 2 );
+	std::vector < double > coefs ( n, 1. / double(n) );
+	mani_Eu.interpolate ( ver, coefs, neighbours );
+}
+
+
+
+void Mesh::baricenter ( const Cell & ver, const tag::Spin &,
+                        const tag::ShadowVertices &, const std::vector < Cell > & vec_cll )
+
+// 'ver' is a vertex in 'this' mesh
+// tag::spin is a mere indication that we are on a quotient manifold
+// and, as such, neighbour segments may have spin
+
+// the above version (without shadow vertices as argument)
+// builds new vertices each time it is invoked,
+// then destroys them (ifdef MANIFEM_COLLECT_CM)
+// this version is more efficient
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+
+	assert ( ver.dim() == 0 );
+	std::vector < Cell > neighbours;  // vertices
+	size_t n = 0;
+	if ( this->dim() == 1 )
+	{	Cell front = this->cell_in_front_of ( ver, tag::may_not_exist );
+		if ( not front.exists() ) return;
+		assert ( front.base() == ver.reverse() );
+		Cell back = this->cell_behind ( ver, tag::may_not_exist );
+		if ( not back.exists() ) return;
+		assert ( back.tip() == ver );
+		assert ( vec_cll.size() >= 2 );
+		Cell shadow_front = vec_cll[0];
+		Cell shadow_back  = vec_cll[1];
+		if ( coords_Eu.nb_of_components() == 1 )
+		{	double new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+			coords_Eu ( shadow_front ) = new_co;
+			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			coords_Eu ( shadow_back ) = new_co;                                            }
+		else
+		{	assert ( coords_Eu.nb_of_components() > 1 );
+			std::vector < double > new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+			coords_Eu ( shadow_front ) = new_co;
+			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			coords_Eu ( shadow_back ) = new_co;                                                }
+		neighbours.push_back ( shadow_front );
+		neighbours.push_back ( shadow_back );
+		n = 2;                                                                                 }
+	else
+	{	assert ( this->dim() >= 2 );
+		CellIterator it = this->iterator ( tag::over_segments, tag::around, ver.reverse() );
+		for ( it.reset(); it.in_range(); it++ )
+		{	Cell seg = *it;
+			assert ( vec_cll.size() > n );
+			Cell shadow = vec_cll[n];
+			n++;
+			if ( coords_Eu.nb_of_components() == 1 )
+			{	double new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+				coords_Eu ( shadow ) = new_co;                                 }
+			else
+			{	assert ( coords_Eu.nb_of_components() > 1 );
+				std::vector < double > new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+				coords_Eu ( shadow ) = new_co;                                                }
+			neighbours.push_back ( shadow );                                                  }  }
+	assert ( n == neighbours.size() );
+	assert ( n >= 2 );
+	std::vector < double > coefs ( n, 1. / double(n) );
+	mani_Eu.interpolate ( ver, coefs, neighbours );                                               }
+
+
+//-----------------------------------------------------------------------------//
 
 

@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.10.06
+//   mesh.h  2021.10.10
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -142,6 +142,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct OverRegion { };  static const OverRegion over_region;
 	struct OneGenerator { };  static const OneGenerator one_generator;
 	struct TwoGenerators { };  static const TwoGenerators two_generators;
+	struct ShadowVertices { };  static const ShadowVertices shadow_vertices;
 
 	struct Util
 	{ template < class T > class Wrapper;
@@ -1019,8 +1020,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// we are still in class Mesh
 	
-	// method baricenter defined in manifold.cpp
 	void baricenter ( const Cell & ver );
+	void baricenter ( const Cell & ver, const tag::Spin & );
+	void baricenter ( const Cell & ver, const tag::Spin &,
+                    const tag::ShadowVertices &, const std::vector < Cell > & vec_cll );
 
 	// iterators defined in iterator.h
 	inline CellIterator iterator ( const tag::OverVertices & ) const;

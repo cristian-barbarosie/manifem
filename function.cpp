@@ -355,6 +355,7 @@ double Function::Scalar::MultiValued::get_value_on_cell ( Cell::Core * cll ) con
 // virtual from Function::Scalar
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
+	assert ( false);
 	return base_scalar->get_value_on_cell(cll);                   }
 
 //-----------------------------------------------------------------------------------------//

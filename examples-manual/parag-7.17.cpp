@@ -6,6 +6,7 @@
 
 // progressive mesh generation does not work yet
 // we fake the result by folding a mesh whose exterior boundary is a polygonal line
+// see attic/five-V-holes.png
 
 #include "maniFEM.h"
 
@@ -91,9 +92,22 @@ int main ( )
 													tag::identify, CD, tag::with, HI.reverse(),
 													tag::use_existing_vertices                 );
 
-	std::cout << "produced folded mesh, now drawing, please wait" << std::endl;
+	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
 	VV.draw_ps ( "VV.eps", tag::unfold, tag::over_region, -1.5 < x < 2.5, -2 < y < 0.5 );
-	std::cout << "produced file VV.eps - please edit before viewing" << std::endl;	
 	
+	std::cout << "now smoothening ... " << std::flush;
+	CellIterator it = VV.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell P = *it;
+		if ( P.belongs_to ( loop1 ) ) continue;
+		if ( P.belongs_to ( loop2 ) ) continue;
+		VV.baricenter ( P, tag::spin );         }
+
+	std::cout << "and drawing again, please wait" << std::endl << std::flush;
+
+	VV.draw_ps ( "VV-smooth.eps", tag::unfold,
+               tag::over_region, -1.5 < x < 2.5, -2 < y < 0.5 );
+
+	std::cout << "produced files VV.eps and VV-smooth.eps - please edit before viewing" << std::endl;	
 }
 

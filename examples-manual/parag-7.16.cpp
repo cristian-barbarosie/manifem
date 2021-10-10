@@ -47,5 +47,18 @@ int main ( )
 	torus.draw_ps ( "torus.eps", tag::unfold,
                   tag::over_region, -2.1 < x < 4.3, -2.6 < y < 2.1 );
 
-	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;	
+	std::cout << "now smoothening ... " << std::flush;
+
+	CellIterator it = torus.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell P = *it;
+		if ( P.belongs_to ( inner ) ) continue;
+		torus.baricenter ( P, tag::spin );        }
+
+	std::cout << "and drawing again, please wait" << std::endl << std::flush;
+
+	torus.draw_ps ( "torus-smooth.eps", tag::unfold,
+                  tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+
+	std::cout << "produced files torus.eps and torus-smooth.eps - please edit before viewing" << std::endl;	
 }
