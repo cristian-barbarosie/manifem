@@ -4,9 +4,9 @@
 // build an intricate mesh on a torus, having two V-shaped holes
 // homogenized elastic tensor exhibits negative Poisson coefficient
 
-// progressive mesh generation does not work yet
+// progressive mesh generation does not work yet on quotient manifolds
 // we fake the result by folding a mesh whose exterior boundary is a polygonal line
-// see attic/five-V-holes.png
+// see https://github.com/cristian-barbarosie/attic/blob/main/five-V-holes.png
 
 #include "maniFEM.h"
 

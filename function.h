@@ -1624,11 +1624,22 @@ inline bool operator==
 	} // just a block for hiding names
 	return true;                                                                       }
 
-	
+
+inline bool operator!=
+( const Function::CompositionOfActions & a, const Function::CompositionOfActions & b )
+{	return not ( a == b );  }
+
+
 inline bool operator== ( const Function::CompositionOfActions & a, const short int zero )
 // shorthand for quering the identity action :  id == 0
 {	assert ( zero == 0 );
 	return a.index_map.size() == 0;  }
+
+
+inline bool operator!=
+( const Function::CompositionOfActions & a, const short int zero )
+{	return not ( a == zero );  }
+	
 
 inline Function::CompositionOfActions Function::CompositionOfActions::operator=
 ( const short int zero )

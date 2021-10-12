@@ -6006,9 +6006,9 @@ inline Cell::NegativeVertex::NegativeVertex
 
 inline Cell::PositiveSegment::PositiveSegment ( Cell A, Cell B, const tag::OneDummyWrapper & )
 
-: Cell::Positive::NotVertex ( tag::of_dim, 1, tag::size_meshes,
-                              tag::Util::assert_diff ( Mesh::maximum_dimension_plus_one, 1 ),
-                              tag::one_dummy_wrapper                                          ),
+:	Cell::Positive::NotVertex ( tag::of_dim, 1, tag::size_meshes,
+	                            tag::Util::assert_diff ( Mesh::maximum_dimension_plus_one, 1 ),
+	                            tag::one_dummy_wrapper                                         ),
 	// tag::Util::assert_diff provides a safe way to substract two 'size_t' numbers
 	base_attr { A }, tip_attr { B }
 
@@ -6042,7 +6042,7 @@ inline Cell::NegativeNotVertex::NegativeNotVertex
 ( const tag::OfDimension &, size_t d,
   const tag::ReverseOf &, Cell::Positive * direct_cll_p, const tag::OneDummyWrapper & )
 
-: Cell::Negative ( tag::of_dim, d, tag::reverse_of, direct_cll_p, tag::one_dummy_wrapper )
+:	Cell::Negative ( tag::of_dim, d, tag::reverse_of, direct_cll_p, tag::one_dummy_wrapper )
 
 {	}
 
@@ -6050,7 +6050,8 @@ inline Cell::NegativeNotVertex::NegativeNotVertex
 inline Cell::NegativeSegment::NegativeSegment
 ( const tag::ReverseOf &, Cell::Positive * direct_seg_p, const tag::OneDummyWrapper & )
 
-: Cell::NegativeNotVertex ( tag::of_dim, 1, tag::reverse_of, direct_seg_p, tag::one_dummy_wrapper )
+:	Cell::NegativeNotVertex ( tag::of_dim, 1, tag::reverse_of, direct_seg_p,
+	                          tag::one_dummy_wrapper                        )
 
 // we must make sure that both extremities of 'direct_seg_p' have a reverse
 // well, the base surely has one since it's a NegativeVertex
@@ -6068,7 +6069,8 @@ inline Cell::PositiveHighDim::PositiveHighDim
   const tag::WhoseBoundaryIs &, const Mesh & msh, const tag::OneDummyWrapper &    )
 
 :	Cell::Positive::NotVertex ( tag::of_dim, d, tag::size_meshes,
-	         tag::Util::assert_diff ( Mesh::maximum_dimension_plus_one, d ), tag::one_dummy_wrapper ),
+	         tag::Util::assert_diff ( Mesh::maximum_dimension_plus_one, d ),
+	                           tag::one_dummy_wrapper                       ),
 	// tag::Util::assert_diff provides a safe way to substract two 'size_t' numbers
 	boundary_attr ( msh )
 	
@@ -6087,7 +6089,8 @@ inline Cell::PositiveHighDim::PositiveHighDim
 inline Cell::NegativeHighDim::NegativeHighDim
 ( const tag::ReverseOf &, Cell::Positive * direct_cell_p, const tag::OneDummyWrapper & )
 :	Cell::Negative::HighDim
-	( tag::of_dim, direct_cell_p->get_dim(), tag::reverse_of, direct_cell_p, tag::one_dummy_wrapper )
+	( tag::of_dim, direct_cell_p->get_dim(), tag::reverse_of, direct_cell_p,
+	  tag::one_dummy_wrapper                                                )
 {	}
 
 
@@ -6095,7 +6098,8 @@ inline Cell::NegativeHighDim::NegativeHighDim
 (	const tag::OfDimension &, const size_t d, const tag::ReverseOf &,
 	Cell::Positive * direct_cell_p, const tag::OneDummyWrapper &                    )
 	
-: Cell::NegativeNotVertex ( tag::of_dim, d, tag::reverse_of, direct_cell_p, tag::one_dummy_wrapper )
+:	Cell::NegativeNotVertex
+	( tag::of_dim, d, tag::reverse_of, direct_cell_p, tag::one_dummy_wrapper )
 
 // we must make sure that all faces of 'direct_cell_p' have a reverse
 // we build the reverse faces if necessary
