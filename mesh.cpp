@@ -905,6 +905,7 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face )
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary_attr.is_positive() );
+	std::cout << "mesh.cpp line 908, cut " << face->get_name() << " from bdry of " << this->get_name() << std::endl;
 	face->remove_from_bdry ( this->boundary_attr.core );
 	// 'remove_from' is virtual, so the computer will choose the right version
 	this->cut_common ( face );                            }
@@ -915,6 +916,7 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face, const tag::D
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary_attr.is_positive() );
+	std::cout << "mesh.cpp line 918, cut " << face->get_name() << " from bdry of " << this->get_name() << std::endl;
 	face->remove_from_bdry ( this->boundary_attr.core, tag::do_not_bother );
 	// 'remove_from' is virtual, so the computer will choose the right version
 	this->cut_common ( face );                            }
@@ -1308,6 +1310,7 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
 	short int mis = map_iter->second.sign;
+	std::cout << "mesh.cpp line 1311, link face " << face->get_name() << ", through cell " << cll->get_name() << ", to mesh " << msh->get_name() << ", cp " << cp << ", cn " << cn << ", mis " << mis << std::endl;
 //	add_link ( face_p, msh, cp, cn, tag::do_not_bother );                    }
 	if ( mis == 1 ) add_link ( face_p, msh, cp, cn, tag::do_not_bother );
 	else  // we switch the two counters
@@ -1330,6 +1333,7 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
 	short int mis = map_iter->second.sign;
+	std::cout << "mesh.cpp line 1334, link face " << face->get_name() << ", through cell " << cll->get_name() << ", to mesh " << msh->get_name() << ", cp " << cp << ", cn " << cn << ", mis " << mis << std::endl;
 //	add_link ( face_p, msh, cp, cn, tag::do_not_bother );                    }
 	if ( mis == 1 ) add_link ( face_p, msh, cp, cn, tag::do_not_bother );
 	else  // we switch the two counters
@@ -1595,11 +1599,11 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	link_face_to_msh ( Ap, seg, msh, 0, 1 );
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	link_face_to_msh ( Bp, seg, msh, 1, 0 );
 
 } // end of make_deep_connections_1d_rev with tag::mesh_is_not_bdry
 
@@ -1622,16 +1626,18 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	// however, we sometimes call this method on the boundary of a
 	// freshly created cell (pretending it is not a boundary)
 
+	std::cout << "mesh.cpp line 1627 make_deep_connections_1d_rev, add " << o_seg->get_name() << ", reverse of " << seg->get_name() << ", to " << msh->get_name() << std::endl;	
+
 	add_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
 	
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 1, 0, tag::do_not_bother );  // we switch the two counters
+	link_face_to_msh ( Ap, seg, msh, 0, 1, tag::do_not_bother );
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 0, 1, tag::do_not_bother );  // we switch the two counters
+	link_face_to_msh ( Bp, seg, msh, 1, 0, tag::do_not_bother );
 
 } // end of make_deep_connections_1d_rev with tag::mesh_is_not_bdry, tag::do_not_bother
 
@@ -1662,12 +1668,12 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	link_face_to_msh ( Ap, seg, msh, 0, 1 );
 	link_face_to_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	link_face_to_msh ( Bp, seg, msh, 1, 0 );
 	link_face_to_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
 
 } // end of make_deep_connections_1d_rev with tag::mesh_is_bdry
@@ -1701,12 +1707,12 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	link_face_to_msh ( Ap, seg, msh, 1, 0, tag::do_not_bother );  // we switch the two counters
+	link_face_to_msh ( Ap, seg, msh, 0, 1, tag::do_not_bother );
 	link_face_to_higher ( Ap, pmce, 1, 0, tag::do_not_bother );  // we switch the two counters
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	link_face_to_msh ( Bp, seg, msh, 0, 1, tag::do_not_bother );  // we switch the two counters
+	link_face_to_msh ( Bp, seg, msh, 1, 0, tag::do_not_bother );
 	link_face_to_higher ( Bp, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 } // end of make_deep_connections_1d_rev with tag::mesh_is_bdry, tag::do_not_bother
@@ -1936,8 +1942,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-		// we switch the two counters
-	  link_face_to_msh ( face, cll, msh, cn, cp );                                   }
+	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1946,8 +1951,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			// we switch the two counters
-			link_face_to_msh ( fface, cll, msh, cn, cp );   }       }
+			link_face_to_msh ( fface, cll, msh, cp, cn );   }       }
 
 } // end of make_deep_connections_hd_rev with tag::mesh_is_not_bdry
 
@@ -1982,8 +1986,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-		// we switch the two counters
-	  link_face_to_msh ( face, cll, msh, cn, cp, tag::do_not_bother );              }
+	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );              }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1992,8 +1995,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			// we switch the two counters
-			link_face_to_msh ( fface, cll, msh, cn, cp, tag::do_not_bother );  }  }
+			link_face_to_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );  }  }
 
 } // end of make_deep_connections_hd_rev with tag::mesh_is_not_bdry, tag::do_not_bother
 
@@ -2034,7 +2036,8 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  link_face_to_msh ( face, cll, msh, cn, cp );  // we switch the two counters
+	  link_face_to_msh ( face, cll, msh, cp, cn );
+		// we switch the two counters
 	  link_face_to_higher ( face, pmce, cn, cp );                                    }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
@@ -2045,7 +2048,8 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			link_face_to_msh ( fface, cll, msh, cn, cp );  // we switch the two counters
+			link_face_to_msh ( fface, cll, msh, cp, cn );
+			// we switch the two counters
 			link_face_to_higher ( fface, pmce, cn, cp );    }  }
 
 } // end of make_deep_connections_hd_rev with tag::mesh_is_bdry
@@ -2089,7 +2093,8 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  link_face_to_msh ( face, cll, msh, cn, cp, tag::do_not_bother );  // we switch the two counters
+	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
+		// we switch the two counters
 	  link_face_to_higher ( face, pmce, cn, cp, tag::do_not_bother );               }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
@@ -2100,7 +2105,8 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			link_face_to_msh ( fface, cll, msh, cn, cp, tag::do_not_bother );  // we switch the two counters
+			link_face_to_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );
+			// we switch the two counters
 			link_face_to_higher ( fface, pmce, cn, cp, tag::do_not_bother );  }  }
 
 } // end of make_deep_connections_hd_rev with tag::mesh_is_bdry, tag::do_not_bother
@@ -2390,10 +2396,13 @@ inline void unlink_face_from_higher  // hidden in anonymous namespace
 	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;
 	maptype & cemd = pmce->meshes_same_dim;
 	maptype::iterator map_iter;
+	std::cout << "mesh.cpp line 2395, unlink " << face->get_name() << " from meshes above "
+						<< pmce->get_name() << ", cp " << cp << ", cn " << cn << std::endl;
 	// we now loop over all meshes of given dimension
 	for ( map_iter = cemd.begin(); map_iter != cemd.end(); ++map_iter )
 	{	assert ( map_iter->first->get_dim_plus_one() == pmce->get_dim() + 1 );
 		Cell::field_to_meshes_same_dim & mis = map_iter->second;
+		std::cout << "   in " << map_iter->first->get_name() << ", mis " << mis.sign << std::endl;
 		if ( mis.sign == 1 ) remove_link ( face_p, map_iter->first, cp, cn );
 		else  // we just switch cp and cn
 		{	assert ( mis.sign == -1 );
@@ -2615,11 +2624,11 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1 );
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
 
 	remove_link_same_dim_rev ( o_seg, seg, msh );
 	
@@ -2647,11 +2656,11 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 1, 0, tag::do_not_bother );  // we switch the two counters
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1, tag::do_not_bother );
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 0, 1, tag::do_not_bother );  // we switch the two counters
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0, tag::do_not_bother );
 
 	remove_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
 	
@@ -2671,23 +2680,29 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	assert ( seg->get_dim() == 1 );
 	assert ( o_seg->get_dim() == 1 );
 
+	std::cout << "mesh.cpp line 2676, break conn between " << o_seg->get_name()
+						<< ", reverse of " << seg->get_name() << ", and " << msh->get_name() << std::endl;
+
 	// for all meshes strictly above msh
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	// unlink 'seg' from meshes above 'msh->cell_enclosed' (of all dimensions)
 	unlink_face_from_higher ( seg, pmce, 0, 1 );  // we switch the two counters
+
+	std::cout << "mesh.cpp line 2686, break conn between " << o_seg->get_name() <<
+		", reverse of " << seg->get_name() << ", and " << msh->get_name() << std::endl;
 
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 1, 0 );  // we switch the two counters
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1 );
 	unlink_face_from_higher ( Ap, pmce, 1, 0 );  // we switch the two counters
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 0, 1 );  // we switch the two counters
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
 	unlink_face_from_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
 
 	remove_link_same_dim_rev ( o_seg, seg, msh );
@@ -2715,18 +2730,18 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
+	// unlink 'seg' from meshes above 'msh->cell_enclosed' (of all dimensions)
 	unlink_face_from_higher ( seg, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
-	unlink_face_from_msh ( Ap, seg, msh, 1, 0, tag::do_not_bother );  // we switch the two counters
+	unlink_face_from_msh ( Ap, seg, msh, 0, 1, tag::do_not_bother );
 	unlink_face_from_higher ( Ap, pmce, 1, 0, tag::do_not_bother );  // we switch the two counters
 	Cell B = seg->tip_attr;
 	Cell::Positive::Vertex * Bp = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
-	unlink_face_from_msh ( Bp, seg, msh, 0, 1, tag::do_not_bother );  // we switch the two counters
+	unlink_face_from_msh ( Bp, seg, msh, 1, 0, tag::do_not_bother );
 	unlink_face_from_higher ( Bp, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	remove_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
@@ -2956,8 +2971,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-		// we switch the two counters
-	  unlink_face_from_msh ( face, cll, msh, cn, cp );                                   }
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );                                   }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2966,8 +2980,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			// we switch the two counters
-			unlink_face_from_msh ( fface, cll, msh, cn, cp );   }       }
+			unlink_face_from_msh ( fface, cll, msh, cp, cn );   }       }
 
 	remove_link_same_dim_rev ( o_cll, cll, msh );
 	
@@ -3004,8 +3017,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-		// we switch the two counters
-	  unlink_face_from_msh ( face, cll, msh, cn, cp, tag::do_not_bother );          }
+	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );          }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -3014,8 +3026,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			// we switch the two counters
-			unlink_face_from_msh ( fface, cll, msh, cn, cp, tag::do_not_bother );  }  }
+			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );  }  }
 
 	remove_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
 	
@@ -3056,7 +3067,8 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cn, cp );  // we switch the two counters
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );
+		// we switch the two counters
 	  unlink_face_from_higher ( face, pmce, cn, cp );                                }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
@@ -3067,7 +3079,8 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			unlink_face_from_msh ( fface, cll, msh, cn, cp );  // we switch the two counters
+			unlink_face_from_msh ( fface, cll, msh, cp, cn );
+			// we switch the two counters
 			unlink_face_from_higher ( fface, pmce, cn, cp );    }  }
 
 	remove_link_same_dim_rev ( o_cll, cll, msh );
@@ -3111,7 +3124,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		short int cp, cn;
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cn, cp, tag::do_not_bother );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
 		// we switch the two counters
 	  unlink_face_from_higher ( face, pmce, cn, cp, tag::do_not_bother );            }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
@@ -3123,7 +3136,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			// to all meshes above 'msh->cell_enclosed' (of all dimensions)
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
-			unlink_face_from_msh ( fface, cll, msh, cn, cp, tag::do_not_bother );
+			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );
 			// we switch the two counters
 			unlink_face_from_higher ( fface, pmce, cn, cp, tag::do_not_bother );    }  }
 
@@ -4270,6 +4283,8 @@ void Mesh::NotZeroDim::add_neg_seg ( Cell::Negative::Segment * seg, const tag::M
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
 
+	std::cout << "mesh.cpp line 4275 Mesh::NotZeroDim::add_neg_seg " << seg->get_name() << " " << this->get_name() << std::endl;	
+
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
 
 	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                  }
@@ -4289,6 +4304,8 @@ void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
 	assert ( pos_seg->tip_attr.exists() );
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
+
+	std::cout << "mesh.cpp line 4297 Mesh::NotZeroDim::add_neg_seg, add " << seg->get_name() << " to " << this->get_name() << std::endl;	
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 
@@ -4310,6 +4327,8 @@ void Mesh::NotZeroDim::add_neg_seg ( Cell::Negative::Segment * seg, const tag::M
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
 
+	std::cout << "mesh.cpp line 4315 Mesh::NotZeroDim::add_neg_seg " << seg->get_name() << " " << this->get_name() << std::endl;	
+
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry );
 
 	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                   }
@@ -4329,6 +4348,8 @@ void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
 	assert ( pos_seg->tip_attr.exists() );
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
+
+	std::cout << "mesh.cpp line 4337 Mesh::NotZeroDim::add_neg_seg " << seg->get_name() << " " << this->get_name() << std::endl;	
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry, tag::do_not_bother );
 
@@ -4407,6 +4428,8 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	assert ( pos_seg->tip_attr.exists() );
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
+
+	std::cout << "mesh.cpp line 4415, remove " << seg->get_name() << " from bdry of " << this->get_name() << std::endl;
 
 	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry );
 

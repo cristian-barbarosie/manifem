@@ -32,6 +32,80 @@ int main ( )
 	Cell ABC ( tag::triangle, BA.reverse(), BC, CA );
 	ABC.core->name = "ABC";
 
+	{ // just a block of code
+	std::cout << "meshes above A" << std::endl;
+	Cell::Positive::Vertex * A_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	auto segs = A_p->segments;
+	for ( auto it = segs.begin(); it != segs.end(); it++ )
+	{	std::cout << "bdry_of_" << it->first->get_name() << " " << it->second << std::endl;  }
+	auto meshes = A_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above B" << std::endl;
+	Cell::Positive::Vertex * B_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	auto segs = B_p->segments;
+	for ( auto it = segs.begin(); it != segs.end(); it++ )
+	{	std::cout << "bdry_of_" << it->first->get_name() << " " << it->second << std::endl;  }
+	auto meshes = B_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above C" << std::endl;
+	Cell::Positive::Vertex * C_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( C.core );
+	auto segs = C_p->segments;
+	for ( auto it = segs.begin(); it != segs.end(); it++ )
+	{	std::cout << "bdry_of_" << it->first->get_name() << " " << it->second << std::endl;  }
+	auto meshes = C_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above BA" << std::endl;
+	Cell::Positive::NotVertex * BA_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( BA.core );
+	auto meshes_same_dim = BA_p->meshes_same_dim;
+	for ( auto it = meshes_same_dim.begin(); it != meshes_same_dim.end(); it++ )
+	{	std::cout << it->first->get_name() << " " << it->second.sign << std::endl;  }
+	auto meshes = BA_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above CA" << std::endl;
+	Cell::Positive::NotVertex * CA_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( CA.core );
+	auto meshes_same_dim = CA_p->meshes_same_dim;
+	for ( auto it = meshes_same_dim.begin(); it != meshes_same_dim.end(); it++ )
+	{	std::cout << it->first->get_name() << " " << it->second.sign << std::endl;  }
+	auto meshes = CA_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above BC" << std::endl;
+	Cell::Positive::NotVertex * BC_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( BC.core );
+	auto meshes_same_dim = BC_p->meshes_same_dim;
+	for ( auto it = meshes_same_dim.begin(); it != meshes_same_dim.end(); it++ )
+	{	std::cout << it->first->get_name() << " " << it->second.sign << std::endl;  }
+	auto meshes = BC_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} // just a block of code
+
 	Mesh msh ( tag::whose_core_is,
      new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one,
 											 tag::one_dummy_wrapper ),
@@ -40,6 +114,80 @@ int main ( )
 
 	ABC .add_to_mesh ( msh );
 	
+	{ // just a block of code
+	std::cout << "meshes above A" << std::endl;
+	Cell::Positive::Vertex * A_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
+	auto segs = A_p->segments;
+	for ( auto it = segs.begin(); it != segs.end(); it++ )
+	{	std::cout << "bdry_of_" << it->first->get_name() << " " << it->second << std::endl;  }
+	auto meshes = A_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above B" << std::endl;
+	Cell::Positive::Vertex * B_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+	auto segs = B_p->segments;
+	for ( auto it = segs.begin(); it != segs.end(); it++ )
+	{	std::cout << "bdry_of_" << it->first->get_name() << " " << it->second << std::endl;  }
+	auto meshes = B_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above C" << std::endl;
+	Cell::Positive::Vertex * C_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( C.core );
+	auto segs = C_p->segments;
+	for ( auto it = segs.begin(); it != segs.end(); it++ )
+	{	std::cout << "bdry_of_" << it->first->get_name() << " " << it->second << std::endl;  }
+	auto meshes = C_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above BA" << std::endl;
+	Cell::Positive::NotVertex * BA_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( BA.core );
+	auto meshes_same_dim = BA_p->meshes_same_dim;
+	for ( auto it = meshes_same_dim.begin(); it != meshes_same_dim.end(); it++ )
+	{	std::cout << it->first->get_name() << " " << it->second.sign << std::endl;  }
+	auto meshes = BA_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above CA" << std::endl;
+	Cell::Positive::NotVertex * CA_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( CA.core );
+	auto meshes_same_dim = CA_p->meshes_same_dim;
+	for ( auto it = meshes_same_dim.begin(); it != meshes_same_dim.end(); it++ )
+	{	std::cout << it->first->get_name() << " " << it->second.sign << std::endl;  }
+	auto meshes = CA_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} { // just a block of code
+	std::cout << "meshes above BC" << std::endl;
+	Cell::Positive::NotVertex * BC_p = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::NotVertex* > ( BC.core );
+	auto meshes_same_dim = BC_p->meshes_same_dim;
+	for ( auto it = meshes_same_dim.begin(); it != meshes_same_dim.end(); it++ )
+	{	std::cout << it->first->get_name() << " " << it->second.sign << std::endl;  }
+	auto meshes = BC_p->meshes;
+	for ( auto it = meshes.begin(); it != meshes.end(); it++ )
+	{	auto m = *it;
+		for ( auto itt = m.begin(); itt != m.end(); itt++ )
+			{	std::cout << itt->first->get_name() << " " << itt->second.counter_pos << " " << itt->second.counter_neg << std::endl;  }  }
+	} // just a block of code
+
   BA .reverse() .cut_from_bdry_of ( ABC );
 
 	std::cout << "reached end of main" << std::endl;
