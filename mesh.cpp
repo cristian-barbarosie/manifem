@@ -1308,9 +1308,10 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
 	short int mis = map_iter->second.sign;
-	if ( mis == 1 ) add_link ( face_p, msh, cp, cn );
+//	add_link ( face_p, msh, cp, cn, tag::do_not_bother );                    }
+	if ( mis == 1 ) add_link ( face_p, msh, cp, cn, tag::do_not_bother );
 	else  // we switch the two counters
-	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp );  }          }
+	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp, tag::do_not_bother );  }  }
 	
 
 inline void link_face_to_msh  // hidden in anonymous namespace
@@ -1329,6 +1330,7 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
 	short int mis = map_iter->second.sign;
+//	add_link ( face_p, msh, cp, cn, tag::do_not_bother );                    }
 	if ( mis == 1 ) add_link ( face_p, msh, cp, cn, tag::do_not_bother );
 	else  // we switch the two counters
 	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp, tag::do_not_bother );  }  }
@@ -1655,7 +1657,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	link_face_to_higher ( seg, pmce, 1, 0 );
+	link_face_to_higher ( seg, pmce, 0, 1 );  // we switch the two counters
 
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
@@ -1694,7 +1696,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	link_face_to_higher ( seg, pmce, 1, 0, tag::do_not_bother );
+	link_face_to_higher ( seg, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
@@ -2281,6 +2283,7 @@ inline void remove_link  // hidden in anonymous namespace
 	assert ( cmdfm != cmd.end() );
 	short int c_p = cmdfm->second.counter_pos -= cp;
 	short int c_n = cmdfm->second.counter_neg -= cn;
+
 	assert ( ( c_p >= 0 ) and ( c_n >= 0 ) );
 	if ( ( c_p == 0 ) and ( c_n == 0 ) )
 	{	msh->remove_from_my_cells ( cll, cll_dim, cmdfm->second.where );
@@ -2463,7 +2466,7 @@ inline void break_deep_connections_0d_rev  // hidden in anonymous namespace
 // see paragraph 11.9 in the manual
 
 {	assert ( ver );  assert ( seg );
-	unlink_face_from_higher ( ver, seg, 0, 1 );
+	unlink_face_from_higher ( ver, seg, 0, 1 );    // we switch the two counters
 	remove_link_zero_dim_rev ( ver, seg );       }
 	
 
@@ -2657,7 +2660,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 
 inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 (	Cell::Core * o_seg, Cell::Positive::Segment * seg,
-  Mesh::Core * msh, const tag::MeshIsBdry &             )
+  Mesh::Core * msh, const tag::MeshIsBdry &          )
 
 // break far connections when removing a negative cell
 // see paragraph 11.9 in the manual
@@ -2674,7 +2677,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 1, 0 );
+	unlink_face_from_higher ( seg, pmce, 0, 1 );  // we switch the two counters
 
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
@@ -2713,7 +2716,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 1, 0, tag::do_not_bother );
+	unlink_face_from_higher ( seg, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
@@ -3964,7 +3967,7 @@ void Mesh::Fuzzy::remove_from_my_cells
 {	assert ( d == cll->get_dim() );
 	assert ( d < this->get_dim_plus_one() );
 	assert ( it != this->cells[d].end() );
-	this->cells[d].erase(it);                  }
+	this->cells[d].erase(it);                 }
 
 
 void Mesh::Fuzzy::remove_from_my_cells
@@ -4399,7 +4402,7 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr.core );
 	// assert that 'pos_seg' belongs to 'this' mesh
 	assert ( pos_seg->meshes_same_dim.find(this) != pos_seg->meshes_same_dim.end() );
-
+	
 	assert ( pos_seg->base_attr.exists() );
 	assert ( pos_seg->tip_attr.exists() );
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );

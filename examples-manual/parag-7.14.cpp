@@ -8,6 +8,7 @@ using namespace maniFEM;
 
 
 void remove_short_segments ( Mesh & msh, double threshold );
+
 void baricenters ( Mesh & msh );
 
 
@@ -206,7 +207,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			// we collapse wing_B, vertex B disappears, vertex A stays where it is
 
 		{	// make a list of segments pointing towards B
-			std::cout << "remove_short_segments, line 209" << std::endl;
+			std::cout << "remove_short_segments, line 210" << std::endl;
 			std::cout << "A " << A_co[0] << " " << A_co[1] << ", B " << B_co[0] << " " << B_co[1] << std::endl;
 			
 			std::forward_list < Cell > list_of_segs;
@@ -232,18 +233,18 @@ void remove_short_segments ( Mesh & msh, double threshold )
 				{	Cell segm = *it_list;      // 'segm' points towards B
 				  segm.spin() -= s;     }
 
-			std::cout << "remove_short_segments, line 235" << std::endl;
+			std::cout << "remove_short_segments, line 236" << std::endl;
 			tri1 .remove_from_mesh ( msh );
 			tri2 .remove_from_mesh ( msh );
 			assert ( tri3.exists() );
 			assert ( tri4.exists() );
-			std::cout << "remove_short_segments, line 240" << std::endl;
+			std::cout << "remove_short_segments, line 241" << std::endl;
 			CB .reverse() .cut_from_bdry_of ( tri3 );
-			std::cout << "remove_short_segments, line 242" << std::endl;
+			std::cout << "remove_short_segments, line 243" << std::endl;
 			BD .reverse() .cut_from_bdry_of ( tri4 );
-			std::cout << "remove_short_segments, line 244" << std::endl;
+			std::cout << "remove_short_segments, line 245" << std::endl;
 			AC .glue_on_bdry_of ( tri3 );
-			std::cout << "remove_short_segments, line 206" << std::endl;
+			std::cout << "remove_short_segments, line 207" << std::endl;
 			DA .glue_on_bdry_of ( tri4 );
 
 			std::cout << "remove_short_segments, line 249" << std::endl;

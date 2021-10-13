@@ -3,7 +3,19 @@
 #include <set>
 #include <fstream>
 
+
+//apanhado :
+// até 01 build_interf
+// 01-02 cortes ao lado da estrada
+// 02-03 alisamento
+// 03-04 volta para a malha ainda com cortes diagonais
+// 04-05 elimina diagonais, fica em escada
+// 05-06 segue nova forma, ainda em escada
+// 06-07 arrendonda as curvas
+// pronto para retomar com 01-02
+
 using namespace maniFEM;
+using namespace std;
 
 int global_counter = 0;
 
@@ -13,6 +25,8 @@ inline bool opposite_signs ( double a, double b )
 {	return ( ( a >= 0. ) and ( b <= 0. ) ) or ( ( a <= 0. ) and ( b >= 0. ) );  }
 
 void special_draw ( Mesh & square, Mesh & cut, std::string f );
+
+inline Cell cut_diagonal ( Mesh ambient, Cell ABCD, Cell A );
 
 Mesh build_interface ( Mesh ambient, Function psi );
 
@@ -44,6 +58,8 @@ int main ()
 	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 20 );
 	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 40 );
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 20 );
+	
+	Mesh Bdry ( tag::join, AB, BC, CD, DA);
 
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
@@ -55,9 +71,9 @@ int main ()
 		y_bg(V)=y(V);  }
 	} // just a block of code for hiding names
 	
-	double radius = 0.4;
+	double radius = 0.3;
 	// std::cout << "radius = ";  std::cin >> radius;
-	Function psi = 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius );
+	Function psi = x*x + (y-0.2)*(y-0.2) - 0.3 + 0.2*x*y - 1.35*x*x*y*y;
 
 	// 0.5 * ( ( x*x + (y-0.2)*(y-0.2) ) / radius - radius )  circulo
 
@@ -81,11 +97,12 @@ int main ()
 		if (V.belongs_to(CD)) y(V)=1.;
 		if (V.belongs_to(DA)) x(V)=-1.;  }
 
+
 	// 'level' is working manifold
 	
 	for ( it.reset(); it.in_range(); it++ )  // 'it' runs over vertices of cut 
 	{	Cell W = *it; cut.baricenter ( W );  }
-
+	
 	RR2.set_as_working_manifold();
 
 	for ( it.reset(); it.in_range(); it++)  // 'it' runs over vertices of cut 
@@ -101,7 +118,12 @@ int main ()
 			rect_mesh.baricenter ( W );                              }                 }
 	} // just a block of code for hiding names
 	
+	special_draw ( rect_mesh, cut, "square-cut-03.eps" );
+	rect_mesh.export_msh("square-03.msh"); 
+	
 	// solve equilibrium problem, compute new psi
+	
+	psi = x*x + (y-0.2)*(y-0.2) - 0.35 + 0.2*x*y - 1.35*x*x*y*y;
 	
 	{ // just a block of code for hiding names
 	CellIterator it=rect_mesh.iterator(tag::over_vertices);
@@ -109,9 +131,18 @@ int main ()
 	{	Cell V=*it;
 		x(V)=x_bg(V);
 		y(V)=y_bg(V);  }
+		
+	special_draw ( rect_mesh, cut, "square-cut-04.eps" );
+	rect_mesh.export_msh("square-04.msh"); 
+		
+	size_t conta_it = 0;
+	
+// eliminate diagonal cuts
+
 	for ( std::list <std::list <Cell >>::iterator it_triple=list_of_triplets.begin();
         it_triple != list_of_triplets.end(); it_triple++                            )
-	{	std::list<Cell> triplet = *it_triple;
+	{	conta_it++;
+	    std::list<Cell> triplet = *it_triple;
 		std::list<Cell>::iterator itt = triplet.begin();
 		assert( itt != triplet.end() );
 		Cell square = *itt;
@@ -122,17 +153,135 @@ int main ()
 		assert( itt != triplet.end() );
 		Cell tri2 = *itt;
 		itt++;
+		assert( itt != triplet.end() );
+		Cell diag = *itt;
+		itt++;
 		assert( itt == triplet.end() );
-		tri1.remove_from_mesh(rect_mesh);
+	    tri1.remove_from_mesh(rect_mesh);
 		tri2.remove_from_mesh(rect_mesh);
-		square.add_to_mesh(rect_mesh);                    }
+		square.add_to_mesh(rect_mesh);       
+// a acrescentar 2 segmentos da fronteira do tri2
+// diag pertence a fronteira de tri2; diag.reverse pertence a fronteira do tri1 	
+// escolhemos tri1 por ser mais comodo
+        if(diag.belongs_to(cut,tag::oriented)) {
+        diag.remove_from_mesh(cut);
+        Cell P = diag.tip();
+        Cell RP = tri1.boundary().cell_behind(P);
+        assert (RP.tip() == P);
+		Cell R = RP.base().reverse();
+		Cell SR = tri1.boundary().cell_behind(R);
+		assert (SR.tip() == R);
+		assert (SR.base() == diag.base());
+		SR.add_to_mesh(cut);
+		RP.add_to_mesh(cut); }
+             }
 	} // just a block of code for hiding names
 	
-	special_draw ( rect_mesh, cut, "square-cut.eps" );
-	rect_mesh.export_msh("background.msh");
-	std::cout << "produced files square-cut.eps and background.msh" << std::endl;
-	exit ( 0 );
+// eliminate red segments if they are on the boundary
 	
+	{ // just a block of code for hiding names
+	
+	std::list <Cell> L;
+	CellIterator it=cut.iterator(tag::over_segments, tag::force_positive);
+	for(it.reset(); it.in_range(); it++)
+	{	Cell seg=*it;
+        if (seg.belongs_to(Bdry, tag::not_oriented))
+			L.push_back(seg);
+	}
+	for(std::list<Cell> ::iterator itL=L.begin(); itL!=L.end();itL++){
+		Cell seg=*itL;
+		seg.remove_from_mesh(cut);
+	}
+	}
+	
+	special_draw ( rect_mesh, cut, "square-cut-05.eps" );
+	rect_mesh.export_msh("square-05.msh"); 
+	
+//	follow level line of new psi
+	
+	{ // just a block of code for hiding names
+//	size_t contador=0;
+	start_again:	
+	CellIterator it=cut.iterator(tag::over_vertices);
+	for(it.reset(); it.in_range(); it++)
+	{	Cell V=*it;
+		Cell seg1=cut.cell_behind(V, tag::may_not_exist);
+		Cell seg2=cut.cell_in_front_of(V, tag::may_not_exist);
+        if(not seg1.exists()) continue;
+		if(not seg2.exists()) continue;
+		Cell sq1 = rect_mesh.cell_behind(seg1);
+		Cell sq2 = rect_mesh.cell_behind(seg2);
+		if( sq1 == sq2 ) {// turn left
+		Cell W = seg2.tip();
+		Cell seg3 = sq1.boundary().cell_in_front_of(W);
+		Cell T = seg3.tip();
+		Cell seg4 = sq1.boundary().cell_in_front_of(T);
+		assert(seg4.tip()==seg1.base().reverse());
+		if(abs(psi(T)) < abs(psi(V))) {
+			assert(not seg3.belongs_to(cut, tag::oriented));
+			assert(not seg4.belongs_to(cut, tag::oriented));
+			seg1.remove_from_mesh(cut);
+			seg2.remove_from_mesh(cut);
+			if (not seg3.get_positive().belongs_to(Bdry, tag::not_oriented)) seg3.reverse().add_to_mesh(cut);
+			if (not seg4.get_positive().belongs_to(Bdry, tag::not_oriented)) seg4.reverse().add_to_mesh(cut);
+			goto start_again;
+		}
+		}
+		sq1 = rect_mesh.cell_in_front_of(seg1);
+		sq2 = rect_mesh.cell_in_front_of(seg2);
+		if( sq1 == sq2 ) {// turn right
+		Cell W = seg2.tip();
+		Cell seg3 = sq1.boundary().cell_behind(W);
+		Cell T = seg3.base().reverse();
+		Cell seg4 = sq1.boundary().cell_behind(T);
+		assert(seg4.base() == seg1.base());
+		if(abs(psi(T)) < abs(psi(V))) {
+			assert(not seg3.reverse().belongs_to(cut, tag::oriented));
+			assert(not seg4.reverse().belongs_to(cut, tag::oriented));
+			seg1.remove_from_mesh(cut);
+			seg2.remove_from_mesh(cut);
+			if (not seg3.get_positive().belongs_to(Bdry, tag::not_oriented)) seg3.add_to_mesh(cut);
+			if (not seg4.get_positive().belongs_to(Bdry, tag::not_oriented)) seg4.add_to_mesh(cut);
+//			if (contador == 1) goto final;
+        goto start_again;			
+		}
+		}
+	}
+	}
+//	final:
+	special_draw ( rect_mesh, cut, "square-cut-06.eps" );
+	rect_mesh.export_msh("square-06.msh"); 
+	
+		{ // just a block of code for hiding names
+//	size_t contador=0;
+	start_again_246:	
+	CellIterator it=cut.iterator(tag::over_vertices);
+	for(it.reset(); it.in_range(); it++)
+	{	Cell V=*it;
+		Cell seg1=cut.cell_behind(V, tag::may_not_exist);
+		Cell seg2=cut.cell_in_front_of(V, tag::may_not_exist);
+        if(not seg1.exists()) continue;
+		if(not seg2.exists()) continue;
+		Cell sq1 = rect_mesh.cell_behind(seg1);
+		Cell sq2 = rect_mesh.cell_behind(seg2);
+		if( sq1 == sq2 ) {// turn left
+		seg1.remove_from_mesh(cut);
+		seg2.remove_from_mesh(cut);
+		Cell diag=cut_diagonal( rect_mesh, sq1, seg1.base().reverse());
+		diag.add_to_mesh(cut);
+		goto start_again_246;}
+		sq1 = rect_mesh.cell_in_front_of(seg1);
+		sq2 = rect_mesh.cell_in_front_of(seg2);
+		if( sq1 == sq2 ) {// turn right
+		seg1.remove_from_mesh(cut);
+		seg2.remove_from_mesh(cut);
+		Cell diag=cut_diagonal( rect_mesh, sq1, seg1.base().reverse());
+		diag.add_to_mesh(cut);
+		goto start_again_246;}
+	}
+	}
+	special_draw ( rect_mesh, cut, "square-cut-07.eps" );
+	rect_mesh.export_msh("square-07.msh"); 
 } // end of main
 	
 //-----------------------------------------------------------------------------------//
@@ -155,7 +304,7 @@ inline Cell cut_diagonal ( Mesh ambient, Cell ABCD, Cell A )
 	Cell ACD ( tag::triangle, AC, CD, DA );
 	ABC.add_to_mesh ( ambient );
 	ACD.add_to_mesh ( ambient );    
-	list_of_triplets.push_back({ABCD,ABC,ACD});
+	list_of_triplets.push_back({ABCD,ABC,ACD,AC});
 	return AC;                                                    }
 
 //-----------------------------------------------------------------------------------//
@@ -409,6 +558,11 @@ Mesh build_interface ( Mesh ambient, Function psi )
 
 	}  // end of for it_set in set_useful
 	}  // just a block of code for hiding names
+	
+	special_draw ( ambient, interf, "square-cut-01.eps" );
+	ambient.export_msh("square-01.msh"); 
+	
+	
                   
 	// we cut in halves some more squares (not touching the interface)
 	
@@ -489,8 +643,10 @@ Mesh build_interface ( Mesh ambient, Function psi )
 			assert ( FBGH.boundary().number_of(tag::segments) == 4 );
 			cut_diagonal ( ambient, FBGH, BF.tip() );       }
 		counter++;                                                                    }
-	std::cout << "found " << counter << " interesting configurations" << std::endl;
 	}  // just a block of code for hiding names
+	
+	special_draw ( ambient, interf, "square-cut-02.eps" );
+	ambient.export_msh("square-02.msh"); 
 
 	return interf;
 
