@@ -142,7 +142,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 		// and that higher-dim cell has neighbours in some higher-dim mesh,
 		// statements below do not work as expected - or do they ?
 
-		std::cout << "remove_short_segments, line 144" << std::endl;
+		std::cout << "remove_short_segments, line 144" << std::endl << std::flush;
 
 		if ( wing_B_free and wing_A_free )
 			// both wings free, we collapse one of them at random
@@ -150,7 +150,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			// A will occupy middle of segment seg
 
 		{	// make a list of segments pointing towards B
-			std::cout << "remove_short_segments, line 152" << std::endl;
+			std::cout << "remove_short_segments, line 152" << std::endl << std::flush;
 			std::forward_list < Cell > list_of_segs;
 			CellIterator it_around_B = msh.iterator ( tag::over_segments, tag::around, B );
 			it_around_B .reset ( tag::start_at, BD.reverse() );
@@ -208,7 +208,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		{	// make a list of segments pointing towards B
 			std::cout << "remove_short_segments, line 210" << std::endl;
-			std::cout << "A " << A_co[0] << " " << A_co[1] << ", B " << B_co[0] << " " << B_co[1] << std::endl;
+			std::cout << "A " << A_co[0] << " " << A_co[1] << ", B " << B_co[0] << " " << B_co[1] << std::endl << std::flush;
 			
 			std::forward_list < Cell > list_of_segs;
 			CellIterator it_around_B = msh.iterator ( tag::over_segments, tag::around, B );
@@ -225,7 +225,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			for ( it_around_B++; it_around_B .in_range(); it_around_B++ )
 				list_of_segs .push_front ( *it_around_B );
 			
-			std::cout << "remove_short_segments, line 227" << std::endl;
+			std::cout << "remove_short_segments, line 227" << std::endl << std::flush;
 			// change spin of these segments
 			if ( s != 0 )
 				for ( std::forward_list < Cell > ::iterator it_list = list_of_segs .begin();
@@ -233,28 +233,32 @@ void remove_short_segments ( Mesh & msh, double threshold )
 				{	Cell segm = *it_list;      // 'segm' points towards B
 				  segm.spin() -= s;     }
 
-			std::cout << "remove_short_segments, line 236" << std::endl;
+			std::cout << "remove_short_segments, line 236" << std::endl << std::flush;
 			tri1 .remove_from_mesh ( msh );
 			tri2 .remove_from_mesh ( msh );
 			assert ( tri3.exists() );
 			assert ( tri4.exists() );
-			std::cout << "remove_short_segments, line 241" << std::endl;
+			std::cout << "remove_short_segments, line 241" << std::endl << std::flush;
 			CB .reverse() .cut_from_bdry_of ( tri3 );
-			std::cout << "remove_short_segments, line 243" << std::endl;
+			std::cout << "remove_short_segments, line 243" << std::endl << std::flush;
 			BD .reverse() .cut_from_bdry_of ( tri4 );
-			std::cout << "remove_short_segments, line 245" << std::endl;
+			std::cout << "remove_short_segments, line 245" << std::endl << std::flush;
 			AC .glue_on_bdry_of ( tri3 );
-			std::cout << "remove_short_segments, line 207" << std::endl;
+			std::cout << "remove_short_segments, line 207" << std::endl << std::flush;
 			DA .glue_on_bdry_of ( tri4 );
 
-			std::cout << "remove_short_segments, line 249" << std::endl;
+			std::cout << "remove_short_segments, line 249" << std::endl << std::flush;
 			// replace B by A in segments neighbour to B
 			for ( std::forward_list < Cell > ::iterator it_list = list_of_segs .begin();
 			      it_list != list_of_segs .end(); it_list ++                            )
-			{	Cell segm = *it;
+			{	Cell segm = *it_list;
 				assert ( segm.tip() == B );
+				std::cout << "remove_short_segments, line 256" << std::endl << std::flush;
 				B .cut_from_bdry_of ( segm );
-				A .glue_on_bdry_of ( segm );  }                                          }
+				std::cout << "remove_short_segments, line 258" << std::endl << std::flush;
+				A .glue_on_bdry_of ( segm );  }
+			std::cout << "remove_short_segments, line 260" << std::endl << std::flush;
+		}
 //				if ( segm .is_positive() )
 //				{	B .cut_from_bdry_of ( segm );
 //					A .glue_on_bdry_of ( segm );   }
@@ -266,7 +270,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			// we collapse wing_A, vertex A disappears,, vertex B stays where it is
 
 		{	// make a list of segments pointing towards A
-			std::cout << "remove_short_segments, line 259" << std::endl;
+			std::cout << "remove_short_segments, line 259" << std::endl << std::flush;
 			std::forward_list < Cell > list_of_segs;
 			CellIterator it_around_A = msh.iterator ( tag::over_segments, tag::around, A );
 			it_around_A .reset ( tag::start_at, AC.reverse() );
