@@ -3,6 +3,8 @@
 
 
 #include "maniFEM.h"
+#include <Eigen/Sparse>
+#include <Eigen/OrderingMethods>
 using namespace maniFEM;
 
 int main ( )
@@ -36,23 +38,55 @@ int main ( )
 	                           tag::identify, BC, tag::with, DA.reverse(),
 	                           tag::use_existing_vertices                 );
 
-	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
-	
-	torus.draw_ps ( "torus.eps", tag::unfold,
-                  tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+	// declare the type of finite element
+	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe.set_integrator ( tag::Gauss, tag::tri_4 );
 
-	std::cout << "now smoothening ... " << std::flush;
-
+	std::map < Cell, size_t > numbering;
+	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = torus.iterator ( tag::over_vertices );
+	size_t counter = 0;
+	for ( it.reset() ; it.in_range(); it++ )
+	{	Cell V = *it;  numbering[V] = counter;  ++counter;  }
+	assert ( counter == numbering.size() );
+	} // just a block of code
+
+	size_t size_matrix = numbering.size();
+	std::cout << "global matrix " << size_matrix + 1 << "x" << size_matrix << std::endl;
+	Eigen::SparseMatrix < double > matrix_A ( size_matrix + 1, size_matrix );
+	
+	matrix_A.reserve ( Eigen::VectorXi::Constant ( size_matrix, 8 ) );
+	// since we will be working with a mesh of triangles,
+	// there will be, in average, eight non-zero elements per column
+	// the diagonal entry plus six neighbour vertices plus the last equation
+
+	Eigen::VectorXd vector_b ( size_matrix + 1 ), vector_sol ( size_matrix );
+	vector_b.setZero();
+
+	// run over all square cells composing 'torus'
+	{ // just a block of code for hiding 'it'
+	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
-	{	Cell P = *it;
-		if ( P.belongs_to ( inner ) ) continue;
-		torus.baricenter ( P, tag::spin );        }
+	{	Cell small_tri = *it;
+		fe.dock_on ( small_tri );
+		// run twice over the four vertices of 'small_tri'
+		CellIterator it1 = small_tri.boundary().iterator ( tag::over_vertices );
+		CellIterator it2 = small_tri.boundary().iterator ( tag::over_vertices );
+		for ( it1.reset(); it1.in_range(); it1++ )
+		for ( it2.reset(); it2.in_range(); it2++ )
+		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
+			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
+			// 					<< x(W) << "," << y(W) << ") " << numbering[W]) << std::endl;
+			Function psiV = fe.basis_function(V),
+			         psiW = fe.basis_function(W),
+			         d_psiV_dx = psiV.deriv(x),
+			         d_psiV_dy = psiV.deriv(y),
+			         d_psiW_dx = psiW.deriv(x),
+			         d_psiW_dy = psiW.deriv(y);
+			// 'fe' is already docked on 'small_tri' so this will be the domain of integration
+			matrix_A.coeffRef ( numbering[V], numbering[W] ) +=
+				fe.integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
+		}  }
+	} // just a block of code 
 
-	std::cout << "and drawing again, please wait" << std::endl << std::flush;
-
-	torus.draw_ps ( "torus-smooth.eps", tag::unfold,
-                  tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
-
-	std::cout << "produced files torus.eps and torus-smooth.eps - please edit before viewing" << std::endl;	
 }

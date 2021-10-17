@@ -8,9 +8,6 @@ Also, maniFEM was written with the goal of being conceptually clear and easy to 
 We hope it will be particularly useful for people who want fine control over the mesh, 
 e.g. for implementing their own meshing or remeshing algorithms.
 
-ManiFEM uses [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for storing matrices
-and for solving systems of linear equations.
-
 ManiFEM is just a collection of C++ classes.
 It has no user-friendly interface nor graphic capabilities. 
 The user should have some understanding of programming and of C++. 
@@ -26,6 +23,9 @@ Variational formulations (section 5 in the manual) are not yet implemented.
 Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now.
 A changelog is available at the end of the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf).
 To check which version of maniFEM is installed in your computer, see at the beginning of the file `maniFEM.h`.
+
+ManiFEM uses [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for storing matrices
+and for solving systems of linear equations.
 
 ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com), [Sérgio Lopes](mailto:slopes@adm.isel.pt)
 and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com); see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).

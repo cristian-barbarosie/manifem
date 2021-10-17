@@ -357,10 +357,10 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 	assert ( tran );
 	// in the above we must use dynamic_cast
 	// below, with -DNDEBUG, assert_cast calls a static_cast which does not compile
+	//   Function::Map * tran = tag::Util::assert_cast
+	// 	   < Function::Core*, Function::Map* > ( fe_core->transf.core );
 	// classes Function::Core and Function::Map are not directly related
 	// perhaps we should have used virtual inheritance ?
-	// Function::Map * tran = tag::Util::assert_cast
-	// 	< Function::Core*, Function::Map* > ( fe_core->transf.core );
 
 	size_t geom_dim = tran->geom_coords.nb_of_components();
 	assert ( geom_dim == tran->back_geom_coords.nb_of_components() );
