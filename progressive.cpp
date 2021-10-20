@@ -94,7 +94,7 @@ class Manifold::Type::Quotient
 {	public :
 
 	class sq_dist;	
-	typedef std::pair < Cell, Function::CompositionOfActions > cell_with_spin;
+	typedef std::pair < Cell, Function::Action > cell_with_spin;
 	typedef MetricTree < cell_with_spin, sq_dist > metric_tree;
 };
 
@@ -114,7 +114,7 @@ class Manifold::Type::Quotient::sq_dist
 {	public :
 
 	inline double dist2
-	( const Cell & A, const Cell & B, const Function::CompositionOfActions & spin,
+	( const Cell & A, const Cell & B, const Function::Action & spin,
 		const Function & coords_Eu, const Function & coords_q                       )
 	{	double res = 0.;
 		std::vector < double > coord_A = coords_Eu ( A ),
@@ -131,8 +131,8 @@ class Manifold::Type::Quotient::sq_dist
 	// relatively to the first one A
 	// (the spin of a future segment AB where the minimum distance is achieved)
 
-	inline double operator() ( std::pair < Cell, Function::CompositionOfActions > A,
-	                           std::pair < Cell, Function::CompositionOfActions > & B )
+	inline double operator() ( std::pair < Cell, Function::Action > A,
+	                           std::pair < Cell, Function::Action > & B )
 	{	Manifold space = Manifold::working;
 		assert ( space.exists() );  // we use the current (quotient) manifold
 		Manifold::Quotient * manif_q = tag::Util::assert_cast
@@ -147,7 +147,7 @@ class Manifold::Type::Quotient::sq_dist
 		// the action group may have one or two generators
 		assert ( manif_q->actions.size() == 2 );
 		assert ( manif_q->spins.size() == 2 );
-		Function::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
+		Function::ActionGenerator g1 = manif_q->actions[0], g2 = manif_q->actions[1];
 	
 		std::vector < std::vector < short int > > directions
 			{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
@@ -165,7 +165,7 @@ class Manifold::Type::Quotient::sq_dist
 			for ( size_t d = 0; d < 4; d++ )
 			{	if ( d == 2 ) size_of_round++;
 				for ( size_t i = 0; i < size_of_round; i++ )
-				{	Function::CompositionOfActions s = ii*g1 + jj*g2;
+				{	Function::Action s = ii*g1 + jj*g2;
 					double di = this->dist2 ( A.first, B.first, s, coords_Eu, coords_q );
 					if ( di < dist )
 					{	dist = di;
@@ -2669,7 +2669,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 //-------------------------------------------------------------------------------------------------
 
 
-void print_spin ( Function::CompositionOfActions a )
+void print_spin ( Function::Action a )
 
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -2680,8 +2680,8 @@ void print_spin ( Function::CompositionOfActions a )
 	assert ( n == manif_q->spins.size() );
 	std::cout << "(";
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Action & g = manif_q->actions[i];
-		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+	{	Function::ActionGenerator & g = manif_q->actions[i];
+		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() )
 		{	std::cout << "0,"; continue;  }
 		short int exp = itt->second;
@@ -2708,8 +2708,8 @@ void test_sq_dist ()
 
 	Manifold::Type::Quotient::sq_dist sd;
 
-	std::pair < Cell, Function::CompositionOfActions > AA { A, 0 };
-	std::pair < Cell, Function::CompositionOfActions > BB { B, 0 };
+	std::pair < Cell, Function::Action > AA { A, 0 };
+	std::pair < Cell, Function::Action > BB { B, 0 };
 	double dist2 = sd ( AA, BB );
 	std::cout << dist2 << std::endl;
 	print_spin ( BB.second );

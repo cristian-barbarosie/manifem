@@ -1,5 +1,6 @@
 
 // solve a celullar problem
+// square periodicity, triangular elements, circular hole
 
 
 #include "maniFEM.h"
@@ -68,7 +69,8 @@ int main ( )
 	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri );
+		std::cout << "*****************************" << std::endl;
+		fe.dock_on ( small_tri, tag::spin );
 		// run twice over the four vertices of 'small_tri'
 		CellIterator it1 = small_tri.boundary().iterator ( tag::over_vertices );
 		CellIterator it2 = small_tri.boundary().iterator ( tag::over_vertices );

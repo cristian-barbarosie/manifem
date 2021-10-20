@@ -149,7 +149,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class Core;
 		class CellCore;  // aka Cell::Core
 		class MeshCore;  // aka Mesh::Core
-		class CompositionOfActions;  // aka Function::CompositionOfActions
+		class Action;  // aka Function::Action
 		// defined in function.h
 		class InequalitySet;  // aka Function::Inequality::Set
 		// defined in function.f
@@ -757,7 +757,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::DividedIn &, const size_t n               );
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n,
-	              const tag::Spin &, const tag::Util::CompositionOfActions & );
+	              const tag::Spin &, const tag::Util::Action & );
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
@@ -1634,7 +1634,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	void draw_ps ( std::string file_name );
 	void draw_ps ( std::string file_name,
-	               const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
+	               const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	               const tag::OverRegion &, const tag::Util::InequalitySet & constraints       );
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::OverRegion &,
@@ -1646,16 +1646,16 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	               const tag::Unfold &, const tag::TwoGenerators &, const tag::OverRegion &,
 	               const tag::Util::InequalitySet & constraints                             );
 	inline void draw_ps ( std::string file_name,
-	           const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
+	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2                );
 	inline void draw_ps ( std::string file_name,
-	           const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
+	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2,
 	                                    const tag::Util::InequalitySet & c3                );
 	inline void draw_ps ( std::string file_name,
-	           const tag::Unfold &, const std::vector < tag::Util::CompositionOfActions > &,
+	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2,
 	                                    const tag::Util::InequalitySet & c3,
@@ -1687,7 +1687,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Spin &, const tag::Util::CompositionOfActions &             );
+	             const tag::Spin &, const tag::Util::Action &             );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 
@@ -5399,7 +5399,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
-                    const tag::Spin &, const tag::Util::CompositionOfActions & s )
+                    const tag::Spin &, const tag::Util::Action & s )
 // due to the spin, A.reverse may be equal to B (mesh may be a closed loop)
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),

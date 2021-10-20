@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.06.12
+// finite-elem.cpp 2021.10.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -250,7 +250,8 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			                                  eta(Gauss_6_AB) = 0.445948490915965;
 			// weights
 			double Gw_6_O = 0.054975871827661, Gw_6_A = 0.054975871827661, Gw_6_B = 0.054975871827661;
-			double Gw_6_OA = 0.1116907948390055, Gw_6_OB = 0.1116907948390055, Gw_6_AB = 0.1116907948390055;
+			double Gw_6_OA = 0.1116907948390055, Gw_6_OB = 0.1116907948390055,
+			       Gw_6_AB = 0.1116907948390055;
 			this->points.push_back ( Gauss_6_O );
 			this->weights.push_back ( Gw_6_O );
 			this->points.push_back ( Gauss_6_A );
@@ -263,7 +264,7 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			this->weights.push_back ( Gw_6_OB );
 			this->points.push_back ( Gauss_6_AB );
 			this->weights.push_back ( Gw_6_AB );
-			break;                                                                                           }
+			break;                                                                                     }
 		case tag::quad_4 :  // Gauss quadrature with four points on a quadrangle
 		{	assert ( dynamic_cast < FiniteElement::WithMaster::Quadrangle* > ( fe.core ) );
 			Function xi_eta = master_manifold.coordinates();
@@ -339,10 +340,13 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			this->weights.push_back ( 25./81. );
 			break;                                                                   }
 		default :	assert ( false );
+
 	}  // end of  switch ( q )
-}
+
+}  // end of  Integrator::Gauss::Gauss
 	
 //-----------------------------------------------------------------------------------------//
+
 
 double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 // virtual from Integrator::Core
@@ -381,8 +385,9 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 
 //-----------------------------------------------------------------------------------------//
 
+
 void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll )
-// virtual from FiniteElement::Core, through FiniteElement::WithMaster
+// virtual from FiniteElement::Core
 
 {	assert ( cll.dim() == 1 );
 	this->docked_on = cll;
@@ -417,8 +422,45 @@ void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll )
 	
 //-----------------------------------------------------------------------------------------//
 
+void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll, const tag::Spin & )
+// virtual from FiniteElement::Core
+
+{	assert ( cll.dim() == 1 );
+	this->docked_on = cll;
+	Cell P = cll.base().reverse();
+	Cell Q = cll.tip();
+
+	Function t = this->master_manif.coordinates();
+	assert ( t.nb_of_components() == 1 );
+
+	Function xyz = Manifold::working.coordinates();
+	size_t geom_dim = xyz.nb_of_components();
+	if ( geom_dim == 1 )
+	{	double xP = xyz(P), xQ = xyz(Q);
+		Function x_c = ( xP * (1.-t) + xQ * (1.+t) ) / 2.;
+		this->transf = Function ( tag::diffeomorphism, tag::one_dim, xyz, t, x_c ); }
+	else  // geometric dimension >= 2
+	{	Function x = xyz[0];
+		double xP = x(P), xQ = x(Q);
+		Function xyz_c = ( xP * (1.-t) + xQ * (1.+t) ) / 2.;
+		for ( size_t d = 1; d < geom_dim; d++ )
+		{	x = xyz[d];
+		  xP = x(P), xQ = x(Q);
+			xyz_c = xyz_c && ( ( xP * (1.-t) + xQ * (1.+t) ) / 2. );  }
+		assert ( xyz_c.nb_of_components() == geom_dim );
+		this->transf = Function ( tag::immersion, xyz, t, xyz_c );     }
+
+	this->base_fun_1.clear();
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+		( P.core, Function ( (1.-t)/2., tag::composed_with, this->transf ) ) );
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+		( Q.core, Function ( (1.+t)/2., tag::composed_with, this->transf ) ) );  }
+	
+//-----------------------------------------------------------------------------------------//
+
+
 void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
-// virtual from FiniteElement::Core, through FiniteElement::WithMaster
+// virtual from FiniteElement::Core
 
 {	assert ( cll.dim() == 2 );
 	this->docked_on = cll;
@@ -479,10 +521,84 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
 	// differentiate base functions with respect to geometric coordinates
 	// and anyway this only works for a diffeomorpsm, not for an immersion
 	
+//-------------------------------------------------------------------------------------------------
+
+void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag::Spin & )
+// virtual from FiniteElement::Core
+
+{	assert ( cll.dim() == 2 );
+	this->docked_on = cll;
+	// perhaps implement a special iterator returning points and segments
+	CellIterator it = cll.boundary().iterator ( tag::over_vertices, tag::require_order );
+	it.reset();  assert ( it.in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it.in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it.in_range() );  Cell R = *it;
+	#ifndef NDEBUG
+	Cell RP = cll .boundary() .cell_in_front_of ( R );
+	#endif
+	it++;  assert ( not it.in_range() );
+
+	Function::Action spin_Q = PQ.spin(), spin_R = spin_Q + QR.spin();
+	assert ( spin_R + RP.spin() == 0 );
+	
+	Function xi_eta = this->master_manif.coordinates();
+	assert ( xi_eta.nb_of_components() == 2 );
+	Function xi = xi_eta[0], eta = xi_eta[1];
+	Function one_m_xi_m_eta = 1.-xi-eta;
+
+	// xi, eta and 1-xi-eta are a base of functions defined on the master element
+	// we may need to differentiate them with respect to x and y (physical coordinates)
+	// which is equivalent to differentiating x_c and y_c with respect to xi and eta
+	// and then taking the inverse matrix
+
+	Function xyz = Manifold::working.coordinates();
+	size_t geom_dim = xyz.nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	if ( geom_dim == 2 )
+
+	{	std::vector < double > xyz_P = xyz ( P ),
+		                       xyz_Q = xyz ( Q, tag::spin, spin_Q ),
+		                       xyz_R = xyz ( R, tag::spin, spin_R );
+
+		Function x_c = xyz_P[0] * one_m_xi_m_eta + xyz_Q[0] * xi + xyz_R[0] * eta;
+		Function y_c = xyz_P[1] * one_m_xi_m_eta + xyz_Q[1] * xi + xyz_R[1] * eta;
+
+		this->transf = Function ( tag::diffeomorphism, tag::high_dim, xyz, xi_eta, x_c && y_c );  }
+	
+	else  // geometric dimension >= 3
+		
+	{	Function x = xyz[0];
+		double xP = x(P), xQ = x(Q), xR = x(R);
+		Function xyz_c = xP * one_m_xi_m_eta + xQ * xi + xR * eta;
+
+		for ( size_t d = 1; d < geom_dim; d++ )
+		{	x = xyz[d];
+		  xP = x(P), xQ = x(Q), xR = x(R);
+			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
+		assert ( xyz_c.nb_of_components() == geom_dim );
+
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );            }
+
+	this->base_fun_1.clear();
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( P.core, Function ( one_m_xi_m_eta, tag::composed_with, this->transf ) ) );
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( Q.core, Function ( xi, tag::composed_with, this->transf ) ) );
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( R.core, Function ( eta, tag::composed_with, this->transf ) ) );              }
+
+	// the only use of composing is to allow the calling code to
+	// differentiate base functions with respect to geometric coordinates
+	// and anyway this only works for a diffeomorpsm, not for an immersion
+	
 //-----------------------------------------------------------------------------------------//
 
+
 void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
-// virtual from FiniteElement::Core, through FiniteElement::WithMaster
+// virtual from FiniteElement::Core
 
 {	assert ( cll.dim() == 2 );
 	this->docked_on = cll;
@@ -543,6 +659,90 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 	       ( R.core, Function ( psiR/4., tag::composed_with, this->transf ) ) );
 	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
 	       ( S.core, Function ( psiS/4., tag::composed_with, this->transf ) ) );          }
+
+	// the only use of composing is to allow the calling code to
+	// differentiate base functions with respect to geometric coordinates
+	// and anyway this only works for a diffeomorphism, not for an immersion
+	
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const tag::Spin & )
+// virtual from FiniteElement::Core
+
+{	assert ( cll.dim() == 2 );
+	this->docked_on = cll;
+	CellIterator it = cll.boundary().iterator ( tag::over_vertices, tag::require_order );
+	it.reset();  assert ( it.in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it.in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it.in_range() );  Cell R = *it;
+	Cell RS = cll .boundary() .cell_in_front_of ( R );
+	it++;  assert ( it.in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S );
+	#endif
+	it++;  assert ( not it.in_range() );
+
+	Function::Action spin_Q = PQ.spin(),
+	                 spin_R = spin_Q + QR.spin(),
+	                 spin_S = spin_R + RS.spin();
+	assert ( spin_S + SP.spin() == 0 );
+	
+	Function xi_eta = this->master_manif.coordinates();
+	assert ( xi_eta.nb_of_components() == 2 );
+	Function xi = xi_eta[0], eta = xi_eta[1];
+
+	Function psi_P = (1.-xi)*(1.-eta), psi_Q = (1.+xi)*(1.-eta),
+	         psi_R = (1.+xi)*(1.+eta), psi_S = (1.-xi)*(1.+eta);
+	// psi_* are a base of functions defined on the master element
+	// each takes value 4 in the associated vertex, zero on the others
+	// we may need to differentiate them with respect to x and y (physical coordinates)
+	// which is equivalent to differentiating x_c and y_c with respect to xi and eta
+	// and then taking the inverse matrix
+	
+	Function xyz = Manifold::working.coordinates();
+	size_t geom_dim = xyz.nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	if ( geom_dim == 2 )
+
+	{	std::vector < double > xyz_P = xyz ( P ),
+		                       xyz_Q = xyz ( Q, tag::spin, spin_Q ),
+		                       xyz_R = xyz ( R, tag::spin, spin_R ),
+		                       xyz_S = xyz ( S, tag::spin, spin_S );
+
+		Function x_c = ( xyz_P[0] * psi_P + xyz_Q[0] * psi_Q +
+	                   xyz_R[0] * psi_R + xyz_S[0] * psi_S ) / 4.;
+		Function y_c = ( xyz_P[1] * psi_P + xyz_Q[1] * psi_Q +
+	                   xyz_R[1] * psi_R + xyz_S[1] * psi_S ) / 4.;
+
+	 this->transf = Function ( tag::diffeomorphism, tag::high_dim, xyz, xi_eta, x_c && y_c );   }
+
+	else  // geometric dimension >= 3
+		
+	{	Function x = xyz[0];
+		double xP = x(P), xQ = x(Q), xR = x(R), xS = x(S);
+		Function xyz_c = ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4.;
+
+		for ( size_t d = 1; d < geom_dim; d++ )
+		{	x = xyz[d];
+		  xP = x(P), xQ = x(Q), xR = x(R);
+			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
+		assert ( xyz_c.nb_of_components() == geom_dim );
+
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
+
+	this->base_fun_1.clear();
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( P.core, Function ( psi_P/4., tag::composed_with, this->transf ) ) );
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( Q.core, Function ( psi_Q/4., tag::composed_with, this->transf ) ) );
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( R.core, Function ( psi_R/4., tag::composed_with, this->transf ) ) );
+	this->base_fun_1.insert ( std::pair < Cell::Core*, Function >
+	       ( S.core, Function ( psi_S/4., tag::composed_with, this->transf ) ) );                  }
 
 	// the only use of composing is to allow the calling code to
 	// differentiate base functions with respect to geometric coordinates

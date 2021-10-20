@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.08.08
+// finite-elem.h 2021.10.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -53,6 +53,7 @@ class FiniteElement;
 
 //-----------------------------------------------------------------------------------------//
 
+	
 class Integrator
 
 // a wrapper for Gauss quadrature
@@ -202,6 +203,7 @@ class FiniteElement
 	inline Integrator set_integrator ( const tag::gauss &, const tag::gauss_quadrature & );
 
 	inline void dock_on ( const Cell & cll );
+	inline void dock_on ( const Cell & cll, const tag::Spin & );
 
 	inline double integrate ( const Function & );
 
@@ -236,6 +238,7 @@ class FiniteElement::Core
 	virtual ~Core()  { };
 
 	virtual void dock_on ( const Cell & cll ) = 0;
+	virtual void dock_on ( const Cell & cll, const tag::Spin & ) = 0;
 	
 };  // end of  class FiniteElement::Core
 
@@ -244,8 +247,12 @@ class FiniteElement::Core
 
 inline FiniteElement::~FiniteElement ()  {  delete this->core;  }
 
+
 inline void FiniteElement::dock_on ( const Cell & cll )
 {	this->core->dock_on ( cll );  }
+
+inline void FiniteElement::dock_on ( const Cell & cll, const tag::Spin & )
+{	this->core->dock_on ( cll, tag::spin );  }
 
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::Vertices & )
@@ -288,7 +295,9 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	inline Function basis_function ( Cell::Core * cll );
 	inline Function basis_function ( Cell::Core * c1, Cell::Core * c2 );
 
-	void dock_on ( const Cell & cll ) = 0;  // virtual from FiniteElement::Core
+	// dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll ) = 0;
+	void dock_on ( const Cell & cll, const tag::Spin & ) = 0;
 
 	class Segment;  class Triangle;  class Quadrangle;
 	
@@ -343,8 +352,9 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
 	inline Segment ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
 	
+	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
-	// virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll, const tag::Spin & );
 
 };  // end of  class FiniteElement::WithMaster::Segment
 
@@ -360,8 +370,9 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
 	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
 	
+	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
-	// virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll, const tag::Spin & );
 
 };  // end of  class FiniteElement::withMaster::Triangle
 
@@ -377,8 +388,9 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 
 	inline Quadrangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
 	
+	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
-	// virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll, const tag::Spin & );
 
 };  // end of  class FiniteElement::withMaster::Quadrangle
 
@@ -388,6 +400,7 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 inline FiniteElement::FiniteElement
 ( const tag::WithMaster &, const tag::Segment &,
   const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
 :	core { nullptr }
 
 {	assert ( deg == 1 );
@@ -408,6 +421,7 @@ inline FiniteElement::FiniteElement
 ( const tag::WithMaster &, const tag::Segment &,
   const tag::lagrange &, const tag::OfDegree &, size_t deg,
   const tag::EnumerateCells &                               )
+	
 :	core { nullptr }
 
 {	assert ( deg == 1 );
@@ -431,6 +445,7 @@ inline FiniteElement::FiniteElement
 inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Triangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
 :	core { nullptr }
 
 {	assert ( deg == 1 );
@@ -452,6 +467,7 @@ inline FiniteElement::FiniteElement
 ( const tag::WithMaster &, const tag::Triangle &,
   const tag::lagrange &, const tag::OfDegree &, size_t deg,
   const tag::EnumerateCells &                               )
+	
 :	core { nullptr }
 
 {	assert ( deg == 1 );
@@ -476,6 +492,7 @@ inline FiniteElement::FiniteElement
 inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Quadrangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
 :	core { nullptr }
 
 {	assert ( deg == 1 );
@@ -497,6 +514,7 @@ inline FiniteElement::FiniteElement
 ( const tag::WithMaster &, const tag::Quadrangle &,
   const tag::lagrange &, const tag::OfDegree &, size_t deg,
   const tag::EnumerateCells &                               )
+	
 :	core { nullptr }
 
 {	assert ( deg == 1 );

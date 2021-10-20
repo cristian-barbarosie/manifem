@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.10.14
+// mesh.cpp 2021.10.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -4746,7 +4746,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_bdry, tag::do_not_bother
 
-//-----------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------------//
 
 
 Mesh::Core * Mesh::ZeroDim::build_deep_copy ( )
@@ -4763,7 +4763,7 @@ Mesh::Core * Mesh::NotZeroDim::build_deep_copy ( )
 	std::cout << "build_deep_copy not implemented yet" << std::endl;
 	exit ( 1 );                                                     }
 
-//-----------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------------//
 
 
 // for one-dimensional meshes, if you call 'baricenter' on an extremity
@@ -4800,6 +4800,8 @@ void Mesh::baricenter ( const Cell & ver )
 	assert ( n >= 2 );
 	std::vector < double > coefs ( n, 1. / double(n) );
 	Manifold::working.interpolate ( ver, coefs, neighbours );                      }
+
+//-----------------------------------------------------------------------------------------//
 
 
 void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
@@ -4864,6 +4866,7 @@ void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
 	mani_Eu.interpolate ( ver, coefs, neighbours );
 }
 
+//-----------------------------------------------------------------------------------------//
 
 
 void Mesh::baricenter ( const Cell & ver, const tag::Spin &,

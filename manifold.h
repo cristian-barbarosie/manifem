@@ -151,7 +151,7 @@ class Manifold
 	// P = sA + sB,  s+t == 1
 	inline void interpolate
 	( const Cell & P, double s, const Cell & A, double t, const Cell & B,
-	  const tag::Spin &, const Function::CompositionOfActions & exp            ) const;
+	  const tag::Spin &, const Function::Action & exp            ) const;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
@@ -159,9 +159,9 @@ class Manifold
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
-	  double t, const Cell & B, const tag::Spin &, const Function::CompositionOfActions &,
-	  double u, const Cell & C, const tag::Spin &, const Function::CompositionOfActions &,
-		double v, const Cell & D, const tag::Spin &, const Function::CompositionOfActions & ) const;
+	  double t, const Cell & B, const tag::Spin &, const Function::Action &,
+	  double u, const Cell & C, const tag::Spin &, const Function::Action &,
+		double v, const Cell & D, const tag::Spin &, const Function::Action & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
@@ -170,11 +170,11 @@ class Manifold
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
-	  double t, const Cell & B, const tag::Spin &, const Function::CompositionOfActions &,
-	  double u, const Cell & C, const tag::Spin &, const Function::CompositionOfActions &,
-	  double v, const Cell & D, const tag::Spin &, const Function::CompositionOfActions &,
-	  double w, const Cell & E, const tag::Spin &, const Function::CompositionOfActions &,
-		double z, const Cell & F, const tag::Spin &, const Function::CompositionOfActions & ) const;
+	  double t, const Cell & B, const tag::Spin &, const Function::Action &,
+	  double u, const Cell & C, const tag::Spin &, const Function::Action &,
+	  double v, const Cell & D, const tag::Spin &, const Function::Action &,
+	  double w, const Cell & E, const tag::Spin &, const Function::Action &,
+		double z, const Cell & F, const tag::Spin &, const Function::Action & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1
 	inline void interpolate
@@ -185,7 +185,7 @@ class Manifold
 	inline void interpolate
 	( const Cell & P, const std::vector < double > & coefs,
 	  const std::vector < Cell > & points, const tag::Spin &,
-	  const std::vector < Function::CompositionOfActions >  ) const;
+	  const std::vector < Function::Action >  ) const;
 
 	inline void project ( const Cell & ) const;
 	
@@ -198,10 +198,10 @@ class Manifold
 	inline Manifold parametric ( const Function::Equality eq1,
         	const Function::Equality eq2, const Function::Equality eq3 ) const;
 
-	inline Manifold quotient ( const Function::Action & g1 );
-	inline Manifold quotient ( const Function::Action & g1, const Function::Action & g2 );
+	inline Manifold quotient ( const Function::Action & a1 );
+	inline Manifold quotient ( const Function::Action & a1, const Function::Action & a2 );
 	inline Manifold quotient
-	( const Function::Action & g1, const Function::Action & g2, const Function::Action & g3 );
+	( const Function::Action & a1, const Function::Action & a2, const Function::Action & a3 );
 
 	static Manifold working;
 
@@ -249,7 +249,7 @@ class Manifold::Core
 	// P = sA + sB,  s+t == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions & exp                    ) const = 0;
+		const tag::Spin &, const Function::Action & exp                    ) const = 0;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -260,11 +260,11 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions & ) const = 0;
+		const tag::Spin &, const Function::Action & ) const = 0;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -276,15 +276,15 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Function::CompositionOfActions & ) const = 0;
+		const tag::Spin &, const Function::Action & ) const = 0;
 
 	// P = sum c_k P_k,  sum c_k == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P, const std::vector < double > & coefs,
@@ -350,7 +350,7 @@ inline void Manifold::interpolate
 // P = sA + sB,  s+t == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A, double t, const Cell & B,
-  const tag::Spin &, const Function::CompositionOfActions & exp_AB         ) const
+  const tag::Spin &, const Function::Action & exp_AB         ) const
 
 {	assert ( P.dim() == 0 );  assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( P.is_positive() );  assert ( A.is_positive() );  assert ( B.is_positive() );
@@ -406,9 +406,9 @@ inline void Manifold::interpolate
 // P = sA + sB + uC + vD,  s+t+u+v == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A,
-  double t, const Cell & B, const tag::Spin &, const Function::CompositionOfActions & exp_AB,
-  double u, const Cell & C, const tag::Spin &, const Function::CompositionOfActions & exp_AC,
-	double v, const Cell & D, const tag::Spin &, const Function::CompositionOfActions & exp_AD ) const
+  double t, const Cell & B, const tag::Spin &, const Function::Action & exp_AB,
+  double u, const Cell & C, const tag::Spin &, const Function::Action & exp_AC,
+	double v, const Cell & D, const tag::Spin &, const Function::Action & exp_AD ) const
 
 {	assert ( P.dim() == 0 );
 	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
@@ -484,11 +484,11 @@ inline void Manifold::interpolate
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 inline void Manifold::interpolate
 ( const Cell & P, double s, const Cell & A,
-  double t, const Cell & B, const tag::Spin &, const Function::CompositionOfActions & exp_AB,
-  double u, const Cell & C, const tag::Spin &, const Function::CompositionOfActions & exp_AC,
-  double v, const Cell & D, const tag::Spin &, const Function::CompositionOfActions & exp_AD,
-  double w, const Cell & E, const tag::Spin &, const Function::CompositionOfActions & exp_AE,
-	double z, const Cell & F, const tag::Spin &, const Function::CompositionOfActions & exp_AF ) const
+  double t, const Cell & B, const tag::Spin &, const Function::Action & exp_AB,
+  double u, const Cell & C, const tag::Spin &, const Function::Action & exp_AC,
+  double v, const Cell & D, const tag::Spin &, const Function::Action & exp_AD,
+  double w, const Cell & E, const tag::Spin &, const Function::Action & exp_AE,
+	double z, const Cell & F, const tag::Spin &, const Function::Action & exp_AF ) const
 {	assert ( P.dim() == 0 );
 	assert ( A.dim() == 0 );  assert ( B.dim() == 0 );
 	assert ( C.dim() == 0 );  assert ( D.dim() == 0 );
@@ -589,7 +589,7 @@ class Manifold::Euclid : public Manifold::Core
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions & exp                    ) const ;
+		const tag::Spin &, const Function::Action & exp                    ) const ;
 	void pretty_interpolate
 		( const Cell & P, double s, const Cell & A, double t, const Cell & B ) const;
 
@@ -600,11 +600,11 @@ class Manifold::Euclid : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 	void pretty_interpolate
 	(	const Cell & P, double s, const Cell & A, double t, const Cell & B,
 		                double u, const Cell & C, double v, const Cell & D  ) const;
@@ -617,15 +617,15 @@ class Manifold::Euclid : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 	void pretty_interpolate ( const Cell & P, double s, const Cell & A,
 		double t, const Cell & B, double u, const Cell & C, double v, const Cell & D,
 		double w, const Cell & E, double z, const Cell & F ) const;
@@ -690,7 +690,7 @@ class Manifold::Implicit : public Manifold::Core
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions & exp                    ) const ;
+		const tag::Spin &, const Function::Action & exp                    ) const ;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -699,11 +699,11 @@ class Manifold::Implicit : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -713,15 +713,15 @@ class Manifold::Implicit : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
   void interpolate ( Cell::Positive::Vertex * P,
@@ -911,7 +911,7 @@ class Manifold::Parametric : public Manifold::Core
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions & exp                    ) const ;
+		const tag::Spin &, const Function::Action & exp                    ) const ;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -920,11 +920,11 @@ class Manifold::Parametric : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -934,15 +934,15 @@ class Manifold::Parametric : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -1035,7 +1035,7 @@ class Manifold::Quotient : public Manifold::Core
 	
 	Function coord_func { tag::non_existent };
 
-	std::vector < Function::Action > actions;  // set of generators for a discrete group
+	std::vector < Function::ActionGenerator > actions;  // set of generators for a discrete group
 	
 	std::vector < Field::ShortInt > spins;  // a jump (exponent) per action
 
@@ -1060,7 +1060,7 @@ class Manifold::Quotient : public Manifold::Core
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions & exp                    ) const ;
+		const tag::Spin &, const Function::Action & exp                    ) const ;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -1069,11 +1069,11 @@ class Manifold::Quotient : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -1083,15 +1083,15 @@ class Manifold::Quotient : public Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A,
 	  double t, Cell::Positive::Vertex * B,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double u, Cell::Positive::Vertex * C,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double v, Cell::Positive::Vertex * D,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double w, Cell::Positive::Vertex * E,
-		const tag::Spin &, const Function::CompositionOfActions &,
+		const tag::Spin &, const Function::Action &,
 	  double z, Cell::Positive::Vertex * F,
-		const tag::Spin &, const Function::CompositionOfActions & ) const;
+		const tag::Spin &, const Function::Action & ) const;
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
@@ -1103,11 +1103,18 @@ class Manifold::Quotient : public Manifold::Core
 //-----------------------------------------------------------------------------------------
 
 
-inline Manifold::Quotient::Quotient ( Manifold b, const Function::Action & g1 )
+inline Manifold::Quotient::Quotient ( Manifold b, const Function::Action & a1 )
 
-: Manifold::Core(), base_space ( b ), actions { { g1 } }
+: Manifold::Core(), base_space ( b ), actions { }
 
-{	assert ( g1.coords.core == b.coordinates().core );
+{	assert ( a1.index_map.size() == 1 );
+	std::map < Function::ActionGenerator, short int > ::const_iterator
+		it = a1.index_map.begin();
+	assert ( it->second == 1 );
+	const Function::ActionGenerator & g1 = it->first;
+	this->actions = { g1 };
+
+	assert ( g1.coords.core == b.coordinates().core );
 	assert ( this->coord_func.core == nullptr );
 	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
 	assert ( this->coord_func.core == nullptr );
@@ -1141,11 +1148,22 @@ inline Manifold::Quotient::Quotient ( Manifold b, const Function::Action & g1 )
 
 
 inline Manifold::Quotient::Quotient
-( Manifold b, const Function::Action & g1, const Function::Action & g2 )
+( Manifold b, const Function::Action & a1, const Function::Action & a2 )
 	
-: Manifold::Core(), base_space ( b ), actions { { g1, g2 } }
+: Manifold::Core(), base_space ( b ), actions { }
 
-{	assert ( g1.coords.core == b.coordinates().core );
+{	assert ( a1.index_map.size() == 1 );
+	std::map < Function::ActionGenerator, short int > ::const_iterator
+		it = a1.index_map.begin();
+	assert ( it->second == 1 );
+	const Function::ActionGenerator & g1 = it->first;
+	assert ( a2.index_map.size() == 1 );
+	it = a2.index_map.begin();
+	assert ( it->second == 1 );
+	const Function::ActionGenerator & g2 = it->first;
+	this->actions = { g1, g2 };
+
+	assert ( g1.coords.core == b.coordinates().core );
 	assert ( g2.coords.core == b.coordinates().core );
 	this->spins.reserve ( 2 );
 	this->spins.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
@@ -1180,11 +1198,26 @@ inline Manifold::Quotient::Quotient
 
 
 inline Manifold::Quotient::Quotient ( Manifold b,
-  const Function::Action & g1, const Function::Action & g2, const Function::Action & g3 )
+  const Function::Action & a1, const Function::Action & a2, const Function::Action & a3 )
 	
-: Manifold::Core(), base_space ( b ), actions { { g1, g2, g3 } }
+: Manifold::Core(), base_space ( b ), actions { }
 
-{	assert ( g1.coords.core == b.coordinates().core );
+{	assert ( a1.index_map.size() == 1 );
+	std::map < Function::ActionGenerator, short int > ::const_iterator
+		it = a1.index_map.begin();
+	assert ( it->second == 1 );
+	const Function::ActionGenerator & g1 = it->first;
+	assert ( a2.index_map.size() == 1 );
+	it = a2.index_map.begin();
+	assert ( it->second == 1 );
+	const Function::ActionGenerator & g2 = it->first;
+	assert ( a3.index_map.size() == 1 );
+	it = a3.index_map.begin();
+	assert ( it->second == 1 );
+	const Function::ActionGenerator & g3 = it->first;
+	this->actions = { g1, g2, g3 };
+
+	assert ( g1.coords.core == b.coordinates().core );
 	assert ( g2.coords.core == b.coordinates().core );
 	assert ( g3.coords.core == b.coordinates().core );
 	this->spins.reserve ( 3 );
@@ -1212,22 +1245,22 @@ inline Manifold::Quotient::Quotient ( Manifold b,
 //-----------------------------------------------------------------------------------------
 
 
-inline Manifold Manifold::quotient ( const Function::Action & g1 )
-{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, g1 ) );  }
+inline Manifold Manifold::quotient ( const Function::Action & a1 )
+{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, a1 ) );  }
 
-inline Manifold Manifold::quotient ( const Function::Action & g1, const Function::Action & g2 )
-{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, g1, g2 ) );  }
+inline Manifold Manifold::quotient ( const Function::Action & a1, const Function::Action & a2 )
+{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, a1, a2 ) );  }
 
 inline Manifold Manifold::quotient
-( const Function::Action & g1, const Function::Action & g2, const Function::Action & g3 )
-{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, g1, g2, g3 ) );  }
+( const Function::Action & a1, const Function::Action & a2, const Function::Action & a3 )
+{	return Manifold ( tag::whose_core_is, new Manifold::Quotient ( *this, a1, a2, a3 ) );  }
 
 //-----------------------------------------------------------------------------------------
 
 
-inline Cell::Spin::operator Function::CompositionOfActions ( )
+inline Cell::Spin::operator Function::Action ( )
 
-{	Function::CompositionOfActions res ( 0 );
+{	Function::Action res ( 0 );
 	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
 	assert ( manif_q );
@@ -1241,17 +1274,17 @@ inline Cell::Spin::operator Function::CompositionOfActions ( )
 	{	short int exp = manif_q->spins[i].on_cell(pos_cll);
 		if ( exp == 0 ) continue;
 		if ( not this->cll->is_positive() ) exp = -exp;
-		Function::Action & g = manif_q->actions[i];
+		Function::ActionGenerator & g = manif_q->actions[i];
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::Action,short int>::iterator itt = res.index_map.lower_bound ( g );
+		std::map<Function::ActionGenerator,short int>::iterator itt = res.index_map.lower_bound ( g );
 		assert ( ( itt == res.index_map.end() ) or ( res.index_map.key_comp()(g,itt->first) ) );
 		res.index_map.emplace_hint ( itt, std::piecewise_construct,
 			std::forward_as_tuple(g), std::forward_as_tuple(exp) );                                }
 	return res;                                                                                  }
 
 
-inline Function::CompositionOfActions Cell::Spin::operator=
-( const Function::CompositionOfActions & a )
+inline Function::Action Cell::Spin::operator=
+( const Function::Action & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -1263,8 +1296,8 @@ inline Function::CompositionOfActions Cell::Spin::operator=
 	assert ( n == manif_q->spins.size() );
 	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Action & g = manif_q->actions[i];
-		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+	{	Function::ActionGenerator & g = manif_q->actions[i];
+		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() )
 		{	manif_q->spins[i].on_cell(this->cll) = 0;
 			continue;                                 }
@@ -1275,8 +1308,8 @@ inline Function::CompositionOfActions Cell::Spin::operator=
 	return *this;                                                                           }
 
 
-inline Function::CompositionOfActions Cell::Spin::operator+=
-( const Function::CompositionOfActions & a )
+inline Function::Action Cell::Spin::operator+=
+( const Function::Action & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -1288,8 +1321,8 @@ inline Function::CompositionOfActions Cell::Spin::operator+=
 	assert ( n == manif_q->spins.size() );
 	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Action & g = manif_q->actions[i];
-		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+	{	Function::ActionGenerator & g = manif_q->actions[i];
+		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() ) continue;
 		short int exp = itt->second;
 		assert ( exp != 0 );
@@ -1298,8 +1331,8 @@ inline Function::CompositionOfActions Cell::Spin::operator+=
 	return *this;                                                                          }
 
 
-inline Function::CompositionOfActions Cell::Spin::operator-=
-( const Function::CompositionOfActions & a )
+inline Function::Action Cell::Spin::operator-=
+( const Function::Action & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -1311,8 +1344,8 @@ inline Function::CompositionOfActions Cell::Spin::operator-=
 	assert ( n == manif_q->spins.size() );
 	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
-	{	Function::Action & g = manif_q->actions[i];
-		std::map<Function::Action,short int>::const_iterator itt = a.index_map.find ( g );
+	{	Function::ActionGenerator & g = manif_q->actions[i];
+		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
 		if ( itt == a.index_map.end() ) continue;
 		short int exp = itt->second;
 		assert ( exp != 0 );
