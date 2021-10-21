@@ -1,5 +1,5 @@
 
-// function.cpp 2021.10.17
+// function.cpp 2021.10.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1066,8 +1066,253 @@ Function Function::Vector::MultiValued::replace ( const Function & x, const Func
 
 //--------------------------------------------------------------------------
 
+
+Function::Jump Function::Core::jump ( )
+// later overridden by Function::***::MultiValued::JumpIsSum
+{	assert ( false );  }
+
+
+Function::Jump Function::Scalar::MultiValued::JumpIsSum::jump ( )
+
+{	Function::Jump::Sum::Scalar res;
+	res.actions = this->actions;
+	res.ju = this->beta;
+	return res;                        }
+
+
+Function::Jump Function::Vector::MultiValued::JumpIsSum::jump ( )
+
+{	Function::Jump::Sum::Vector res;
+	res.actions = this->actions;
+	res.ju = this->beta;
+	return res;                        }
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump maniFEM::operator+ ( const Function::Jump & j1, const Function::Jump & j2 )
+
+{	const size_t n = j1.actions.size();
+	assert ( n > 0 );
+	assert ( j1.actions == j2.actions );
+	Function::Jump::Sum::Scalar const * j1s =
+		dynamic_cast < Function::Jump::Sum::Scalar const * > ( & j1 );
+	if ( j1s )
+	{	Function::Jump::Sum::Scalar res;
+		res.actions = j1.actions;
+		res.ju = j1s->ju;
+		Function::Jump::Sum::Scalar const * j2s =
+			dynamic_cast < Function::Jump::Sum::Scalar const * > ( & j2 );
+		assert ( j2s );
+		assert ( n == j1s->ju.size() );
+		assert ( n == j2s->ju.size() );
+		for ( size_t i = 0; i < n; i++ ) res.ju[i] += j2s->ju[i];
+		return res;                                                       }
+	Function::Jump::Sum::Vector const * j1v =
+		dynamic_cast < Function::Jump::Sum::Vector const * > ( & j1 );
+	assert ( j1v );
+	Function::Jump::Sum::Vector res;
+	res.actions = j1.actions;
+	res.ju = j1v->ju;
+	Function::Jump::Sum::Vector const * j2v =
+		dynamic_cast < Function::Jump::Sum::Vector const * > ( & j2 );
+	assert ( j2v );
+	assert ( n == j1v->ju.size() );
+	assert ( n == j2v->ju.size() );
+	const size_t m = j1v->ju[0].size();
+	for ( size_t i = 0; i < n; i++ )
+	{	assert ( j1v->ju[i].size() == m );
+		assert ( j2v->ju[i].size() == m );
+		for ( size_t j = 0; j < m; j++ )
+			res.ju[i][j] += j2v->ju[i][j];    }
+	return res;                                                              }
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump maniFEM::operator+= ( Function::Jump & j1, const Function::Jump & j2 )
+
+{	const size_t n = j1.actions.size();
+	assert ( n > 0 );
+	assert ( j1.actions == j2.actions );
+	Function::Jump::Sum::Scalar * j1s =
+		dynamic_cast < Function::Jump::Sum::Scalar * > ( & j1 );
+	if ( j1s )
+	{	Function::Jump::Sum::Scalar const * j2s =
+			dynamic_cast < Function::Jump::Sum::Scalar const * > ( & j2 );
+		assert ( j2s );
+		assert ( n == j1s->ju.size() );
+		assert ( n == j2s->ju.size() );
+		for ( size_t i = 0; i < n; i++ ) j1s->ju[i] += j2s->ju[i];         }
+	else
+	{	Function::Jump::Sum::Vector * j1v =
+			dynamic_cast < Function::Jump::Sum::Vector * > ( & j1 );
+		assert ( j1v );
+		Function::Jump::Sum::Vector const * j2v =
+			dynamic_cast < Function::Jump::Sum::Vector const * > ( & j2 );
+		assert ( j2v );
+		assert ( n == j1v->ju.size() );
+		assert ( n == j2v->ju.size() );
+		const size_t m = j1v->ju[0].size();
+		for ( size_t i = 0; i < n; i++ )
+		{	assert ( j1v->ju[i].size() == m );
+			assert ( j2v->ju[i].size() == m );
+			for ( size_t j = 0; j < m; j++ ) j1v->ju[i][j] += j2v->ju[i][j];  }  }
+	return j1;                                                                  }  
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump maniFEM::operator- ( const Function::Jump & j1, const Function::Jump & j2 )
+
+{	const size_t n = j1.actions.size();
+	assert ( n > 0 );
+	assert ( j1.actions == j2.actions );
+	Function::Jump::Sum::Scalar const * j1s =
+		dynamic_cast < Function::Jump::Sum::Scalar const * > ( & j1 );
+	if ( j1s )
+	{	Function::Jump::Sum::Scalar res;
+		res.actions = j1.actions;
+		res.ju = j1s->ju;
+		Function::Jump::Sum::Scalar const * j2s =
+			dynamic_cast < Function::Jump::Sum::Scalar const * > ( & j2 );
+		assert ( j2s );
+		assert ( n == j1s->ju.size() );
+		assert ( n == j2s->ju.size() );
+		for ( size_t i = 0; i < n; i++ ) res.ju[i] -= j2s->ju[i];
+		return res;                                                       }
+	Function::Jump::Sum::Vector const * j1v =
+		dynamic_cast < Function::Jump::Sum::Vector const * > ( & j1 );
+	assert ( j1v );
+	Function::Jump::Sum::Vector res;
+	res.actions = j1.actions;
+	res.ju = j1v->ju;
+	Function::Jump::Sum::Vector const * j2v =
+		dynamic_cast < Function::Jump::Sum::Vector const * > ( & j2 );
+	assert ( j2v );
+	assert ( n == j1v->ju.size() );
+	assert ( n == j2v->ju.size() );
+	const size_t m = j1v->ju[0].size();
+	for ( size_t i = 0; i < n; i++ )
+	{	assert ( j1v->ju[i].size() == m );
+		assert ( j2v->ju[i].size() == m );
+		for ( size_t j = 0; j < m; j++ )
+			res.ju[i][j] -= j2v->ju[i][j];    }
+	return res;                                                              }
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump maniFEM::operator-= ( Function::Jump & j1, const Function::Jump & j2 )
+
+{	const size_t n = j1.actions.size();
+	assert ( n > 0 );
+	assert ( j1.actions == j2.actions );
+	Function::Jump::Sum::Scalar * j1s =
+		dynamic_cast < Function::Jump::Sum::Scalar * > ( & j1 );
+	if ( j1s )
+	{	Function::Jump::Sum::Scalar const * j2s =
+			dynamic_cast < Function::Jump::Sum::Scalar const * > ( & j2 );
+		assert ( j2s );
+		assert ( n == j1s->ju.size() );
+		assert ( n == j2s->ju.size() );
+		for ( size_t i = 0; i < n; i++ ) j1s->ju[i] -= j2s->ju[i];         }
+	else
+	{	Function::Jump::Sum::Vector * j1v =
+			dynamic_cast < Function::Jump::Sum::Vector * > ( & j1 );
+		assert ( j1v );
+		Function::Jump::Sum::Vector const * j2v =
+			dynamic_cast < Function::Jump::Sum::Vector const * > ( & j2 );
+		assert ( j2v );
+		assert ( n == j1v->ju.size() );
+		assert ( n == j2v->ju.size() );
+		const size_t m = j1v->ju[0].size();
+		for ( size_t i = 0; i < n; i++ )
+		{	assert ( j1v->ju[i].size() == m );
+			assert ( j2v->ju[i].size() == m );
+			for ( size_t j = 0; j < m; j++ ) j1v->ju[i][j] -= j2v->ju[i][j];  }  }
+	return j1;                                                                  }  
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump maniFEM::operator* ( double a, const Function::Jump & jj )
+
+{	size_t n = jj.actions.size();
+	assert ( n > 0 );
+	Function::Jump::Sum::Scalar const * js =
+		dynamic_cast < Function::Jump::Sum::Scalar const * > ( & jj );
+	if ( js )
+	{	Function::Jump::Sum::Scalar res;
+		res.actions = jj.actions;
+		res.ju = js->ju;
+		assert ( n == js->ju.size() );
+		for ( size_t i = 0; i < n; i++ ) res.ju[i] *= a;
+		return res;                                                       }
+	assert ( false );
+	Function::Jump::Sum::Vector const * jv =
+		dynamic_cast < Function::Jump::Sum::Vector const * > ( & jj );
+	assert ( jv );
+	Function::Jump::Sum::Vector res;
+	res.actions = jj.actions;
+	res.ju = jv->ju;
+	assert ( n == jv->ju.size() );
+	size_t m = jv->ju[0].size();
+	for ( size_t i = 0; i < n; i++ )
+	{	assert ( jv->ju[i].size() == m );
+		for ( size_t j = 0; j < m; j++ ) res.ju[i][j] *= a;  }
+	return res;                                                              }
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump maniFEM::operator*= ( Function::Jump & jj, double a )
+
+{	size_t n = jj.actions.size();
+	assert ( n > 0 );
+	Function::Jump::Sum::Scalar * js =
+		dynamic_cast < Function::Jump::Sum::Scalar * > ( & jj );
+	if ( js )
+	{	assert ( n == js->ju.size() );
+		for ( size_t i = 0; i < n; i++ ) js->ju[i] *= a;  }
+	return jj;
+	assert ( false );
+	Function::Jump::Sum::Vector * jv =
+		dynamic_cast < Function::Jump::Sum::Vector * > ( & jj );
+	assert ( jv );
+	assert ( n == jv->ju.size() );
+	size_t m = jv->ju[0].size();
+	for ( size_t i = 0; i < n; i++ )
+	{	assert ( jv->ju[i].size() == m );
+		for ( size_t j = 0; j < m; j++ ) jv->ju[i][j] *= a;  }
+	return jj;                                                              }
+
+//-----------------------------------------------------------------------------------------//
+
+
+double Function::Jump::operator() ( const Function::Action & a ) const
+{	assert ( false );  }
+
+
+double Function::Jump::Sum::Scalar::operator() ( const Function::Action & a ) const
+
+{	double res = 0.;
+	const size_t n = this->ju.size();
+	assert ( n == this->actions.size() );
+	for ( size_t i = 0; i < n; i++ )
+	{	const Function::ActionGenerator & g = this->actions[i];
+		std::map < Function::ActionGenerator, short int > ::const_iterator
+			it = a .index_map .find ( g );
+		assert ( it != a .index_map .end() );
+		res += this->ju[i] * it->second;                                   }
+	return res;                                                             }
+	
+//-----------------------------------------------------------------------------------------//
+
+
 Function::Core::~Core ( )
 {	assert ( Function::total_cores > 0 );
 	Function::total_cores--; }
 
+//-----------------------------------------------------------------------------------------//
 

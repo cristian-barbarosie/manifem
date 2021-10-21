@@ -69,7 +69,7 @@ int main ( )
 	x = xy[0];  y = xy[1];
 
 	// macroscopic temperature gradient
-	//	std::map < Function::Action, double > jump_of_solution = x.jump();
+	Function::Jump jump_of_solution = x.jump() + y.jump();
 
 	// run over all square cells composing 'torus'
 	{ // just a block of code for hiding 'it'
@@ -98,8 +98,8 @@ int main ( )
 				// 'fe' is already docked on 'small_tri' so this will be the domain of integration
 				double integral = fe.integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy );
 				matrix_A.coeffRef ( numbering[V], numbering[W] ) += integral;
-				//		vector_b ( numbering[V] ) -= jump_V_W * integral;
-				//		jump_V_W += jump_of_solution [ seg.spin() ];
+				vector_b ( numbering[V] ) -= jump_V_W * integral;
+				jump_V_W += jump_of_solution ( seg.spin() );
 				W = seg.tip();
 				if ( V == W ) break;
 				seg = small_tri .boundary() .cell_in_front_of ( seg.tip() );                          }

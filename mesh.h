@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.10.10
+//   mesh.h  2021.10.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -147,11 +147,11 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Util
 	{ template < class T > class Wrapper;
 		class Core;
-		class CellCore;  // aka Cell::Core
-		class MeshCore;  // aka Mesh::Core
-		class Action;  // aka Function::Action
+		class CellCore;  //  aka  class Cell::Core
+		class MeshCore;  //  aka  class Mesh::Core
+		class Action;  //  aka  class Function::Action
 		// defined in function.h
-		class InequalitySet;  // aka Function::Inequality::Set
+		class InequalitySet;  //  aka  class Function::Inequality::Set
 		// defined in function.f
 		inline static size_t assert_diff ( const size_t a, const size_t b )
 		{	assert ( a >= b );  return  a - b;  }

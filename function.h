@@ -1,5 +1,5 @@
 
-// function.h 2021.09.17
+// function.h 2021.09.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -139,6 +139,9 @@ class Function
 	                              const tag::Becomes &, const Function &,
 	                              const tag::Through &, const Function::ActionGenerator &,
 	                              const tag::Becomes &, const Function &         );
+
+	class Jump;
+	inline Jump jump();
 	
 	class TakenOnCell;  class TakenOnCellWithSpin;
 	inline Function::TakenOnCell operator() ( const Cell & cll ) const;
@@ -161,7 +164,8 @@ class Function
 	// other solution :
 	//namespace std
 	//{	template <>
-	//	struct less<Function>  {  inline bool operator() ( const Function &, const Function & );  };  }
+	//	struct less<Function>
+	//	{  inline bool operator() ( const Function &, const Function & );  };  }
 
 	class Scalar;  class ArithmeticExpression;  class Constant;
 	class Vector;  class Aggregate;  class CoupledWithField;
@@ -209,6 +213,10 @@ class Function::Core
 
 	virtual Function replace ( const Function & x, const Function & y ) = 0;
 	// in an expression, replace x by y
+
+	virtual Function::Jump jump ( );
+	// here execution forbidden
+	// later overridden by Function::***::MultiValued::JumpIsSum
 
 	#ifndef NDEBUG	
 	virtual std::string repr ( const Function::From & from = Function::from_void ) const = 0;
@@ -284,6 +292,9 @@ class Function::Scalar : public Function::Core
 	// Function deriv ( Function )
 	// Function replace ( const Function & x, const Function & y )
 	//    stay pure virtual from Function::Core
+
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	// later overridden by Function::Scalar::MultiValued::JumpIsSum
 	
 	#ifndef NDEBUG	
 	// string repr ( const Function::From & from = Function::from_void )
@@ -326,6 +337,8 @@ class Function::ArithmeticExpression : public Function::Scalar
 	// Function deriv ( Function )
 	// Function replace ( const Function & x, const Function & y )
 	//   stay pure virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	// string repr ( const Function::From & from = Function::from_void )
@@ -373,6 +386,8 @@ class Function::Constant : public Function::ArithmeticExpression
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
@@ -426,6 +441,8 @@ class Function::Sum : public Function::ArithmeticExpression
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -471,6 +488,8 @@ class Function::Product : public Function::ArithmeticExpression
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
@@ -521,6 +540,8 @@ class Function::Power : public Function::ArithmeticExpression
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -567,6 +588,8 @@ class Function::Sqrt : public Function::ArithmeticExpression
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
@@ -620,6 +643,8 @@ class Function::Sin : public Function::ArithmeticExpression
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -671,6 +696,8 @@ class Function::Cos : public Function::ArithmeticExpression
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
@@ -782,6 +809,8 @@ class Function::Step : public Function::ArithmeticExpression
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -817,6 +846,9 @@ class Function::Vector : public Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core, here execution forbidden
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	// later overridden by Function::Vector::MultiValued::JumpIsSum
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
@@ -865,6 +897,8 @@ class Function::Aggregate : public Function::Vector
 
 	// Function replace ( const Function & x, const Function & y );
 	//    defined by Function::Vector (execution forbidden), to change
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	// std::string repr ( const Function::From & from = Function::from_void )
@@ -990,6 +1024,8 @@ class Function::Diffeomorphism::OneDim
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -1080,6 +1116,8 @@ class Function::Immersion : public Function::Vector, public Function::Map
 	// Function replace ( const Function & x, const Function & y );
 	//    defined by Function::Vector (execution forbidden), to change
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	// std::string repr ( const Function::From & from = Function::from_void )
 	//    defined by Function::Vector (execution forbidden)
@@ -1154,6 +1192,8 @@ class Function::Diffeomorphism::HighDim
 
 	// Function replace ( const Function & x, const Function & y );
 	//    defined by Function::Vector (execution forbidden)
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	// std::string repr ( const Function::From & from = Function::from_void )
@@ -1233,6 +1273,8 @@ class Function::Composition : public Function::Scalar
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
@@ -1314,6 +1356,8 @@ class Function::CoupledWithField::Scalar
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -1369,6 +1413,8 @@ class Function::CoupledWithField::Vector
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core, through Function::Vector
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
 	
 	#ifndef NDEBUG	
 	// std::string repr ( const Function::From & from = Function::from_void );
@@ -1552,7 +1598,7 @@ inline bool operator< ( const Function::ActionGenerator & f, const Function::Act
 //-----------------------------------------------------------------------------------------//
 
 
-class tag::Util::Action  // aka class Function::Action
+class tag::Util::Action  //  aka  class Function::Action
 
 // a composition of actions, thus an element of the group
 // essentially, a multi-index, more precisely a map < Function::ActionGenerator, short int >
@@ -1838,6 +1884,9 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	// later overridden by Function::Scalar::MultiValued::JumpIsSum
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -1862,6 +1911,7 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	
 	std::vector < double > beta;
 	// upon each action[i], the value v of the function becomes  v + beta[i]
+	// use a Function::Jump::Sum::Scalar instead !
 	
 	inline JumpIsSum ( const tag::AssociatedWith &, const Function & f,
 										 std::vector < Function::ActionGenerator > ac, std::vector < double > be )
@@ -1895,6 +1945,9 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::Scalar::MultiValued, execution forbidden
 
+	Function::Jump jump ( );
+  // virtual, defined by Function::Core, execution forbidden, here overridden
+	
 	// the return value of 'analyse_linear_expression' should be double
 	// however, we use std::vector < double > instead
 	// a zero-length vector means not succeeded
@@ -1955,6 +2008,8 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	// double set_value_on_cell ( Cell::Core *, const double & )
 	//   defined by Function::Scalar::MultiValued, execution forbidden
 
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	static inline std::pair < std::vector < double >, double > analyse_linear_expression
 	( Function expression, Function base );
 
@@ -1966,6 +2021,7 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 class Function::Vector::MultiValued : public Function::MultiValued, public Function::Aggregate
 
 // same as Function::Scalar::MultiValued, here with vector values
+
 // abstract class, specialized in Function::Vector::MultiValued::JumpIsSum and JumpIsLinear
 
 // inheriting from Function::Aggregate means simply that there is a 'components' member
@@ -2006,6 +2062,9 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
 	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	// later overridden by Function::Vector::MultiValued::JumpIsSum
+	
 	#ifndef NDEBUG	
 	std::string repr ( const Function::From & from = Function::from_void ) const;
 	//  virtual from Function::Core
@@ -2030,6 +2089,7 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	
 	std::vector < std::vector < double > > beta;
 	// upon each action[i], the value v of the function becomes  v + beta[i]
+	// use a Function::Jump::Sum::Vector instead !
 
 	inline JumpIsSum ( const tag::AssociatedWith &, const Function & f,
 	                   std::vector < Function::ActionGenerator > ac,
@@ -2073,6 +2133,9 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
 	//   defined by Function::Vector::MultiValued
 
+	Function::Jump jump ( );
+  // virtual, defined by Function::Core, here overridden
+	
 	inline static std::vector < double > analyse_linear_expression
 	( Function expression, Function base );
 	
@@ -2146,10 +2209,99 @@ class Function::Vector::MultiValued::JumpIsLinear : public Function::Vector::Mul
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
 	//   defined by Function::Vector::MultiValued
 
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
 	inline static std::pair < std::vector < std::vector < double > >, std::vector < double > >
 	analyse_linear_expression ( Function expression, Function base );
 
 };  // end of class Function::Vector::MultiValued::JumpIsLinear
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Jump
+
+// a Function::Jump object describes the behaviour of a multi-function
+// when the point goes "around" the manifold a given number of times
+// a Cell::Spin describes this number of times
+
+// so a Function::Jump can be applied to a Cell::Spin, producing as result
+// a double for a Function::Scalar::MultiValued
+// or a vector of doubles for a Function::Vector::MultiValued
+
+// abstract class, specialized in Function::Jump::Sum::Scalar and Function::Jump::Sum::Vector
+
+{	public :
+
+	std::vector < Function::ActionGenerator > actions;
+
+	virtual ~Jump() { };
+
+	struct Sum  {  class Scalar;  class Vector;  };
+	
+	virtual double operator() ( const Function::Action & a ) const;
+	// here execution forbidden, overridden by Function::Jump::Sum::Scalar
+
+};  // end of class Function::Jump
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Jump::Sum::Scalar : public Function::Jump
+
+// jump of a Function::Scalar::Multivalued::JumpIsSum
+
+{	public :
+
+	// attribute inherited from Function::Jump :
+	// std::vector < Function::ActionGenerator > actions
+	
+	std::vector < double > ju;
+	
+	double operator() ( const Function::Action & a ) const override;
+	// virtual from Function::Jump, here overridden
+
+};  // end of class Function::Jump::Sum::Scalar
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::Jump::Sum::Vector : public Function::Jump
+
+// jump of a Function::Vector::Multivalued::JumpIsSum
+
+{	public :
+
+	std::vector < std::vector < double > > ju;
+	
+	// double operator() ( const Function::Action & a ) const
+	// virtual, defined by Function::Jump, execution forbidden
+
+};  // end of class Function::Jump::Sum::Vector
+
+//-----------------------------------------------------------------------------------------//
+
+
+Function::Jump operator+ ( const Function::Jump & j1, const Function::Jump & j2 );
+
+Function::Jump operator+= ( Function::Jump & j1, const Function::Jump & j2 );
+
+Function::Jump operator- ( const Function::Jump & j1, const Function::Jump & j2 );
+
+Function::Jump operator-= ( Function::Jump & j1, const Function::Jump & j2 );
+
+Function::Jump operator* ( double a, const Function::Jump & j );
+
+inline Function::Jump operator* ( const Function::Jump & j, double a )
+{	return a*j;  }
+
+Function::Jump operator*= ( Function::Jump & j, double a );
+
+inline Function::Jump operator/ ( const Function::Jump & j, double a )
+{	return (1./a)*j;  }
+
+inline Function::Jump operator/= ( Function::Jump & j, double a )
+{	return operator*= ( j, 1./a );  }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -2400,6 +2552,12 @@ Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression
 		res.first.push_back ( std::move ( res_i.first ) );
 		res.second.push_back ( res_i.second );                                   }
 	return res;                                                                  }
+
+//-----------------------------------------------------------------------------------------//
+
+
+inline Function::Jump Function::jump ( )
+{	return this->core->jump();  }
 
 //-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
