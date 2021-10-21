@@ -4,9 +4,11 @@
 
 
 #include "maniFEM.h"
+#include <fstream>
 #include <Eigen/Sparse>
 #include <Eigen/OrderingMethods>
 using namespace maniFEM;
+
 
 int main ( )
 
@@ -64,31 +66,86 @@ int main ( )
 	Eigen::VectorXd vector_b ( size_matrix + 1 ), vector_sol ( size_matrix );
 	vector_b.setZero();
 
+	xy = Manifold::working.coordinates();
+	x = xy[0];  y = xy[1];
+
+	// macroscopic temperature gradient
+	Function::Jump jump_of_solution = x.jump() + y.jump();
+
 	// run over all square cells composing 'torus'
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_tri = *it;
-		std::cout << "*****************************" << std::endl;
 		fe.dock_on ( small_tri, tag::spin );
 		// run twice over the four vertices of 'small_tri'
-		CellIterator it1 = small_tri.boundary().iterator ( tag::over_vertices );
-		CellIterator it2 = small_tri.boundary().iterator ( tag::over_vertices );
-		for ( it1.reset(); it1.in_range(); it1++ )
-		for ( it2.reset(); it2.in_range(); it2++ )
-		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
-			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
-			// 					<< x(W) << "," << y(W) << ") " << numbering[W]) << std::endl;
-			Function psiV = fe.basis_function(V),
-			         psiW = fe.basis_function(W),
-			         d_psiV_dx = psiV.deriv(x),
-			         d_psiV_dy = psiV.deriv(y),
-			         d_psiW_dx = psiW.deriv(x),
-			         d_psiW_dy = psiW.deriv(y);
-			// 'fe' is already docked on 'small_tri' so this will be the domain of integration
-			matrix_A.coeffRef ( numbering[V], numbering[W] ) +=
-				fe.integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
+		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
+		for ( it_V.reset(); it_V.in_range(); it_V++ )
+		{	Cell V = *it_V;
+			// perhaps implement an interator returning a vertex and a segment
+			Cell seg = small_tri .boundary(). cell_in_front_of ( V );
+			Cell W = V;
+			double jump_V_W = 0.;
+			while ( true )
+			{	assert ( W == seg.base().reverse() );
+				// V may be the same as W, no problem about that
+				Function psi_V = fe .basis_function ( V ),
+				         psi_W = fe .basis_function ( W ),
+				         d_psi_V_dx = psi_V .deriv ( x ),
+				         d_psi_V_dy = psi_V .deriv ( y ),
+				         d_psi_W_dx = psi_W .deriv ( x ),
+				         d_psi_W_dy = psi_W .deriv ( y );
+				// 'fe' is already docked on 'small_tri' so this will be the domain of integration
+				double integral = fe.integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy );
+				matrix_A.coeffRef ( numbering[V], numbering[W] ) += integral;
+				vector_b ( numbering[V] ) -= jump_V_W * integral;
+				jump_V_W += jump_of_solution ( seg.spin() );
+				W = seg.tip();
+				if ( V == W ) break;
+				seg = small_tri .boundary() .cell_in_front_of ( seg.tip() );                          }
+			// here  jump_V_W  should be zero again
+			// but we do not assert that, rounding errors may mess up things
 		}  }
-	} // just a block of code 
+	} // just a block of code for hiding 'it'
+
+	matrix_A .makeCompressed();
+
+	Eigen::SparseQR < Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;
+
+	solver.compute ( matrix_A );
+	if ( solver.info() != Eigen::Success )
+	{	std::cout << "Eigen solver.compute failed" << std::endl;
+		exit ( 0 );                                  }
+
+	vector_sol = solver.solve ( vector_b );
+	if ( solver.info() != Eigen::Success )
+	{	std::cout << "Eigen solver.solve failed" << std::endl;
+		exit ( 0 );                                  }
+
+	RR2 .set_as_working_manifold();
+	square.export_msh ("cell.msh", numbering );
+	
+  { // just a block of code for hiding variables
+	std::ofstream solution_file ("cell.msh", std::fstream::app );
+	solution_file << "$NodeData" << std::endl;
+	solution_file << "1" << std::endl;   // one string follows
+	solution_file << "\"temperature\"" << std::endl;
+	solution_file << "1" << std::endl;   //  one real follows
+	solution_file << "0.0" << std::endl;  // time [??]
+	solution_file << "3" << std::endl;   // three integers follow
+	solution_file << "0" << std::endl;   // time step [??]
+	solution_file << "1" << std::endl;  // scalar values of u
+	solution_file << square.number_of ( tag::vertices ) << std::endl;
+  // number of values listed below
+	CellIterator it = square.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell P = *it;
+		size_t i = numbering[P];
+		solution_file << i << " " << vector_sol[i] << std::endl;   }
+	} // just a block of code
+
+	std::cout << "produced file cell.msh" << std::endl;
+
+	return 0;
 
 }

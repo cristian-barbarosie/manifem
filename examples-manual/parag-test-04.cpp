@@ -76,7 +76,6 @@ int main ( )
 	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_tri = *it;
-		std::cout << "******************" << std::endl;
 		fe.dock_on ( small_tri, tag::spin );
 		// run twice over the four vertices of 'small_tri'
 		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
@@ -104,6 +103,7 @@ int main ( )
 				if ( V == W ) break;
 				seg = small_tri .boundary() .cell_in_front_of ( seg.tip() );                          }
 			// here  jump_V_W  should be zero again
+			std::cout << jump_V_W << " should be zero" << std::endl;
 			// but we do not assert that, rounding errors may mess up things
 		}  }
 	} // just a block of code for hiding 'it'

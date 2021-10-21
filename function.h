@@ -2229,55 +2229,17 @@ class Function::Jump
 // a double for a Function::Scalar::MultiValued
 // or a vector of doubles for a Function::Vector::MultiValued
 
-// abstract class, specialized in Function::Jump::Sum::Scalar and Function::Jump::Sum::Vector
 
 {	public :
 
-	std::vector < Function::ActionGenerator > actions;
-
-	virtual ~Jump() { };
-
-	struct Sum  {  class Scalar;  class Vector;  };
-	
-	virtual double operator() ( const Function::Action & a ) const;
-	// here execution forbidden, overridden by Function::Jump::Sum::Scalar
-
-};  // end of class Function::Jump
-
-//-----------------------------------------------------------------------------------------//
-
-
-class Function::Jump::Sum::Scalar : public Function::Jump
-
-// jump of a Function::Scalar::Multivalued::JumpIsSum
-
-{	public :
-
-	// attribute inherited from Function::Jump :
-	// std::vector < Function::ActionGenerator > actions
+  std::vector < Function::ActionGenerator > actions;
 	
 	std::vector < double > ju;
 	
-	double operator() ( const Function::Action & a ) const override;
-	// virtual from Function::Jump, here overridden
+	double operator() ( const Function::Action & a ) const;
 
 };  // end of class Function::Jump::Sum::Scalar
 
-//-----------------------------------------------------------------------------------------//
-
-
-class Function::Jump::Sum::Vector : public Function::Jump
-
-// jump of a Function::Vector::Multivalued::JumpIsSum
-
-{	public :
-
-	std::vector < std::vector < double > > ju;
-	
-	// double operator() ( const Function::Action & a ) const
-	// virtual, defined by Function::Jump, execution forbidden
-
-};  // end of class Function::Jump::Sum::Vector
 
 //-----------------------------------------------------------------------------------------//
 
