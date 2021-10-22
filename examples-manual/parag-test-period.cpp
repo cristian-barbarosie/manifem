@@ -45,9 +45,10 @@ int main ( )
 	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ = fe.set_integrator ( tag::Gauss, tag::tri_4 );
 
+	// we number all nodes in 'square', not only those belonging to 'torus'
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = torus.iterator ( tag::over_vertices );
+	CellIterator it = square.iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell V = *it;  numbering[V] = counter;  ++counter;  }
@@ -63,6 +64,16 @@ int main ( )
 	// there will be, in average, eight non-zero elements per column
 	// the diagonal entry plus six neighbour vertices plus the last equation
 
+	// we fill the main diagonal with ones
+	// then we put zero for vertices belonging to 'torus'
+	{ // just a block of code for hiding 'it'
+	for ( size_t i = 0; i < size_matrix; i++ ) matrix_A.coeffRef ( i, i ) = 1.;
+	CellIterator it = torus.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		matrix_A.coeffRef ( numbering[V], numbering[V] ) = 0.;  }
+	} // just a block of code for hiding 'it'
+	
 	Eigen::VectorXd vector_b ( size_matrix + 1 ), vector_sol ( size_matrix );
 	vector_b.setZero();
 
@@ -70,7 +81,8 @@ int main ( )
 	x = xy[0];  y = xy[1];
 
 	// macroscopic temperature gradient
-	Function::Jump jump_of_solution = x.jump() + y.jump();
+	std::vector < double > macro_grad { 1., 0.5 };
+	Function::Jump jump_of_solution = macro_grad[0] * x.jump() + macro_grad[1] * y.jump();
 
 	// run over all square cells composing 'torus'
 	{ // just a block of code for hiding 'it'
@@ -108,6 +120,10 @@ int main ( )
 		}  }
 	} // just a block of code for hiding 'it'
 
+	// we add, as last equation, the condition of zero average
+	// actually, a more rudimentary condition : a line of ones
+	for ( size_t i = 0; i < size_matrix; i++ ) matrix_A.coeffRef ( size_matrix, i ) = 1.;
+
 	matrix_A .makeCompressed();
 
 	Eigen::SparseQR < Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;
@@ -123,9 +139,12 @@ int main ( )
 		exit ( 0 );                                  }
 
 	RR2 .set_as_working_manifold();
+	xy = Manifold::working.coordinates();
+	x = xy[0];  y = xy[1];
 	square.export_msh ("cell.msh", numbering );
 	
-  { // just a block of code for hiding variables
+	{ // just a block of code for hiding variables
+	double tol = 1.e-6;
 	std::ofstream solution_file ("cell.msh", std::fstream::app );
 	solution_file << "$NodeData" << std::endl;
 	solution_file << "1" << std::endl;   // one string follows
@@ -135,13 +154,29 @@ int main ( )
 	solution_file << "3" << std::endl;   // three integers follow
 	solution_file << "0" << std::endl;   // time step [??]
 	solution_file << "1" << std::endl;  // scalar values of u
-	solution_file << square.number_of ( tag::vertices ) << std::endl;
+	solution_file << square .number_of ( tag::vertices ) << std::endl;
   // number of values listed below
 	CellIterator it = square.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P];
-		solution_file << i << " " << vector_sol[i] << std::endl;   }
+		Cell other_cell ( tag::non_existent );
+		if ( P .belongs_to ( torus ) ) other_cell = P;
+		else if ( ( P == A ) or ( P == C ) or ( P == D ) ) other_cell = B;
+		else if ( P .belongs_to ( CD ) )
+		{	CellIterator itt = AB .iterator ( tag::over_vertices );
+			for ( itt.reset(); itt.in_range(); itt++ )
+				if ( std::abs ( x ( *itt ) - x ( P ) ) < tol )
+				{	other_cell = *itt;  break;  }                       }
+		else if ( P .belongs_to ( DA ) )
+		{	CellIterator itt = BC .iterator ( tag::over_vertices );
+			for ( itt.reset(); itt.in_range(); itt++ )
+			{	if ( std::abs ( y ( *itt ) - y ( P ) ) < tol )
+				{	other_cell = *itt;  break;  }                  }     }
+		assert ( other_cell .exists() );
+		size_t j = numbering [ other_cell ];
+		double jump = macro_grad[0] * ( x ( P ) - x ( other_cell ) )
+		            + macro_grad[1] * ( y ( P ) - y ( other_cell ) );
+		solution_file << numbering[P] << " " << vector_sol[j] + jump << std::endl;  }
 	} // just a block of code
 
 	std::cout << "produced file cell.msh" << std::endl;
