@@ -1,6 +1,7 @@
 
 // solve a celullar problem
 // square periodicity, triangular elements, circular hole
+// graphical representation buggy
 
 
 #include "maniFEM.h"

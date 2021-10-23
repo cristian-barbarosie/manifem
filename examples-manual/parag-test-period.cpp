@@ -1,6 +1,7 @@
 
 // solve a celullar problem
 // square periodicity, triangular elements, circular hole
+// identification of opposite sides based order (when exporting msh)
 
 
 #include "maniFEM.h"
@@ -144,7 +145,6 @@ int main ( )
 	square.export_msh ("cell.msh", numbering );
 	
 	{ // just a block of code for hiding variables
-	double tol = 1.e-6;
 	std::ofstream solution_file ("cell.msh", std::fstream::app );
 	solution_file << "$NodeData" << std::endl;
 	solution_file << "1" << std::endl;   // one string follows
@@ -156,27 +156,54 @@ int main ( )
 	solution_file << "1" << std::endl;  // scalar values of u
 	solution_file << square .number_of ( tag::vertices ) << std::endl;
   // number of values listed below
-	CellIterator it = square.iterator ( tag::over_vertices );
+	CellIterator it = torus.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		Cell other_cell ( tag::non_existent );
-		if ( P .belongs_to ( torus ) ) other_cell = P;
-		else if ( ( P == A ) or ( P == C ) or ( P == D ) ) other_cell = B;
-		else if ( P .belongs_to ( CD ) )
-		{	CellIterator itt = AB .iterator ( tag::over_vertices );
-			for ( itt.reset(); itt.in_range(); itt++ )
-				if ( std::abs ( x ( *itt ) - x ( P ) ) < tol )
-				{	other_cell = *itt;  break;  }                       }
-		else if ( P .belongs_to ( DA ) )
-		{	CellIterator itt = BC .iterator ( tag::over_vertices );
-			for ( itt.reset(); itt.in_range(); itt++ )
-			{	if ( std::abs ( y ( *itt ) - y ( P ) ) < tol )
-				{	other_cell = *itt;  break;  }                  }     }
-		assert ( other_cell .exists() );
-		size_t j = numbering [ other_cell ];
-		double jump = macro_grad[0] * ( x ( P ) - x ( other_cell ) )
-		            + macro_grad[1] * ( y ( P ) - y ( other_cell ) );
-		solution_file << numbering[P] << " " << vector_sol[j] + jump << std::endl;  }
+		size_t j = numbering [ P ];
+		solution_file << j << " " << vector_sol[j] << std::endl;  }
+	size_t j = numbering [ B ];
+	assert ( not A .belongs_to ( torus ) );
+	solution_file << numbering[A] << " "
+		<< vector_sol[j] + macro_grad[0] * ( x ( A ) - x ( B ) )
+		                 + macro_grad[1] * ( y ( A ) - y ( B ) ) << std::endl;
+	assert ( not C .belongs_to ( torus ) );
+	solution_file << numbering[C] << " "
+		<< vector_sol[j] + macro_grad[0] * ( x ( C ) - x ( B ) )
+		                 + macro_grad[1] * ( y ( C ) - y ( B ) ) << std::endl;
+	assert ( not D .belongs_to ( torus ) );
+	solution_file << numbering[D] << " "
+		<< vector_sol[j] + macro_grad[0] * ( x ( D ) - x ( B ) )
+		                 + macro_grad[1] * ( y ( D ) - y ( B ) ) << std::endl;
+	CellIterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
+	it_AB .reset();  assert ( it_AB .in_range() );
+	assert ( *it_AB == A );  it_AB ++;
+	it_CD .reset();  assert ( it_CD .in_range() );
+	assert ( *it_CD == D );  it_CD ++;
+	for ( ; ; it_AB ++, it_CD ++ )
+	{	assert ( it_AB .in_range() );  assert ( it_CD .in_range() );
+		Cell V = *it_AB, W = *it_CD;
+		if ( V == B )  {  assert ( W == C );  break;  }
+		assert ( not W .belongs_to ( torus ) );
+		j = numbering [ V ];
+		solution_file << numbering[W] << " "
+			<< vector_sol[j] + macro_grad[0] * ( x ( W ) - x ( V ) )
+			                 + macro_grad[1] * ( y ( W ) - y ( V ) ) << std::endl;  }
+	CellIterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
+	it_BC .reset();  assert ( it_BC .in_range() );
+	assert ( *it_BC == B );  it_BC ++;
+	it_DA .reset();  assert ( it_DA .in_range() );
+	assert ( *it_DA == A );  it_DA ++;
+	for ( ; ; it_BC ++, it_DA ++ )
+	{	assert ( it_BC .in_range() );  assert ( it_DA .in_range() );
+		Cell V = *it_BC, W = *it_DA;
+		if ( V == C )  {  assert ( W == D );  break;  }
+		assert ( not W .belongs_to ( torus ) );
+		j = numbering [ V ];
+		solution_file << numbering[W] << " "
+			<< vector_sol[j] + macro_grad[0] * ( x ( W ) - x ( V ) )
+			                 + macro_grad[1] * ( y ( W ) - y ( V ) ) << std::endl;  }
 	} // just a block of code
 
 	std::cout << "produced file cell.msh" << std::endl;
