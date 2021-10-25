@@ -1,5 +1,4 @@
-
-//   field.h  2021.08.26
+//   field.h  2021.10.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -87,8 +86,8 @@ class Field::ShortInt : public Field::Core
 
 	inline ShortInt ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
 	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
-		index_in_heap { Cell::short_int_heap_size_pos[d] }
-	{	Cell::short_int_heap_size_pos[d] ++;  }
+		index_in_heap { Cell::Positive::short_int_heap_size [d] }
+	{	Cell::Positive::short_int_heap_size [d] ++;  }
 
 	virtual ~ShortInt ( ) { };
 
@@ -114,8 +113,8 @@ class Field::SizeT : public Field::Core
 
 	inline SizeT ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
 	:	Field::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
-		index_in_heap { Cell::size_t_heap_size_pos[d] }
-	{	Cell::size_t_heap_size_pos[d] ++;  }
+		index_in_heap { Cell::Positive::size_t_heap_size [d] }
+	{	Cell::Positive::size_t_heap_size [d] ++;  }
 
 	virtual ~SizeT ( ) { };
 
@@ -230,8 +229,8 @@ class Field::Double::Scalar : public Field::Double::Core
 
 	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d )
 	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d ),
-		index_in_heap { Cell::double_heap_size_pos[d] }
-	{	Cell::double_heap_size_pos[d] ++;  }
+		index_in_heap { Cell::Positive::double_heap_size [d] }
+	{	Cell::Positive::double_heap_size [d] ++;  }
 	
 	inline Scalar ( const tag::LivesOnPositiveCells &, const tag::OfDimension &,
 		size_t d, const tag::HasIndexInHeap, size_t i )
@@ -260,9 +259,9 @@ class Field::Double::Block : public Field::Double::Core
 	inline Block ( const tag::LivesOnPositiveCells &, const tag::OfDimension &, size_t d,
 	                    const tag::HasSize &, size_t s                                   )
 	:	Field::Double::Core ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{	min_index = Cell::double_heap_size_pos[d];
-		Cell::double_heap_size_pos[d] += s;
-		max_index_p1 = Cell::double_heap_size_pos[d];  }
+	{	min_index = Cell::Positive::double_heap_size [d];
+		Cell::Positive::double_heap_size [d] += s;
+		max_index_p1 = Cell::Positive::double_heap_size [d];  }
 	
 	size_t nb_of_components ( );  // virtual from Field::Double::Core
 	

@@ -1,5 +1,4 @@
-
-//   mesh.h  2021.10.20
+//   mesh.h  2021.10.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -563,9 +562,6 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	static std::vector < std::vector < void* > > data_for_init_pos, data_for_init_neg;
 	// probably through a 'this' pointer
 	
-	static std::vector < size_t > double_heap_size_pos, double_heap_size_neg,
-		size_t_heap_size_pos, size_t_heap_size_neg, short_int_heap_size_pos, short_int_heap_size_neg;
-
 	struct field_to_meshes
 	{	short int counter_pos;
 		short int counter_neg;
@@ -1713,16 +1709,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// see method 'set_max_dim' and paragraph 11.7 in the manual
 	static size_t maximum_dimension_plus_one;
 
-	inline static void set_max_dim ( const size_t d )
+	inline static void set_max_dim ( const size_t d );
+	// invoked at the beginning of mesh.cpp
 	// see paragraph 11.7 in the manual
-	{	maximum_dimension_plus_one = d + 1;
-		Cell::double_heap_size_pos.resize ( maximum_dimension_plus_one, 0. );
-		Cell::double_heap_size_neg.resize ( maximum_dimension_plus_one, 0. );
-		Cell::size_t_heap_size_pos.resize ( maximum_dimension_plus_one, 0 );
-		Cell::size_t_heap_size_neg.resize ( maximum_dimension_plus_one, 0 );
-		Cell::short_int_heap_size_pos.resize ( maximum_dimension_plus_one, 0 );
-		Cell::short_int_heap_size_neg.resize ( maximum_dimension_plus_one, 0 );  }
-
+	
 	struct Connected  {  class OneDim;  class HighDim;  };
 	struct MultiplyConnected  {  class OneDim;  class HighDim; };
 	class ZeroDim;  class NotZeroDim;  class Fuzzy;  class STSI;
@@ -1782,48 +1772,10 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	#endif
 
 	inline CellCore ( const tag::OfDimension &, const size_t d,  // for positive cells
-                    const tag::HasNoReverse &, const tag::OneDummyWrapper & )
-	#ifdef MANIFEM_COLLECT_CM	
-	:	tag::Util::Core::DelegateDispose
-		( & tag::Util::Core::default_dispose_query, tag::one_dummy_wrapper ),
-	#else  // no MANIFEM_COLLECT_CM
-	:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
-	#endif  // MANIFEM_COLLECT_CM	
-		double_heap ( Cell::double_heap_size_pos [d] ),
-		size_t_heap ( Cell::size_t_heap_size_pos [d] ),
-		short_int_heap ( Cell::short_int_heap_size_pos [d], 0 ),
-		reverse_attr ( tag::non_existent )
-	{	// Cell::counter++;
-		std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_pos_cell[d];
-		std::vector < void* > & data = Cell::data_for_init_pos[d];
-		std::vector<void(*)(Cell::Core*,void*)>::iterator it_f = init.begin();
-		std::vector<void*>::iterator it_d = data.begin();
-		for ( ; it_f != init.end(); it_f++, it_d++ )
-		{	assert ( it_d != data.end() );
-			(*it_f) ( this, *it_d );       }
-		assert ( it_d == data.end() );                                               }
+	                  const tag::HasNoReverse &, const tag::OneDummyWrapper & );
 
 	inline CellCore ( const tag::OfDimension &, const size_t d,  // for negative cells
-                    const tag::ReverseOf &, Cell::Core * direct_cell_p, const tag::OneDummyWrapper & )
-	#ifdef MANIFEM_COLLECT_CM	
-	:	tag::Util::Core::DelegateDispose
-		( & tag::Util::Core::dispose_query_cell_with_reverse, tag::one_dummy_wrapper ),
-	#else  // no MANIFEM_COLLECT_CM
-	:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
-	#endif  // MANIFEM_COLLECT_CM	
-		double_heap ( Cell::double_heap_size_neg [d] ),
-		size_t_heap ( Cell::size_t_heap_size_neg [d] ),
-		short_int_heap ( Cell::short_int_heap_size_neg [d], 0 ),
-		reverse_attr ( tag::whose_core_is, direct_cell_p, tag::previously_existing, tag::surely_not_null )
-	{	// Cell::counter++;
-		std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_neg_cell[d];
-		std::vector < void* > & data = Cell::data_for_init_neg[d];
-		std::vector<void(*)(Cell::Core*,void*)>::iterator it_f = init.begin();
-		std::vector<void*>::iterator it_d = data.begin();
-		for ( ; it_f != init.end(); it_f++, it_d++ )
-		{	assert ( it_d != data.end() );
-			(*it_f) ( this, *it_d );       }
-		assert ( it_d == data.end() );                                               }
+	                  const tag::ReverseOf &, Cell::Core * direct_cell_p, const tag::OneDummyWrapper & );
 
 	virtual ~CellCore ( )  // 
 	{	}  // { Cell::counter--;  std::cout << Cell::counter << std::endl;  }
@@ -1944,6 +1896,8 @@ class Cell::Positive : public Cell::Core
 
 	std::vector < std::map < Mesh::Core*, Cell::field_to_meshes > > meshes;
 
+	static std::vector < size_t > double_heap_size, size_t_heap_size, short_int_heap_size;
+
 	inline Positive ( const tag::OfDimension &, const size_t d,
 	                  const tag::SizeMeshes &, const size_t sz, const tag::OneDummyWrapper & )
 	:	Cell::Core ( tag::of_dim, d, tag::has_no_reverse, tag::one_dummy_wrapper ),
@@ -2010,6 +1964,8 @@ class Cell::Negative : public Cell::Core
 	// and cell_behind_within inherited from Cell::Core
 
 	// Cell reverse_attr  inherited from Cell::Core
+
+	static std::vector < size_t > double_heap_size, size_t_heap_size, short_int_heap_size;
 
 	inline Negative ( const tag::OfDimension &, const size_t d,
 	                  const tag::ReverseOf &, Cell::Positive * direct, const tag::OneDummyWrapper & )
@@ -5257,6 +5213,70 @@ class Mesh::STSI : public Mesh::Fuzzy
 }; // end of  class Mesh::STSI
 
 //-----------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------//
+
+
+inline void Mesh::set_max_dim ( const size_t d )  // static
+// invoked at the beginning of mesh.cpp
+// see paragraph 11.7 in the manual
+{	Mesh::maximum_dimension_plus_one = d + 1;
+	Cell::Positive::double_heap_size.resize ( maximum_dimension_plus_one, 0. );
+	Cell::Negative::double_heap_size.resize ( maximum_dimension_plus_one, 0. );
+	Cell::Positive::size_t_heap_size.resize ( maximum_dimension_plus_one, 0 );
+	Cell::Negative::size_t_heap_size.resize ( maximum_dimension_plus_one, 0 );
+	Cell::Positive::short_int_heap_size.resize ( maximum_dimension_plus_one, 0 );
+	Cell::Negative::short_int_heap_size.resize ( maximum_dimension_plus_one, 0 );  }
+
+//-----------------------------------------------------------------------------//
+
+
+inline tag::Util::CellCore::CellCore
+( const tag::OfDimension &, const size_t d,  // for positive cells
+  const tag::HasNoReverse &, const tag::OneDummyWrapper & )
+#ifdef MANIFEM_COLLECT_CM	
+:	tag::Util::Core::DelegateDispose
+	( & tag::Util::Core::default_dispose_query, tag::one_dummy_wrapper ),
+#else  // no MANIFEM_COLLECT_CM
+:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
+#endif  // MANIFEM_COLLECT_CM	
+	double_heap ( Cell::Positive::double_heap_size [d] ),
+	size_t_heap ( Cell::Positive::size_t_heap_size [d] ),
+	short_int_heap ( Cell::Positive::short_int_heap_size [d], 0 ),
+	reverse_attr ( tag::non_existent )
+{	// Cell::counter++;
+	std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_pos_cell[d];
+	std::vector < void* > & data = Cell::data_for_init_pos[d];
+	std::vector<void(*)(Cell::Core*,void*)>::iterator it_f = init.begin();
+	std::vector<void*>::iterator it_d = data.begin();
+	for ( ; it_f != init.end(); it_f++, it_d++ )
+	{	assert ( it_d != data.end() );
+		(*it_f) ( this, *it_d );       }
+	assert ( it_d == data.end() );                                               }
+
+
+inline tag::Util::CellCore::CellCore
+( const tag::OfDimension &, const size_t d,  // for negative cells
+  const tag::ReverseOf &, Cell::Core * direct_cell_p, const tag::OneDummyWrapper & )
+#ifdef MANIFEM_COLLECT_CM	
+:	tag::Util::Core::DelegateDispose
+	( & tag::Util::Core::dispose_query_cell_with_reverse, tag::one_dummy_wrapper ),
+#else  // no MANIFEM_COLLECT_CM
+:	tag::Util::Core::Inactive ( tag::one_dummy_wrapper ),
+#endif  // MANIFEM_COLLECT_CM	
+	double_heap ( Cell::Negative::double_heap_size [d] ),
+	size_t_heap ( Cell::Negative::size_t_heap_size [d] ),
+	short_int_heap ( Cell::Negative::short_int_heap_size [d], 0 ),
+	reverse_attr ( tag::whose_core_is, direct_cell_p, tag::previously_existing, tag::surely_not_null )
+{	// Cell::counter++;
+	std::vector < void(*)(Cell::Core*,void*) > & init = Cell::init_neg_cell[d];
+	std::vector < void* > & data = Cell::data_for_init_neg[d];
+	std::vector<void(*)(Cell::Core*,void*)>::iterator it_f = init.begin();
+	std::vector<void*>::iterator it_d = data.begin();
+	for ( ; it_f != init.end(); it_f++, it_d++ )
+	{	assert ( it_d != data.end() );
+		(*it_f) ( this, *it_d );       }
+	assert ( it_d == data.end() );                                               }
+
 //-----------------------------------------------------------------------------//
 
 

@@ -1,5 +1,4 @@
-
-// mesh.cpp 2021.10.17
+// mesh.cpp 2021.10.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -41,12 +40,12 @@ size_t Mesh::maximum_dimension_plus_one { 4 };  // static data member
 
 // static data members :
 
-std::vector < size_t > Cell::double_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0. );
-std::vector < size_t > Cell::double_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0. );
-std::vector < size_t > Cell::size_t_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0 );
-std::vector < size_t > Cell::size_t_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0 );
-std::vector < size_t > Cell::short_int_heap_size_pos ( Mesh::maximum_dimension_plus_one, 0 );
-std::vector < size_t > Cell::short_int_heap_size_neg ( Mesh::maximum_dimension_plus_one, 0 );
+std::vector < size_t > Cell::Positive::double_heap_size ( Mesh::maximum_dimension_plus_one, 0. );
+std::vector < size_t > Cell::Negative::double_heap_size ( Mesh::maximum_dimension_plus_one, 0. );
+std::vector < size_t > Cell::Positive::size_t_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
+std::vector < size_t > Cell::Negative::size_t_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
+std::vector < size_t > Cell::Positive::short_int_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
+std::vector < size_t > Cell::Negative::short_int_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < std::vector < void(*)(Cell::Core*,void*) > >
    Cell::init_pos_cell ( Mesh::maximum_dimension_plus_one );
 std::vector < std::vector < void(*)(Cell::Core*,void*) > >
@@ -3853,7 +3852,7 @@ std::list<Cell>::iterator Mesh::Connected::OneDim::add_to_my_cells
 
 std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 (	Cell::Core * cll, const size_t d )
-// virtual from Mesh::Core, later overriden Mesh::STSI
+// virtual from Mesh::Core, later overriden by Mesh::STSI
 
 // called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
 
