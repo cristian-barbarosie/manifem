@@ -5220,8 +5220,8 @@ inline void Mesh::set_max_dim ( const size_t d )  // static
 // invoked at the beginning of mesh.cpp
 // see paragraph 11.7 in the manual
 {	Mesh::maximum_dimension_plus_one = d + 1;
-	Cell::Positive::double_heap_size.resize ( maximum_dimension_plus_one, 0. );
-	Cell::Negative::double_heap_size.resize ( maximum_dimension_plus_one, 0. );
+	Cell::Positive::double_heap_size.resize ( maximum_dimension_plus_one, 0 );
+	Cell::Negative::double_heap_size.resize ( maximum_dimension_plus_one, 0 );
 	Cell::Positive::size_t_heap_size.resize ( maximum_dimension_plus_one, 0 );
 	Cell::Negative::size_t_heap_size.resize ( maximum_dimension_plus_one, 0 );
 	Cell::Positive::short_int_heap_size.resize ( maximum_dimension_plus_one, 0 );

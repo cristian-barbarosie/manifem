@@ -40,8 +40,8 @@ size_t Mesh::maximum_dimension_plus_one { 4 };  // static data member
 
 // static data members :
 
-std::vector < size_t > Cell::Positive::double_heap_size ( Mesh::maximum_dimension_plus_one, 0. );
-std::vector < size_t > Cell::Negative::double_heap_size ( Mesh::maximum_dimension_plus_one, 0. );
+std::vector < size_t > Cell::Positive::double_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
+std::vector < size_t > Cell::Negative::double_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::Positive::size_t_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::Negative::size_t_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
 std::vector < size_t > Cell::Positive::short_int_heap_size ( Mesh::maximum_dimension_plus_one, 0 );
@@ -243,6 +243,7 @@ size_t Mesh::Fuzzy::get_dim_plus_one ( )  // virtual from Mesh::Core
 size_t Mesh::ZeroDim::number_of ( const tag::Vertices & )
 // virtual from Mesh::Core
 {	return 2;  }
+// what if the segment is incomplete ?
 	
 size_t Mesh::ZeroDim::number_of ( const tag::Segments & )
 // virtual from Mesh::Core
@@ -253,10 +254,12 @@ size_t Mesh::ZeroDim::number_of ( const tag::Segments & )
 size_t Mesh::ZeroDim::number_of ( const tag::CellsOfDim &, const size_t d )
 // virtual from Mesh::Core
 {	assert ( d == 0 );  return 2;  }
+// what if the segment is incomplete ?
 	
 size_t Mesh::ZeroDim::number_of ( const tag::CellsOfMaxDim & )
 // virtual from Mesh::Core
 {	return 2;  }
+// what if the segment is incomplete ?
 	
 size_t Mesh::Connected::OneDim::number_of ( const tag::Vertices & )
 // virtual from Mesh::Core
@@ -315,17 +318,17 @@ size_t Mesh::Fuzzy::number_of ( const tag::Segments & )
 // virtual from Mesh::Core
 {	assert ( 1 < this->get_dim_plus_one() );
 	assert ( this->cells.size() > 1 );
-	return this->cells[1].size();       }
+	return this->cells[1].size();            }
 	
 size_t Mesh::Fuzzy::number_of ( const tag::CellsOfDim &, const size_t d )
 // virtual from Mesh::Core
 {	assert ( d < this->get_dim_plus_one() );
 	assert ( this->cells.size() > d );
-	return this->cells[d].size();             }
+	return this->cells[d].size();            }
 	
 size_t Mesh::Fuzzy::number_of ( const tag::CellsOfMaxDim & )
 // virtual from Mesh::Core
-{	return this->cells.back().size();       }
+{	return this->cells.back().size();  }
 	
 
 Cell Mesh::Core::first_vertex ( )  // virtual
@@ -355,7 +358,7 @@ Cell Mesh::Connected::OneDim::first_vertex ( )
 	assert ( not this->first_ver.is_positive() );
 	assert ( this->last_ver.exists() );
 	assert ( this->last_ver.is_positive() );
-	return this->first_ver;                         }
+	return this->first_ver;                        }
 
 Cell Mesh::Connected::OneDim::last_vertex ( )
 // virtual from Mesh::Core, here overriden
@@ -363,7 +366,7 @@ Cell Mesh::Connected::OneDim::last_vertex ( )
 	assert ( not this->first_ver.is_positive() );
 	assert ( this->last_ver.exists() );
 	assert ( this->last_ver.is_positive() );
-	return this->last_ver;                          }
+	return this->last_ver;                         }
 
 Cell Mesh::Connected::OneDim::first_segment ( )
 // virtual from Mesh::Core, here overriden
@@ -390,13 +393,13 @@ Mesh Cell::Positive::Vertex::boundary ( )  // virtual from Cell::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "vertices have no boundary" << std::endl;
-	exit ( 1 );                                                                 }
+	exit ( 1 );                                             }
 
 Mesh Cell::Negative::Vertex::boundary ( )  // virtual from Cell::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "vertices have no boundary" << std::endl;
-	exit ( 1 );                                                                 }
+	exit ( 1 );                                             }
 
 Mesh Cell::Positive::Segment::boundary ( )  // virtual from Cell::Core
 {	return Mesh ( tag::whose_core_is,
