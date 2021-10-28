@@ -886,20 +886,24 @@ void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver )
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
-	ver->remove_from_seg ( this );
+	std::cout << "mesh.cpp line 889 Cell::Positive::Segment::cut_from_my_bdry" << std::endl << std::flush;
+	this->cut_common ( ver );
 	// 'remove_from_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
-	this->cut_common ( ver );       }
+	std::cout << "mesh.cpp line 893 Cell::Positive::Segment::cut_from_my_bdry" << std::endl << std::flush;
+	ver->remove_from_seg ( this );
+	std::cout << "mesh.cpp line 895 Cell::Positive::Segment::cut_from_my_bdry" << std::endl << std::flush;
+}
 	
 
 void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver, const tag::DoNotBother & )
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
-	ver->remove_from_seg ( this );
+	this->cut_common ( ver );
 	// 'remove_from_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
-	this->cut_common ( ver );       }
+	ver->remove_from_seg ( this );       }
 	
 
 void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face )
@@ -907,9 +911,9 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face )
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary_attr.is_positive() );
-	face->remove_from_bdry ( this->boundary_attr.core );
+	this->cut_common ( face );
 	// 'remove_from' is virtual, so the computer will choose the right version
-	this->cut_common ( face );                            }
+	face->remove_from_bdry ( this->boundary_attr.core );   }
 
 
 void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face, const tag::DoNotBother & )
@@ -917,9 +921,9 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face, const tag::D
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary_attr.is_positive() );
-	face->remove_from_bdry ( this->boundary_attr.core, tag::do_not_bother );
+	this->cut_common ( face );
 	// 'remove_from' is virtual, so the computer will choose the right version
-	this->cut_common ( face );                            }
+	face->remove_from_bdry ( this->boundary_attr.core, tag::do_not_bother );  }
 
 
 void Cell::Negative::cut_from_my_bdry ( Cell::Core * cll )
@@ -987,8 +991,6 @@ void Cell::Positive::NotVertex::compute_sign
 namespace {  // anonymous namespace, mimics static linkage
 
 // here is where the low-level linking between cells and meshes happens
-// ***_deep_connections and ***_deep_connections_rev
-// are called from Mesh::***::add_*** and remove_***
 
 	
 inline void add_link_zero_dim  // hidden in anonymous namespace
@@ -1742,6 +1744,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1788,6 +1791,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );               }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1837,6 +1841,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn );
 	  link_face_to_higher ( face, pmce, cp, cn );                                    }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1891,6 +1896,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
 	  link_face_to_higher ( face, pmce, cp, cn, tag::do_not_bother );                }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1937,6 +1943,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -1981,6 +1988,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 		face->compute_sign ( cp, cn, cll_bdry.core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );              }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2033,6 +2041,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	  link_face_to_msh ( face, cll, msh, cp, cn );
 		// we switch the two counters
 	  link_face_to_higher ( face, pmce, cn, cp );                                    }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2090,6 +2099,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
 		// we switch the two counters
 	  link_face_to_higher ( face, pmce, cn, cp, tag::do_not_bother );               }
+
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2109,8 +2119,8 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 inline void remove_link_zero_dim  // hidden in anonymous namespace
 (	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg )
 
-// This function "removes the link" between a cell and a mesh.
-// This "link" asserts that the cell belongs to the mesh.
+// this function "removes the link" between a vertex and a segment
+// this "link" asserts that the vertex belongs to the (boundary of the) segment
 
 // this function updates ver->segments
 
@@ -2126,12 +2136,13 @@ inline void remove_link_zero_dim  // hidden in anonymous namespace
 inline void remove_link_zero_dim_rev  // hidden in anonymous namespace
 (	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg )
 
-// this function "removes the link" between a cell and a mesh
-// this "link" asserts that the cell belongs to the mesh
+// this function "removes the link" between a vertex and a segment
+// this "link" asserts that the vertex belongs to the (boundary of the) segment
 
 // this function updates ver->segments
 
 {	assert ( ver );  assert ( seg );
+	std::cout << "mesh.cpp 2145 remove_link_zero_dim_rev, seg " << seg << ", ver " << ver << std::endl;
 	typedef std::map < Cell::Positive::Segment *, short int > maptype;
 	maptype & vs = ver->segments;
 	maptype::iterator vsfs = vs.find(seg);
@@ -2334,7 +2345,7 @@ inline void remove_link  // hidden in anonymous namespace
 inline void unlink_face_from_msh  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * cll,
   Mesh::Core * const msh, const short int cp, const short int cn )
-// just a block of code for make_deep_connections
+// just a block of code for break_deep_connections
 
 {	assert ( face );  assert ( cll );
 	assert ( face->get_dim() < cll->get_dim() );
@@ -2357,7 +2368,7 @@ inline void unlink_face_from_msh  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * cll,
   Mesh::Core * const msh, const short int cp, const short int cn,
   const tag::DoNotBother &                                        )
-// just a block of code for make_deep_connections
+// just a block of code for break_deep_connections
 
 {	assert ( face );  assert ( cll );
 	assert ( face->get_dim() < cll->get_dim() );
@@ -2379,7 +2390,7 @@ inline void unlink_face_from_msh  // hidden in anonymous namespace
 inline void unlink_face_from_higher  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * const pmce,
   const short int cp, const short int cn                          )
-// just a block of code for make_deep_connections
+// just a block of code for break_deep_connections
 
 {	assert ( face );  assert ( pmce );
 	assert ( face->get_dim() + 1 <= pmce->get_dim() );
@@ -2415,7 +2426,7 @@ inline void unlink_face_from_higher  // hidden in anonymous namespace
 inline void unlink_face_from_higher  // hidden in anonymous namespace
 (	Cell::Core * const face, Cell::Positive::NotVertex * const pmce,
   const short int cp, const short int cn, const tag::DoNotBother & )
-// just a block of code for make_deep_connections
+// just a block of code for break_deep_connections
 
 {	assert ( face );  assert ( pmce );
 	assert ( face->get_dim() + 1 <= pmce->get_dim() );
@@ -2455,8 +2466,8 @@ inline void break_deep_connections_0d  // hidden in anonymous namespace
 // see paragraph 11.9 in the manual
 
 {	assert ( ver );  assert ( seg );
-	remove_link_zero_dim ( ver, seg );
-	unlink_face_from_higher ( ver, seg, 1, 0 );  }
+	unlink_face_from_higher ( ver, seg, 1, 0 );
+	remove_link_zero_dim ( ver, seg );          }
 	
 
 inline void break_deep_connections_0d_rev  // hidden in anonymous namespace
@@ -2467,7 +2478,7 @@ inline void break_deep_connections_0d_rev  // hidden in anonymous namespace
 
 {	assert ( ver );  assert ( seg );
 	unlink_face_from_higher ( ver, seg, 0, 1 );    // we switch the two counters
-	remove_link_zero_dim_rev ( ver, seg );       }
+	remove_link_zero_dim_rev ( ver, seg );      }
 	
 
 inline void break_deep_connections_1d  // hidden in anonymous namespace
@@ -2535,14 +2546,11 @@ inline void break_deep_connections_1d  // hidden in anonymous namespace
 	assert ( seg );
 	assert ( seg->get_dim() == 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'seg' from all meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 1, 0 );
-
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
@@ -2553,6 +2561,8 @@ inline void break_deep_connections_1d  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
 	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
 	unlink_face_from_higher ( Bp, pmce, 1, 0 );
+
+	unlink_face_from_higher ( seg, pmce, 1, 0 );
 
 	remove_link_same_dim ( seg, msh );
 
@@ -2572,14 +2582,11 @@ inline void break_deep_connections_1d  // hidden in anonymous namespace
 	assert ( seg );
 	assert ( seg->get_dim() == 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'seg' from all meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 1, 0, tag::do_not_bother );
-
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
@@ -2590,6 +2597,8 @@ inline void break_deep_connections_1d  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
 	unlink_face_from_msh ( Bp, seg, msh, 1, 0, tag::do_not_bother );
 	unlink_face_from_higher ( Bp, pmce, 1, 0, tag::do_not_bother );
+
+	unlink_face_from_higher ( seg, pmce, 1, 0, tag::do_not_bother );
 
 	remove_link_same_dim ( seg, msh, tag::do_not_bother );
 
@@ -2671,14 +2680,11 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	assert ( seg->get_dim() == 1 );
 	assert ( o_seg->get_dim() == 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'seg' from meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// unlink 'seg' from meshes above 'msh->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 0, 1 );  // we switch the two counters
-
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
@@ -2689,6 +2695,8 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
 	unlink_face_from_msh ( Bp, seg, msh, 1, 0 );
 	unlink_face_from_higher ( Bp, pmce, 0, 1 );  // we switch the two counters
+
+	unlink_face_from_higher ( seg, pmce, 0, 1 );  // we switch the two counters
 
 	remove_link_same_dim_rev ( o_seg, seg, msh );
 	
@@ -2710,14 +2718,11 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 	assert ( seg->get_dim() == 1 );
 	assert ( o_seg->get_dim() == 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'seg' from meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// unlink 'seg' from meshes above 'msh->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( seg, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
-
 	Cell A = seg->base_attr.reverse ( tag::surely_exists );
 	Cell::Positive::Vertex * Ap = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( A.core );
@@ -2728,6 +2733,8 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
 	unlink_face_from_msh ( Bp, seg, msh, 1, 0, tag::do_not_bother );
 	unlink_face_from_higher ( Bp, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
+
+	unlink_face_from_higher ( seg, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	remove_link_same_dim_rev ( o_seg, seg, msh, tag::do_not_bother );
 	
@@ -2753,15 +2760,6 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 	// cell being destroyed (pretending it is not a boundary)
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn );                                   }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2771,6 +2769,16 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );   }     }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );                                }
 
 	remove_link_same_dim ( cll, msh );
 
@@ -2799,15 +2807,6 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 	// cell being destroyed (pretending it is not a boundary)
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );           }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2817,6 +2816,16 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );  }  }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );           }
 
 	remove_link_same_dim ( cll, msh, tag::do_not_bother );
 
@@ -2837,26 +2846,12 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
 	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'cll' from all meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( cll, pmce, 1, 0 );
-
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
-		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn );
-	  unlink_face_from_higher ( face, pmce, cp, cn );                                    }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2868,6 +2863,20 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );
 			unlink_face_from_higher ( fface, pmce, cp, cn );            }  }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );
+	  unlink_face_from_higher ( face, pmce, cp, cn );                                    }
+
+	unlink_face_from_higher ( cll, pmce, 1, 0 );
 
 	remove_link_same_dim ( cll, msh );
 	
@@ -2891,26 +2900,12 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
 	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'cll' from all meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( cll, pmce, 1, 0, tag::do_not_bother );
-
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
-		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
-	  unlink_face_from_higher ( face, pmce, cp, cn, tag::do_not_bother );            }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2922,6 +2917,20 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );
 			unlink_face_from_higher ( fface, pmce, cp, cn, tag::do_not_bother );  }  }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
+	  unlink_face_from_higher ( face, pmce, cp, cn, tag::do_not_bother );            }
+
+	unlink_face_from_higher ( cll, pmce, 1, 0, tag::do_not_bother );
 
 	remove_link_same_dim ( cll, msh, tag::do_not_bother );
 	
@@ -2948,15 +2957,6 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 	// cell being destroyed (pretending it is not a boundary)
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn );                                   }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -2966,6 +2966,16 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );   }       }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );                                   }
 
 	remove_link_same_dim_rev ( o_cll, cll, msh );
 	
@@ -2994,15 +3004,6 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 	// cell being destroyed (pretending it is not a boundary)
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );          }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -3012,6 +3013,16 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			short int cp, cn;
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );  }  }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );          }
 
 	remove_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
 	
@@ -3034,27 +3045,12 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
 	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'cll' from all meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( cll, pmce, 0, 1 );  // we switch the two counters
-
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
-		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn );
-		// we switch the two counters
-	  unlink_face_from_higher ( face, pmce, cn, cp );                                }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -3067,6 +3063,21 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );
 			// we switch the two counters
 			unlink_face_from_higher ( fface, pmce, cn, cp );    }  }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn );
+		// we switch the two counters
+	  unlink_face_from_higher ( face, pmce, cn, cp );                                }
+
+	unlink_face_from_higher ( cll, pmce, 0, 1 );  // we switch the two counters
 
 	remove_link_same_dim_rev ( o_cll, cll, msh );
 	
@@ -3091,27 +3102,12 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 	size_t cll_dim_m1 = tag::Util::assert_diff ( cll_dim, 1 );
 	assert ( msh->get_dim_plus_one() == cll_dim + 1 );
 
-	// for all meshes strictly above msh
+	// unlink 'cll' from all meshes above 'msh->cell_enclosed' (of all dimensions)
 	Cell::Core * mce = msh->cell_enclosed;
 	assert ( mce );
 	Cell::Positive::NotVertex * pmce = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
-	// link 'cll' to all meshes above 'this->cell_enclosed' (of all dimensions)
-	unlink_face_from_higher ( cll, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
-
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
-		( tag::over_cells, tag::of_max_dim, tag::force_positive );
-	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
-		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
-		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
-		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
-	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
-		// we switch the two counters
-	  unlink_face_from_higher ( face, pmce, cn, cp, tag::do_not_bother );            }
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
 	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
@@ -3124,6 +3120,21 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );
 			// we switch the two counters
 			unlink_face_from_higher ( fface, pmce, cn, cp, tag::do_not_bother );    }  }
+
+	CellIterator it = cll_bdry.iterator
+		( tag::over_cells, tag::of_max_dim, tag::force_positive );
+	// talvez implementar um iterador especial que devolva cp e cn
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell::Core * face = (*it).core;  // add link from face to 'msh' and
+		// to all meshes above 'msh->cell_enclosed' (of all dimensions)
+		short int cp, cn;
+		face->compute_sign ( cp, cn, cll_bdry.core );
+		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
+	  unlink_face_from_msh ( face, cll, msh, cp, cn, tag::do_not_bother );
+		// we switch the two counters
+	  unlink_face_from_higher ( face, pmce, cn, cp, tag::do_not_bother );            }
+
+	unlink_face_from_higher ( cll, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	remove_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
 	
@@ -3287,7 +3298,9 @@ void Cell::Positive::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 // virtual from Cell::Core, here overriden
 	
 {	assert ( seg );
+	std::cout << "mesh.cpp liine 3296 Cell::Positive::Vertex::remove_from_seg" << std::endl << std::flush;
 	// assert that 'this' vertex belongs to the boundary of 'seg'
+	break_deep_connections_0d ( this, seg );
 	std::map < Cell::Positive::Segment *, short int > & tm0 = this->segments;
 	// this->segments contains segments instead of zero-dimensional meshes
 	std::map<Cell::Positive::Segment*,short int>::iterator it = tm0.find ( seg );
@@ -3296,8 +3309,7 @@ void Cell::Positive::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 	seg->tip_attr = Cell ( tag::non_existent );
 	// perhaps define a method "unlink_core_from_wrapper" ?
 	assert ( it->second == 1 );
-	tm0.erase ( it );
-	break_deep_connections_0d ( this, seg );                                       }
+	tm0.erase ( it );                                                             }
 
 
 void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
@@ -3328,14 +3340,24 @@ void Cell::Negative::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 	// assert that 'this' vertex belongs to the mesh 'msh'
 	std::map < Cell::Positive::Segment *, short int > & pvm0 = pos_ver->segments;
 	// this->segments contains segments instead of zero-dimensional meshes
+				std::cout << "Cell::Negative::Vertex::remove_from_seg, segments around this->rev : ";
+				for ( std::map < Cell::Positive::Segment*, short int > ::iterator
+								itbc = pvm0.begin(); itbc != pvm0.end(); itbc++ )
+					std::cout << itbc->first << " " << itbc->second << ", ";
+				std::cout << std::endl;
+	break_deep_connections_0d_rev ( pos_ver, seg );
+				std::cout << "Cell::Negative::Vertex::remove_from_seg, segments around this->rev : ";
+				for ( std::map < Cell::Positive::Segment*, short int > ::iterator
+								itbc = pvm0.begin(); itbc != pvm0.end(); itbc++ )
+					std::cout << itbc->first << " " << itbc->second << ", ";
+				std::cout << " seg " << seg << std::endl;
 	std::map<Cell::Positive::Segment*,short int>::iterator it = pvm0.find ( seg );
 	assert ( it != pvm0.end() );
 	assert ( seg->base_attr.core == this );
 	seg->base_attr = Cell ( tag::non_existent );
 	// perhaps define a method "unlink_core_from_wrapper" ?
 	assert ( it->second == -1 );
-	pvm0.erase ( it );
-	break_deep_connections_0d_rev ( pos_ver, seg );                                 }
+	pvm0.erase ( it );                                                             }
 
 
 void Cell::Positive::Vertex::add_to_mesh ( Mesh::Core * )
@@ -4167,16 +4189,14 @@ void Mesh::NotZeroDim::add_pos_seg
 	not_zero_dim_add_pos_seg ( seg, this );                                             }
 
 
-void Mesh::NotZeroDim::remove_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsNotBdry & )
-// virtual from Mesh::Core
+void Mesh::NotZeroDim::remove_pos_seg  // virtual from Mesh::Core
+( Cell::Positive::Segment * seg, const tag::MeshIsNotBdry & )
 
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->base_attr.exists() );
 	assert ( seg->tip_attr.exists() );
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim.find(this) != seg->meshes_same_dim.end() );
-
-  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
 	assert ( seg->base_attr.core->cell_behind_within.find(this) !=
 	         seg->base_attr.core->cell_behind_within.end()         );
@@ -4185,6 +4205,8 @@ void Mesh::NotZeroDim::remove_pos_seg ( Cell::Positive::Segment * seg, const tag
 	assert ( seg->tip_attr.core->cell_behind_within.find(this) !=
 	         seg->tip_attr.core->cell_behind_within.end()         );
 	seg->tip_attr.core->cell_behind_within.erase(this);
+
+  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
 }  // end of Mesh::NotZeroDim::remove_pos_seg with tag::mesh_is_not_bdry
 
@@ -4198,8 +4220,6 @@ void Mesh::NotZeroDim::remove_pos_seg  // virtual from Mesh::Core
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim.find(this) != seg->meshes_same_dim.end() );
 
-  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
-
 	assert ( seg->base_attr.core->cell_behind_within.find(this) !=
 	         seg->base_attr.core->cell_behind_within.end()         );
 	seg->base_attr.core->cell_behind_within.erase(this);
@@ -4207,6 +4227,8 @@ void Mesh::NotZeroDim::remove_pos_seg  // virtual from Mesh::Core
 	assert ( seg->tip_attr.core->cell_behind_within.find(this) !=
 	         seg->tip_attr.core->cell_behind_within.end()         );
 	seg->tip_attr.core->cell_behind_within.erase(this);
+
+  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 
 }  // end of Mesh::NotZeroDim::remove_pos_seg with tag::mesh_is_not_bdry, tag::do_not_bother
 
@@ -4220,14 +4242,14 @@ void Mesh::NotZeroDim::remove_pos_seg ( Cell::Positive::Segment * seg, const tag
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim.find(this) != seg->meshes_same_dim.end() );
 
-	break_deep_connections_1d ( seg, this, tag::mesh_is_bdry );
-
 	assert ( seg->base_attr.core->cell_behind_within.find(this) !=
 	         seg->base_attr.core->cell_behind_within.end()         );
 	seg->base_attr.core->cell_behind_within.erase(this);
 	assert ( seg->tip_attr.core->cell_behind_within.find(this) !=
 	         seg->tip_attr.core->cell_behind_within.end()         );
 	seg->tip_attr.core->cell_behind_within.erase(this);
+
+	break_deep_connections_1d ( seg, this, tag::mesh_is_bdry );
 
 }  // end of Mesh::NotZeroDim::remove_pos_seg with tag::mesh_is_bdry
 
@@ -4241,14 +4263,14 @@ void Mesh::NotZeroDim::remove_pos_seg  // virtual from Mesh::Core
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim.find(this) != seg->meshes_same_dim.end() );
 
-	break_deep_connections_1d ( seg, this, tag::mesh_is_bdry, tag::do_not_bother );
-
 	assert ( seg->base_attr.core->cell_behind_within.find(this) !=
 	         seg->base_attr.core->cell_behind_within.end()         );
 	seg->base_attr.core->cell_behind_within.erase(this);
 	assert ( seg->tip_attr.core->cell_behind_within.find(this) !=
 	         seg->tip_attr.core->cell_behind_within.end()         );
 	seg->tip_attr.core->cell_behind_within.erase(this);
+
+	break_deep_connections_1d ( seg, this, tag::mesh_is_bdry, tag::do_not_bother );
 
 }  // end of Mesh::NotZeroDim::remove_pos_seg with tag::mesh_is_bdry, tag::do_not_bother
 
@@ -4333,8 +4355,8 @@ void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
 	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                            }
 
 	
-void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
-// virtual from Mesh::Core
+void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
+( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
 	
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr.exists() );
@@ -4348,8 +4370,6 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
 
-	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
-
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.find(this) !=
 	         pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
@@ -4359,6 +4379,8 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
 	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);
 	
+	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
+
 }  // end of Mesh::NotZeroDim::remove_neg_seg with tag::mesh_is_not_bdry
 
 
@@ -4377,8 +4399,6 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
 
-	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
-
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.find(this) !=
 	         pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
@@ -4388,6 +4408,8 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
 	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);
 	
+	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
+
 }  // end of Mesh::NotZeroDim::remove_neg_seg with tag::mesh_is_not_bdry, tag::do_not_bother
 
 
@@ -4406,8 +4428,6 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
 
-	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry );
-
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.find(this) !=
 	         pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
@@ -4416,6 +4436,8 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 	         pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
 	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);
+
+	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry );
 
 }  // end of Mesh::NotZeroDim::remove_neg_seg with tag::mesh_is_bdry
 	
@@ -4435,8 +4457,6 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 	assert ( pos_seg->base_attr.core->reverse_attr.exists() );
 	assert ( pos_seg->tip_attr.core->reverse_attr.exists() );
 
-	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry, tag::do_not_bother );
-
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.find(this) !=
 	         pos_seg->base_attr.core->reverse_attr.core->cell_behind_within.end()         );
 	assert ( pos_seg->base_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
@@ -4446,11 +4466,13 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 	assert ( pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[this].core == seg );
 	pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within.erase(this);
 
+	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry, tag::do_not_bother );
+
 }  // end of Mesh::NotZeroDim::remove_neg_seg with tag::mesh_is_bdry, tag::do_not_bother
 	
 	
-void Mesh::NotZeroDim::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
-// virtual from Mesh::Core
+void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
+( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
 	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' does not belong yet to 'this' mesh
@@ -4504,8 +4526,6 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( cll->meshes_same_dim.find(this) != cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
-	
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4517,6 +4537,8 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 		// optimize map access !!
 		face_p->cell_behind_within.erase(this);                  }
 
+	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
+	
 }  // end of Mesh::NotZeroDim::remove_pos_hd_cell with tag::mesh_is_not_bdry
 	
 	
@@ -4527,8 +4549,6 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( cll->meshes_same_dim.find(this) != cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
-	
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4540,6 +4560,8 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 		// optimize map access !!
 		face_p->cell_behind_within.erase(this);                  }
 
+	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
+	
 }  // end of Mesh::NotZeroDim::remove_pos_hd_cell with tag::mesh_is_not_bdry, tag::do_not_bother
 	
 	
@@ -4550,8 +4572,6 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( cll->meshes_same_dim.find(this) != cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd ( cll, this, tag::mesh_is_bdry );
-	
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4563,6 +4583,8 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 		// optimize map access !!
 		face_p->cell_behind_within.erase(this);                  }
 
+	break_deep_connections_hd ( cll, this, tag::mesh_is_bdry );
+	
 }  // end of Mesh::NotZeroDim::remove_pos_hd_cell with tag::mesh_is_bdry
 
 	
@@ -4573,8 +4595,6 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( cll->meshes_same_dim.find(this) != cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd ( cll, this, tag::mesh_is_bdry, tag::do_not_bother );
-	
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4586,6 +4606,8 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 		// optimize map access !!
 		face_p->cell_behind_within.erase(this);                  }
 
+	break_deep_connections_hd ( cll, this, tag::mesh_is_bdry, tag::do_not_bother );
+	
 }  // end of Mesh::NotZeroDim::remove_pos_hd_cell with tag::mesh_is_bdry, tag::do_not_bother
 
 	
@@ -4659,8 +4681,6 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( pos_cll->meshes_same_dim.find(this) != pos_cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
-
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4670,6 +4690,8 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
 		rev_face->cell_behind_within.erase(this);                  }
+
+	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_not_bdry
 
@@ -4684,8 +4706,6 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( pos_cll->meshes_same_dim.find(this) != pos_cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
-
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4695,6 +4715,8 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
 		rev_face->cell_behind_within.erase(this);                  }
+
+	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_not_bdry, tag::do_not_bother
 
@@ -4709,8 +4731,6 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( pos_cll->meshes_same_dim.find(this) != pos_cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry );
-
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4720,6 +4740,8 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
 		rev_face->cell_behind_within.erase(this);                 }
+
+	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry );
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_bdry
 
@@ -4734,8 +4756,6 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( pos_cll->meshes_same_dim.find(this) != pos_cll->meshes_same_dim.end() );
 
-	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry, tag::do_not_bother );
-
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
@@ -4745,6 +4765,8 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within[this].core == cll );
 		rev_face->cell_behind_within.erase(this);              }
+
+	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry, tag::do_not_bother );
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_bdry, tag::do_not_bother
 

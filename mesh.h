@@ -6300,13 +6300,20 @@ inline Cell::PositiveHighDim::PositiveHighDim
 
 inline void Cell::Positive::NotVertex::glue_common ( Cell::Core * face_p )
 
-{	std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > & tm0 = this->meshes_same_dim;
-	std::map<Mesh::Core*,Cell::field_to_meshes_same_dim>::iterator it;
+// called from Cell::Positive::***::glue_on_my_bdry
+
+{	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype_f;
+	maptype_f & tm0 = this->meshes_same_dim;
+	maptype_f::iterator it;
 	for ( it = tm0.begin(); it != tm0.end(); ++it )
 	{	Mesh::Core * msh = it->first;
-		std::list<Cell>::iterator wh = it->second.where;
-		const Cell other_cell = *wh;  assert ( other_cell.exists() );
-		if ( other_cell.core == this )  // orientations match
+		// std::list<Cell>::iterator wh = it->second.where;
+		// const Cell other_cell = *wh;  assert ( other_cell.exists() );
+		// we used to inquire whether  other_cell.core == this
+		// but 'wh' is well defined only for Fuzzy (and STSI) meshes
+		// so we use the sign instead
+		short int s = it->second.sign;
+		if ( s == 1 )  // orientations match
 //////////////////////////////////////////////////////////////////////////////////
 		// inspired in item 24 of the book : Scott Meyers, Effective STL            //
 		{	typedef std::map < Mesh::Core *, Cell > maptype;                          //
@@ -6323,8 +6330,9 @@ inline void Cell::Positive::NotVertex::glue_common ( Cell::Core * face_p )
 //			Cell ( tag::whose_core_is, this, tag::previously_existing ) ;   //
 //////////////////////////////////////////////////////////////////////////
 		else  // mismatched orientations
-		{	assert ( other_cell == this->reverse_attr );
+		{	assert ( s == -1 );
 			Cell::Core * rev_face_p = face_p->reverse_attr.core;
+			Cell & other_cell = this->reverse_attr;
 			assert ( rev_face_p );
 /////////////////////////////////////////////////////////////////////////////////////
 			// inspired in item 24 of the book : Scott Meyers, Effective STL             //
@@ -6341,26 +6349,33 @@ inline void Cell::Positive::NotVertex::glue_common ( Cell::Core * face_p )
 
 inline void Cell::Positive::NotVertex::cut_common ( Cell::Core * face_p )
 	
+// called from Cell::Positive::***::cut_from_my_bdry
+
 {	if ( this->meshes.size() == 0 ) return;
-	std::map < Mesh::Core *, Cell::field_to_meshes_same_dim > & tm0 = this->meshes_same_dim;
-	std::map<Mesh::Core*,Cell::field_to_meshes_same_dim>::iterator it;
+	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype_f;
+	maptype_f & tm0 = this->meshes_same_dim;
+	maptype_f::iterator it;
 	for ( it = tm0.begin(); it != tm0.end(); ++it )
 	{	Mesh::Core * msh = it->first;
-		std::list<Cell>::iterator wh = it->second.where;
-		const Cell other_cell = *wh;  assert ( other_cell.exists() );
-		if ( other_cell.core == this )  // orientations match
+		// std::list<Cell>::iterator wh = it->second.where;
+		// const Cell other_cell = *wh;  assert ( other_cell.exists() );
+		// we used to inquire whether  other_cell.core == this
+		// but 'wh' is well defined only for Fuzzy (and STSI) meshes
+		// so we use the sign instead
+		short int s = it->second.sign;
+		if ( s == 1 )  // orientations match
 		{	assert ( face_p->cell_behind_within.find(msh) !=
 		           face_p->cell_behind_within.end()        );
 			assert ( face_p->cell_behind_within[msh].core == this );
 			face_p->cell_behind_within.erase(msh);                   }
 		else  // mismatched orientations
-		{	assert ( other_cell == this->reverse_attr );
+		{	assert ( s == -1 );
 			Cell::Core * rev_face_p { face_p->reverse_attr.core };
 			assert ( rev_face_p );
-			assert ( rev_face_p->cell_behind_within.find(msh) !=
-		           rev_face_p->cell_behind_within.end()        );
-			assert ( rev_face_p->cell_behind_within[msh] == other_cell );
-			rev_face_p->cell_behind_within.erase(msh);                     }  }                  }
+			assert ( rev_face_p->cell_behind_within .find ( msh ) !=
+		           rev_face_p->cell_behind_within .end()          );
+			assert ( rev_face_p->cell_behind_within [ msh ] == this->reverse_attr );
+			rev_face_p->cell_behind_within .erase ( msh );                           }  }           }
 	
 
 inline bool tag::Util::Core::dispose_query ( )

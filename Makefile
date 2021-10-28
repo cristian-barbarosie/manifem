@@ -24,6 +24,9 @@ manifem-exe-%: parag-%.o $(manifem_objects)
 # manifem-exe-test-%: test-%.o $(test_objects)
 # 	$(CC) -o $@ -std=c++17 $^
 
+parag-12.10.o: parag-12.10.cpp
+	$(CC) $(CFLAGS) -o $@ $^
+
 manifem-exe-12.10: parag-12.10.o
 	$(CC) -o $@ -std=c++17 $^
 

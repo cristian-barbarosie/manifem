@@ -112,7 +112,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		Cell A = seg.base().reverse();
 		Cell B = seg.tip();
-		Function::CompositionOfActions s = seg.spin();
+		Function::Action s = seg.spin();
 		std::vector < double > A_co = coords_q ( A );
 		std::vector < double > B_co = coords_q ( B, tag::spin, s );
 		size_t n = A_co.size();
@@ -253,7 +253,19 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			      it_list != list_of_segs .end(); it_list ++                            )
 			{	Cell segm = *it_list;
 				assert ( segm.tip() == B );
-				std::cout << "remove_short_segments, line 256" << std::endl << std::flush;
+				assert ( B.exists() );  assert ( segm.exists() );
+				std::cout << "remove_short_segments, line 256, B " << B.core << std::endl << std::flush;
+				std::cout << "segm.core " << segm.core << ", segm.rev.core " << segm.reverse().core << " ";
+				if ( segm.is_positive() ) std::cout << "segm is positive" << std::endl;
+				else                      std::cout << "segm is negative" << std::endl;
+				std::cout << "remove_short_segments, segments around B : ";
+				Cell::Positive::Vertex * Bc = tag::Util::assert_cast
+					< Cell::Core*, Cell::Positive::Vertex* > ( B.core );
+				for ( std::map < Cell::Positive::Segment*, short int > ::iterator
+								itbc = Bc->segments.begin(); itbc != Bc->segments.end(); itbc++ )
+					std::cout << itbc->first << " " << itbc->second << ", ";
+				std::cout << std::endl;
+				
 				B .cut_from_bdry_of ( segm );
 				std::cout << "remove_short_segments, line 258" << std::endl << std::flush;
 				A .glue_on_bdry_of ( segm );  }
