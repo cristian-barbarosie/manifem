@@ -1070,10 +1070,9 @@ inline void add_link_same_dim  // hidden in anonymous namespace
 	      std::forward_as_tuple(1,msh->add_to_my_cells(cll,cll_dim)) );      //
 /////////  code below is conceptually equivalent to the above  //////////////////
 //	assert ( cll->meshes_same_dim.find(msh) == cll->meshes_same_dim.end() );   //
-//	msh->cells[cll->dim].push_front(o_cll);                                    //
-//	Cell::field_to_meshes field;                                               //
-//	field.counter_pos = cp;                                                    //
-//	field.counter_neg = cn;                                                    //
+//	msh->cells[cll->dim].push_front(cll);                                      //
+//	Cell::field_to_meshes_same_dim field;                                      //
+//	field.sign = 1;                                                            //
 //	field.where = msh->cells[cll->dim]->begin();                               //
 //	cll->meshes_same_dim[msh] = field;                                         //
 /////////////////////////////////////////////////////////////////////////////////
@@ -1108,10 +1107,9 @@ inline void add_link_same_dim  // hidden in anonymous namespace
 	   std::forward_as_tuple(1,msh->add_to_my_cells(cll,cll_dim,tag::do_not_bother)) ); //
 /////////  code below is conceptually equivalent to the above  //////////////////>//////
 //	assert ( cll->meshes_same_dim.find(msh) == cll->meshes_same_dim.end() );   //
-//	msh->cells[cll->dim].push_front(o_cll);                                    //
-//	Cell::field_to_meshes field;                                               //
-//	field.counter_pos = cp;                                                    //
-//	field.counter_neg = cn;                                                    //
+//	msh->cells[cll->dim].push_front(cll);                                      //
+//	Cell::field_to_meshes_same_dim field;                                      //
+//	field.sign = 1;                                                            //
 //	field.where = msh->cells[cll->dim]->begin();                               //
 //	cll->meshes_same_dim[msh] = field;                                         //
 /////////////////////////////////////////////////////////////////////////////////
@@ -1312,9 +1310,9 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
 	short int mis = map_iter->second.sign;
-	if ( mis == 1 ) add_link ( face_p, msh, cp, cn, tag::do_not_bother );
+	if ( mis == 1 ) add_link ( face_p, msh, cp, cn );
 	else  // we switch the two counters
-	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp, tag::do_not_bother );  }  }
+	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp );  }          }
 	
 
 inline void link_face_to_msh  // hidden in anonymous namespace
@@ -3432,8 +3430,7 @@ void Cell::Positive::Segment::add_to_mesh ( Mesh::Core * msh )
 
 // there are many types of meshes, so we call a virtual method
 
-{	assert ( msh );
-	msh->add_pos_seg ( this, tag::mesh_is_not_bdry );  }
+{	assert ( msh );  msh->add_pos_seg ( this, tag::mesh_is_not_bdry );  }
 
 
 void Cell::Positive::Segment::add_to_mesh ( Mesh::Core * msh, const tag::DoNotBother & )

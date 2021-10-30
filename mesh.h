@@ -6034,7 +6034,7 @@ inline Cell::PositiveSegment::PositiveSegment ( Cell A, Cell B, const tag::OneDu
 
 {	// below is a much simplified version of Cell::Negative::Vertex::add_to_seg
 	// that's because 'this' segment has just been created, so it has no meshes above
-	// also, the base has already been correctly initialized
+	// also, the base and tip have already been correctly initialized
 	assert ( not A.is_positive() );
 	assert ( B.is_positive() );
 	Cell pos_A =  A.reverse ( tag::surely_exists );
