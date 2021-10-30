@@ -835,6 +835,7 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary().is_positive() );
+	std::cout << "mesh.cpp line 838" << std::endl << std::flush;
 	face->add_to_bdry ( this->boundary().core );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
 	this->glue_common ( face );                         }
@@ -845,6 +846,7 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face, const tag::Do
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary().is_positive() );
+	std::cout << "mesh.cpp line 848" << std::endl << std::flush;
 	face->add_to_bdry ( this->boundary().core, tag::do_not_bother );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
 	this->glue_common ( face );                                      }
@@ -3281,14 +3283,8 @@ void Cell::Positive::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 // virtual from Cell::Core, here overriden
 	
 {	assert ( seg );
-	// assert that 'this' vertex does not belong yet to the boundary of 'seg'
-	std::map < Cell::Positive::Segment *, short int > & tm0 = this->segments;
-	// this->segments contains segments instead of zero-dimensional meshes
-	assert ( tm0.find(seg) == tm0.end() );
 	assert ( not seg->tip_attr.exists() );
 	seg->tip_attr = Cell ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
-	tm0.emplace ( std::piecewise_construct,
-		std::forward_as_tuple(seg), std::forward_as_tuple(1) );
 	make_deep_connections_0d ( this, seg );                                      }
 
 
@@ -3296,18 +3292,9 @@ void Cell::Positive::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 // virtual from Cell::Core, here overriden
 	
 {	assert ( seg );
-	std::cout << "mesh.cpp liine 3296 Cell::Positive::Vertex::remove_from_seg" << std::endl << std::flush;
-	// assert that 'this' vertex belongs to the boundary of 'seg'
 	break_deep_connections_0d ( this, seg );
-	std::map < Cell::Positive::Segment *, short int > & tm0 = this->segments;
-	// this->segments contains segments instead of zero-dimensional meshes
-	std::map<Cell::Positive::Segment*,short int>::iterator it = tm0.find ( seg );
-	assert ( it != tm0.end() );
 	assert ( seg->tip_attr.core == this );
-	seg->tip_attr = Cell ( tag::non_existent );
-	// perhaps define a method "unlink_core_from_wrapper" ?
-	assert ( it->second == 1 );
-	tm0.erase ( it );                                                             }
+	seg->tip_attr = Cell ( tag::non_existent );  }
 
 
 void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
@@ -3318,13 +3305,8 @@ void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( this->reverse_attr.core );
 	// assert that 'this' vertex does not belong yet to the boundary of 'seg'
-	std::map < Cell::Positive::Segment *, short int > & pvm0 = pos_ver->segments;
-	// this->segments contains segments instead of zero-dimensional meshes
-	assert ( pvm0.find(seg) == pvm0.end() );
 	assert ( not seg->base_attr.exists() );
 	seg->base_attr = Cell ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
-	pvm0.emplace ( std::piecewise_construct,
-		std::forward_as_tuple(seg), std::forward_as_tuple(-1) );
 	make_deep_connections_0d_rev ( pos_ver, seg );                                  }
 
 
@@ -3335,27 +3317,9 @@ void Cell::Negative::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 	assert ( this->reverse_attr.exists() );
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( this->reverse_attr.core );
-	// assert that 'this' vertex belongs to the mesh 'msh'
-	std::map < Cell::Positive::Segment *, short int > & pvm0 = pos_ver->segments;
-	// this->segments contains segments instead of zero-dimensional meshes
-				std::cout << "Cell::Negative::Vertex::remove_from_seg, segments around this->rev : ";
-				for ( std::map < Cell::Positive::Segment*, short int > ::iterator
-								itbc = pvm0.begin(); itbc != pvm0.end(); itbc++ )
-					std::cout << itbc->first << " " << itbc->second << ", ";
-				std::cout << std::endl;
 	break_deep_connections_0d_rev ( pos_ver, seg );
-				std::cout << "Cell::Negative::Vertex::remove_from_seg, segments around this->rev : ";
-				for ( std::map < Cell::Positive::Segment*, short int > ::iterator
-								itbc = pvm0.begin(); itbc != pvm0.end(); itbc++ )
-					std::cout << itbc->first << " " << itbc->second << ", ";
-				std::cout << " seg " << seg << std::endl;
-	std::map<Cell::Positive::Segment*,short int>::iterator it = pvm0.find ( seg );
-	assert ( it != pvm0.end() );
 	assert ( seg->base_attr.core == this );
-	seg->base_attr = Cell ( tag::non_existent );
-	// perhaps define a method "unlink_core_from_wrapper" ?
-	assert ( it->second == -1 );
-	pvm0.erase ( it );                                                             }
+	seg->base_attr = Cell ( tag::non_existent );                             }
 
 
 void Cell::Positive::Vertex::add_to_mesh ( Mesh::Core * )

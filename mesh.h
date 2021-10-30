@@ -1,4 +1,4 @@
-//   mesh.h  2021.10.25
+//   mesh.h  2021.10.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1804,9 +1804,11 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	// e.g. within factory functions in Cell class.
 	// It glues 'this' cell to the boundary of 'cll'.
 	inline void glue_on_bdry_of ( Cell::Core * cll )
-	{	cll->glue_on_my_bdry ( this );   }
+	{	assert ( cll );
+		cll->glue_on_my_bdry ( this );   }
 	inline void glue_on_bdry_of ( Cell::Core * cll, const tag::DoNotBother & )
-	{	cll->glue_on_my_bdry ( this, tag::do_not_bother );   }
+	{	assert ( cll );
+		cll->glue_on_my_bdry ( this, tag::do_not_bother );   }
 	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 
 	// Method 'cut_from_bdry_of' does the reverse : cuts 'this' cell from
