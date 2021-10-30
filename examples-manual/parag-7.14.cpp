@@ -179,24 +179,21 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			assert ( tri4.exists() );
 			assert ( tri5.exists() );
 			assert ( tri6.exists() );
-			CB .reverse() .cut_from_bdry_of ( tri3 );
-			BD .reverse() .cut_from_bdry_of ( tri4 );
-			AC .glue_on_bdry_of ( tri3 );
-			DA .glue_on_bdry_of ( tri4 );
+			CB .reverse() .cut_from_bdry_of ( tri3, tag::do_not_bother );
+			BD .reverse() .cut_from_bdry_of ( tri4, tag::do_not_bother );
+			AC .glue_on_bdry_of ( tri3, tag::do_not_bother );
+			DA .glue_on_bdry_of ( tri4, tag::do_not_bother );
 
 			// replace B by A in segments neighbour to B
 			for ( std::forward_list < Cell > ::iterator it_list = list_of_segs .begin();
 			      it_list != list_of_segs .end(); it_list ++                            )
 			{	Cell segm = *it_list;
 				assert ( segm.tip() == B );
-				B .cut_from_bdry_of ( segm );
-				A .glue_on_bdry_of ( segm );  }
-//				if ( segm .is_positive() )
-//				{	B .cut_from_bdry_of ( segm );
-//					A .glue_on_bdry_of ( segm );   }
-//				else
-//				{	B.reverse() .cut_from_bdry_of ( segm );
-//					A.reverse() .glue_on_bdry_of ( segm );  }  }
+				B .cut_from_bdry_of ( segm, tag::do_not_bother );
+				A .glue_on_bdry_of ( segm, tag::do_not_bother );  }
+
+			tri3 .boundary() .closed_loop ( A );
+			tri4 .boundary() .closed_loop ( A );
 
 			// change coordinates of A
 			// if we are on an implicit manifold, we should project A
@@ -239,13 +236,13 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			assert ( tri3.exists() );
 			assert ( tri4.exists() );
 			std::cout << "remove_short_segments, line 241" << std::endl << std::flush;
-			CB .reverse() .cut_from_bdry_of ( tri3 );
+			CB .reverse() .cut_from_bdry_of ( tri3, tag::do_not_bother );
 			std::cout << "remove_short_segments, line 243" << std::endl << std::flush;
-			BD .reverse() .cut_from_bdry_of ( tri4 );
+			BD .reverse() .cut_from_bdry_of ( tri4, tag::do_not_bother );
 			std::cout << "remove_short_segments, line 245" << std::endl << std::flush;
-			AC .glue_on_bdry_of ( tri3 );
+			AC .glue_on_bdry_of ( tri3, tag::do_not_bother );
 			std::cout << "remove_short_segments, line 207" << std::endl << std::flush;
-			DA .glue_on_bdry_of ( tri4 );
+			DA .glue_on_bdry_of ( tri4, tag::do_not_bother );
 
 			std::cout << "remove_short_segments, line 249" << std::endl << std::flush;
 			// replace B by A in segments neighbour to B
@@ -266,10 +263,14 @@ void remove_short_segments ( Mesh & msh, double threshold )
 					std::cout << itbc->first << " " << itbc->second << ", ";
 				std::cout << std::endl;
 				
-				B .cut_from_bdry_of ( segm );
+				B .cut_from_bdry_of ( segm, tag::do_not_bother );
 				std::cout << "remove_short_segments, line 258" << std::endl << std::flush;
-				A .glue_on_bdry_of ( segm );  }
+				A .glue_on_bdry_of ( segm, tag::do_not_bother );  }
 			std::cout << "remove_short_segments, line 260" << std::endl << std::flush;
+
+			tri3 .boundary() .closed_loop ( A );
+			tri4 .boundary() .closed_loop ( A );
+
 			break;
 		}
 //				if ( segm .is_positive() )
@@ -312,12 +313,12 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			std::cout << "remove_short_segments, line 312" << std::endl << std::flush;
 			assert ( tri5.exists() );
 			assert ( tri6.exists() );
-			AC .reverse() .cut_from_bdry_of ( tri5 );
-			DA .reverse() .cut_from_bdry_of ( tri6 );
+			AC .reverse() .cut_from_bdry_of ( tri5, tag::do_not_bother );
+			DA .reverse() .cut_from_bdry_of ( tri6, tag::do_not_bother );
 			std::cout << "remove_short_segments, line 317" << std::endl << std::flush;
-			CB .glue_on_bdry_of ( tri5 );
+			CB .glue_on_bdry_of ( tri5, tag::do_not_bother );
 			std::cout << "remove_short_segments, line 319" << std::endl << std::flush;
-			BD .glue_on_bdry_of ( tri6 );
+			BD .glue_on_bdry_of ( tri6, tag::do_not_bother );
 
 			std::cout << "remove_short_segments, line 321" << std::endl << std::flush;
 			// replace A by B in segments neighbour to A
@@ -326,10 +327,15 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			{	Cell segm = *it_list;
 				assert ( segm.tip() == A );
 				std::cout << "remove_short_segments, line 328" << std::endl << std::flush;
-				A .cut_from_bdry_of ( segm );
+				A .cut_from_bdry_of ( segm, tag::do_not_bother );
 				std::cout << "remove_short_segments, line 330" << std::endl << std::flush;
-				B .glue_on_bdry_of ( segm );  }
-				std::cout << "remove_short_segments, line 332" << std::endl << std::flush;
+				B .glue_on_bdry_of ( segm, tag::do_not_bother );  }
+			std::cout << "remove_short_segments, line 332" << std::endl << std::flush;
+
+			tri5 .boundary() .closed_loop ( B );
+			tri6 .boundary() .closed_loop ( B );
+			
+			break;
 		}
 		std::cout << "remove_short_segments, line 334" << std::endl << std::flush;
 		

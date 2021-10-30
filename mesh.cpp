@@ -1,4 +1,4 @@
-// mesh.cpp 2021.10.25
+// mesh.cpp 2021.10.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -824,10 +824,11 @@ void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver, const tag::DoN
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
+	std::cout << "mesh.cpp line 827" << std::endl;
 	ver->add_to_seg ( this );
 	// 'add_to_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::add_to_seg or Cell::Negative::Vertex::add_to_seg)
-	this->glue_common ( ver );       }
+	this->glue_common ( ver );  }
 	
 
 void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
@@ -838,7 +839,7 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
 	std::cout << "mesh.cpp line 838" << std::endl << std::flush;
 	face->add_to_bdry ( this->boundary().core );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
-	this->glue_common ( face );                         }
+	this->glue_common ( face );                  }
 
 
 void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face, const tag::DoNotBother & )
@@ -4730,6 +4731,51 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry, tag::do_not_bother );
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_bdry, tag::do_not_bother
+
+//-----------------------------------------------------------------------------------------//
+
+
+void Mesh::ZeroDim::closed_loop ( const Cell & ver )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Zero-dim meshes cannot be closed loops" << std::endl;
+	exit ( 1 );                                                     }
+
+
+void Mesh::ZeroDim::closed_loop ( const Cell & ver, size_t n )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Zero-dim meshes cannot be closed loops" << std::endl;
+	exit ( 1 );                                                     }
+
+
+void Mesh::Connected::OneDim::closed_loop ( const Cell & ver )
+
+{	assert ( ver.is_positive() );
+	this->first_ver = ver.reverse();
+	this->last_ver = ver;             }
+	
+
+void Mesh::Connected::OneDim::closed_loop ( const Cell & ver, size_t n )
+
+{	assert ( ver.is_positive() );
+	this->first_ver = ver.reverse();
+	this->last_ver = ver;
+	this->nb_of_segs = n;             }
+
+
+void Mesh::Fuzzy::closed_loop ( const Cell & ver )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Fuzzy meshes cannot be closed loops" << std::endl;
+	exit ( 1 );                                                     }
+
+
+void Mesh::Fuzzy::closed_loop ( const Cell & ver, size_t n )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Fuzzy meshes cannot be closed loops" << std::endl;
+	exit ( 1 );                                                     }
 
 //-----------------------------------------------------------------------------------------//
 

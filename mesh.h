@@ -528,10 +528,12 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	// method 'glue_on_bdry_of' is intensively used when building a mesh
 	// it glues 'this' cell to the boundary of 'cll'
 	inline void glue_on_bdry_of ( Cell & cll );
+	inline void glue_on_bdry_of ( Cell & cll, const tag::DoNotBother & );
 	
 	// method 'cut_from_bdry_of' does the reverse : cuts 'this' cell from
 	// the boundary of 'cll' - used mainly in remeshing
 	inline void cut_from_bdry_of ( Cell & cll );
+	inline void cut_from_bdry_of ( Cell & cll, const tag::DoNotBother & );
 	
 	// methods 'add_to_mesh' and 'remove_from_mesh' add/remove 'this' cell to/from the mesh 'msh'
 	// if 'msh' is the boundary of some cell, methods 'glue_on_bdry_of'
@@ -1013,6 +1015,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Cell cell_behind
 	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
 	  const tag::MayNotExist &                                       ) const;
+
+	inline void closed_loop ( const Cell & ver );
+	// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
+
+	inline void closed_loop ( const Cell & ver, size_t );
+	// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
+	// and number of segments
 
 	// we are still in class Mesh
 	
@@ -2731,6 +2740,11 @@ class tag::Util::MeshCore
 	virtual void remove_from_my_cells
 		( Cell::Core * const, const size_t, std::list<Cell>::iterator, const tag::DoNotBother & ) = 0;
 		
+	virtual void closed_loop ( const Cell & ver ) = 0;
+	virtual void closed_loop ( const Cell & ver, size_t ) = 0;
+	// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
+	// (and number of segments)
+		
 	// iterators defined in iterator.cpp
 	// we are still in class Mesh::Core
 
@@ -3304,6 +3318,10 @@ class Mesh::ZeroDim : public Mesh::Core
 		( Cell::Core * const, const size_t, std::list<Cell>::iterator, const tag::DoNotBother & );
 	// virtual from Cell::Core, here execution forbidden
 	
+	void closed_loop ( const Cell & ver );
+	void closed_loop ( const Cell & ver, size_t );
+	// virtual from Mesh::Core, here execution forbidden
+		
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 
 	CellIterator::Core * iterator
@@ -3863,6 +3881,8 @@ class Mesh::NotZeroDim : public Mesh::Core
 	// two versions of add_to_my_cells  stay pure virtual from Cell::Core
 	// two versions of remove_from_my_cells  stay pure virtual from Cell::Core
 
+	// two versions of  closed_loop  stay pure virtual from Mesh::Core
+
 	// iterators stay pure virtual from Mesh::Core
 
 	#ifndef NDEBUG
@@ -3944,6 +3964,12 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 		( Cell::Core * const, const size_t, std::list<Cell>::iterator, const tag::DoNotBother & );
 	// virtual from Cell::Core, here does nothing
 	
+	void closed_loop ( const Cell & ver );  // virtual from Mesh::Core
+	// sets both first_ver and last_ver to 'ver'
+
+	void closed_loop ( const Cell & ver, size_t );  // virtual from Mesh::Core
+	// sets both first_ver and last_ver to 'ver' and number of segments
+
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 	
 	CellIterator::Core * iterator
@@ -4663,6 +4689,10 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 		( Cell::Core * const, const size_t d, std::list<Cell>::iterator, const tag::DoNotBother & );
 	// virtual from Cell::Core, later overriden by Mesh::STSI
 	
+	void closed_loop ( const Cell & ver );
+	void closed_loop ( const Cell & ver, size_t );
+	// virtual from Mesh::Core, here execution forbidden
+
 	// we are still in class Mesh::Fuzzy
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 
@@ -5932,6 +5962,15 @@ inline void Cell::glue_on_bdry_of ( Cell & cll )
 	this->core->glue_on_bdry_of ( cll.core );  }
 
 
+inline void Cell::glue_on_bdry_of ( Cell & cll, const tag::DoNotBother & )
+
+// glue 'this' face on the boundary of cell 'cll'
+// any of them may be negative
+
+{	assert ( this->exists() );
+	this->core->glue_on_bdry_of ( cll.core, tag::do_not_bother );  }
+
+
 inline void Cell::cut_from_bdry_of ( Cell & cll )
 
 // cut 'this' face from the boundary of cell 'cll'
@@ -5939,6 +5978,15 @@ inline void Cell::cut_from_bdry_of ( Cell & cll )
 
 {	assert ( this->exists() );
 	this->core->cut_from_bdry_of ( cll.core );  }
+
+
+inline void Cell::cut_from_bdry_of ( Cell & cll, const tag::DoNotBother & )
+
+// cut 'this' face from the boundary of cell 'cll'
+// any of them may be negative
+
+{	assert ( this->exists() );
+	this->core->cut_from_bdry_of ( cll.core, tag::do_not_bother );  }
 
 
 inline void Cell::add_to_mesh ( Mesh & msh )
@@ -6009,6 +6057,21 @@ inline void Cell::remove_from_mesh ( Mesh & msh, const tag::DoNotBother & )
 	{	assert( this->core->reverse_attr.exists() );
 		this->core->reverse_attr.core->remove_from_mesh ( msh.core, tag::do_not_bother );  }   }
 // for negative Meshes, the core points towards the reverse, positive, Mesh::Core
+
+//-----------------------------------------------------------------------------//
+
+
+inline void Mesh::closed_loop ( const Cell & ver )
+// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
+{	assert ( this->exists() );
+	this->core->closed_loop ( ver );  }
+
+
+inline void Mesh::closed_loop ( const Cell & ver, size_t n )
+// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
+// and number of segments
+{	assert ( this->exists() );
+	this->core->closed_loop ( ver, n );  }
 
 //-----------------------------------------------------------------------------//
 
