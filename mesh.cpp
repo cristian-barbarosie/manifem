@@ -824,11 +824,10 @@ void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver, const tag::DoN
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
-	std::cout << "mesh.cpp line 827" << std::endl;
-	ver->add_to_seg ( this );
+	ver->add_to_seg ( this, tag::do_not_bother );
 	// 'add_to_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::add_to_seg or Cell::Negative::Vertex::add_to_seg)
-	this->glue_common ( ver );  }
+	this->glue_common ( ver );                    }
 	
 
 void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
@@ -836,7 +835,6 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary().is_positive() );
-	std::cout << "mesh.cpp line 838" << std::endl << std::flush;
 	face->add_to_bdry ( this->boundary().core );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
 	this->glue_common ( face );                  }
@@ -847,7 +845,6 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face, const tag::Do
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary().is_positive() );
-	std::cout << "mesh.cpp line 848" << std::endl << std::flush;
 	face->add_to_bdry ( this->boundary().core, tag::do_not_bother );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
 	this->glue_common ( face );                                      }
@@ -889,14 +886,10 @@ void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver )
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
-	std::cout << "mesh.cpp line 889 Cell::Positive::Segment::cut_from_my_bdry" << std::endl << std::flush;
 	this->cut_common ( ver );
 	// 'remove_from_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
-	std::cout << "mesh.cpp line 893 Cell::Positive::Segment::cut_from_my_bdry" << std::endl << std::flush;
-	ver->remove_from_seg ( this );
-	std::cout << "mesh.cpp line 895 Cell::Positive::Segment::cut_from_my_bdry" << std::endl << std::flush;
-}
+	ver->remove_from_seg ( this );  }
 	
 
 void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver, const tag::DoNotBother & )
@@ -906,7 +899,7 @@ void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver, const tag::Do
 	this->cut_common ( ver );
 	// 'remove_from_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
-	ver->remove_from_seg ( this );       }
+	ver->remove_from_seg ( this, tag::do_not_bother );  }
 	
 
 void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face )
@@ -1441,6 +1434,17 @@ inline void make_deep_connections_0d  // hidden in anonymous namespace
 	link_face_to_higher ( ver, seg, 1, 0 );  }
 	
 
+inline void make_deep_connections_0d  // hidden in anonymous namespace
+(	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg,
+  const tag::DoNotBother &                                                )
+
+// make far connections when adding a positive vertex
+
+{	assert ( ver );  assert ( seg );
+	add_link_zero_dim ( ver, seg );
+	link_face_to_higher ( ver, seg, 1, 0, tag::do_not_bother );  }
+	
+
 inline void make_deep_connections_0d_rev  // hidden in anonymous namespace
 (	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg )
 
@@ -1449,6 +1453,17 @@ inline void make_deep_connections_0d_rev  // hidden in anonymous namespace
 {	assert ( ver );  assert ( seg );
 	add_link_zero_dim_rev ( ver, seg );
 	link_face_to_higher ( ver, seg, 0, 1 );  }
+	
+
+inline void make_deep_connections_0d_rev  // hidden in anonymous namespace
+(	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg,
+  const tag::DoNotBother &                                                )
+
+// make far connections when adding a negative vertex
+
+{	assert ( ver );  assert ( seg );
+	add_link_zero_dim_rev ( ver, seg );
+	link_face_to_higher ( ver, seg, 0, 1, tag::do_not_bother );  }
 	
 
 inline void make_deep_connections_1d  // hidden in anonymous namespace
@@ -2143,7 +2158,6 @@ inline void remove_link_zero_dim_rev  // hidden in anonymous namespace
 // this function updates ver->segments
 
 {	assert ( ver );  assert ( seg );
-	std::cout << "mesh.cpp 2145 remove_link_zero_dim_rev, seg " << seg << ", ver " << ver << std::endl;
 	typedef std::map < Cell::Positive::Segment *, short int > maptype;
 	maptype & vs = ver->segments;
 	maptype::iterator vsfs = vs.find(seg);
@@ -2471,6 +2485,18 @@ inline void break_deep_connections_0d  // hidden in anonymous namespace
 	remove_link_zero_dim ( ver, seg );          }
 	
 
+inline void break_deep_connections_0d  // hidden in anonymous namespace
+(	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg,
+  const tag::DoNotBother &                                                )
+
+// break far connections when adding a positive vertex
+// see paragraph 11.9 in the manual
+
+{	assert ( ver );  assert ( seg );
+	unlink_face_from_higher ( ver, seg, 1, 0, tag::do_not_bother );
+	remove_link_zero_dim ( ver, seg );                              }
+	
+
 inline void break_deep_connections_0d_rev  // hidden in anonymous namespace
 (	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg )
 
@@ -2480,6 +2506,18 @@ inline void break_deep_connections_0d_rev  // hidden in anonymous namespace
 {	assert ( ver );  assert ( seg );
 	unlink_face_from_higher ( ver, seg, 0, 1 );    // we switch the two counters
 	remove_link_zero_dim_rev ( ver, seg );      }
+	
+
+inline void break_deep_connections_0d_rev  // hidden in anonymous namespace
+(	Cell::Positive::Vertex * const ver, Cell::Positive::Segment * const seg,
+  const tag::DoNotBother &                                                )
+
+// break far connections when adding a negative vertex
+// see paragraph 11.9 in the manual
+
+{	assert ( ver );  assert ( seg );  // we switch the two counters
+	unlink_face_from_higher ( ver, seg, 0, 1, tag::do_not_bother );
+	remove_link_zero_dim_rev ( ver, seg );                         }
 	
 
 inline void break_deep_connections_1d  // hidden in anonymous namespace
@@ -3272,7 +3310,23 @@ void Cell::Core::add_to_seg ( Cell::Positive::Segment * seg )
 	exit ( 1 );                                                                   }
 
 
+void Cell::Core::add_to_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+// virtual, overriden by Cell::***tive::Vertex
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
+	exit ( 1 );                                                                   }
+
+
 void Cell::Core::remove_from_seg ( Cell::Positive::Segment * seg )
+// virtual, overriden by Cell::***tive::Vertex
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
+	exit ( 1 );                                                                             }
+
+
+void Cell::Core::remove_from_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
 // virtual, overriden by Cell::***tive::Vertex
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
@@ -3285,8 +3339,19 @@ void Cell::Positive::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 	
 {	assert ( seg );
 	assert ( not seg->tip_attr.exists() );
-	seg->tip_attr = Cell ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
-	make_deep_connections_0d ( this, seg );                                      }
+	seg->tip_attr = Cell ( tag::whose_core_is, this,
+	                       tag::previously_existing, tag::surely_not_null );
+	make_deep_connections_0d ( this, seg );                                   }
+
+
+void Cell::Positive::Vertex::add_to_seg  // virtual from Cell::Core, here overriden
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+	
+{	assert ( seg );
+	assert ( not seg->tip_attr.exists() );
+	seg->tip_attr = Cell ( tag::whose_core_is, this,
+	                       tag::previously_existing, tag::surely_not_null );
+	make_deep_connections_0d ( this, seg, tag::do_not_bother );               }
 
 
 void Cell::Positive::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
@@ -3298,6 +3363,15 @@ void Cell::Positive::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 	seg->tip_attr = Cell ( tag::non_existent );  }
 
 
+void Cell::Positive::Vertex::remove_from_seg  // virtual from Cell::Core, here overriden
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+	
+{	assert ( seg );
+	break_deep_connections_0d ( this, seg, tag::do_not_bother );
+	assert ( seg->tip_attr.core == this );
+	seg->tip_attr = Cell ( tag::non_existent );                  }
+
+
 void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 // virtual from Cell::Core, here overriden
 
@@ -3307,8 +3381,23 @@ void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 		< Cell::Core*, Cell::Positive::Vertex* > ( this->reverse_attr.core );
 	// assert that 'this' vertex does not belong yet to the boundary of 'seg'
 	assert ( not seg->base_attr.exists() );
-	seg->base_attr = Cell ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
+	seg->base_attr = Cell ( tag::whose_core_is, this,
+                          tag::previously_existing, tag::surely_not_null );
 	make_deep_connections_0d_rev ( pos_ver, seg );                                  }
+
+
+void Cell::Negative::Vertex::add_to_seg  // virtual from Cell::Core, here overriden
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+
+{ assert ( seg );
+	assert ( this->reverse_attr.exists() );
+	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( this->reverse_attr.core );
+	// assert that 'this' vertex does not belong yet to the boundary of 'seg'
+	assert ( not seg->base_attr.exists() );
+	seg->base_attr = Cell ( tag::whose_core_is, this,
+                          tag::previously_existing, tag::surely_not_null );
+	make_deep_connections_0d_rev ( pos_ver, seg, tag::do_not_bother );        }
 
 
 void Cell::Negative::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
@@ -3319,6 +3408,18 @@ void Cell::Negative::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive::Vertex* > ( this->reverse_attr.core );
 	break_deep_connections_0d_rev ( pos_ver, seg );
+	assert ( seg->base_attr.core == this );
+	seg->base_attr = Cell ( tag::non_existent );                             }
+
+
+void Cell::Negative::Vertex::remove_from_seg  // virtual from Cell::Core, here overriden
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+
+{ assert ( seg );
+	assert ( this->reverse_attr.exists() );
+	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Vertex* > ( this->reverse_attr.core );
+	break_deep_connections_0d_rev ( pos_ver, seg, tag::do_not_bother );
 	assert ( seg->base_attr.core == this );
 	seg->base_attr = Cell ( tag::non_existent );                             }
 

@@ -1,4 +1,4 @@
-//   mesh.h  2021.10.30
+//   mesh.h  2021.10.31
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1828,10 +1828,12 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	{	cll->cut_from_my_bdry ( this, tag::do_not_bother );   }
 	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
 	
-	// the two methods below are only relevant for vertices
+	// the four methods below are only relevant for vertices
 	// so we forbid execution for now and then override them in Cell::***tive::Vertex
   virtual void add_to_seg ( Cell::PositiveSegment * seg );
+  virtual void add_to_seg ( Cell::PositiveSegment * seg, const tag::DoNotBother & );
 	virtual void remove_from_seg ( Cell::PositiveSegment * seg );
+	virtual void remove_from_seg ( Cell::PositiveSegment * seg, const tag::DoNotBother & );
 
 	// the eight methods below are not relevant for vertices
   virtual void add_to_mesh ( Mesh::Core * msh ) = 0;
@@ -2072,9 +2074,11 @@ class Cell::PositiveVertex : public Cell::Positive
 
 	// glue_on_bdry_of  and  cut_from_bdry_of  defined by Cell::Core
 
-	// the two methods below are defined by Cell::Core but overriden here
+	// the four methods below are defined by Cell::Core but overriden here
 	void add_to_seg ( Cell::Positive::Segment * seg ) override;
+	void add_to_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & ) override;
 	void remove_from_seg ( Cell::Positive::Segment * seg ) override;
+	void remove_from_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & ) override;
 
 	// the twelve methods below are virtual from Cell::Core, here execution forbidden
 	void add_to_mesh ( Mesh::Core * msh );
@@ -2145,9 +2149,11 @@ class Cell::NegativeVertex : public Cell::Negative
 	// methods 'add_to' and 'remove_from' add/remove 'this' cell to/from the mesh 'msh'
 	// see paragraph 11.9 in the manual
 
-	// the two methods below are defined by Cell::Core but overriden here
+	// the four methods below are defined by Cell::Core but overriden here
 	void add_to_seg ( Cell::Positive::Segment * seg ) override;
+	void add_to_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & ) override;
 	void remove_from_seg ( Cell::Positive::Segment * seg ) override;
+	void remove_from_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & ) override;
 
 	// the eight methods below are virtual from Cell::Core, here execution forbidden
 	void add_to_mesh ( Mesh::Core * msh );
