@@ -9,6 +9,8 @@ using namespace maniFEM;
 
 void remove_short_segments ( Mesh & msh, double threshold );
 
+void flip_long_segments ( Mesh & msh, double threshold );
+
 void baricenters ( Mesh & msh );
 
 
@@ -45,6 +47,12 @@ int main ( )
 	cyl.draw_ps ( "cylinder.eps", tag::unfold,
                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
+	baricenters ( cyl );
+	// re-define the position of each vertex as baricenter of its neighbours
+	
+	flip_long_segments ( cyl, 1.5*d );
+	// remove segments shorter than the given threshold
+	
 	remove_short_segments ( cyl, 0.5*d );
 	// remove segments shorter than the given threshold
 	
@@ -54,21 +62,134 @@ int main ( )
 	cyl.draw_ps ( "cylinder-0.5.eps", tag::unfold,
                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
+	flip_long_segments ( cyl, 1.4*d );
 	remove_short_segments ( cyl, 0.6*d );
 	baricenters ( cyl );
 	
 	cyl.draw_ps ( "cylinder-0.6.eps", tag::unfold,
                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
+	flip_long_segments ( cyl, 1.35*d );
 	remove_short_segments ( cyl, 0.65*d );
 	baricenters ( cyl );
 	
 	cyl.draw_ps ( "cylinder-0.65.eps", tag::unfold,
                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	std::cout << "produced files cylinder-*.eps - please edit before viewing" << std::endl;	
+	std::cout << "produced files cylinder*.eps - please edit before viewing" << std::endl;	
 
 } // end of main
+
+//-----------------------------------------------------------------------------------------
+
+
+void flip_long_segments ( Mesh & msh, double threshold )
+
+// flip long segments and also makes baricenters on the four neighbour vertices
+
+// this function assumes there is no higher-dimensional mesh "above" 'msh'
+
+// assumes also that the current manifold is not implicit
+// (for an implicit manifold, a projection operation should be added)
+
+// assumes that the current manifold is a quotient manifold
+// (it manipulates spins)
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+
+	double thr_sq = threshold * threshold;
+
+	std::list < Cell > list_of_segments;
+
+	CellIterator it = msh.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;
+
+	  Cell tri1 = msh.cell_in_front_of ( seg, tag::may_not_exist );
+		if ( not tri1.exists() ) continue;
+	  Cell tri2 = msh.cell_behind ( seg, tag::may_not_exist );
+		if ( not tri2.exists() ) continue;
+		// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) continue
+		// segments on the boundary cannot be flipped
+
+		Cell A = seg.base().reverse();
+		Cell B = seg.tip();
+		Function::Action s = seg.spin();
+		std::vector < double > A_co = coords_q ( A );
+		std::vector < double > B_co = coords_q ( B, tag::spin, s );
+		size_t n = A_co.size();
+		double len_sq = 0.;
+		for ( size_t i = 0; i < n; i++ )
+		{	double d = B_co[i] - A_co[i];
+			len_sq += d*d;                }
+		if ( len_sq > thr_sq )  list_of_segments .push_back ( seg );   }
+
+	while ( list_of_segments .size() > 0 )
+		for ( std::list < Cell > ::iterator itt = list_of_segments .begin();
+	        itt != list_of_segments .end();                                )
+		{	Cell seg = * itt;
+
+			// 'seg' may have been eliminated from 'msh' in the meanwhile
+			if ( not seg .belongs_to ( msh ) )
+			{	itt = list_of_segments .erase ( itt );  continue;  }
+
+			// the configuration around 'seg' may have changed in the meanwhile
+			Cell tri1 = msh.cell_in_front_of ( seg, tag::may_not_exist );
+			if ( not tri1.exists() ) 
+			{	itt = list_of_segments .erase ( itt );  continue;  }
+			Cell tri2 = msh.cell_behind ( seg, tag::may_not_exist );
+			if ( not tri2.exists() )
+			{	itt = list_of_segments .erase ( itt );  continue;  }
+			// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) continue
+			// segments on the boundary cannot be flipped
+
+			// length of 'seg' may have changed in the meanwhile
+			Cell A = seg.base().reverse();
+			Cell B = seg.tip();
+			Function::Action s = seg.spin();
+			std::vector < double > A_co = coords_q ( A );
+			std::vector < double > B_co = coords_q ( B, tag::spin, s );
+			size_t n = A_co.size();
+			double len_sq = 0.;
+			for ( size_t i = 0; i < n; i++ )
+				{	double d = B_co[i] - A_co[i];
+					len_sq += d*d;                }
+			if ( len_sq < thr_sq ) 
+			{	itt = list_of_segments .erase ( itt );  continue;  }
+
+			// flip
+			Cell BC = tri2 .boundary() .cell_in_front_of ( B, tag::surely_exists );
+			Cell CA = tri2 .boundary() .cell_behind ( A, tag::surely_exists );
+			Cell AD = tri1 .boundary() .cell_in_front_of ( A, tag::surely_exists );
+			Cell DB = tri1 .boundary() .cell_behind ( B, tag::surely_exists );
+			Cell C = BC.tip();
+			assert ( CA.base().reverse() == C );
+			Cell D = AD.tip();
+			assert ( DB.base().reverse() == D );
+
+			B .cut_from_bdry_of ( seg, tag::do_not_bother );
+			A .reverse() .cut_from_bdry_of ( seg, tag::do_not_bother );
+			CA .cut_from_bdry_of ( tri1, tag::do_not_bother );
+			DB .cut_from_bdry_of ( tri2, tag::do_not_bother );
+			C .glue_on_bdry_of ( seg, tag::do_not_bother );
+			D .reverse() .glue_on_bdry_of ( seg, tag::do_not_bother );
+			DB .glue_on_bdry_of ( tri1, tag::do_not_bother );
+			CA .glue_on_bdry_of ( tri2, tag::do_not_bother );
+
+			if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::spin );
+			if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::spin );
+			if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::spin );
+			if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::spin );
+			
+			itt ++;                                                                  }
+			
+}
 
 //-----------------------------------------------------------------------------------------
 

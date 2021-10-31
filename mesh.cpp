@@ -1,4 +1,4 @@
-// mesh.cpp 2021.10.30
+// mesh.cpp 2021.10.31
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -794,6 +794,96 @@ void Mesh::Fuzzy::print_everything ( )  // virtual from Mesh::Core
 //////////////////////////////////////////////////////////////////
 
 
+namespace { // anonymous namespace, mimics static linkage
+
+
+inline void add_cell_behind_above ( Cell::Positive::NotVertex * cll, Cell::Core * face_p )
+
+// hidden in anonymous namespace
+// called from Cell::Positive::***::glue_on_my_bdry
+
+{	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype_f;
+	maptype_f & tm0 = cll->meshes_same_dim;
+	maptype_f::iterator it;
+	for ( it = tm0.begin(); it != tm0.end(); ++it )
+	{	Mesh::Core * msh = it->first;
+		// std::list<Cell>::iterator wh = it->second.where;
+		// const Cell other_cell = *wh;  assert ( other_cell.exists() );
+		// we used to inquire whether  other_cell.core == cll
+		// but 'wh' is well defined only for Fuzzy (and STSI) meshes
+		// so we use the sign instead
+		short int s = it->second.sign;
+		if ( s == 1 )  // orientations match
+//////////////////////////////////////////////////////////////////////////////////
+		// inspired in item 24 of the book : Scott Meyers, Effective STL            //
+		{	typedef std::map < Mesh::Core *, Cell > maptype;                          //
+			maptype & cmd = face_p->cell_behind_within;                               //
+			maptype::iterator lb = cmd.lower_bound(msh);                              //
+			assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(msh,lb->first) ) );      //
+			cmd.emplace_hint ( lb, std::piecewise_construct,                          //
+			      std::forward_as_tuple(msh),                                         //
+			      std::forward_as_tuple(Cell(tag::whose_core_is,cll,                 //
+																			 tag::previously_existing,                //
+																			 tag::surely_not_null      )) );       }  //
+/////////  code below is conceptually equivalent to the above  ///////////////////
+//		face_p->cell_behind_within[msh] =                                 //
+//			Cell ( tag::whose_core_is, cll, tag::previously_existing ) ;   //
+//////////////////////////////////////////////////////////////////////////
+		else  // mismatched orientations
+		{	assert ( s == -1 );
+			Cell::Core * rev_face_p = face_p->reverse_attr.core;
+			Cell & other_cell = cll->reverse_attr;
+			assert ( rev_face_p );
+/////////////////////////////////////////////////////////////////////////////////////
+			// inspired in item 24 of the book : Scott Meyers, Effective STL             //
+			typedef std::map < Mesh::Core *, Cell > maptype;                             //
+			maptype & cmd = rev_face_p->cell_behind_within;                              //
+			maptype::iterator lb = cmd.lower_bound(msh);                                 //
+			assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(msh,lb->first) ) );         //
+			cmd.emplace_hint ( lb, std::piecewise_construct,                             //
+			      std::forward_as_tuple(msh), std::forward_as_tuple(other_cell) );  }  }  }  
+/////////  code below is conceptually equivalent to the above  //////////////////////
+//		rev_face_p->cell_behind_within[msh] = other_cell;          //
+///////////////////////////////////////////////////////////////////
+	
+
+inline void remove_cell_behind_above ( Cell::Positive::NotVertex * cll, Cell::Core * face_p )
+	
+// hidden in anonymous namespace
+// called from Cell::Positive::***::cut_from_my_bdry
+
+{	if ( cll->meshes.size() == 0 ) return;
+	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype_f;
+	maptype_f & tm0 = cll->meshes_same_dim;
+	maptype_f::iterator it;
+	for ( it = tm0.begin(); it != tm0.end(); ++it )
+	{	Mesh::Core * msh = it->first;
+		// std::list<Cell>::iterator wh = it->second.where;
+		// const Cell other_cell = *wh;  assert ( other_cell.exists() );
+		// we used to inquire whether  other_cell.core == cll
+		// but 'wh' is well defined only for Fuzzy (and STSI) meshes
+		// so we use the sign instead
+		short int s = it->second.sign;
+		if ( s == 1 )  // orientations match
+		{	assert ( face_p->cell_behind_within.find(msh) !=
+		           face_p->cell_behind_within.end()        );
+			assert ( face_p->cell_behind_within[msh].core == cll );
+			face_p->cell_behind_within .erase ( msh );               }
+		else  // mismatched orientations
+		{	assert ( s == -1 );
+			Cell::Core * rev_face_p { face_p->reverse_attr.core };
+			assert ( rev_face_p );
+			assert ( rev_face_p->cell_behind_within .find ( msh ) !=
+		           rev_face_p->cell_behind_within .end()          );
+			assert ( rev_face_p->cell_behind_within [ msh ] == cll->reverse_attr );
+			rev_face_p->cell_behind_within .erase ( msh );                           }  }  }
+
+
+}  // anonymous namespace
+
+//-----------------------------------------------------------------------------//
+
+
 void Cell::Positive::Vertex::glue_on_my_bdry ( Cell::Core * )
 // virtual from Cell::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
@@ -817,7 +907,7 @@ void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver )
 	ver->add_to_seg ( this );
 	// 'add_to_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::add_to_seg or Cell::Negative::Vertex::add_to_seg)
-	this->glue_common ( ver );       }
+	add_cell_behind_above ( this, ver );        }
 	
 
 void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver, const tag::DoNotBother & )
@@ -827,7 +917,7 @@ void Cell::Positive::Segment::glue_on_my_bdry ( Cell::Core * ver, const tag::DoN
 	ver->add_to_seg ( this, tag::do_not_bother );
 	// 'add_to_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::add_to_seg or Cell::Negative::Vertex::add_to_seg)
-	this->glue_common ( ver );                    }
+	add_cell_behind_above ( this, ver );                    }
 	
 
 void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
@@ -837,7 +927,7 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face )
 	assert ( this->boundary().is_positive() );
 	face->add_to_bdry ( this->boundary().core );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
-	this->glue_common ( face );                  }
+	add_cell_behind_above ( this, face );                  }
 
 
 void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face, const tag::DoNotBother & )
@@ -847,7 +937,7 @@ void Cell::Positive::HighDim::glue_on_my_bdry ( Cell::Core * face, const tag::Do
 	assert ( this->boundary().is_positive() );
 	face->add_to_bdry ( this->boundary().core, tag::do_not_bother );
 	// 'add_to_bdry' is virtual, so the computer will choose the right version
-	this->glue_common ( face );                                      }
+	add_cell_behind_above ( this, face );                                      }
 
 
 void Cell::Negative::glue_on_my_bdry ( Cell::Core * cll )
@@ -886,7 +976,7 @@ void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver )
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
-	this->cut_common ( ver );
+	remove_cell_behind_above ( this, ver );
 	// 'remove_from_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
 	ver->remove_from_seg ( this );  }
@@ -896,7 +986,7 @@ void Cell::Positive::Segment::cut_from_my_bdry ( Cell::Core * ver, const tag::Do
 // virtual from Cell::Core
 
 {	assert ( ver->get_dim() == 0 );
-	this->cut_common ( ver );
+	remove_cell_behind_above ( this, ver );
 	// 'remove_from_seg' is virtual, so the computer will choose the right version
 	// (Cell::Positive::Vertex::remove_from_seg or Cell::Negative::Vertex::remove_from_seg)
 	ver->remove_from_seg ( this, tag::do_not_bother );  }
@@ -907,7 +997,7 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face )
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary_attr.is_positive() );
-	this->cut_common ( face );
+	remove_cell_behind_above ( this, face );
 	// 'remove_from' is virtual, so the computer will choose the right version
 	face->remove_from_bdry ( this->boundary_attr.core );   }
 
@@ -917,7 +1007,7 @@ void Cell::Positive::HighDim::cut_from_my_bdry ( Cell::Core * face, const tag::D
 
 {	assert ( this->get_dim() == face->get_dim() + 1 );
 	assert ( this->boundary_attr.is_positive() );
-	this->cut_common ( face );
+	remove_cell_behind_above ( this, face );
 	// 'remove_from' is virtual, so the computer will choose the right version
 	face->remove_from_bdry ( this->boundary_attr.core, tag::do_not_bother );  }
 
@@ -1301,14 +1391,14 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	assert ( cll->get_dim() + 1 == msh->get_dim_plus_one() );
 	Cell::Positive * face_p = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive* > ( face );
-	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;
+	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype;
 	maptype & cemd = cll->meshes_same_dim;
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
 	short int mis = map_iter->second.sign;
 	if ( mis == 1 ) add_link ( face_p, msh, cp, cn );
 	else  // we switch the two counters
-	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp );  }          }
+	{	assert ( mis == -1 ); add_link ( face_p, msh, cn, cp );  }              }
 	
 
 inline void link_face_to_msh  // hidden in anonymous namespace
@@ -1322,7 +1412,7 @@ inline void link_face_to_msh  // hidden in anonymous namespace
 	assert ( cll->get_dim() + 1 == msh->get_dim_plus_one() );
 	Cell::Positive * face_p = tag::Util::assert_cast
 		< Cell::Core*, Cell::Positive* > ( face );
-	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;
+	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype;
 	maptype & cemd = cll->meshes_same_dim;
 	maptype::iterator map_iter = cemd.find ( msh );
 	assert ( map_iter != cemd.end() );
@@ -1343,7 +1433,7 @@ inline void link_face_to_higher  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive* > ( face );
 	{ // just a block of code for hiding maptype, cemd and map_iter
 	// pmce->meshes[0] is empty, we use pmce->meshes_same_dim instead
-	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;
+	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype;
 	maptype & cemd = pmce->meshes_same_dim;
 	maptype::iterator map_iter;
 	// we now loop over all meshes of given dimension
@@ -1353,10 +1443,10 @@ inline void link_face_to_higher  // hidden in anonymous namespace
 		if ( mis.sign == 1 ) add_link ( face_p, map_iter->first, cp, cn );
 		else  // we just switch cp and cn
 		{	assert ( mis.sign == -1 );
-			add_link ( face_p, map_iter->first, cn, cp );  }                  }
+			add_link ( face_p, map_iter->first, cn, cp );  }                      }
 	} // just a block of code for hiding maptype, cemd and map_iter
 	for ( size_t dif_dim = 1; dif_dim < pmce->meshes.size(); dif_dim++ )
-	{	typedef std::map<Mesh::Core*,Cell::field_to_meshes> maptype;
+	{	typedef std::map < Mesh::Core*, Cell::field_to_meshes > maptype;
 		maptype & cemd = pmce->meshes[dif_dim];
 		maptype::iterator map_iter;
 		// we now loop over all meshes of given dimension
@@ -1379,7 +1469,7 @@ inline void link_face_to_higher  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive* > ( face );
 	{ // just a block of code for hiding maptype, cemd and map_iter
 	// pmce->meshes[0] is empty, we use pmce->meshes_same_dim instead
-	typedef std::map<Mesh::Core*,Cell::field_to_meshes_same_dim> maptype;
+	typedef std::map < Mesh::Core*, Cell::field_to_meshes_same_dim > maptype;
 	maptype & cemd = pmce->meshes_same_dim;
 	maptype::iterator map_iter;
 	// we now loop over all meshes of given dimension
@@ -1392,7 +1482,7 @@ inline void link_face_to_higher  // hidden in anonymous namespace
 			add_link ( face_p, map_iter->first, cn, cp, tag::do_not_bother );  }                }
 	} // just a block of code for hiding maptype, cemd and map_iter
 	for ( size_t dif_dim = 1; dif_dim < pmce->meshes.size(); dif_dim++ )
-	{	typedef std::map<Mesh::Core*,Cell::field_to_meshes> maptype;
+	{	typedef std::map < Mesh::Core*, Cell::field_to_meshes > maptype;
 		maptype & cemd = pmce->meshes[dif_dim];
 		maptype::iterator map_iter;
 		// we now loop over all meshes of given dimension
@@ -3180,7 +3270,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 } // end of break_deep_connections_hd_rev with tag::mesh_is_bdry, tag::do_not_bother
 
 	
-inline void not_zero_dim_add_pos_seg  // hidden in anonymous namespace
+inline void add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 ( Cell::Positive::Segment * const seg, Mesh::NotZeroDim * const that )
 
 // just a block of code called from four versions of Mesh::NotZeroDim::add_pos_seg
@@ -3212,7 +3302,7 @@ inline void not_zero_dim_add_pos_seg  // hidden in anonymous namespace
 //////////////////////////////////////////////////////////////////////
 
 
-inline void not_zero_dim_add_neg_seg  // hidden in anonymous namespace
+inline void add_cell_behind_below_neg_seg  // hidden in anonymous namespace
 ( Cell::Negative::Segment * const seg, Cell::Positive::Segment * const pos_seg,
   Mesh::NotZeroDim * const that                                                )
 
@@ -3245,7 +3335,7 @@ inline void not_zero_dim_add_neg_seg  // hidden in anonymous namespace
 /////////////////////////////////////////////////////////////////////////////
 
 
-inline void not_zero_dim_add_pos_hd  // hidden in anonymous namespace
+inline void add_cell_behind_below_pos_hd  // hidden in anonymous namespace
 ( Cell::Positive::HighDim * const cll, Mesh::NotZeroDim * const that )
 
 // just a block of code called from four versions of Mesh::NotZeroDim::add_pos_hd_cell
@@ -3271,7 +3361,7 @@ inline void not_zero_dim_add_pos_hd  // hidden in anonymous namespace
 //////////////////////////////////////////////////////////////////////
 
 
-inline void not_zero_dim_add_neg_hd  // hidden in anonymous namespace
+inline void add_cell_behind_below_neg_hd  // hidden in anonymous namespace
 ( Cell::Negative::HighDim * const cll, Cell::Positive::HighDim * const pos_cll,
   Mesh::NotZeroDim * const that                                                )
 
@@ -3302,41 +3392,8 @@ inline void not_zero_dim_add_neg_hd  // hidden in anonymous namespace
 }  // anonymous namespace
 
 
-void Cell::Core::add_to_seg ( Cell::Positive::Segment * seg )
-// virtual, overriden by Cell::***tive::Vertex
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-            << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
-	exit ( 1 );                                                                   }
-
-
-void Cell::Core::add_to_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
-// virtual, overriden by Cell::***tive::Vertex
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-            << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
-	exit ( 1 );                                                                   }
-
-
-void Cell::Core::remove_from_seg ( Cell::Positive::Segment * seg )
-// virtual, overriden by Cell::***tive::Vertex
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-	          << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
-	exit ( 1 );                                                                             }
-
-
-void Cell::Core::remove_from_seg ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
-// virtual, overriden by Cell::***tive::Vertex
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-	          << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
-	exit ( 1 );                                                                             }
-
-
 void Cell::Positive::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
-// virtual from Cell::Core, here overriden
-	
+// virtual from Cell::Core	
 {	assert ( seg );
 	assert ( not seg->tip_attr.exists() );
 	seg->tip_attr = Cell ( tag::whose_core_is, this,
@@ -3344,9 +3401,8 @@ void Cell::Positive::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 	make_deep_connections_0d ( this, seg );                                   }
 
 
-void Cell::Positive::Vertex::add_to_seg  // virtual from Cell::Core, here overriden
+void Cell::Positive::Vertex::add_to_seg  // virtual from Cell::Core
 ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
-	
 {	assert ( seg );
 	assert ( not seg->tip_attr.exists() );
 	seg->tip_attr = Cell ( tag::whose_core_is, this,
@@ -3355,17 +3411,15 @@ void Cell::Positive::Vertex::add_to_seg  // virtual from Cell::Core, here overri
 
 
 void Cell::Positive::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
-// virtual from Cell::Core, here overriden
-	
+// virtual from Cell::Core
 {	assert ( seg );
 	break_deep_connections_0d ( this, seg );
 	assert ( seg->tip_attr.core == this );
 	seg->tip_attr = Cell ( tag::non_existent );  }
 
 
-void Cell::Positive::Vertex::remove_from_seg  // virtual from Cell::Core, here overriden
+void Cell::Positive::Vertex::remove_from_seg  // virtual from Cell::Core
 ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
-	
 {	assert ( seg );
 	break_deep_connections_0d ( this, seg, tag::do_not_bother );
 	assert ( seg->tip_attr.core == this );
@@ -3373,8 +3427,7 @@ void Cell::Positive::Vertex::remove_from_seg  // virtual from Cell::Core, here o
 
 
 void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
-// virtual from Cell::Core, here overriden
-
+// virtual from Cell::Core
 { assert ( seg );
 	assert ( this->reverse_attr.exists() );
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
@@ -3383,12 +3436,11 @@ void Cell::Negative::Vertex::add_to_seg ( Cell::Positive::Segment * seg )
 	assert ( not seg->base_attr.exists() );
 	seg->base_attr = Cell ( tag::whose_core_is, this,
                           tag::previously_existing, tag::surely_not_null );
-	make_deep_connections_0d_rev ( pos_ver, seg );                                  }
+	make_deep_connections_0d_rev ( pos_ver, seg );                             }
 
 
-void Cell::Negative::Vertex::add_to_seg  // virtual from Cell::Core, here overriden
+void Cell::Negative::Vertex::add_to_seg  // virtual from Cell::Core
 ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
-
 { assert ( seg );
 	assert ( this->reverse_attr.exists() );
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
@@ -3401,8 +3453,7 @@ void Cell::Negative::Vertex::add_to_seg  // virtual from Cell::Core, here overri
 
 
 void Cell::Negative::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
-// virtual from Cell::Core, here overriden
-
+// virtual from Cell::Core
 { assert ( seg );
 	assert ( this->reverse_attr.exists() );
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
@@ -3412,9 +3463,8 @@ void Cell::Negative::Vertex::remove_from_seg ( Cell::Positive::Segment * seg )
 	seg->base_attr = Cell ( tag::non_existent );                             }
 
 
-void Cell::Negative::Vertex::remove_from_seg  // virtual from Cell::Core, here overriden
+void Cell::Negative::Vertex::remove_from_seg  // virtual from Cell::Core
 ( Cell::Positive::Segment * seg, const tag::DoNotBother & )
-
 { assert ( seg );
 	assert ( this->reverse_attr.exists() );
 	Cell::Positive::Vertex * pos_ver = tag::Util::assert_cast
@@ -3422,6 +3472,72 @@ void Cell::Negative::Vertex::remove_from_seg  // virtual from Cell::Core, here o
 	break_deep_connections_0d_rev ( pos_ver, seg, tag::do_not_bother );
 	assert ( seg->base_attr.core == this );
 	seg->base_attr = Cell ( tag::non_existent );                             }
+
+
+void Cell::Positive::NotVertex::add_to_seg ( Cell::Positive::Segment * seg )
+// virtual from Cell::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
+	exit ( 1 );                                                                   }
+
+
+void Cell::Positive::NotVertex::add_to_seg   // virtual from Cell::Core
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
+	exit ( 1 );                                                                   }
+
+
+void Cell::Negative::NotVertex::add_to_seg ( Cell::Positive::Segment * seg )
+// virtual from Cell::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
+	exit ( 1 );                                                                   }
+
+
+void Cell::Negative::NotVertex::add_to_seg   // virtual from Cell::Core
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot add a cell to a segment, use add_to_mesh." << std::endl;
+	exit ( 1 );                                                                   }
+
+
+void Cell::Positive::NotVertex::remove_from_seg ( Cell::Positive::Segment * seg )
+// virtual from Cell::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
+	exit ( 1 );                                                                             }
+
+
+void Cell::Positive::NotVertex::remove_from_seg   // virtual from Cell::Core
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
+	exit ( 1 );                                                                             }
+
+
+void Cell::Negative::NotVertex::remove_from_seg ( Cell::Positive::Segment * seg )
+// virtual from Cell::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
+	exit ( 1 );                                                                             }
+
+
+void Cell::Negative::NotVertex::remove_from_seg   // virtual from Cell::Core
+( Cell::Positive::Segment * seg, const tag::DoNotBother & )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot remove a cell from a segment, use remove_from_mesh." << std::endl;
+	exit ( 1 );                                                                             }
+
+//-----------------------------------------------------------------------------//
 
 
 void Cell::Positive::Vertex::add_to_mesh ( Mesh::Core * )
@@ -4205,7 +4321,7 @@ void Mesh::NotZeroDim::add_pos_seg ( Cell::Positive::Segment * seg, const tag::M
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
-	not_zero_dim_add_pos_seg ( seg, this );                                             }
+	add_cell_behind_below_pos_seg ( seg, this );                                             }
 
 
 void Mesh::NotZeroDim::add_pos_seg
@@ -4220,7 +4336,7 @@ void Mesh::NotZeroDim::add_pos_seg
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 
-	not_zero_dim_add_pos_seg ( seg, this );                                             }
+	add_cell_behind_below_pos_seg ( seg, this );                                             }
 
 
 void Mesh::NotZeroDim::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
@@ -4234,7 +4350,7 @@ void Mesh::NotZeroDim::add_pos_seg ( Cell::Positive::Segment * seg, const tag::M
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_bdry );
 
-	not_zero_dim_add_pos_seg ( seg, this );                                             }
+	add_cell_behind_below_pos_seg ( seg, this );                                             }
 
 
 void Mesh::NotZeroDim::add_pos_seg
@@ -4249,7 +4365,7 @@ void Mesh::NotZeroDim::add_pos_seg
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_bdry, tag::do_not_bother );
 
-	not_zero_dim_add_pos_seg ( seg, this );                                             }
+	add_cell_behind_below_pos_seg ( seg, this );                                             }
 
 
 void Mesh::NotZeroDim::remove_pos_seg  // virtual from Mesh::Core
@@ -4355,7 +4471,7 @@ void Mesh::NotZeroDim::add_neg_seg ( Cell::Negative::Segment * seg, const tag::M
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
 
-	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                  }
+	add_cell_behind_below_neg_seg ( seg, pos_seg, this );                                  }
 
 	
 void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
@@ -4375,7 +4491,7 @@ void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 
-	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                               }
+	add_cell_behind_below_neg_seg ( seg, pos_seg, this );                                               }
 
 	
 void Mesh::NotZeroDim::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
@@ -4395,7 +4511,7 @@ void Mesh::NotZeroDim::add_neg_seg ( Cell::Negative::Segment * seg, const tag::M
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry );
 
-	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                   }
+	add_cell_behind_below_neg_seg ( seg, pos_seg, this );                                   }
 
 	
 void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
@@ -4415,7 +4531,7 @@ void Mesh::NotZeroDim::add_neg_seg  // virtual from Mesh::Core
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry, tag::do_not_bother );
 
-	not_zero_dim_add_neg_seg ( seg, pos_seg, this );                                            }
+	add_cell_behind_below_neg_seg ( seg, pos_seg, this );                                            }
 
 	
 void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
@@ -4543,7 +4659,7 @@ void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
 	
 	make_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
 	
-	not_zero_dim_add_pos_hd ( cll, this );                                     }
+	add_cell_behind_below_pos_hd ( cll, this );                                     }
 
 
 void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
@@ -4555,7 +4671,7 @@ void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
 	
 	make_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 	
-	not_zero_dim_add_pos_hd ( cll, this );                                             }
+	add_cell_behind_below_pos_hd ( cll, this );                                             }
 
 
 void Mesh::NotZeroDim::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
@@ -4567,7 +4683,7 @@ void Mesh::NotZeroDim::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const ta
 	
   make_deep_connections_hd ( cll, this, tag::mesh_is_bdry );
 	
-	not_zero_dim_add_pos_hd ( cll, this );                                    }
+	add_cell_behind_below_pos_hd ( cll, this );                                    }
 
 
 void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
@@ -4579,7 +4695,7 @@ void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
 	
   make_deep_connections_hd ( cll, this, tag::mesh_is_bdry, tag::do_not_bother );
 	
-	not_zero_dim_add_pos_hd ( cll, this );                                         }
+	add_cell_behind_below_pos_hd ( cll, this );                                         }
 
 
 void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
@@ -4686,7 +4802,7 @@ void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
 	
-	not_zero_dim_add_neg_hd ( cll, pos_cll, this );                                    }
+	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                    }
 
 
 void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
@@ -4701,7 +4817,7 @@ void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 	
-	not_zero_dim_add_neg_hd ( cll, pos_cll, this );                                                 }
+	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                                 }
 
 
 void Mesh::NotZeroDim::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
@@ -4716,7 +4832,7 @@ void Mesh::NotZeroDim::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const ta
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry );
 	
-	not_zero_dim_add_neg_hd ( cll, pos_cll, this );                                    }
+	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                    }
 
 	
 void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
@@ -4731,7 +4847,7 @@ void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry, tag::do_not_bother );
 	
-	not_zero_dim_add_neg_hd ( cll, pos_cll, this );                                             }
+	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                             }
 
 	
 void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
