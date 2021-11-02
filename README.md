@@ -24,9 +24,6 @@ Finite elements (section 6 in the manual) are implemented in a rather rudimentar
 A changelog is available at the end of the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf).
 To check which version of maniFEM is installed in your computer, see at the beginning of the file `maniFEM.h`.
 
-ManiFEM uses [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for storing matrices
-and for solving systems of linear equations.
-
 ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com), [Sérgio Lopes](mailto:slopes@adm.isel.pt)
 and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com); see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
 
@@ -45,13 +42,14 @@ It is not that easy to install and use them under Windows, but it is certainly p
 Some examples require the [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) library; 
 just copy its source tree somewhere in your computer and be sure that path is mentioned in your 
 `Makefile` under the `-I` flag of your compiler.
-You may also want to use [gmsh](http://gmsh.info/) for visualization purposes. 
+You may want to use [gmsh](http://gmsh.info/) for visualization purposes. 
 
 A component of maniFEM, [MetricTree](https://github.com/cristian-barbarosie/MetricTree), can be used independently.
 
-This work is supported by National Funding from FCT - Fundação para a Ciência e a Tecnologia (Portugal), 
-through Faculdade de Ciências da Universidade de Lisboa and 
-Centro de Matemática, Aplicações Fundamentais e Investigação Operacional, project UID/MAT/04561/2020.
+This work is supported by National Funding from FCT - Fundação para a Ciência e a Tecnologia
+(Portugal), through Faculdade de Ciências da Universidade de Lisboa and 
+Centro de Matemática, Aplicações Fundamentais e Investigação Operacional,
+project UID/MAT/04561/2020.
 
 Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 

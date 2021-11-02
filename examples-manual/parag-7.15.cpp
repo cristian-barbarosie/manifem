@@ -43,14 +43,7 @@ int main ( )
 	torus.draw_ps ( "torus.eps", tag::unfold,
                   tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	std::cout << "now smoothening ... " << std::flush;
-
-	std::cout << "and drawing again, please wait" << std::endl << std::flush;
-
-	torus.draw_ps ( "torus-smooth.eps", tag::unfold,
-                  tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
-
-	std::cout << "produced files torus.eps and torus-smooth.eps - please edit before viewing" << std::endl;	
+	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;	
 }
 
 //-----------------------------------------------------------------------------------------

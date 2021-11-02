@@ -101,8 +101,8 @@ int main ( )
 													tag::identify, CD, tag::with, HI.reverse(),
 													tag::use_existing_vertices                 );
 
-	// std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
-	// VV.draw_ps ( "VV.eps", tag::unfold, tag::over_region, -1.5 < x < 2.5, -2 < y < 0.5 );
+	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
+	VV.draw_ps ( "VV.eps", tag::unfold, tag::over_region, -1.5 < x < 2.5, -2 < y < 0.5 );
 	
 	std::cout << "now smoothening ... " << std::flush;
 
@@ -122,6 +122,13 @@ int main ( )
 
 	remove_short_segments ( VV, std::pow(0.9,4) * d );
 	flip_split_long_segments ( VV, std::pow(1.1,4) * d );
+	limit_number_of_neighbours ( VV );
+	remove_short_segments ( VV, std::pow(0.9,3.5) * d );
+	flip_split_long_segments ( VV, std::pow(1.1,3.5) * d );
+	limit_number_of_neighbours ( VV );
+	remove_short_segments ( VV, std::pow(0.9,3.3) * d );
+	flip_split_long_segments ( VV, std::pow(1.1,3.3) * d );
+	limit_number_of_neighbours ( VV );
 
 	baricenters ( VV );
 	
@@ -141,12 +148,14 @@ int main ( )
 
 inline bool flip_segment ( Mesh & msh, Cell & seg )
 
-// flips 'seg' if it is inner to 'msh'
+// flip 'seg' if it is inner to 'msh'
 // equilibrates (baricenter) the four neighbour vertices
 
-// returns true if the segment has been flipped, false if not
+// return true if the segment has been flipped, false if not
+
+// assumes there are only triangular cells
 	
-// this function assumes there is no higher-dimensional mesh "above" 'msh'
+// assumes there is no higher-dimensional mesh "above" 'msh'
 
 // assumes that the current manifold is a quotient manifold (manipulates spins)
 
@@ -167,7 +176,7 @@ inline bool flip_segment ( Mesh & msh, Cell & seg )
 	assert ( CA.base().reverse() == C );
 	Cell D = AD.tip();
 	assert ( DB.base().reverse() == D );
-
+	
 	assert ( seg.spin() == - BC.spin() - CA.spin() );
 	assert ( seg.spin() == AD.spin() + DB.spin() );
 	seg.spin() = CA.spin() + AD.spin();
@@ -255,8 +264,6 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 	Function coords_Eu = mani_Eu.coordinates();
 
 	if ( not seg .belongs_to ( msh ) ) return false;
-
-	std::cout << std::endl << "split_segment 261" << std::endl;
 
 	Cell tri2 = msh.cell_in_front_of ( seg, tag::may_not_exist );
 	if ( not tri2.exists() ) return false;
@@ -454,17 +461,7 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 		// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) continue
 		// segments on the boundary cannot be flipped
 
-		Cell A = seg.base().reverse();
-		Cell B = seg.tip();
-		Function::Action s = seg.spin();
-		std::vector < double > A_co = coords_q ( A );
-		std::vector < double > B_co = coords_q ( B, tag::spin, s );
-		size_t n = A_co.size();
-		double len_sq = 0.;
-		for ( size_t i = 0; i < n; i++ )
-		{	double d = B_co[i] - A_co[i];
-			len_sq += d*d;                }
-		if ( len_sq > thr_sq )  list_of_segments .push_back ( seg );   }
+		if ( length_square ( seg ) > thr_sq )  list_of_segments .push_back ( seg );   }
 
 	for ( size_t ii = 0; ii < 2; ii++ )
 	for ( std::list < Cell > ::iterator itt = list_of_segments .begin();
@@ -486,28 +483,18 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 		// segments on the boundary cannot be flipped
 
 		// length of 'seg' may have changed in the meanwhile
-		Cell A = seg.base().reverse();
-		Cell B = seg.tip();
-		Function::Action s = seg.spin();
-		std::vector < double > A_co = coords_q ( A );
-		std::vector < double > B_co = coords_q ( B, tag::spin, s );
-		size_t n = A_co.size();
-		double len_sq = 0.;
-		for ( size_t i = 0; i < n; i++ )
-		{	double d = B_co[i] - A_co[i];
-			len_sq += d*d;                }
-		if ( len_sq < thr_sq ) 
+		if ( length_square ( seg ) < thr_sq ) 
 		{	itt = list_of_segments .erase ( itt );  continue;  }
 
 		flip_segment ( msh, seg );
-			
 		itt ++;                                                                   }
 
 	// segments still on the list will be split
-			
+
 	for ( std::list < Cell > ::iterator itt = list_of_segments .begin();
-        itt != list_of_segments .end();                                )
-		split_segment ( msh, *itt );
+        itt != list_of_segments .end(); itt ++                         )
+	{	Cell seg = * itt;
+		if ( length_square ( seg ) > thr_sq )  split_segment ( msh, seg );  }
 
 }
 
@@ -549,15 +536,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		Cell A = seg.base().reverse();
 		Cell B = seg.tip();
-		Function::Action s = seg.spin();
-		std::vector < double > A_co = coords_q ( A );
-		std::vector < double > B_co = coords_q ( B, tag::spin, s );
-		size_t n = A_co.size();
-		double len_sq = 0.;
-		for ( size_t i = 0; i < n; i++ )
-		{	double d = B_co[i] - A_co[i];
-			len_sq += d*d;                }
-		if ( len_sq > thr_sq ) continue;
+		if ( length_square ( seg ) > thr_sq ) continue;
 		// long segments are left unchanged
 
 		// method 'is_inner_to' says "vertex is not on the boundary of mesh"

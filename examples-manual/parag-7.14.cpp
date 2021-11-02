@@ -40,10 +40,7 @@ int main ( )
 	cyl.draw_ps ( "cylinder.eps", tag::unfold,
                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	cyl.draw_ps ( "cylinder-0.65.eps", tag::unfold,
-               tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
-
-	std::cout << "produced files cylinder*.eps - please edit before viewing" << std::endl;	
+	std::cout << "produced file cylinder.eps - please edit before viewing" << std::endl;	
 
 } // end of main
 
