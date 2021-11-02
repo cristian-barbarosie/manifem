@@ -1,5 +1,5 @@
 
-// manifold.h 2021.10.07
+// manifold.h 2021.11.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1276,15 +1276,16 @@ inline Cell::Spin::operator Function::Action ( )
 		if ( not this->cll->is_positive() ) exp = -exp;
 		Function::ActionGenerator & g = manif_q->actions[i];
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::ActionGenerator,short int>::iterator itt = res.index_map.lower_bound ( g );
-		assert ( ( itt == res.index_map.end() ) or ( res.index_map.key_comp()(g,itt->first) ) );
+		std::map<Function::ActionGenerator,short int>::iterator itt =
+			res.index_map.lower_bound ( g );
+		assert ( ( itt == res.index_map.end() ) or
+	           ( res.index_map.key_comp()(g,itt->first) ) );
 		res.index_map.emplace_hint ( itt, std::piecewise_construct,
-			std::forward_as_tuple(g), std::forward_as_tuple(exp) );                                }
-	return res;                                                                                  }
+			std::forward_as_tuple(g), std::forward_as_tuple(exp) );       }
+	return res;                                                          }
 
 
-inline Function::Action Cell::Spin::operator=
-( const Function::Action & a )
+inline Function::Action Cell::Spin::operator= ( const Function::Action & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -1297,19 +1298,19 @@ inline Function::Action Cell::Spin::operator=
 	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::ActionGenerator & g = manif_q->actions[i];
-		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
+		std::map<Function::ActionGenerator,short int>::const_iterator itt =
+			a.index_map.find ( g );
 		if ( itt == a.index_map.end() )
-		{	manif_q->spins[i].on_cell(this->cll) = 0;
-			continue;                                 }
+		{	manif_q->spins[i] .on_cell ( pos_cll ) = 0;
+			continue;                                   }
 		short int exp = itt->second;
 		assert ( exp != 0 );
 		if ( this->cll->is_positive() ) manif_q->spins[i].on_cell(pos_cll) = exp;
-		else manif_q->spins[i].on_cell(pos_cll) = -exp;                                     }
-	return *this;                                                                           }
+		else manif_q->spins[i].on_cell(pos_cll) = -exp;                           }
+	return *this;                                                                  }
 
 
-inline Function::Action Cell::Spin::operator+=
-( const Function::Action & a )
+inline Function::Action Cell::Spin::operator+= ( const Function::Action & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -1322,17 +1323,17 @@ inline Function::Action Cell::Spin::operator+=
 	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::ActionGenerator & g = manif_q->actions[i];
-		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
+		std::map<Function::ActionGenerator,short int>::const_iterator itt =
+			a.index_map.find ( g );
 		if ( itt == a.index_map.end() ) continue;
 		short int exp = itt->second;
 		assert ( exp != 0 );
 		if ( not this->cll->is_positive() ) exp = -exp;
-		manif_q->spins[i].on_cell(pos_cll) += exp;                                         }
-	return *this;                                                                          }
+		manif_q->spins[i].on_cell(pos_cll) += exp;                           }
+	return *this;                                                             }
 
 
-inline Function::Action Cell::Spin::operator-=
-( const Function::Action & a )
+inline Function::Action Cell::Spin::operator-= ( const Function::Action & a )
 	
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -1345,13 +1346,14 @@ inline Function::Action Cell::Spin::operator-=
 	Cell::Core * pos_cll = this->cll->get_positive().core;
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::ActionGenerator & g = manif_q->actions[i];
-		std::map<Function::ActionGenerator,short int>::const_iterator itt = a.index_map.find ( g );
+		std::map<Function::ActionGenerator,short int>::const_iterator itt =
+			a.index_map.find ( g );
 		if ( itt == a.index_map.end() ) continue;
 		short int exp = itt->second;
 		assert ( exp != 0 );
 		if ( not this->cll->is_positive() ) exp = -exp;
-		manif_q->spins[i].on_cell(pos_cll) -= exp;                                         }
-	return *this;                                                                          }
+		manif_q->spins[i].on_cell(pos_cll) -= exp;                           }
+	return *this;                                                             }
 
 
 inline Cell::Spin Cell::spin ( )

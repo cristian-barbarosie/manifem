@@ -4968,20 +4968,21 @@ void Mesh::ZeroDim::closed_loop ( const Cell & ver, size_t n )
 
 void Mesh::Connected::OneDim::closed_loop ( const Cell & ver )
 
+// check it is indeed a closed loop !!
+
 {	assert ( ver.is_positive() );
 	this->first_ver = ver.reverse();
 	this->last_ver = ver;             }
 	
 
 void Mesh::Connected::OneDim::closed_loop ( const Cell & ver, size_t n )
-
-{	assert ( ver.is_positive() );
-	this->first_ver = ver.reverse();
-	this->last_ver = ver;
-	this->nb_of_segs = n;             }
+	
+{	this->closed_loop ( ver );
+	this->nb_of_segs = n;      }
 
 
 void Mesh::Fuzzy::closed_loop ( const Cell & ver )
+// do nothing !!
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Fuzzy meshes cannot be closed loops" << std::endl;
@@ -4989,6 +4990,7 @@ void Mesh::Fuzzy::closed_loop ( const Cell & ver )
 
 
 void Mesh::Fuzzy::closed_loop ( const Cell & ver, size_t n )
+// do nothing !!
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Fuzzy meshes cannot be closed loops" << std::endl;

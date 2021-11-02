@@ -9,13 +9,15 @@
 // see https://github.com/cristian-barbarosie/attic/blob/main/five-V-holes.png
 
 #include "maniFEM.h"
+#include <set>
 
 using namespace maniFEM;
 
+void limit_number_of_neighbours ( Mesh msh );
 	
 void remove_short_segments ( Mesh & msh, double threshold );
 
-void flip_long_segments ( Mesh & msh, double threshold );
+void flip_split_long_segments ( Mesh & msh, double threshold );
 
 void baricenters ( Mesh & msh );
 
@@ -109,62 +111,313 @@ int main ( )
 	baricenters ( VV );
 	// re-define the position of each vertex as baricenter of its neighbours
 	
-	flip_long_segments ( VV, 1.5*d );
-	// remove segments shorter than the given threshold
-	
-	remove_short_segments ( VV, 0.5*d );
-	// remove segments shorter than the given threshold
-	
-	baricenters ( VV );
-	// re-define the position of each vertex as baricenter of its neighbours
-	
-	flip_long_segments ( VV, 1.5*d );
-	remove_short_segments ( VV, 0.5*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.5*d );
-	remove_short_segments ( VV, 0.5*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.45*d );
-	remove_short_segments ( VV, 0.55*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.45*d );
-	remove_short_segments ( VV, 0.55*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.45*d );
-	remove_short_segments ( VV, 0.55*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.4*d );
-	remove_short_segments ( VV, 0.6*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.4*d );
-	remove_short_segments ( VV, 0.6*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.4*d );
-	remove_short_segments ( VV, 0.6*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.35*d );
-	remove_short_segments ( VV, 0.65*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.35*d );
-	remove_short_segments ( VV, 0.65*d );
-	baricenters ( VV );
-	flip_long_segments ( VV, 1.35*d );
-	remove_short_segments ( VV, 0.65*d );
-	baricenters ( VV );
+	limit_number_of_neighbours ( VV );
+	// change the configuration around vertices with too few or too many neighbours
 
+	remove_short_segments ( VV, std::pow(0.9,5) * d );
+	// remove segments shorter than the given threshold
+
+	flip_split_long_segments ( VV, std::pow(1.1,5) * d );
+	// flip or split segments longer than the given threshold
+
+	remove_short_segments ( VV, std::pow(0.9,4) * d );
+	flip_split_long_segments ( VV, std::pow(1.1,4) * d );
+
+	baricenters ( VV );
+	
 	std::cout << "and drawing again, please wait" << std::endl << std::flush;
 
 	VV.draw_ps ( "VV-smooth.eps", tag::unfold,
                tag::over_region, -1.5 < x < 2.5, -2 < y < 0.5 );
 
 	std::cout << "produced files VV.eps and VV-smooth.eps - please edit before viewing" << std::endl;	
-}
+
+}  // end of  main
 
 
 
 //-----------------------------------------------------------------------------------------
 
 
+inline bool flip_segment ( Mesh & msh, Cell & seg )
+
+// flips 'seg' if it is inner to 'msh'
+// equilibrates (baricenter) the four neighbour vertices
+
+// returns true if the segment has been flipped, false if not
+	
+// this function assumes there is no higher-dimensional mesh "above" 'msh'
+
+// assumes that the current manifold is a quotient manifold (manipulates spins)
+
+{	Cell tri2 = msh.cell_in_front_of ( seg, tag::may_not_exist );
+	if ( not tri2.exists() ) return false; 
+	Cell tri1 = msh.cell_behind ( seg, tag::may_not_exist );
+	if ( not tri1.exists() ) return false;
+	// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) return false
+
+	Cell A = seg.base().reverse();
+	Cell B = seg.tip();
+
+	Cell BC = tri1 .boundary() .cell_in_front_of ( B, tag::surely_exists );
+	Cell CA = tri1 .boundary() .cell_behind ( A, tag::surely_exists );
+	Cell AD = tri2 .boundary() .cell_in_front_of ( A, tag::surely_exists );
+	Cell DB = tri2 .boundary() .cell_behind ( B, tag::surely_exists );
+	Cell C = BC.tip();
+	assert ( CA.base().reverse() == C );
+	Cell D = AD.tip();
+	assert ( DB.base().reverse() == D );
+
+	assert ( seg.spin() == - BC.spin() - CA.spin() );
+	assert ( seg.spin() == AD.spin() + DB.spin() );
+	seg.spin() = CA.spin() + AD.spin();
+	assert ( seg.spin() == - BC.spin() - DB.spin() );
+
+	B .cut_from_bdry_of ( seg, tag::do_not_bother );
+	A .reverse() .cut_from_bdry_of ( seg, tag::do_not_bother );
+	CA .cut_from_bdry_of ( tri1, tag::do_not_bother );
+	DB .cut_from_bdry_of ( tri2, tag::do_not_bother );
+	C .reverse() .glue_on_bdry_of ( seg, tag::do_not_bother );
+	D .glue_on_bdry_of ( seg, tag::do_not_bother );
+	DB .glue_on_bdry_of ( tri1, tag::do_not_bother );
+	CA .glue_on_bdry_of ( tri2, tag::do_not_bother );
+
+	tri1 .boundary() .closed_loop ( B );
+	tri2 .boundary() .closed_loop ( A );
+
+	if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::spin );
+	if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::spin );
+	if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::spin );
+	if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::spin );
+
+	return true;
+
+}  // end of  flip_segment
+	
+//-----------------------------------------------------------------------------------------
+
+
+double length_square ( Cell AB )
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	Cell A = AB.base().reverse();
+	Cell B = AB.tip();
+	Function::Action s = AB.spin();
+	std::vector < double > A_co = coords_q ( A );  // same as coords_Eu ( A )
+	std::vector < double > B_co = coords_q ( B, tag::spin, s );
+	size_t n = A_co.size();
+	assert ( n == B_co .size() );
+	double len_AB_2 = 0.;
+	for ( size_t i = 0; i < n; i++ )
+		{	double v = B_co[i] - A_co[i];  len_AB_2 += v*v;  }
+	return len_AB_2;                                              }
+	
+
+class compare_lenghts_of_segs
+
+{ public :
+	inline bool operator() ( Cell AB, Cell CD ) const
+	{	return length_square ( AB ) > length_square ( CD );  }
+};
+
+//-----------------------------------------------------------------------------------//
+
+
+inline bool split_segment ( Mesh & msh, Cell & seg )
+
+// splits 'seg' in two if it is inner to 'msh'
+// splits also the two neighbour triangles
+// equilibrates (baricenter) the four neighbour vertices
+// among the four segments "around" the newly created vertex,
+// flips the longest
+
+// returns true if the segment has been split, false if not
+	
+// this function assumes there is no higher-dimensional mesh "above" 'msh'
+
+// assumes also that the current manifold is not implicit
+// (for an implicit manifold, a projection operation should be added)
+
+// assumes that the current manifold is a quotient manifold (manipulates spins)
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+
+	if ( not seg .belongs_to ( msh ) ) return false;
+
+	std::cout << std::endl << "split_segment 261" << std::endl;
+
+	Cell tri2 = msh.cell_in_front_of ( seg, tag::may_not_exist );
+	if ( not tri2.exists() ) return false;
+	Cell tri1 = msh.cell_behind ( seg, tag::may_not_exist );
+	if ( not tri1.exists() ) return false;
+	// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) return false
+	// refuse to split segments on the boundary
+
+	Cell A = seg .base() .reverse();
+	Cell B = seg .tip();
+	Function::Action s = seg.spin();
+	std::vector < double > A_co = coords_q ( A );  // same as coords_Eu ( A )
+	std::vector < double > B_co = coords_q ( B, tag::spin, s );
+	size_t n = A_co.size();
+
+	Cell BC = tri1 .boundary() .cell_in_front_of ( B, tag::surely_exists );
+	Cell CA = tri1 .boundary() .cell_behind ( A, tag::surely_exists );
+	Cell AD = tri2 .boundary() .cell_in_front_of ( A, tag::surely_exists );
+	Cell DB = tri2 .boundary() .cell_behind ( B, tag::surely_exists );
+	Cell C = BC.tip();
+	assert ( CA.base().reverse() == C );
+	Cell D = AD.tip();
+	assert ( DB.base().reverse() == D );
+
+	assert ( seg.spin() == - BC.spin() - CA.spin() );
+	assert ( seg.spin() == AD.spin() + DB.spin() );
+
+	Cell E ( tag::vertex );   // put 'E' at the middle of 'seg' (aka AB)
+	for ( size_t i = 0; i < n; i++ )
+		coords_Eu[i] ( E ) = ( A_co[i] + B_co[i] ) / 2.;
+
+	A .reverse() .cut_from_bdry_of ( seg, tag::do_not_bother );
+	E .reverse() .glue_on_bdry_of ( seg, tag::do_not_bother );
+	CA .cut_from_bdry_of ( tri1, tag::do_not_bother );
+	AD .cut_from_bdry_of ( tri2, tag::do_not_bother );
+
+	Cell AE ( tag::segment, A.reverse(), E );  // zero spin
+	Cell CE ( tag::segment, C.reverse(), E );
+	CE .spin() = CA .spin();
+	Cell DE ( tag::segment, D.reverse(), E );
+	DE .spin() = - AD .spin();
+
+	CE .glue_on_bdry_of ( tri1, tag::do_not_bother );
+	DE .reverse() .glue_on_bdry_of ( tri2, tag::do_not_bother );
+
+	tri1 .boundary() .closed_loop ( B );
+	tri2 .boundary() .closed_loop ( B );
+
+	Cell AEC ( tag::triangle, AE, CE.reverse(), CA );
+	AEC .add_to_mesh ( msh );
+	Cell ADE ( tag::triangle, AD, DE, AE.reverse() );
+	ADE .add_to_mesh ( msh );
+
+	// we want to sweep over the four segments "around" E : CA, AD, DB, BC
+	// we want to flip the longest one (could be the two longest)
+	// if the longest one is stuck (is on the boundary) we flip the next one
+
+	// we use a map to order them
+	compare_lenghts_of_segs comp_len;
+	std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
+	ms .insert ( CA );
+	ms .insert ( AD );
+	ms .insert ( DB );
+	ms .insert ( BC );
+
+	for ( std::multiset < Cell, compare_lenghts_of_segs > ::iterator it = ms .begin();
+				it != ms .end(); it ++                                                      )
+	{	Cell sseg = * it;
+		if ( flip_segment ( msh, sseg ) )  break;  }
+		// we choose to to flip only one segment
+
+	if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::spin );
+	if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::spin );
+	if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::spin );
+	if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::spin );
+	if ( E .is_inner_to ( msh ) ) msh .baricenter ( E, tag::spin );
+
+	return true;
+
+}  // end of  split_segment
+
+
+//-----------------------------------------------------------------------------------------
+
+void limit_number_of_neighbours ( Mesh msh )
+
+// only applies to meshes of triangular cells
+	
+// this function assumes there is no higher-dimensional mesh "above" 'msh'
+
+// assumes that the current manifold is a quotient manifold
+// (manipulates spins)
+
+{	std::forward_list < Cell > has_few_neighbours, has_many_neighbours;
+
+	{ // just a block of code for hiding 'it'
+	CellIterator it = msh .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell P = * it;
+		if ( not P .is_inner_to ( msh ) ) continue;
+		// how many neighbours does P have ?
+		size_t counter = 0;
+		CellIterator it_around_P = msh .iterator ( tag::over_segments, tag::around, P );
+		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
+			counter ++;
+		if ( counter < 5 ) has_few_neighbours .push_front ( P );
+		if ( counter > 7 ) has_many_neighbours .push_front ( P );                         }
+	} // just a block of code for hiding 'it'
+
+	// we use a map to order neighbour segments, we flip the longest one
+	compare_lenghts_of_segs comp_len;
+	for ( std::forward_list < Cell > ::iterator it = has_few_neighbours .begin();
+				it != has_few_neighbours .end(); it ++                                 )
+	{	Cell P = * it;
+		// we count again the neighbours, configuration may have changed in the meanwhile
+		size_t counter = 0;
+		std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
+		CellIterator it_around_P =
+			msh .iterator ( tag::over_cells_of_dim, 2, tag::around, P );
+		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
+		{	Cell tri = * it_around_P;
+			counter ++;
+			assert ( tri.dim() == 2 );
+			Cell SP = tri .boundary() .cell_behind ( P, tag::surely_exists );
+			Cell PT = tri .boundary() .cell_in_front_of ( P, tag::surely_exists );
+			Cell T = PT .tip();
+			Cell TS = tri .boundary() .cell_in_front_of ( T, tag::surely_exists );
+			assert ( TS .tip() == SP .base() .reverse() );
+			ms .insert ( TS );                                                      }
+		if ( counter > 4 ) continue;
+		for ( std::multiset < Cell, compare_lenghts_of_segs > ::iterator itt = ms .begin();
+					itt != ms .end(); itt ++                                                      )
+		{	Cell seg = * itt;
+			if ( flip_segment ( msh, seg ) )  break;  }                                         }
+			// we choose to to flip only one segment
+
+	for ( std::forward_list < Cell > ::iterator it = has_many_neighbours .begin();
+				it != has_many_neighbours .end(); it ++                                 )
+	{	Cell P = * it;
+		// we count again the neighbours, configuration may have changed in the meanwhile
+		size_t counter = 0;
+		std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
+		CellIterator it_around_P =
+			msh .iterator ( tag::over_segments, tag::around, P );
+		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
+		{	Cell seg = * it_around_P;
+			assert ( seg.tip() == P );
+			counter ++;
+			ms .insert ( seg );        }
+		if ( counter < 8 ) continue;
+		for ( std::multiset < Cell, compare_lenghts_of_segs > ::iterator itt = ms .begin();
+					itt != ms .end(); itt ++                                                      )
+		{	Cell seg = * itt;
+			if ( flip_segment ( msh, seg ) )  break;  }                                         }
+			// we choose to to flip only one segment
+
+}  // end of  limit_number_of_neighbours
+	
+//-----------------------------------------------------------------------------------------
+
+	
 void flip_split_long_segments ( Mesh & msh, double threshold )
 
 // flip long segments, make baricenters on the four neighbour vertices
@@ -176,7 +429,7 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 // (for an implicit manifold, a projection operation should be added)
 
 // assumes that the current manifold is a quotient manifold
-// (it manipulates spins)
+// (manipulates spins)
 
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
@@ -213,7 +466,7 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 			len_sq += d*d;                }
 		if ( len_sq > thr_sq )  list_of_segments .push_back ( seg );   }
 
-	for ( size_t i = 0; i < 2; i++ )
+	for ( size_t ii = 0; ii < 2; ii++ )
 	for ( std::list < Cell > ::iterator itt = list_of_segments .begin();
         itt != list_of_segments .end();                                )
 	{	Cell seg = * itt;
@@ -225,10 +478,10 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 		// the configuration around 'seg' may have changed in the meanwhile
 		Cell tri2 = msh.cell_in_front_of ( seg, tag::may_not_exist );
 		if ( not tri2.exists() ) 
-			{	itt = list_of_segments .erase ( itt );  continue;  }
+		{	itt = list_of_segments .erase ( itt );  continue;  }
 		Cell tri1 = msh.cell_behind ( seg, tag::may_not_exist );
 		if ( not tri1.exists() )
-			{	itt = list_of_segments .erase ( itt );  continue;  }
+		{	itt = list_of_segments .erase ( itt );  continue;  }
 		// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) continue
 		// segments on the boundary cannot be flipped
 
@@ -241,37 +494,12 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 		size_t n = A_co.size();
 		double len_sq = 0.;
 		for ( size_t i = 0; i < n; i++ )
-			{	double d = B_co[i] - A_co[i];
-				len_sq += d*d;                }
+		{	double d = B_co[i] - A_co[i];
+			len_sq += d*d;                }
 		if ( len_sq < thr_sq ) 
-			{	itt = list_of_segments .erase ( itt );  continue;  }
+		{	itt = list_of_segments .erase ( itt );  continue;  }
 
-		// flip
-		Cell BC = tri1 .boundary() .cell_in_front_of ( B, tag::surely_exists );
-		Cell CA = tri1 .boundary() .cell_behind ( A, tag::surely_exists );
-		Cell AD = tri2 .boundary() .cell_in_front_of ( A, tag::surely_exists );
-		Cell DB = tri2 .boundary() .cell_behind ( B, tag::surely_exists );
-		Cell C = BC.tip();
-		assert ( CA.base().reverse() == C );
-		Cell D = AD.tip();
-		assert ( DB.base().reverse() == D );
-
-		B .cut_from_bdry_of ( seg, tag::do_not_bother );
-		A .reverse() .cut_from_bdry_of ( seg, tag::do_not_bother );
-		CA .cut_from_bdry_of ( tri1, tag::do_not_bother );
-		DB .cut_from_bdry_of ( tri2, tag::do_not_bother );
-		C .reverse() .glue_on_bdry_of ( seg, tag::do_not_bother );
-		D .glue_on_bdry_of ( seg, tag::do_not_bother );
-		DB .glue_on_bdry_of ( tri1, tag::do_not_bother );
-		CA .glue_on_bdry_of ( tri2, tag::do_not_bother );
-
-		tri1 .boundary() .closed_loop ( B );
-		tri2 .boundary() .closed_loop ( A );
-
-		if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::spin );
-		if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::spin );
-		if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::spin );
-		if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::spin );
+		flip_segment ( msh, seg );
 			
 		itt ++;                                                                   }
 
@@ -279,22 +507,8 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 			
 	for ( std::list < Cell > ::iterator itt = list_of_segments .begin();
         itt != list_of_segments .end();                                )
-	{	Cell seg = * itt;
+		split_segment ( msh, *itt );
 
-	  Cell tri1 = msh.cell_in_front_of ( seg, tag::may_not_exist );
-		assert ( tri1.exists() );
-	  Cell tri2 = msh.cell_behind ( seg, tag::may_not_exist );
-		assert ( tri2.exists() );
-		// or, equivalently :  assert ( not seg.is_inner_to ( msh ) )
-
-		Cell A = seg.base().reverse();
-		Cell B = seg.tip();
-		Function::Action s = seg.spin();
-		std::vector < double > A_co = coords_q ( A );
-		std::vector < double > B_co = coords_q ( B, tag::spin, s );
-		size_t n = A_co.size();
-
-		
 }
 
 //-----------------------------------------------------------------------------------------
