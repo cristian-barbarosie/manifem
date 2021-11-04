@@ -20,10 +20,6 @@ int main ( )
 	Cell A ( tag::vertex );  x(A) = 1.;  y(A) = 0.;
 	Mesh circle ( tag::progressive, tag::start_at, A, tag::desired_length, 0.2 );
 
-	CellIterator it = circle.iterator ( tag::over_segments );
-	it.reset();  assert ( it.in_range() );
-	it++;  assert ( it.in_range() );
-
 	RR2.set_as_working_manifold();
 	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.2 );
 

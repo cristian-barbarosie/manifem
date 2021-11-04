@@ -33,11 +33,20 @@ manifem-exe-12.10: parag-12.10.o
 # manifem-exe-test-12.10: test-12.10.o
 # 	$(CC) -o $@ -std=c++17 $^
 
+manifem-exe-user-%: user-%.o $(manifem_objects)
+	$(CC) -o $@ -std=c++17 $^
+
+user-%.o: user-%.cpp
+	$(CC) $(CFLAGS) -o $@ $^
+
 run-%: manifem-exe-%
 	./$<
 
+static-lib: $(manifem_objects)
+	ar cr libmaniFEM.a $^
+
 clean:
-	rm *.o manifem-exe-*
+	rm *.o manifem-exe-* libmaniFEM.a
 
 clean-all: clean
 	rm *.eps *.msh

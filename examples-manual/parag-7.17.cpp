@@ -248,7 +248,7 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 
 // returns true if the segment has been split, false if not
 	
-// this function assumes there is no higher-dimensional mesh "above" 'msh'
+// assumes there is no higher-dimensional mesh "above" 'msh'
 
 // assumes also that the current manifold is not implicit
 // (for an implicit manifold, a projection operation should be added)
@@ -352,9 +352,9 @@ void limit_number_of_neighbours ( Mesh msh )
 
 // only applies to meshes of triangular cells
 	
-// this function assumes there is no higher-dimensional mesh "above" 'msh'
+// assumes there is no higher-dimensional mesh "above" 'msh'
 
-// assumes that the current manifold is a quotient manifold
+// calls 'flip_segment' which assumes that the current manifold is a quotient manifold
 // (manipulates spins)
 
 {	std::forward_list < Cell > has_few_neighbours, has_many_neighbours;
@@ -430,22 +430,15 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 // flip long segments, make baricenters on the four neighbour vertices
 // if a segment is still long after flip, split it
 
-// this function assumes there is no higher-dimensional mesh "above" 'msh'
+// assumes there is no higher-dimensional mesh "above" 'msh'
 
 // assumes also that the current manifold is not implicit
 // (for an implicit manifold, a projection operation should be added)
 
-// assumes that the current manifold is a quotient manifold
-// (manipulates spins)
+// calls 'flip_segment' and 'split_segment' which assume that the current manifold
+// is a quotient manifold (manipulate spins)
 
-{	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
-	Manifold::Quotient * mani_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	Function coords_q = space.coordinates();
-	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-
+{
 	double thr_sq = threshold * threshold;
 
 	std::list < Cell > list_of_segments;
@@ -494,6 +487,12 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 	for ( std::list < Cell > ::iterator itt = list_of_segments .begin();
         itt != list_of_segments .end(); itt ++                         )
 	{	Cell seg = * itt;
+		// the configuration around 'seg' may have changed in the meanwhile
+	  Cell tri1 = msh.cell_in_front_of ( seg, tag::may_not_exist );
+		if ( not tri1.exists() ) continue;
+	  Cell tri2 = msh.cell_behind ( seg, tag::may_not_exist );
+		if ( not tri2.exists() ) continue;
+		// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) continue
 		if ( length_square ( seg ) > thr_sq )  split_segment ( msh, seg );  }
 
 }
@@ -503,7 +502,9 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 
 void remove_short_segments ( Mesh & msh, double threshold )
 
-// this function assumes there is no higher-dimensional mesh "above" 'msh'
+// remove segments shorter than the given threshold
+
+// assumes there is no higher-dimensional mesh "above" 'msh'
 
 // assumes also that the current manifold is not implicit
 // (for an implicit manifold, a projection operation should be added)

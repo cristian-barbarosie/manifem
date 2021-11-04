@@ -35,6 +35,8 @@ Latest code might be unstable; the releases are stable.
 To check which version of maniFEM is installed in your computer, see at the beginning of the file `maniFEM.h`.
 You can then run the examples in the manual : just `make run-1.1` for the example in paragraph 1.1, 
 `make run-2.6` for the example in paragraph 2.6, and so on.
+Paragraph 11.16 in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf)
+gives more details.
 You will need a recent C++ compiler (we use `g++`) and the `make` utility. 
 Under linux it should be easy to install them. 
 It is not that easy to install and use them under Windows, but it is certainly possible, for instance by using 
