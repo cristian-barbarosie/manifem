@@ -1,5 +1,5 @@
 
-// iterator.cpp 2021.07.23
+// iterator.cpp 2021.11.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1457,7 +1457,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::
 			SegmentsOfConnectedOneDimMesh::NormalOrder::AsTheyAre ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                       }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1468,7 +1469,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::
 			SegmentsOfConnectedOneDimMesh::NormalOrder::AsTheyAre ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1479,7 +1481,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::
 			SegmentsOfConnectedOneDimMesh::ReverseOrder::AsTheyAre ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1490,7 +1493,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::
 			SegmentsOfConnectedOneDimMesh::ReverseOrder::AsTheyAre ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1501,7 +1505,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			NormalOrder::ForcePositive ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1512,7 +1517,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			NormalOrder::ForcePositive ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1523,7 +1529,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			ReverseOrder::ForcePositive ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1534,7 +1541,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			ReverseOrder::ForcePositive ( this );
-	assert ( false );                                                                      }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                        }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1548,7 +1556,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			NormalOrder::ReverseEachCell::AssumeCellsExist ( this );
-	assert ( false );                                                                              }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                                }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1563,7 +1572,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			NormalOrder::ReverseEachCell::AssumeCellsExist ( this );
-	assert ( false );                                                                              }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                                }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1578,7 +1588,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			ReverseOrder::ReverseEachCell::AssumeCellsExist ( this );
-	assert ( false );                                                                              }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                                }
 
 
 CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
@@ -1593,7 +1604,8 @@ CellIterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Co
 	if ( d == 1 )
 		return new CellIterator::Over::SegmentsOfConnectedOneDimMesh::
 			ReverseOrder::ReverseEachCell::AssumeCellsExist ( this );
-	assert ( false );                                                                              }
+	assert ( false );   // we return nullptr just to avoid compilation errors
+	return nullptr;                                                                                }
 
 //--------------------------------------------------------------------------------------------//
 

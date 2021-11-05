@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.10.10
+// manifold.cpp 2021.11.04
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -54,19 +54,23 @@ Function Manifold::Euclid::build_coord_func
 	return this->coord_func;                                                            }
 
 
-Function Manifold::Implicit::build_coord_func
+Function Manifold::Implicit::build_coord_func  // virtual from Manifold::Core
 ( const tag::lagrange &, const tag::OfDegree &, size_t deg )
-// virtual from Manifold::Core
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
-Function Manifold::Parametric::build_coord_func
+Function Manifold::Parametric::build_coord_func  // virtual from Manifold::Core
 ( const tag::lagrange &, const tag::OfDegree &, size_t deg )
-// virtual from Manifold::Core
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
-Function Manifold::Quotient::build_coord_func
+Function Manifold::Quotient::build_coord_func  // virtual from Manifold::Core
 ( const tag::lagrange &, const tag::OfDegree &, size_t deg )
-{	assert ( false );  }  // virtual from Manifold::Core
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 //-----------------------------------------------------------------------------------------
 	

@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.09.11
+// progressive.cpp 2021.11.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -249,7 +249,8 @@ inline size_t get_topological_dim ( )
 			( m_impl_2->surrounding_space.core );
 		assert ( m_euclid );
 		return m_euclid->coord_func.nb_of_components() - 2;              }
-	assert ( false );                                                               } 
+	assert ( false );  // we return zero just to avoid compilation errors
+	return 0;                                                                      }
 
 //-------------------------------------------------------------------------------------------------
 

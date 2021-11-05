@@ -3,9 +3,9 @@
 CC = g++
 
 # compiler flags
-#	CFLAGS = -c -I . -I $(HOME)/include/ -std=c++17
-CFLAGS = -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
-# CFLAGS = -DMANIFEM_COLLECT_CM -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
+# CFLAGS = -c -I . -I $(HOME)/include/ -std=c++17
+# CFLAGS = -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
+CFLAGS = -DMANIFEM_COLLECT_CM -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
 # CFLAGS = -DMANIFEM_COLLECT_CM -DNDEBUG -O4 -c -I . -I $(HOME)/include/ -std=c++17
 # CFLAGS = -DNDEBUG -c -O4 -I . -I $(HOME)/include/ -std=c++17
 # CFLAGS = -DNDEBUG -c -I . -I $(HOME)/include/ -std=c++17
@@ -46,10 +46,10 @@ static-lib: $(manifem_objects)
 	ar cr libmaniFEM.a $^
 
 clean:
-	rm *.o manifem-exe-* libmaniFEM.a
+	rm -f *.o manifem-exe-* libmaniFEM.a
 
 clean-all: clean
-	rm *.eps *.msh
+	rm -f *.eps *.msh
 
 .SECONDARY:
 

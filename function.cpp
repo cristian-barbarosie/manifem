@@ -1,5 +1,5 @@
 
-// function.cpp 2021.10.20
+// function.cpp 2021.11.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -54,7 +54,9 @@ size_t Function::Aggregate::nb_of_components ( ) const
 
 size_t Function::Immersion::nb_of_components ( ) const
 // virtual from Function::Core, through Function::Vector
-{ assert ( false );  }
+{ assert ( false );
+	// we return zero just to avoid compilation errors
+	return 0;           }
 
 size_t Function::CoupledWithField::Vector::nb_of_components ( ) const
 // virtual from Function::Core, defined in Function::Aggregate, here overridden
@@ -81,7 +83,9 @@ Function Function::Aggregate::component ( size_t i )
 
 Function Function::Immersion::component ( size_t i )
 // virtual from Function::Core
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 Function Function::CoupledWithField::Vector::component ( size_t i )
 // virtual from Function::Core, defined in Function::Aggregate, here overridden
@@ -94,7 +98,9 @@ Function Function::Vector::MultiValued::JumpIsLinear::component ( size_t i )
 // virtual from Function::Core, defined by Function::Aggregate, here overridden
 // difficult case ! it's impossible to compute separately the value of
 // a component of such a multifunction, the jump depends on all other components
-{	assert ( false );  }
+{	assert ( false ); 
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 //-----------------------------------------------------------------------------------------//
 	
@@ -276,7 +282,9 @@ std::vector<double> Function::Aggregate::get_value_on_cell ( Cell::Core * cll ) 
 std::vector<double> Function::Aggregate::get_value_on_cell
 ( Cell::Core * cll, const tag::Spin &, const Function::Action & exp ) const
 // virtual from Function::Vector
-{ assert ( false );  }
+{ assert ( false );
+	// we return an empty vector just to avoid compilation errors
+	return std::vector<double> ();   }
 
 void Function::CoupledWithField::Scalar::set_value ( double v )
 // virtual from Function::Scalar
@@ -298,11 +306,15 @@ void Function::Diffeomorphism::OneDim::set_value ( double v )
 { assert ( false );  }
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell ( Cell::Core * cll ) const
-{ assert ( false );  }  // virtual from Function::Scalar
+{ assert ( false );   // virtual from Function::Scalar
+	// we return zero just to avoid compilation errors
+	return 0;          }
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell
 ( Cell::Core * cll, const tag::Spin &, const Function::Action & exp ) const
-{ assert ( false );  }  // virtual from Function::Scalar
+{ assert ( false );    // virtual from Function::Scalar
+	// we return zero just to avoid compilation errors
+	return 0;   }
 	
 std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
 ( Cell::Core * cll ) const  // virtual from Function::Vector
@@ -315,14 +327,18 @@ std::vector<double> Function::CoupledWithField::Vector::get_value_on_cell
 // { return this->field->on_cell(cll).reference();  }
 	
 std::vector<double> Function::Immersion::get_value_on_cell ( Cell::Core * cll ) const
-{ assert ( false );  }  // virtual from Function::Vector
+{ assert ( false );    // virtual from Function::Vector
+	// we return an empty vector just to avoid compilation errors
+	return std::vector<double> ();   }
 
 std::vector<double> Function::Immersion::get_value_on_cell
 ( Cell::Core * cll, const tag::Spin &, const Function::Action & exp ) const
-{ assert ( false );  }  // virtual from Function::Vector
+{ assert ( false );   // virtual from Function::Vector
+	// we return an empty vector just to avoid compilation errors
+	return std::vector<double> ();  }
 
 void Function::Composition::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{ assert ( false );   }
 
 double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -333,7 +349,9 @@ double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
 
 double Function::Composition::get_value_on_cell  // virtual from Function::Scalar
 ( Cell::Core * cll, const tag::Spin &, const Function::Action & exp ) const
-{ assert ( false );  }
+{ assert ( false );
+	// we return zero just to avoid compilation errors
+	return 0;          }
 	
 //-----------------------------------------------------------------------------------------//
 
@@ -509,7 +527,9 @@ double Function::CoupledWithField::Scalar::set_value_on_cell
 
 double Function::Diffeomorphism::OneDim::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
-{ assert ( false );  }
+{ assert ( false );
+	// we return zero just to avoid compilation errors
+	return 0;           }
 
 std::vector<double> Function::CoupledWithField::Vector::set_value_on_cell
 ( Cell::Core * cll, const std::vector<double> & x )  // virtual from Function::Vector
@@ -517,19 +537,26 @@ std::vector<double> Function::CoupledWithField::Vector::set_value_on_cell
 
 std::vector<double> Function::Immersion::set_value_on_cell
 ( Cell::Core * cll, const std::vector<double> & x )  // virtual from Function::Vector
-{ assert ( false );  }
+{ assert ( false );
+	// we return an empty vector just to avoid compilation errors
+	return std::vector<double> ();  }
 
 double Function::Composition::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Vector
-{ assert ( false );  }
+{ assert ( false );
+	// we return zero just to avoid compilation errors
+	return 0;           }
 
 double Function::Scalar::MultiValued::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
-{ assert ( false );  }
+{ assert ( false );
+	// we return zero just to avoid compilation errors
+	return 0;           }
 
 std::vector < double > Function::Vector::MultiValued::set_value_on_cell
 ( Cell::Core * cll, const std::vector<double> & x )  // virtual from Function::Scalar
-{ assert ( false );  }
+{ assert ( false );  // we return a void vector just to avoid compilation errors
+	return std::vector<double> ();   }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -827,16 +854,24 @@ Function Function::CoupledWithField::Scalar::deriv ( Function x ) const
 	return Function ( 0. );                        }
 
 Function Function::Vector::deriv ( Function x ) const
-{ assert ( false );  }
+{ assert ( false ); 
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );   }
 
 Function Function::Diffeomorphism::OneDim::deriv ( Function x ) const
-{ assert ( false );  }
+{ assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );   }
 
 Function Function::Scalar::MultiValued::deriv ( Function x ) const
-{ assert ( false );  }
+{ assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );   }
 
 Function Function::Vector::MultiValued::deriv ( Function x ) const
-{ assert ( false );  }
+{ assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );   }
 
 //-------------------------------------------------------------------------------------
 
@@ -1032,11 +1067,15 @@ Function Function::Cos::replace ( const Function & x, const Function & y )
 
 Function Function::Step::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 Function Function::Vector::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 Function Function::CoupledWithField::Scalar::replace
 ( const Function & x, const Function & y )
@@ -1047,33 +1086,41 @@ Function Function::CoupledWithField::Scalar::replace
 Function Function::CoupledWithField::Vector::replace
 ( const Function & x, const Function & y )
 //  virtual from Function::Core, through Function::Scalar, Function::ArithmeticExpression
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 Function Function::Diffeomorphism::OneDim::replace
 ( const Function & x, const Function & y )
 //  virtual from Function::Vector
-{	assert ( false );  }
+{	assert ( false );
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 Function Function::Composition::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core, through Function::Vector
 {	return Function ( tag::whose_core_is, this );  }
 
 Function Function::Scalar::MultiValued::replace ( const Function & x, const Function & y )
-{	assert ( false );  }  //  virtual from Function::Scalar
+{	assert ( false );   //  virtual from Function::Scalar
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 Function Function::Vector::MultiValued::replace ( const Function & x, const Function & y )
-{	assert ( false );  }  //  virtual from Function::Vector
+{	assert ( false );   //  virtual from Function::Vector
+	// we return a non-existent Function just to avoid compilation errors
+	return Function ( tag::non_existent );  }
 
 //--------------------------------------------------------------------------
 
 
 Function::Jump Function::Core::jump ( )
 // later overridden by Function::***::MultiValued::JumpIsSum
-{	assert ( false );  }
+{	assert ( false );  // we return some Jump just to avoid compilation errors
+	return Function::Jump ();  }
 
 
 Function::Jump Function::Scalar::MultiValued::JumpIsSum::jump ( )
-
 {	Function::Jump res;
 	res.actions = this->actions;
 	res.ju = this->beta;
@@ -1081,8 +1128,8 @@ Function::Jump Function::Scalar::MultiValued::JumpIsSum::jump ( )
 
 
 Function::Jump Function::Vector::MultiValued::JumpIsSum::jump ( )
-
-{	assert ( false );   }
+{	assert ( false );   // we return some Jump just to avoid compilation errors
+	return Function::Jump ();  }
 
 //-----------------------------------------------------------------------------------------//
 

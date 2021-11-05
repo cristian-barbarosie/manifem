@@ -1,5 +1,5 @@
 
-// function.h 2021.09.20
+// function.h 2021.11.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2386,15 +2386,16 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 				Function var = *itt;
 				itt++;
 				assert ( itt == fl.end() );
-				Function::CoupledWithField * var_cf =
-					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* > ( var.core );
+				Function::CoupledWithField::Scalar * var_cf =
+					tag::Util::assert_cast < Function::Core*,
+					                         Function::CoupledWithField::Scalar* > ( var.core );
 				Field::Double::Scalar * var_field =
 					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * > ( var_cf->field );
 				bool found_var = false;
 				size_t i = 0;
 				for ( ; i < n_coord; i++ )
-				{	Function::CoupledWithField * base_i_cf =
-						tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* >
+				{	Function::CoupledWithField::Scalar * base_i_cf =
+						tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
 						( base[i].core );
 					Field::Double::Scalar * base_i_field =
 						tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
@@ -2415,8 +2416,8 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 					bool found_var = false;
 					size_t i = 0;
 					for ( ; i < n_coord; i++ )
-					{	Function::CoupledWithField * base_i_cf =
-							tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* >
+					{	Function::CoupledWithField::Scalar * base_i_cf =
+							tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
 							( base[i].core );
 						Field::Double::Scalar * base_i_field =
 							tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
@@ -2447,15 +2448,16 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 			Function var = *itt;
 			itt++;
 			assert ( itt == fl.end() );
-			Function::CoupledWithField * var_cf =
-				tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* > ( var.core );
+			Function::CoupledWithField::Scalar * var_cf =
+				tag::Util::assert_cast < Function::Core*,
+				                         Function::CoupledWithField::Scalar* > ( var.core );
 			Field::Double::Scalar * var_field =
 				tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * > ( var_cf->field );
 			bool found_var = false;
 			size_t i = 0;
 			for ( ; i < n_coord; i++ )
-			{	Function::CoupledWithField * base_i_cf =
-					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* >
+			{	Function::CoupledWithField::Scalar * base_i_cf =
+					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
 					( base[i].core );
 				Field::Double::Scalar * base_i_field =
 					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
@@ -2467,8 +2469,8 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 			res.first[i] = cc->value;                                                       }
 		else  // expression is not a sum, not a product
 		{	// must be a variable xi
-			Function::CoupledWithField * expr_var =
-				tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* >
+			Function::CoupledWithField::Scalar * expr_var =
+				tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
 				( expression.core );
 			Field::Double::Scalar * var_field =
 				tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
@@ -2476,8 +2478,8 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 			bool found_var = false;
 			size_t i = 0;
 			for ( ; i < n_coord; i++ )
-			{	Function::CoupledWithField * base_i_cf =
-					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField* >
+			{	Function::CoupledWithField::Scalar * base_i_cf =
+					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
 					( base[i].core );
 				Field::Double::Scalar * base_i_field =
 					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >

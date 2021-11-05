@@ -1,4 +1,4 @@
-// mesh.cpp 2021.10.31
+// mesh.cpp 2021.11.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -86,7 +86,8 @@ bool tag::Util::Core::dispose_query_cell_with_reverse ( tag::Util::Core::Delegat
 			return true;                                                 }  }
 	return false;                                                          }
 #else  // no MANIFEM_COLLECT_CM
-{	assert ( false );  }
+{	assert ( false );  // we return false just to avoid compilation errors
+	return false;     }
 #endif  // MANIFEM_COLLECT_CM	
 
 //-----------------------------------------------------------------------------//
