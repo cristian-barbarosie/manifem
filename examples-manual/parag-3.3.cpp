@@ -12,7 +12,7 @@ int main ( )
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
 
-	double d = 0.065;
+	double d = 0.1;
 
 	Manifold circle = RR2.implicit ( x*x + y*y == 1. );
 	Mesh outer ( tag::progressive, tag::entire_manifold, circle, tag::desired_length, d );

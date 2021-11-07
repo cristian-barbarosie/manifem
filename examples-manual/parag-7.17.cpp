@@ -106,31 +106,7 @@ int main ( )
 	
 	std::cout << "now smoothening ... " << std::flush;
 
-	double d = 0.05;
-	
-	baricenters ( VV );
-	// re-define the position of each vertex as baricenter of its neighbours
-	
 	limit_number_of_neighbours ( VV );
-	// change the configuration around vertices with too few or too many neighbours
-
-	remove_short_segments ( VV, std::pow(0.9,5) * d );
-	// remove segments shorter than the given threshold
-
-	flip_split_long_segments ( VV, std::pow(1.1,5) * d );
-	// flip or split segments longer than the given threshold
-
-	remove_short_segments ( VV, std::pow(0.9,4) * d );
-	flip_split_long_segments ( VV, std::pow(1.1,4) * d );
-	limit_number_of_neighbours ( VV );
-	remove_short_segments ( VV, std::pow(0.9,3.5) * d );
-	flip_split_long_segments ( VV, std::pow(1.1,3.5) * d );
-	limit_number_of_neighbours ( VV );
-	remove_short_segments ( VV, std::pow(0.9,3.3) * d );
-	flip_split_long_segments ( VV, std::pow(1.1,3.3) * d );
-	limit_number_of_neighbours ( VV );
-
-	baricenters ( VV );
 	
 	std::cout << "and drawing again, please wait" << std::endl << std::flush;
 
@@ -141,6 +117,8 @@ int main ( )
 
 }  // end of  main
 
+// looks like there is a problem in split_segment or in remove_short_segments
+// shows up with MANIFEM_COLLECT_CM on
 
 
 //-----------------------------------------------------------------------------------------

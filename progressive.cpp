@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.11.04
+// progressive.cpp 2021.11.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1644,22 +1644,12 @@ void progressive_construct
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
 
-	Mesh new_msh ( tag::whose_core_is,
-	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	    tag::freshly_created, tag::is_positive                                               );
-	// the number of segments does not count, and we don't know it yet
-	// we compute it after the mesh is built, by counting segments
-	// but we count segments using an iterator, and the iterator won't work
-	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-	// in iterator.cpp
-	progressive_construct ( new_msh, tag::start_at, start, tag::towards, best_tangent,
-                          tag::stop_at, start                                       );
-	update_info_connected_one_dim ( new_msh, start, start );
+	progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
+                          tag::stop_at, start                                   );
+	update_info_connected_one_dim ( msh, start, start );
 	// define number of segments, first vertex, last vertex
 
-	if ( not correctly_oriented ( new_msh ) ) switch_orientation ( new_msh );
-	msh = new_msh;
+	if ( not correctly_oriented ( msh ) ) switch_orientation ( msh );
 }
 	
 //-------------------------------------------------------------------------------------------------

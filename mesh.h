@@ -5355,7 +5355,8 @@ inline Mesh & Mesh::operator= ( const Mesh & c )
 	if ( c.core ) c.core->nb_of_wrappers++;
 	#endif
 	return *this;                            }
-		
+
+
 inline Mesh & Mesh::operator= ( Mesh && c )
 {
 	#ifdef MANIFEM_COLLECT_CM	
