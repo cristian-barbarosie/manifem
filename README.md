@@ -19,8 +19,8 @@ Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
 
 In its current version, release 21.11, maniFEM works well for mesh generation,
 including meshes on quotient manifolds. 
-Anisotropic Riemann metrics (paragraph 3.24 in the manual) are not yet implemented. 
-Variational formulations are not yet implemented. 
+Anisotropic Riemann metrics (paragraph 3.24 in the manual) and
+variational formulations are not yet implemented. 
 Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now.
 A changelog is available at the end of the
 [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf).
