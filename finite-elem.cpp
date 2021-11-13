@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.10.17
+// finite-elem.cpp 2021.11.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -422,7 +422,7 @@ void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll )
 	
 //-----------------------------------------------------------------------------------------//
 
-void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll, const tag::Spin & )
+void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll, const tag::Winding & )
 // virtual from FiniteElement::Core
 
 {	assert ( cll.dim() == 1 );
@@ -523,7 +523,7 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
 	
 //-------------------------------------------------------------------------------------------------
 
-void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag::Spin & )
+void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag::Winding & )
 // virtual from FiniteElement::Core
 
 {	assert ( cll.dim() == 2 );
@@ -540,8 +540,8 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag:
 	#endif
 	it++;  assert ( not it.in_range() );
 
-	Function::Action spin_Q = PQ.spin(), spin_R = spin_Q + QR.spin();
-	assert ( spin_R + RP.spin() == 0 );
+	Function::Action winding_Q = PQ.winding(), winding_R = winding_Q + QR.winding();
+	assert ( winding_R + RP.winding() == 0 );
 	
 	Function xi_eta = this->master_manif.coordinates();
 	assert ( xi_eta.nb_of_components() == 2 );
@@ -560,8 +560,8 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag:
 	if ( geom_dim == 2 )
 
 	{	std::vector < double > xyz_P = xyz ( P ),
-		                       xyz_Q = xyz ( Q, tag::spin, spin_Q ),
-		                       xyz_R = xyz ( R, tag::spin, spin_R );
+		                       xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+		                       xyz_R = xyz ( R, tag::winding, winding_R );
 
 		Function x_c = xyz_P[0] * one_m_xi_m_eta + xyz_Q[0] * xi + xyz_R[0] * eta;
 		Function y_c = xyz_P[1] * one_m_xi_m_eta + xyz_Q[1] * xi + xyz_R[1] * eta;
@@ -667,7 +667,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 //-----------------------------------------------------------------------------------------//
 
 
-void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const tag::Spin & )
+void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const tag::Winding & )
 // virtual from FiniteElement::Core
 
 {	assert ( cll.dim() == 2 );
@@ -685,10 +685,10 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 	#endif
 	it++;  assert ( not it.in_range() );
 
-	Function::Action spin_Q = PQ.spin(),
-	                 spin_R = spin_Q + QR.spin(),
-	                 spin_S = spin_R + RS.spin();
-	assert ( spin_S + SP.spin() == 0 );
+	Function::Action winding_Q = PQ.winding(),
+	                 winding_R = winding_Q + QR.winding(),
+	                 winding_S = winding_R + RS.winding();
+	assert ( winding_S + SP.winding() == 0 );
 	
 	Function xi_eta = this->master_manif.coordinates();
 	assert ( xi_eta.nb_of_components() == 2 );
@@ -709,9 +709,9 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 	if ( geom_dim == 2 )
 
 	{	std::vector < double > xyz_P = xyz ( P ),
-		                       xyz_Q = xyz ( Q, tag::spin, spin_Q ),
-		                       xyz_R = xyz ( R, tag::spin, spin_R ),
-		                       xyz_S = xyz ( S, tag::spin, spin_S );
+		                       xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+		                       xyz_R = xyz ( R, tag::winding, winding_R ),
+		                       xyz_S = xyz ( S, tag::winding, winding_S );
 
 		Function x_c = ( xyz_P[0] * psi_P + xyz_Q[0] * psi_Q +
 	                   xyz_R[0] * psi_R + xyz_S[0] * psi_S ) / 4.;

@@ -12,11 +12,11 @@ int main ( )
 {	Manifold RR ( tag::Euclid, tag::of_dim, 1 );
 	Function theta = RR.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	const double pi = 3.1415926536;
-	Function::Action g ( tag::transforms, theta, tag::into, theta + 2*pi );
+	Manifold::Action g ( tag::transforms, theta, tag::into, theta + 2*pi );
 	Manifold circle = RR.quotient ( g );
 	
 	Cell A ( tag::vertex );  theta ( A ) = 0.;
-	Mesh seg ( tag::segment, A.reverse(), A, tag::divided_in, 20, tag::spin, g );
+	Mesh seg ( tag::segment, A.reverse(), A, tag::divided_in, 20, tag::winding, g );
 
 	// define new coordinates x and y as arithmetic expressions of theta
 	Function x = cos(theta), y = sin(theta);

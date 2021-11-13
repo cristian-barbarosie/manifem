@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.10.17
+// finite-elem.h 2021.11.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -203,7 +203,7 @@ class FiniteElement
 	inline Integrator set_integrator ( const tag::gauss &, const tag::gauss_quadrature & );
 
 	inline void dock_on ( const Cell & cll );
-	inline void dock_on ( const Cell & cll, const tag::Spin & );
+	inline void dock_on ( const Cell & cll, const tag::Winding & );
 
 	inline double integrate ( const Function & );
 
@@ -238,7 +238,7 @@ class FiniteElement::Core
 	virtual ~Core()  { };
 
 	virtual void dock_on ( const Cell & cll ) = 0;
-	virtual void dock_on ( const Cell & cll, const tag::Spin & ) = 0;
+	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 	
 };  // end of  class FiniteElement::Core
 
@@ -251,8 +251,8 @@ inline FiniteElement::~FiniteElement ()  {  delete this->core;  }
 inline void FiniteElement::dock_on ( const Cell & cll )
 {	this->core->dock_on ( cll );  }
 
-inline void FiniteElement::dock_on ( const Cell & cll, const tag::Spin & )
-{	this->core->dock_on ( cll, tag::spin );  }
+inline void FiniteElement::dock_on ( const Cell & cll, const tag::Winding & )
+{	this->core->dock_on ( cll, tag::winding );  }
 
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::Vertices & )
@@ -297,7 +297,7 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) = 0;
-	void dock_on ( const Cell & cll, const tag::Spin & ) = 0;
+	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 
 	class Segment;  class Triangle;  class Quadrangle;
 	
@@ -354,7 +354,7 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
-	void dock_on ( const Cell & cll, const tag::Spin & );
+	void dock_on ( const Cell & cll, const tag::Winding & );
 
 };  // end of  class FiniteElement::WithMaster::Segment
 
@@ -372,7 +372,7 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
-	void dock_on ( const Cell & cll, const tag::Spin & );
+	void dock_on ( const Cell & cll, const tag::Winding & );
 
 };  // end of  class FiniteElement::withMaster::Triangle
 
@@ -390,7 +390,7 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
-	void dock_on ( const Cell & cll, const tag::Spin & );
+	void dock_on ( const Cell & cll, const tag::Winding & );
 
 };  // end of  class FiniteElement::withMaster::Quadrangle
 

@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.11.05
+// progressive.cpp 2021.11.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -46,10 +46,10 @@ namespace tag
 // not easy to reach both goals while keeping some of the common code ... common
 
 // for quotient manifolds, we use a dirty trick
-// we provide as Point not just a Cell but a Cell together with a spin
-// each call to SqDist will set the "winning" spin of the second Point B
+// we provide as Point not just a Cell but a Cell together with a winding number
+// each call to SqDist will set the "winning" winding of the second Point B
 // relatively to the first one A
-// (the spin of a future segment AB where the minimum distance is achieved)
+// (the winding number of a future segment AB where the minimum distance is achieved)
 	
 	
 //-----------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ class Manifold::Type::Euclidian
 {	public :
 
 	class sq_dist;
-	typedef Cell cell_with_spin;
+	typedef Cell winding_cell;
 	typedef MetricTree < Cell, sq_dist > metric_tree;
 
 };
@@ -94,14 +94,14 @@ class Manifold::Type::Quotient
 {	public :
 
 	class sq_dist;	
-	typedef std::pair < Cell, Function::Action > cell_with_spin;
-	typedef MetricTree < cell_with_spin, sq_dist > metric_tree;
+	typedef std::pair < Cell, Manifold::Action > winding_cell;
+	typedef MetricTree < winding_cell, sq_dist > metric_tree;
 };
 
-// in the above, we don't really need a MetricTree of cells_with_spin
+// in the above, we don't really need a MetricTree of windng_cells
 // MetricTree < Cell, sq_dist >  would do as well
-// we only need the spin for searching close neighbours of a given vertex
-// in that situation, we need 'sq_dist' to keep the "winning" spin, see below
+// we only need the winding for searching close neighbours of a given vertex
+// in that situation, we need 'sq_dist' to keep the "winning" winding, see below
 	
 //-------------------------------------------------------------------------------------------------
 
@@ -114,11 +114,11 @@ class Manifold::Type::Quotient::sq_dist
 {	public :
 
 	inline double dist2
-	( const Cell & A, const Cell & B, const Function::Action & spin,
+	( const Cell & A, const Cell & B, const Manifold::Action & winding,
 		const Function & coords_Eu, const Function & coords_q                       )
 	{	double res = 0.;
 		std::vector < double > coord_A = coords_Eu ( A ),
-		                       coord_B = coords_q ( B, tag::spin, spin );
+		                       coord_B = coords_q ( B, tag::winding, winding );
 		const size_t nc = coord_A.size();
 		assert ( nc == coord_B.size() );
 		for ( size_t i = 0; i < nc; i++ )
@@ -126,13 +126,13 @@ class Manifold::Type::Quotient::sq_dist
 			res += tmp*tmp;                      }
 		return res;                                                        }
 
-	// we provide as Point not just a Cell but a Cell together with a spin
-	// each call to SqDist will set the "winning" spin of the second Point B
+	// we provide as Point not just a Cell but a Cell together with a winding number
+	// each call to SqDist will set the "winning" winding of the second Point B
 	// relatively to the first one A
-	// (the spin of a future segment AB where the minimum distance is achieved)
+	// (the winding number of a future segment AB where the minimum distance is achieved)
 
-	inline double operator() ( std::pair < Cell, Function::Action > A,
-	                           std::pair < Cell, Function::Action > & B )
+	inline double operator() ( std::pair < Cell, Manifold::Action > A,
+	                           std::pair < Cell, Manifold::Action > & B )
 	{	Manifold space = Manifold::working;
 		assert ( space.exists() );  // we use the current (quotient) manifold
 		Manifold::Quotient * manif_q = tag::Util::assert_cast
@@ -146,7 +146,7 @@ class Manifold::Type::Quotient::sq_dist
 
 		// the action group may have one or two generators
 		assert ( manif_q->actions.size() == 2 );
-		assert ( manif_q->spins.size() == 2 );
+		assert ( manif_q->winding_nbs.size() == 2 );
 		Function::ActionGenerator g1 = manif_q->actions[0], g2 = manif_q->actions[1];
 	
 		std::vector < std::vector < short int > > directions
@@ -165,7 +165,7 @@ class Manifold::Type::Quotient::sq_dist
 			for ( size_t d = 0; d < 4; d++ )
 			{	if ( d == 2 ) size_of_round++;
 				for ( size_t i = 0; i < size_of_round; i++ )
-				{	Function::Action s = ii*g1 + jj*g2;
+				{	Manifold::Action s = ii*g1 + jj*g2;
 					double di = this->dist2 ( A.first, B.first, s, coords_Eu, coords_q );
 					if ( di < dist )
 					{	dist = di;
@@ -359,7 +359,7 @@ inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell s
 
 
 template < class manif_type >
-inline void progress_add_point ( const typename manif_type::cell_with_spin & P,
+inline void progress_add_point ( const typename manif_type::winding_cell & P,
                                  typename manif_type::metric_tree & cloud      )
 // hidden in anonymous namespace
 
@@ -1137,8 +1137,8 @@ inline Cell glue_two_segs_S
 // progress_interface.cell_in_front_of(B) may have tip C
 // that is, BC may belong already to 'progress_interface'
 
-{	Cell AD ( tag::segment, A.reverse(), D );  // spin !!
-	Cell AC ( tag::segment, A.reverse(), C );  // spin !!
+{	Cell AD ( tag::segment, A.reverse(), D );  // winding !!
+	Cell AC ( tag::segment, A.reverse(), C );  // winding !!
 	Cell BC = progress_interface.cell_in_front_of(B);
 	if ( BC.tip() == C )
 	{	progress_fill_60 < manif_type > ( AB, BC, AC.reverse(), B, cloud );
@@ -1148,7 +1148,7 @@ inline Cell glue_two_segs_S
 		AD.add_to_mesh ( progress_interface );
 		build_one_normal ( A, D, AD );  }  // based on previous segment
 	else
-	{	BC = Cell ( tag::segment, B.reverse(), C );  // spin !!
+	{	BC = Cell ( tag::segment, B.reverse(), C );  // winding !!
 		Cell ABC ( tag::triangle, AB, BC, AC.reverse() );
 		Cell ACD ( tag::triangle, AC, CD, AD.reverse() );
 		ABC.add_to_mesh ( mesh_under_constr );
@@ -1170,8 +1170,8 @@ inline Cell glue_two_segs_Z
 // progress_interface.cell_behind(A) may have base D
 // that is, DA may belong already to 'progress_interface'
 
-{	Cell BC ( tag::segment, B.reverse(), C );  // spin !!
-	Cell DB ( tag::segment, D.reverse(), B );  // spin !!
+{	Cell BC ( tag::segment, B.reverse(), C );  // winding !!
+	Cell DB ( tag::segment, D.reverse(), B );  // winding !!
 	Cell DA = progress_interface.cell_behind(A);
 	if ( DA.base().reverse() == D )
 	{	progress_fill_60 < manif_type > ( DA, AB, DB.reverse(), A, cloud );
@@ -1181,7 +1181,7 @@ inline Cell glue_two_segs_Z
 		BC.reverse().add_to_mesh ( progress_interface );
 		build_one_normal ( B, C, BC );  }  // based on previous segment
 	else
-	{	DA = Cell ( tag::segment, D.reverse(), A );  // spin !!
+	{	DA = Cell ( tag::segment, D.reverse(), A );  // winding !!
 		Cell ABD ( tag::triangle, AB, DB.reverse(), DA );
 		Cell BCD ( tag::triangle, BC, CD, DB );
 		ABD.add_to_mesh ( mesh_under_constr );
@@ -1220,7 +1220,7 @@ inline void progress_fill_last_triangle
 template < class manif_type >
 void progress_relocate
 (	const Cell & P, size_t n, std::vector<double> & normal_dir,
-	std::set < typename manif_type::cell_with_spin > & set_of_ver,
+	std::set < typename manif_type::winding_cell > & set_of_ver,
 	typename manif_type::metric_tree & cloud                      )
 // hidden in anonymous namespace
 
@@ -1237,11 +1237,11 @@ void progress_relocate
 	// build a vector of segments from it
 	// relocate point P by averaging all normals
 
-	std::list < typename manif_type::cell_with_spin > list_of_ver =
+	std::list < typename manif_type::winding_cell > list_of_ver =
 		cloud.find_close_neighbours_of ( P, progress_long_dist );
 	// P has not been added to the cloud yet, so it will not show up in 'list_of_ver'
 	set_of_ver.clear();
-	for ( typename std::list < typename  manif_type::cell_with_spin >
+	for ( typename std::list < typename  manif_type::winding_cell >
 					::const_iterator it = list_of_ver.begin();
         it != list_of_ver.end(); it++                               )
 		set_of_ver.insert ( *it );
@@ -1311,7 +1311,7 @@ void progress_relocate
 
 template < class manif_type >
 inline bool check_touching
-(	Cell & ver, std::set < typename manif_type::cell_with_spin > & set_of_ver,
+(	Cell & ver, std::set < typename manif_type::winding_cell > & set_of_ver,
 	Cell & point_120, Cell & stop_point_120,
 	typename manif_type::metric_tree & cloud                                  )
 // hidden in anonymous namespace
@@ -1738,7 +1738,7 @@ void progressive_construct
 	} // just a block of code 
 	mesh_under_constr = msh;
 	Cell vertex_recently_built ( tag::non_existent );
-	std::set < typename manif_type::cell_with_spin > set_of_nearby_vertices;
+	std::set < typename manif_type::winding_cell > set_of_nearby_vertices;
 	// vertices close to vertex_recently_built
 
 	if ( start.dim() != 1 )
@@ -2660,7 +2660,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 //-------------------------------------------------------------------------------------------------
 
 
-void print_spin ( Function::Action a )
+void print_winding ( Manifold::Action a )
 
 {	Manifold::Quotient * manif_q = dynamic_cast
 		< Manifold::Quotient* > ( Manifold::working.core );
@@ -2668,7 +2668,7 @@ void print_spin ( Function::Action a )
 	Function xy = manif_q->base_space.coordinates();
 	Function x = xy[0], y = xy[1];
 	size_t n = manif_q->actions.size();
-	assert ( n == manif_q->spins.size() );
+	assert ( n == manif_q->winding_nbs.size() );
 	std::cout << "(";
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::ActionGenerator & g = manif_q->actions[i];
@@ -2699,11 +2699,11 @@ void test_sq_dist ()
 
 	Manifold::Type::Quotient::sq_dist sd;
 
-	std::pair < Cell, Function::Action > AA { A, 0 };
-	std::pair < Cell, Function::Action > BB { B, 0 };
+	std::pair < Cell, Manifold::Action > AA { A, 0 };
+	std::pair < Cell, Manifold::Action > BB { B, 0 };
 	double dist2 = sd ( AA, BB );
 	std::cout << dist2 << std::endl;
-	print_spin ( BB.second );
+	print_winding ( BB.second );
 }
 
 

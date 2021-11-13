@@ -1,4 +1,5 @@
-// mesh.cpp 2021.11.04
+
+// mesh.cpp 2021.11.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -5055,11 +5056,11 @@ void Mesh::baricenter ( const Cell & ver )
 //-----------------------------------------------------------------------------------------//
 
 
-void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
+void Mesh::baricenter ( const Cell & ver, const tag::Winding & )
 
 // 'ver' is a vertex in 'this' mesh
-// tag::spin is a mere indication that we are on a quotient manifold
-// and, as such, neighbour segments may have spin
+// tag::winding is a mere indication that we are on a quotient manifold
+// and, as such, neighbour segments may be winding
 
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
@@ -5082,15 +5083,15 @@ void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
 		Cell shadow_front ( tag::vertex );
 		Cell shadow_back ( tag::vertex );
 		if ( coords_Eu.nb_of_components() == 1 )
-		{	double new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+		{	double new_co = coords_q ( front.tip(), tag::winding, front.winding() );
 			coords_Eu ( shadow_front ) = new_co;
-			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			new_co = coords_q ( back.base().reverse(), tag::winding, back.reverse().winding() );
 			coords_Eu ( shadow_back ) = new_co;                                            }
 		else
 		{	assert ( coords_Eu.nb_of_components() > 1 );
-			std::vector < double > new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+			std::vector < double > new_co = coords_q ( front.tip(), tag::winding, front.winding() );
 			coords_Eu ( shadow_front ) = new_co;
-			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			new_co = coords_q ( back.base().reverse(), tag::winding, back.reverse().winding() );
 			coords_Eu ( shadow_back ) = new_co;                                                }
 		neighbours.push_back ( shadow_front );
 		neighbours.push_back ( shadow_back );
@@ -5103,11 +5104,11 @@ void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
 			Cell seg = *it;
 			Cell shadow ( tag::vertex );
 			if ( coords_Eu.nb_of_components() == 1 )
-			{	double new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+			{	double new_co = coords_q ( seg.tip(), tag::winding, seg.winding() );
 				coords_Eu ( shadow ) = new_co;                                 }
 			else
 			{	assert ( coords_Eu.nb_of_components() > 1 );
-				std::vector < double > new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+				std::vector < double > new_co = coords_q ( seg.tip(), tag::winding, seg.winding() );
 				coords_Eu ( shadow ) = new_co;                                                }
 			neighbours.push_back ( shadow );                                                  }  }
 	std::vector < double > co = coords_Eu ( ver );
@@ -5120,12 +5121,12 @@ void Mesh::baricenter ( const Cell & ver, const tag::Spin & )
 //-----------------------------------------------------------------------------------------//
 
 
-void Mesh::baricenter ( const Cell & ver, const tag::Spin &,
+void Mesh::baricenter ( const Cell & ver, const tag::Winding &,
                         const tag::ShadowVertices &, const std::vector < Cell > & vec_cll )
 
 // 'ver' is a vertex in 'this' mesh
-// tag::spin is a mere indication that we are on a quotient manifold
-// and, as such, neighbour segments may have spin
+// tag::winding is a mere indication that we are on a quotient manifold
+// and, as such, neighbour segments may be winding
 
 // the above version (without shadow vertices as argument)
 // builds new vertices each time it is invoked,
@@ -5154,15 +5155,15 @@ void Mesh::baricenter ( const Cell & ver, const tag::Spin &,
 		Cell shadow_front = vec_cll[0];
 		Cell shadow_back  = vec_cll[1];
 		if ( coords_Eu.nb_of_components() == 1 )
-		{	double new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+		{	double new_co = coords_q ( front.tip(), tag::winding, front.winding() );
 			coords_Eu ( shadow_front ) = new_co;
-			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			new_co = coords_q ( back.base().reverse(), tag::winding, back.reverse().winding() );
 			coords_Eu ( shadow_back ) = new_co;                                            }
 		else
 		{	assert ( coords_Eu.nb_of_components() > 1 );
-			std::vector < double > new_co = coords_q ( front.tip(), tag::spin, front.spin() );
+			std::vector < double > new_co = coords_q ( front.tip(), tag::winding, front.winding() );
 			coords_Eu ( shadow_front ) = new_co;
-			new_co = coords_q ( back.base().reverse(), tag::spin, back.reverse().spin() );
+			new_co = coords_q ( back.base().reverse(), tag::winding, back.reverse().winding() );
 			coords_Eu ( shadow_back ) = new_co;                                                }
 		neighbours.push_back ( shadow_front );
 		neighbours.push_back ( shadow_back );
@@ -5176,11 +5177,11 @@ void Mesh::baricenter ( const Cell & ver, const tag::Spin &,
 			Cell shadow = vec_cll[n];
 			n++;
 			if ( coords_Eu.nb_of_components() == 1 )
-			{	double new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+			{	double new_co = coords_q ( seg.tip(), tag::winding, seg.winding() );
 				coords_Eu ( shadow ) = new_co;                                 }
 			else
 			{	assert ( coords_Eu.nb_of_components() > 1 );
-				std::vector < double > new_co = coords_q ( seg.tip(), tag::spin, seg.spin() );
+				std::vector < double > new_co = coords_q ( seg.tip(), tag::winding, seg.winding() );
 				coords_Eu ( shadow ) = new_co;                                                }
 			neighbours.push_back ( shadow );                                                  }  }
 	assert ( n == neighbours.size() );

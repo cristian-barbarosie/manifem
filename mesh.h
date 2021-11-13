@@ -1,4 +1,5 @@
-//   mesh.h  2021.10.31
+
+//   mesh.h  2021.11.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -136,7 +137,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct IntrinsicOrientation { };  static const IntrinsicOrientation intrinsic_orientation;
 	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
 	struct RandomOrientation { };  static const RandomOrientation random_orientation;
-	struct Spin { };  static const Spin spin;
+	struct Winding { };  static const Winding winding;
 	struct Unfold { };  static const Unfold unfold;
 	struct OverRegion { };  static const OverRegion over_region;
 	struct OneGenerator { };  static const OneGenerator one_generator;
@@ -148,8 +149,9 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class Core;
 		class CellCore;  //  aka  class Cell::Core
 		class MeshCore;  //  aka  class Mesh::Core
-		class Action;  //  aka  class Function::Action
-		// defined in function.h
+		class Action;  //  aka class Function::Action, aka class Manfold::Action
+		// we define it in function.h because we need it for Function::MultiValued
+		// but we prefer the user to see it as an attribute of class Manifold
 		class InequalitySet;  //  aka  class Function::Inequality::Set
 		// defined in function.f
 		inline static size_t assert_diff ( const size_t a, const size_t b )
@@ -548,8 +550,8 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline void project ( ) const;  // both defined in manifold.h
 	inline void project ( const tag::Onto &, const Manifold m ) const;
 
-	class Spin;  // defined in function.h
-	inline Spin spin ( );  // defined in manifold.h
+	class Winding;  // defined in function.h
+	inline Winding winding ( );  // defined in manifold.h
 		
 #ifndef NDEBUG
 	inline void print_everything ( );
@@ -755,12 +757,12 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::DividedIn &, const size_t n               );
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n,
-	              const tag::Spin &, const tag::Util::Action & );
+	              const tag::Winding &, const tag::Util::Action & );
 	// builds a chain of n segment cells
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
-	              const tag::Spin &                                                        );
+	              const tag::Winding &                                                        );
 	// builds a triangular mesh from three sides
 	// the number of divisions defined by the divisions of the sides (must be the same)
 	
@@ -773,13 +775,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
-	              const tag::Spin &,
+	              const tag::Winding &,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         );
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
-	              const tag::WithTriangles &, const tag::Spin &                  );
-	// same as above, but take into account spins
-	// specific information about spins is included in the four segments
+	              const tag::WithTriangles &, const tag::Winding &                  );
+	// same as above, but take into account winding segments
+	// specific information about widing numbers is included in the four segments
 
 	inline Mesh
 	( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
@@ -1026,8 +1028,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// we are still in class Mesh
 	
 	void baricenter ( const Cell & ver );
-	void baricenter ( const Cell & ver, const tag::Spin & );
-	void baricenter ( const Cell & ver, const tag::Spin &,
+	void baricenter ( const Cell & ver, const tag::Winding & );
+	void baricenter ( const Cell & ver, const tag::Winding &,
                     const tag::ShadowVertices &, const std::vector < Cell > & vec_cll );
 
 	// iterators defined in iterator.h
@@ -1692,19 +1694,19 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Spin &, const tag::Util::Action &             );
+	             const tag::Winding &, const tag::Util::Action &             );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
-	             const tag::Spin &                                                        );
+	             const tag::Winding &                                                        );
 
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half );
 	
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
-	             const tag::Spin &                                                  );
+	             const tag::Winding &                                                  );
 	
 	void build ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	             const Cell & NE, const Cell & NW, const size_t m, const size_t n,
@@ -5462,14 +5464,14 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
-                    const tag::Spin &, const tag::Util::Action & s )
-// due to the spin, A.reverse may be equal to B (mesh may be a closed loop)
+                    const tag::Winding &, const tag::Util::Action & s )
+// due to the winding, A.reverse may be equal to B (mesh may be a closed loop)
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
 {	assert ( not A.is_positive() );
 	assert ( B.is_positive() );
-	this->build ( tag::segment, A, B, tag::divided_in, n, tag::spin, s );
+	this->build ( tag::segment, A, B, tag::divided_in, n, tag::winding, s );
 	Mesh::Connected::OneDim * this_core = tag::Util::assert_cast
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
 	this_core->first_ver = A;
@@ -5485,18 +5487,18 @@ inline Mesh::Mesh
 
 
 inline Mesh::Mesh
-( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA, const tag::Spin & )
+( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA, const tag::Winding & )
 
-// the tag::spin provides no specific information,
+// the tag::winding provides no specific information,
 // it just warns maniFEM that we are on a quotient manifold
-// and that it must take spins into account
-// specific information about spins is included in the three segments
+// and that it must take winding segments into account
+// specific information about winding numbers is included in the three segments
 
 : Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
-{	this->build ( tag::triangle, AB, BC, CA, tag::spin );  }
+{	this->build ( tag::triangle, AB, BC, CA, tag::winding );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
@@ -5515,40 +5517,40 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
                     const Mesh & east, const Mesh & north, const Mesh & west,
-                    const tag::Spin &,
+                    const tag::Winding &,
                     const tag::WithTriangles & wt                             )
 
 // 'wt' defaults to 'tag::not_with_triangles',
 // so constructor can be called with only six arguments
 
-// the tag::spin provides no specific information,
+// the tag::winding provides no specific information,
 // it just warns maniFEM that we are on a quotient manifold
-// and that it must take spins into account
-// specific information about spins is included in the four segments
+// and that it must take winding segments into account
+// specific information about winding numbers is included in the four segments
 
 : Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
 {	this->build ( tag::quadrangle, south, east, north, west,
-                wt != tag::not_with_triangles, tag::spin  );  }
+                wt != tag::not_with_triangles, tag::winding  );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
                     const Mesh & east, const Mesh & north, const Mesh & west,
-                    const tag::WithTriangles & wt, const tag::Spin &         )
+                    const tag::WithTriangles & wt, const tag::Winding &         )
 
-// the tag::spin provides no specific information,
+// the tag::winding provides no specific information,
 // it just warns maniFEM that we are on a quotient manifold
-// and that it must take spins into account
-// specific information about spins is included in the four segments
+// and that it must take winding segmtnts into account
+// specific information about winding numbers is included in the four segments
 
 : Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
 {	assert ( wt == tag::with_triangles );
-	this->build ( tag::quadrangle, south, east, north, west, true, tag::spin );  }
+	this->build ( tag::quadrangle, south, east, north, west, true, tag::winding );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,

@@ -135,7 +135,7 @@ inline bool flip_segment ( Mesh & msh, Cell & seg )
 	
 // assumes there is no higher-dimensional mesh "above" 'msh'
 
-// assumes that the current manifold is a quotient manifold (manipulates spins)
+// assumes that the current manifold is a quotient manifold (manipulates windings)
 
 {	Cell tri2 = msh.cell_in_front_of ( seg, tag::may_not_exist );
 	if ( not tri2.exists() ) return false; 
@@ -155,10 +155,10 @@ inline bool flip_segment ( Mesh & msh, Cell & seg )
 	Cell D = AD.tip();
 	assert ( DB.base().reverse() == D );
 	
-	assert ( seg.spin() == - BC.spin() - CA.spin() );
-	assert ( seg.spin() == AD.spin() + DB.spin() );
-	seg.spin() = CA.spin() + AD.spin();
-	assert ( seg.spin() == - BC.spin() - DB.spin() );
+	assert ( seg.winding() == - BC.winding() - CA.winding() );
+	assert ( seg.winding() == AD.winding() + DB.winding() );
+	seg.winding() = CA.winding() + AD.winding();
+	assert ( seg.winding() == - BC.winding() - DB.winding() );
 
 	B .cut_from_bdry_of ( seg, tag::do_not_bother );
 	A .reverse() .cut_from_bdry_of ( seg, tag::do_not_bother );
@@ -172,10 +172,10 @@ inline bool flip_segment ( Mesh & msh, Cell & seg )
 	tri1 .boundary() .closed_loop ( B );
 	tri2 .boundary() .closed_loop ( A );
 
-	if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::spin );
-	if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::spin );
-	if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::spin );
-	if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::spin );
+	if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::winding );
+	if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::winding );
+	if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::winding );
+	if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::winding );
 
 	return true;
 
@@ -195,9 +195,9 @@ double length_square ( Cell AB )
 	Function coords_Eu = mani_Eu.coordinates();
 	Cell A = AB.base().reverse();
 	Cell B = AB.tip();
-	Function::Action s = AB.spin();
+	Manifold::Action s = AB.winding();
 	std::vector < double > A_co = coords_q ( A );  // same as coords_Eu ( A )
-	std::vector < double > B_co = coords_q ( B, tag::spin, s );
+	std::vector < double > B_co = coords_q ( B, tag::winding, s );
 	size_t n = A_co.size();
 	assert ( n == B_co .size() );
 	double len_AB_2 = 0.;
@@ -231,7 +231,7 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 // assumes also that the current manifold is not implicit
 // (for an implicit manifold, a projection operation should be added)
 
-// assumes that the current manifold is a quotient manifold (manipulates spins)
+// assumes that the current manifold is a quotient manifold (manipulates windings)
 
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
@@ -252,9 +252,9 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 
 	Cell A = seg .base() .reverse();
 	Cell B = seg .tip();
-	Function::Action s = seg.spin();
+	Manifold::Action s = seg.winding();
 	std::vector < double > A_co = coords_q ( A );  // same as coords_Eu ( A )
-	std::vector < double > B_co = coords_q ( B, tag::spin, s );
+	std::vector < double > B_co = coords_q ( B, tag::winding, s );
 	size_t n = A_co.size();
 
 	Cell BC = tri1 .boundary() .cell_in_front_of ( B, tag::surely_exists );
@@ -266,8 +266,8 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 	Cell D = AD.tip();
 	assert ( DB.base().reverse() == D );
 
-	assert ( seg.spin() == - BC.spin() - CA.spin() );
-	assert ( seg.spin() == AD.spin() + DB.spin() );
+	assert ( seg.winding() == - BC.winding() - CA.winding() );
+	assert ( seg.winding() == AD.winding() + DB.winding() );
 
 	Cell E ( tag::vertex );   // put 'E' at the middle of 'seg' (aka AB)
 	for ( size_t i = 0; i < n; i++ )
@@ -278,11 +278,11 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 	CA .cut_from_bdry_of ( tri1, tag::do_not_bother );
 	AD .cut_from_bdry_of ( tri2, tag::do_not_bother );
 
-	Cell AE ( tag::segment, A.reverse(), E );  // zero spin
+	Cell AE ( tag::segment, A.reverse(), E );  // no winding
 	Cell CE ( tag::segment, C.reverse(), E );
-	CE .spin() = CA .spin();
+	CE .winding() = CA .winding();
 	Cell DE ( tag::segment, D.reverse(), E );
-	DE .spin() = - AD .spin();
+	DE .winding() = - AD .winding();
 
 	CE .glue_on_bdry_of ( tri1, tag::do_not_bother );
 	DE .reverse() .glue_on_bdry_of ( tri2, tag::do_not_bother );
@@ -313,11 +313,11 @@ inline bool split_segment ( Mesh & msh, Cell & seg )
 		if ( flip_segment ( msh, sseg ) )  break;  }
 		// we choose to to flip only one segment
 
-	if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::spin );
-	if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::spin );
-	if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::spin );
-	if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::spin );
-	if ( E .is_inner_to ( msh ) ) msh .baricenter ( E, tag::spin );
+	if ( A .is_inner_to ( msh ) ) msh .baricenter ( A, tag::winding );
+	if ( B .is_inner_to ( msh ) ) msh .baricenter ( B, tag::winding );
+	if ( C .is_inner_to ( msh ) ) msh .baricenter ( C, tag::winding );
+	if ( D .is_inner_to ( msh ) ) msh .baricenter ( D, tag::winding );
+	if ( E .is_inner_to ( msh ) ) msh .baricenter ( E, tag::winding );
 
 	return true;
 
@@ -333,7 +333,7 @@ void limit_number_of_neighbours ( Mesh msh )
 // assumes there is no higher-dimensional mesh "above" 'msh'
 
 // calls 'flip_segment' which assumes that the current manifold is a quotient manifold
-// (manipulates spins)
+// (manipulates windings)
 
 {	std::forward_list < Cell > has_few_neighbours, has_many_neighbours;
 
@@ -414,7 +414,7 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 // (for an implicit manifold, a projection operation should be added)
 
 // calls 'flip_segment' and 'split_segment' which assume that the current manifold
-// is a quotient manifold (manipulate spins)
+// is a quotient manifold (manipulate windings)
 
 {
 	double thr_sq = threshold * threshold;
@@ -488,7 +488,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 // (for an implicit manifold, a projection operation should be added)
 
 // assumes that the current manifold is a quotient manifold
-// (it manipulates spins)
+// (it manipulates windings)
 
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
@@ -541,9 +541,9 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		Cell A = seg.base().reverse();
 		Cell B = seg.tip();
-		Function::Action s = seg.spin();
+		Manifold::Action s = seg.winding();
 		std::vector < double > A_co = coords_q ( A );
-		std::vector < double > B_co = coords_q ( B, tag::spin, s );
+		std::vector < double > B_co = coords_q ( B, tag::winding, s );
 		size_t n = A_co.size();
 
 		Cell CB = tri1 .boundary() .cell_behind ( B, tag::surely_exists );
@@ -589,12 +589,12 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			for ( it_around_B++; it_around_B .in_range(); it_around_B++ )
 				list_of_segs .push_front ( *it_around_B );
 			
-			// change spin of these segments
+			// change winding number of these segments
 			if ( s != 0 )
 				for ( std::forward_list < Cell > ::iterator it_list = list_of_segs .begin();
 			        it_list != list_of_segs .end(); it_list ++                            )
 				{	Cell segm = *it_list;      // 'segm' points towards B
-				  segm.spin() -= s;     }
+				  segm.winding() -= s;     }
 
 			tri1 .remove_from_mesh ( msh );
 			tri2 .remove_from_mesh ( msh );
@@ -642,12 +642,12 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			for ( it_around_B++; it_around_B .in_range(); it_around_B++ )
 				list_of_segs .push_front ( *it_around_B );
 			
-			// change spin of these segments
+			// change winding number of these segments
 			if ( s != 0 )
 				for ( std::forward_list < Cell > ::iterator it_list = list_of_segs .begin();
 			        it_list != list_of_segs .end(); it_list ++                            )
 				{	Cell segm = *it_list;      // 'segm' points towards B
-				  segm.spin() -= s;     }
+				  segm.winding() -= s;     }
 
 			tri1 .remove_from_mesh ( msh );
 			tri2 .remove_from_mesh ( msh );
@@ -689,12 +689,12 @@ void remove_short_segments ( Mesh & msh, double threshold )
 			for ( it_around_A++; it_around_A .in_range(); it_around_A++ )
 				list_of_segs .push_front ( *it_around_A );
 			
-			// change spin of these segments
+			// change winding number of these segments
 			if ( s != 0 )
 				for ( std::forward_list < Cell > ::iterator it_list = list_of_segs .begin();
 			        it_list != list_of_segs .end(); it_list ++                            )
 				{	Cell segm = *it_list;      // 'segm' points towards A
-				  segm.spin() += s;     }
+				  segm.winding() += s;     }
 
 			tri1 .remove_from_mesh ( msh );
 			tri2 .remove_from_mesh ( msh );
@@ -730,5 +730,5 @@ void baricenters ( Mesh & msh )
 {	CellIterator it = msh.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		if ( P.is_inner_to ( msh ) ) msh.baricenter ( P, tag::spin );  }  }
+		if ( P.is_inner_to ( msh ) ) msh.baricenter ( P, tag::winding );  }  }
 	

@@ -1,5 +1,5 @@
 
-// function.h 2021.11.04
+// function.h 2021.11.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -109,7 +109,9 @@ class Function
 
 	class ActionGenerator;  // a generator of a discrete group
 	// an action will act on functions, particularly on coordinates of a quotient manifold
-	typedef tag::Util::Action Action; 
+	typedef tag::Util::Action Action;  // aka  class Manifold::Action
+	// we define it here because we need it for Function::MultiValued
+	// but we prefer the user to see it as an attribute of class Manifold
 	
 	inline ~Function();
 
@@ -143,10 +145,10 @@ class Function
 	class Jump;
 	inline Jump jump();
 	
-	class TakenOnCell;  class TakenOnCellWithSpin;
+	class TakenOnCell;  class TakenOnWindingCell;
 	inline Function::TakenOnCell operator() ( const Cell & cll ) const;
-	inline Function::TakenOnCellWithSpin operator()
-	( const Cell & cll, const tag::Spin &, const Function::Action & exp ) const;
+	inline Function::TakenOnWindingCell operator()
+	( const Cell & cll, const tag::Winding &, const Function::Action & exp ) const;
 
 	inline Function deriv ( const Function & x ) const;  // derivative with respect to x
 
@@ -284,7 +286,7 @@ class Function::Scalar : public Function::Core
 
 	virtual double get_value_on_cell ( Cell::Core * ) const = 0;
 	virtual double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const = 0;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const = 0;
 
 	virtual double set_value_on_cell ( Cell::Core *, const double & ) = 0;
 	// assign a numeric value to the function on the cell and return that value
@@ -374,7 +376,7 @@ class Function::Constant : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -428,7 +430,7 @@ class Function::Sum : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -476,7 +478,7 @@ class Function::Product : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -527,7 +529,7 @@ class Function::Power : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -576,7 +578,7 @@ class Function::Sqrt : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -630,7 +632,7 @@ class Function::Sin : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -684,7 +686,7 @@ class Function::Cos : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -796,7 +798,7 @@ class Function::Step : public Function::ArithmeticExpression
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -835,7 +837,7 @@ class Function::Vector : public Function::Core
 
 	virtual std::vector<double> get_value_on_cell ( Cell::Core * ) const = 0;
 	virtual std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const = 0;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const = 0;
 
 	virtual std::vector<double> set_value_on_cell
 	( Cell::Core *, const std::vector<double> & ) = 0;
@@ -886,7 +888,7 @@ class Function::Aggregate : public Function::Vector
 	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Vector
 
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
@@ -1012,7 +1014,7 @@ class Function::Diffeomorphism::OneDim
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar
 
 	double set_value_on_cell ( Cell::Core *, const double & );
@@ -1105,7 +1107,7 @@ class Function::Immersion : public Function::Vector, public Function::Map
 	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Vector
 
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
@@ -1264,7 +1266,7 @@ class Function::Composition : public Function::Scalar
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Scalar
 
@@ -1346,7 +1348,7 @@ class Function::CoupledWithField::Scalar
 
 	double get_value_on_cell ( Cell::Core * ) const;
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Scalar
 
@@ -1404,7 +1406,7 @@ class Function::CoupledWithField::Vector
 	
 	std::vector<double> get_value_on_cell ( Cell::Core * ) const;
 	std::vector<double> get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & );
 	// virtual from Function::Vector
 
@@ -1781,23 +1783,23 @@ inline Function::Action operator-
 //---------------------------------------------------------------------------------------
 
 	
-class Cell::Spin  // inutil ?
+class Cell::Winding  // inutil ?
 
-// temporary object returned by Cell::spin() and used for assingment of spins
+// temporary object returned by Cell::winding() and used for assingment of winding numbers
 
-// only positive segments have space reserved for holding a spin
+// only positive segments have space reserved for holding a winding number
 // however, the arithmetic operators of this class are crafted in a manner
-// which allows getting and setting the spin of a negative segment, too
+// which allows getting and setting the winding number of a negative segment, too
 // reversed arithmetic operations are performed on the reverse, positive, segment
 
 {	public :
 
 	Cell::Core * cll;  // usually a segment
-	// Cell::Spin should only be used as temporary objects
+	// Cell::Winding should only be used as temporary objects
 	// they should be immediately converted to a (reference to a) double or vector<double>
 	// so an ordinary pointer is OK here
 
-	inline Spin ( const Cell & c )
+	inline Winding ( const Cell & c )
 	:	cll { c.core }
 	{ assert ( this->cll );  }
 	
@@ -1838,7 +1840,7 @@ class Function::MultiValued
 
 class Function::Scalar::MultiValued : public Function::MultiValued, public Function::Scalar
 
-// here (finally) the method get_value_on_cell with tag::spin is meaningful
+// here (finally) the method get_value_on_cell with tag::winding is meaningful
 // suppose 'exp' is a pair of short integers (i,j)
 // then the above refered method checks that the 'actions' match
 // those of the current working manifold
@@ -1873,7 +1875,7 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 	double get_value_on_cell ( Cell::Core * ) const;
 	//  virtual from Function::Scalar, delegates to base
 
-	// double get_value_on_cell  with tag::spin  stays pure virtual from Function::Scalar
+	// double get_value_on_cell  with tag::winding  stays pure virtual from Function::Scalar
 
 	double set_value_on_cell ( Cell::Core *, const double & );
 	//   virtual from Function::Scalar, here execution forbidden
@@ -1939,7 +1941,7 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	//  virtual from Function::Scalar
 	
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -2002,7 +2004,7 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	//   defined by Function::Scalar::MultiValued, delegates to base
 
 	double get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	//  virtual from Function::Scalar
 	
 	// double set_value_on_cell ( Cell::Core *, const double & )
@@ -2050,7 +2052,7 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 
 	std::vector < double > get_value_on_cell ( Cell::Core * ) const;
 
-	// std::vector < double > get_value_on_cell  with tag::spin
+	// std::vector < double > get_value_on_cell  with tag::winding
 	//   stays pure virtual from Function::Vector
 
 	std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & );
@@ -2127,7 +2129,7 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	//   defined by Function::Vector::MultiValued, delegates to base
 
 	std::vector < double > get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	//  virtual from Function::Vector
 	
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
@@ -2203,7 +2205,7 @@ class Function::Vector::MultiValued::JumpIsLinear : public Function::Vector::Mul
 	//   defined by Function::Vector::MultiValued, delegates to base
 
 	std::vector < double > get_value_on_cell
-	( Cell::Core *, const tag::Spin &, const Function::Action & exp ) const;
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	//  virtual from Function::Vector
 	
 	// std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & )
@@ -2223,9 +2225,9 @@ class Function::Jump
 
 // a Function::Jump object describes the behaviour of a multi-function
 // when the point goes "around" the manifold a given number of times
-// a Cell::Spin describes this number of times
+// a Cell::Winding describes this number of times
 
-// so a Function::Jump can be applied to a Cell::Spin, producing as result
+// so a Function::Jump can be applied to a Cell::Winding, producing as result
 // a double for a Function::Scalar::MultiValued
 // or a vector of doubles for a Function::Vector::MultiValued
 
@@ -2614,28 +2616,28 @@ class Function::TakenOnCell
 //-----------------------------------------------------------------------------------------//
 
 
-class Function::TakenOnCellWithSpin
+class Function::TakenOnWindingCell
 
 {	public :
 
   Function::Core * f;
-	const Function::Action & spin;
+	const Function::Action & winding;
 	
-	// Function::TakenOnCellWithSpin should only be used as temporary objects
+	// Function::TakenOnWindingCell should only be used as temporary objects
 	// they should be immediately converted to a (reference to a) double or vector<double>
 	// so an ordinary pointer is OK here
 	
 	Cell::Core * const cll;
 
-	inline TakenOnCellWithSpin ( const Function & ff, const Cell & c,
+	inline TakenOnWindingCell ( const Function & ff, const Cell & c,
                                const Function::Action & exp )
-	:	f { ff.core }, spin { exp }, cll { c.core }
+	:	f { ff.core }, winding { exp }, cll { c.core }
 	{	}
 
-	TakenOnCellWithSpin ( const Function::TakenOnCellWithSpin & other ) = delete;
-	TakenOnCellWithSpin ( const Function::TakenOnCellWithSpin && other ) = delete;
+	TakenOnWindingCell ( const Function::TakenOnWindingCell & other ) = delete;
+	TakenOnWindingCell ( const Function::TakenOnWindingCell && other ) = delete;
 	
-	inline Function::TakenOnCellWithSpin & operator= ( const Function::TakenOnCellWithSpin & other )
+	inline Function::TakenOnWindingCell & operator= ( const Function::TakenOnWindingCell & other )
 	{	if ( this->f->nb_of_components() == 1 )
 		{	(*this) = static_cast <double> ( other );
 			return *this;                            }
@@ -2643,7 +2645,7 @@ class Function::TakenOnCellWithSpin
 		{	(*this) = static_cast <std::vector<double>> ( other );
 			return *this;                                          }  }
 
-	inline Function::TakenOnCellWithSpin & operator= ( const Function::TakenOnCellWithSpin && other )
+	inline Function::TakenOnWindingCell & operator= ( const Function::TakenOnWindingCell && other )
 	{	if ( this->f->nb_of_components() == 1 )
 		{	(*this) = static_cast <double> ( other );
 			return *this;                             }
@@ -2655,7 +2657,7 @@ class Function::TakenOnCellWithSpin
 	// can be used like in  double x = f(cll)  or  cout << f(cll)
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
-		return f_scalar->get_value_on_cell ( this->cll, tag::spin, this->spin );     }
+		return f_scalar->get_value_on_cell ( this->cll, tag::winding, this->winding );     }
 		
 	inline double operator= ( const double & x )
 	// can be used like in  f(cll) = 2.0
@@ -2695,7 +2697,7 @@ class Function::TakenOnCellWithSpin
 	// can be used like in  vector<double> vec = f(cll)
 	{	Function::Vector * f_vect =
 			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
-	  return f_vect->get_value_on_cell ( this->cll, tag::spin, this->spin );       }
+	  return f_vect->get_value_on_cell ( this->cll, tag::winding, this->winding );       }
 		
 	inline std::vector<double> operator= ( const std::vector<double> & x )
 	// can be used like in  f(cll) = vec
@@ -2703,7 +2705,7 @@ class Function::TakenOnCellWithSpin
 			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
 		return f_vect->set_value_on_cell ( this->cll, x );                           }
 
-};  // end of class Function::TakenOnCellWithSpin
+};  // end of class Function::TakenOnWindingCell
 
 //-----------------------------------------------------------------------------------------//
 
@@ -2777,7 +2779,7 @@ class tag::Util::InequalitySet
 
 	inline bool on_cell ( const Cell & ) const;
 	inline bool on_cell
-	( const Cell &, const tag::Spin &, const Function::Action & ) const;
+	( const Cell &, const tag::Winding &, const Function::Action & ) const;
 	
 };
 
@@ -2822,11 +2824,11 @@ inline bool Function::Inequality::Set::on_cell ( const Cell & cll ) const
 
 
 inline bool Function::Inequality::Set::on_cell
-( const Cell & cll, const tag::Spin &, const Function::Action & a ) const
+( const Cell & cll, const tag::Winding &, const Function::Action & a ) const
 
 {	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
         it = this->vec.begin(); it != this->vec.end(); it++             )
-		if ( ( it->expr ) ( cll, tag::spin, a ) > 0. ) return false;
+		if ( ( it->expr ) ( cll, tag::winding, a ) > 0. ) return false;
 	return true;                                                             }
 
 
@@ -2895,9 +2897,9 @@ inline Function::TakenOnCell Function::operator() ( const Cell & cll ) const
 {	return Function::TakenOnCell { this->core, cll.core };   }
 
 
-inline Function::TakenOnCellWithSpin Function::operator()
-( const Cell & cll, const tag::Spin &, const Function::Action & exp ) const
-{	return Function::TakenOnCellWithSpin ( *this, cll, exp );   }
+inline Function::TakenOnWindingCell Function::operator()
+( const Cell & cll, const tag::Winding &, const Function::Action & exp ) const
+{	return Function::TakenOnWindingCell ( *this, cll, exp );   }
 
 //----------------------------------------------------------------------------------//
 //----------------------------------------------------------------------------------//
