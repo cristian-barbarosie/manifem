@@ -90,7 +90,7 @@ int main ( )
 	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri, tag::spin );
+		fe.dock_on ( small_tri, tag::winding );
 		// run twice over the four vertices of 'small_tri'
 		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
 		for ( it_V.reset(); it_V.in_range(); it_V++ )
@@ -112,7 +112,7 @@ int main ( )
 				double integral = fe.integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy );
 				matrix_A.coeffRef ( numbering[V], numbering[W] ) += integral;
 				vector_b ( numbering[V] ) -= jump_V_W * integral;
-				jump_V_W += jump_of_solution ( seg.spin() );
+				jump_V_W += jump_of_solution ( seg .winding() );
 				W = seg.tip();
 				if ( V == W ) break;
 				seg = small_tri .boundary() .cell_in_front_of ( seg.tip() );                          }

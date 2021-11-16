@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.11.13
+//   mesh.h  2021.11.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -138,6 +138,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
 	struct RandomOrientation { };  static const RandomOrientation random_orientation;
 	struct Winding { };  static const Winding winding;
+	struct Singular { };  static const Singular singular;
 	struct Unfold { };  static const Unfold unfold;
 	struct OverRegion { };  static const OverRegion over_region;
 	struct OneGenerator { };  static const OneGenerator one_generator;
@@ -762,7 +763,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
-	              const tag::Winding &                                                        );
+	              const tag::Winding &                                                     );
+	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+	              const tag::Winding &, const tag::Singular &, const Cell & S              );
 	// builds a triangular mesh from three sides
 	// the number of divisions defined by the divisions of the sides (must be the same)
 	
@@ -1694,19 +1697,22 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	void build ( const tag::Segment &,  // builds a chain of n segment cells
 	             const Cell & A, const Cell & B, const tag::DividedIn &, const size_t n,
-	             const tag::Winding &, const tag::Util::Action &             );
+	             const tag::Winding &, const tag::Util::Action &                        );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 
 	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
-	             const tag::Winding &                                                        );
+	             const tag::Winding &                                                     );
 
+	void build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+	             const tag::Winding &, const tag::Singular &, const Cell & S              );
+	
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half );
 	
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
-	             const tag::Winding &                                                  );
+	             const tag::Winding &                                               );
 	
 	void build ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	             const Cell & NE, const Cell & NW, const size_t m, const size_t n,
@@ -5499,6 +5505,25 @@ inline Mesh::Mesh
          tag::freshly_created, tag::is_positive                                           )
 
 {	this->build ( tag::triangle, AB, BC, CA, tag::winding );  }
+
+
+inline Mesh::Mesh
+( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+  const tag::Winding &, const tag::Singular &, const Cell & O                )
+
+// the tag::winding provides no specific information,
+// it just warns maniFEM that we are on a quotient manifold
+// and that it must take winding segments into account
+// specific information about winding numbers is included in the three segments
+
+// cell O is special, it's like the vertex of a cone
+// cell O must be the extremity of two of the three segments provided as arguments
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::triangle, AB, BC, CA, tag::winding, tag::singular, O );  }
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,

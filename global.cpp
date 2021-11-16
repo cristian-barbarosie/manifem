@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.13
+// global.cpp 2021.11.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -213,7 +213,9 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 		// improve by moving ceiling to ground, leaving ceiling empty !
 
 	// last triangle
-	Cell seg_on_CA = CA.cell_behind ( Q_CA );
+	Cell seg_on_CA = CA .cell_in_front_of ( C );
+	assert ( seg_on_CA == CA .cell_behind ( Q_CA ) );
+	assert ( seg_on_BC == BC .cell_behind ( C ) );
 	assert ( not ground.empty() );
 	Cell ground_seg = *(ground.begin());
 	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
@@ -256,19 +258,13 @@ Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
 	// seg2 begins in V
 	return V;                                                                      }
 
-} // end of anonymous namespace
-
-
-void Mesh::build ( const tag::Triangle &,
-                   const Mesh & AB, const Mesh & BC, const Mesh & CA,
-                   const tag::Winding &                                 )
-
-// see paragraph 12.4 in the manual
-// the tag:::winding tells maniFEM that we are on a quotient manifold
-// and that the segments provided (AB, BC, CA) may be winding
 	
-// beware, sides may be closed loops
-	
+void build_common  ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+                               const Cell & A, const Cell & B, const Cell & C,
+                     bool not_singular                                           )
+
+// C may be singular
+
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current manifold
 	Manifold::Quotient * mani_q = tag::Util::assert_cast
@@ -281,15 +277,7 @@ void Mesh::build ( const tag::Triangle &,
 	size_t N = AB.number_of ( tag::segments );
 	assert ( N == BC.number_of ( tag::segments ) );
 	assert ( N == CA.number_of ( tag::segments ) );
-
-	// recover corners from the sides
-	// the process is different from the one in 'build' without tag::winding
-	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
-	// become meaningless
-	Cell A = find_common_vertex ( CA, AB );
-	Cell B = find_common_vertex ( AB, BC );
-	Cell C = find_common_vertex ( BC, CA );
-
+	
 	// we keep a list of horizontal segments (parallel to AB)
 	// useful for the next layer of triangles
 	std::list < Cell > ground, ceiling;
@@ -308,21 +296,26 @@ void Mesh::build ( const tag::Triangle &,
 	     shadow_P_CA ( tag::vertex ), shadow_Q_CA ( tag::vertex );
 
   // we keep winding numbers of vertices relative to A
-	Manifold::Action winding_B = 0, winding_C = 0;
+	Manifold::Action winding_B = 0;
+	// C may be singular, so we keep two different winding numbers for it
 	{ // just a block of code for hiding 'it'
 	CellIterator it = AB.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_B += seg.winding();  }
-	} { // just a block of code for hiding 'it'
-	CellIterator it = CA.iterator ( tag::over_segments );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell seg = *it;  winding_C -= seg.winding();  }
-	} { // just a block of code for hiding 'it'
-	Manifold::Action winding_test = winding_B;
+	} // just a block of code for hiding 'it'
+	Manifold::Action winding_C_from_B = winding_B;
+	{ // just a block of code for hiding 'it'
 	CellIterator it = BC.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
-	{	Cell seg = *it;  winding_test += seg.winding();  }
-	assert ( winding_test == winding_C );
+	{	Cell seg = *it;  winding_C_from_B += seg.winding();  }
+	#ifndef NDEBUG
+	} { // just a block of code for hiding 'it'
+	Manifold::Action winding_C_from_A = 0;
+	CellIterator it = CA.iterator ( tag::over_segments );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell seg = *it;  winding_C_from_A -= seg.winding();  }
+	if ( not_singular ) assert ( winding_C_from_A == winding_C_from_B );
+	#endif  // NDEBUG
 	} // just a block of code for hiding 'it'
 	
 	Manifold::Action winding_Q_AB_ini = 0, winding_P_BC = winding_B, winding_Q_CA = 0;
@@ -351,12 +344,12 @@ void Mesh::build ( const tag::Triangle &,
 		v = coords_q ( P_BC, tag::winding, winding_P_BC );
 		coords_Eu ( shadow_P_BC ) = v;
 		Cell P_AB = A, Q_BC = C;
-		Manifold::Action winding_P_AB = 0, winding_Q_BC = winding_C;
+		Manifold::Action winding_P_AB = 0, winding_Q_BC = winding_C_from_B;
 		// build the first triangle on this layer
 		Cell previous_seg ( tag::segment, ground_ver.reverse(), P_CA );
 		previous_seg.winding() = - ground_seg.winding() - seg_Q_CA.winding();
 		Cell tri ( tag::triangle, ground_seg, previous_seg, seg_Q_CA );
-		tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
+		tri.add_to_mesh ( msh );  // 'msh' is the mesh we are building
 		Cell previous_ver = Q_CA;
 		Manifold::Action winding_prev_ver = winding_Q_CA;
 		ceiling.clear();
@@ -405,7 +398,7 @@ void Mesh::build ( const tag::Triangle &,
 			horizontal_seg.winding() = winding_prev_ver - winding_S;
 			assert ( horizontal_seg.winding() + new_seg.winding() - previous_seg.winding() == 0 );
 		  Cell tri_1 ( tag::triangle, previous_seg.reverse(), new_seg, horizontal_seg );
-		  tri_1.add_to_mesh ( *this );  // 'this' is the mesh we are building
+		  tri_1.add_to_mesh ( msh );  // 'msh' is the mesh we are building
 			it_ground++;  assert ( it_ground != ground.end() );
 			ground_seg = *it_ground;
 			if ( j == N ) previous_seg = seg_P_BC;
@@ -415,7 +408,7 @@ void Mesh::build ( const tag::Triangle &,
 				previous_seg.winding() = winding_S - winding_ground_ver;                }
 			assert ( ground_seg.winding() + previous_seg.winding() - new_seg.winding() == 0 );
 		  Cell tri_2 ( tag::triangle, ground_seg, previous_seg, new_seg.reverse() );
-			tri_2.add_to_mesh ( *this );  // 'this' is the mesh we are building
+			tri_2.add_to_mesh ( msh );  // 'msh' is the mesh we are building
 			previous_ver = S;  winding_prev_ver = winding_S;
 			// add horizontal_seg.reverse() to future ground
 			ceiling.push_back ( horizontal_seg.reverse() );                              	  }
@@ -425,14 +418,76 @@ void Mesh::build ( const tag::Triangle &,
 		// improve by moving ceiling to ground, leaving ceiling empty !
 
 	// last triangle
-	Cell seg_on_CA = CA.cell_behind ( Q_CA );
+	Cell seg_on_CA = CA .cell_in_front_of ( C );
+	Cell seg_on_BC = BC .cell_behind ( C );
 	assert ( not ground.empty() );
 	Cell ground_seg = *(ground.begin());
-	assert ( seg_P_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
-	Cell tri ( tag::triangle, seg_P_BC, seg_on_CA, ground_seg );
-	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
-		
+	if ( not_singular )
+		assert ( seg_on_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
+	// above assertion usually false
+	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
+	tri.add_to_mesh ( msh );  // 'this' is the mesh we are building
+	
+}  // end of  build_common
+	
+} // end of anonymous namespace
+
+
+void Mesh::build ( const tag::Triangle &,
+                   const Mesh & AB, const Mesh & BC, const Mesh & CA,
+                   const tag::Winding &                                 )
+
+// see paragraph 12.4 in the manual
+// the tag:::winding tells maniFEM that we are on a quotient manifold
+// and that the segments provided (AB, BC, CA) may be winding
+	
+// beware, sides may be closed loops
+	
+{	// recover corners from the sides
+	// the process is different from the one in 'build' without tag::winding
+	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
+	// become meaningless
+	Cell A = find_common_vertex ( CA, AB );
+	Cell B = find_common_vertex ( AB, BC );
+	Cell C = find_common_vertex ( BC, CA );
+
+	build_common ( *this, AB, BC, CA, A, B, C, true );
+	// last argument true means "no singularity", perform all checkings
+
 } // end of Mesh::build with tag::triangle and tag::winding
+
+
+void Mesh::build ( const tag::Triangle &,
+                   const Mesh & AB, const Mesh & BC, const Mesh & CA,
+                   const tag::Winding &, const tag::Singular &, const Cell & O )
+
+// see paragraph 12.4 in the manual
+// the tag:::winding tells maniFEM that we are on a quotient manifold
+// and that the segments provided (AB, BC, CA) may be winding
+	
+// beware, sides may be closed loops
+
+// tag::singular means Cell O is special, it is like the vertex of a cone
+// of the segments provided as arguments has O as base and other as tip
+	
+{	// we search for the side which does not contain O and call it A_B
+	// in this new notation, O will be equal to C
+	
+	Mesh A_B = AB, B_C = BC, C_A = CA;
+	// if ( A == O )
+	if ( not O .belongs_to ( B_C ) )  //  A == O
+	{	A_B = BC;  B_C = CA;  C_A = AB;  }
+	if ( not O .belongs_to ( C_A ) )  //  B == O
+	{	A_B = CA;  B_C = AB;  C_A = BC;  }
+
+	Cell A = find_common_vertex ( C_A, A_B );
+	Cell B = find_common_vertex ( A_B, B_C );	
+
+	// 'build_common' builds all triangles but the last one, touching C
+	build_common  ( *this, A_B, B_C, C_A, A, B, O, false );
+	// last argument false means there is a singularity, skip some checkings
+		
+} // end of Mesh::build with tag::triangle and tag::winding and tag::singular
 
 //----------------------------------------------------------------------------------//
 
