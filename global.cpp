@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.15
+// global.cpp 2021.11.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -259,9 +259,11 @@ Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
 	return V;                                                                      }
 
 	
-void build_common  ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
-                               const Cell & A, const Cell & B, const Cell & C,
-                     bool not_singular                                           )
+void build_common
+( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+            const Cell & A, const Cell & B, const Cell & C,
+  Cell & seg1, Cell & seg2, Manifold::Action & winding_C_from_B,
+  bool not_singular                                             )
 
 // C may be singular
 
@@ -309,7 +311,7 @@ void build_common  ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_C_from_B += seg.winding();  }
 	#ifndef NDEBUG
-	} { // just a block of code for hiding 'it'
+	} { // just a block of code for hiding names
 	Manifold::Action winding_C_from_A = 0;
 	CellIterator it = CA.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
@@ -320,7 +322,10 @@ void build_common  ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA
 	
 	Manifold::Action winding_Q_AB_ini = 0, winding_P_BC = winding_B, winding_Q_CA = 0;
 
-	for ( size_t i = 1; i < N; i++ ) // "vertical" movement
+	// we start with i=2, meaning triangles will be built
+	// except the last four, near C
+	// calling code must build those four triangles
+	for ( size_t i = 2; i < N; i++ ) // "vertical" movement
 	{	// advance one level upwards and slightly right (parallel to CA)
 		std::list<Cell>::iterator it_ground = ground.begin();
 		Cell ground_seg = *it_ground;
@@ -417,16 +422,7 @@ void build_common  ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA
 		ground = ceiling;                                                                    }
 		// improve by moving ceiling to ground, leaving ceiling empty !
 
-	// last triangle
-	Cell seg_on_CA = CA .cell_in_front_of ( C );
-	Cell seg_on_BC = BC .cell_behind ( C );
-	assert ( not ground.empty() );
-	Cell ground_seg = *(ground.begin());
-	if ( not_singular )
-		assert ( seg_on_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
-	// above assertion usually false
-	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
-	tri.add_to_mesh ( msh );  // 'this' is the mesh we are building
+	// return two segments (elements of 'ground') and also 'winding_C_from_B'
 	
 }  // end of  build_common
 	
@@ -451,8 +447,26 @@ void Mesh::build ( const tag::Triangle &,
 	Cell B = find_common_vertex ( AB, BC );
 	Cell C = find_common_vertex ( BC, CA );
 
-	build_common ( *this, AB, BC, CA, A, B, C, true );
+	// 'build_common' builds all triangles but the last four, near C
+	Manifold::Action winding_C_from_B;
+	Cell seg1 ( tag::non_existent ), seg2 ( tag::non_existent );
+	build_common ( *this, AB, BC, CA, A, B, C, seg1, seg2, winding_C_from_B, true );
 	// last argument true means "no singularity", perform all checkings
+
+	// build last four triangles
+	// 'build_common' provides two segments (elements of 'ground')
+	// and also 'winding_C_from_B'
+
+
+
+	
+	Cell seg_on_CA = CA .cell_in_front_of ( C );
+	Cell seg_on_BC = BC .cell_behind ( C );
+	assert ( not ground.empty() );
+	Cell ground_seg = *(ground.begin());
+	assert ( seg_on_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
+	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
+	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
 
 } // end of Mesh::build with tag::triangle and tag::winding
 
@@ -483,10 +497,21 @@ void Mesh::build ( const tag::Triangle &,
 	Cell A = find_common_vertex ( C_A, A_B );
 	Cell B = find_common_vertex ( A_B, B_C );	
 
-	// 'build_common' builds all triangles but the last one, touching C
-	build_common  ( *this, A_B, B_C, C_A, A, B, O, false );
+	// 'build_common' builds all triangles but the last four, near C
+	std::list < Cell > ground = build_common  ( *this, A_B, B_C, C_A, A, B, O, false );
 	// last argument false means there is a singularity, skip some checkings
 		
+	// build last four triangles
+	// ground must contain two segments
+	Cell seg_on_CA = C_A .cell_in_front_of ( C );
+	Cell seg_on_BC = B_C .cell_behind ( C );
+	assert ( not ground.empty() );
+	Cell ground_seg = *(ground.begin());
+	// assert ( seg_on_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
+	// assertion above is often false
+	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
+	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
+
 } // end of Mesh::build with tag::triangle and tag::winding and tag::singular
 
 //----------------------------------------------------------------------------------//
