@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.16
+// global.cpp 2021.11.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -262,9 +262,11 @@ Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
 void build_common
 ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
             const Cell & A, const Cell & B, const Cell & C,
-  Cell & seg1, Cell & seg2, Manifold::Action & winding_C_from_B,
+  Cell & seg1, Cell & seg2, Manifold::Action & winding_C_from_A,
   bool not_singular                                             )
 
+// return two segments seg1 and seg2 and also 'winding_C_from_A'
+	
 // C may be singular
 
 {	Manifold space = Manifold::working;
@@ -305,19 +307,17 @@ void build_common
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_B += seg.winding();  }
 	} // just a block of code for hiding 'it'
-	Manifold::Action winding_C_from_B = winding_B;
+	Manifold::Action winding_C_via_B = winding_B;
 	{ // just a block of code for hiding 'it'
 	CellIterator it = BC.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
-	{	Cell seg = *it;  winding_C_from_B += seg.winding();  }
-	#ifndef NDEBUG
+	{	Cell seg = *it;  winding_C_via_B += seg.winding();  }
 	} { // just a block of code for hiding names
-	Manifold::Action winding_C_from_A = 0;
+	winding_C_from_A = 0;
 	CellIterator it = CA.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_C_from_A -= seg.winding();  }
-	if ( not_singular ) assert ( winding_C_from_A == winding_C_from_B );
-	#endif  // NDEBUG
+	if ( not_singular ) assert ( winding_C_from_A == winding_C_via_B );
 	} // just a block of code for hiding 'it'
 	
 	Manifold::Action winding_Q_AB_ini = 0, winding_P_BC = winding_B, winding_Q_CA = 0;
@@ -349,7 +349,7 @@ void build_common
 		v = coords_q ( P_BC, tag::winding, winding_P_BC );
 		coords_Eu ( shadow_P_BC ) = v;
 		Cell P_AB = A, Q_BC = C;
-		Manifold::Action winding_P_AB = 0, winding_Q_BC = winding_C_from_B;
+		Manifold::Action winding_P_AB = 0, winding_Q_BC = winding_C_via_B;
 		// build the first triangle on this layer
 		Cell previous_seg ( tag::segment, ground_ver.reverse(), P_CA );
 		previous_seg.winding() = - ground_seg.winding() - seg_Q_CA.winding();
@@ -422,7 +422,7 @@ void build_common
 		ground = ceiling;                                                                    }
 		// improve by moving ceiling to ground, leaving ceiling empty !
 
-	// return two segments (elements of 'ground') and also 'winding_C_from_B'
+	// return two segments (elements of 'ground') and also 'winding_C_from_A'
 	
 }  // end of  build_common
 	
@@ -431,7 +431,7 @@ void build_common
 
 void Mesh::build ( const tag::Triangle &,
                    const Mesh & AB, const Mesh & BC, const Mesh & CA,
-                   const tag::Winding &                                 )
+                   const tag::Winding &                              )
 
 // see paragraph 12.4 in the manual
 // the tag:::winding tells maniFEM that we are on a quotient manifold
@@ -447,32 +447,51 @@ void Mesh::build ( const tag::Triangle &,
 	Cell B = find_common_vertex ( AB, BC );
 	Cell C = find_common_vertex ( BC, CA );
 
+	std::cout << "global.cpp line 450" << std::endl;
+																				
 	// 'build_common' builds all triangles but the last four, near C
-	Manifold::Action winding_C_from_B;
+	Manifold::Action winding_C_from_A;
 	Cell seg1 ( tag::non_existent ), seg2 ( tag::non_existent );
-	build_common ( *this, AB, BC, CA, A, B, C, seg1, seg2, winding_C_from_B, true );
+	build_common ( *this, AB, BC, CA, A, B, C, seg1, seg2, winding_C_from_A, true );
 	// last argument true means "no singularity", perform all checkings
 
 	// build last four triangles
 	// 'build_common' provides two segments (elements of 'ground')
-	// and also 'winding_C_from_B'
-
-
-
-	
-	Cell seg_on_CA = CA .cell_in_front_of ( C );
-	Cell seg_on_BC = BC .cell_behind ( C );
-	assert ( not ground.empty() );
-	Cell ground_seg = *(ground.begin());
-	assert ( seg_on_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
-	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
-	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
+	// and also 'winding_C_via_B'
+	Cell CE = CA .cell_in_front_of ( C );
+	Cell E = CE .tip();
+	Cell EF = CA. cell_in_front_of ( E );
+	Cell F = EF .tip();
+	assert ( F == seg1 .base() .reverse() );
+	Cell I = seg1 .tip();
+	assert ( I == seg2 .base() .reverse() );
+	Cell H = seg2 .tip();
+	assert ( H .belongs_to ( BC ) );
+	Cell HG = BC .cell_in_front_of ( H );
+	Cell G = HG .tip();
+	Cell GC = BC .cell_in_front_of ( G );
+	assert ( GC .tip() == C );
+	Cell IE ( tag::segment, I .reverse(), E );
+	IE .winding() = EF .winding() + seg1 .winding();
+	Cell GI ( tag::segment, G .reverse(), I );
+	GI .winding() = - seg2 .winding() - HG .winding();
+	Cell GE ( tag::segment, G .reverse(), E );
+	GE .winding() = - IE .winding() - GI .winding();
+	assert ( GE .winding() == CE .winding() - GC .winding() );
+	Cell FIE ( tag::triangle, seg1, IE, EF );
+	FIE .add_to_mesh ( *this );
+	Cell GIH ( tag::triangle, GI, seg2, HG );
+	GIH .add_to_mesh ( *this );
+	Cell IGE ( tag::triangle, GI .reverse(), GE, IE .reverse() );
+	IGE .add_to_mesh ( *this );
+	Cell CEG ( tag::triangle, CE, GE .reverse(), GC );
+	CEG .add_to_mesh ( *this );
 
 } // end of Mesh::build with tag::triangle and tag::winding
 
 
 void Mesh::build ( const tag::Triangle &,
-                   const Mesh & AB, const Mesh & BC, const Mesh & CA,
+                   const Mesh & A_B, const Mesh & B_C, const Mesh & C_A,
                    const tag::Winding &, const tag::Singular &, const Cell & O )
 
 // see paragraph 12.4 in the manual
@@ -484,33 +503,100 @@ void Mesh::build ( const tag::Triangle &,
 // tag::singular means Cell O is special, it is like the vertex of a cone
 // of the segments provided as arguments has O as base and other as tip
 	
-{	// we search for the side which does not contain O and call it A_B
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	
+	// we search for the side which does not contain O and call it AB
 	// in this new notation, O will be equal to C
 	
-	Mesh A_B = AB, B_C = BC, C_A = CA;
-	// if ( A == O )
-	if ( not O .belongs_to ( B_C ) )  //  A == O
-	{	A_B = BC;  B_C = CA;  C_A = AB;  }
-	if ( not O .belongs_to ( C_A ) )  //  B == O
-	{	A_B = CA;  B_C = AB;  C_A = BC;  }
+	Mesh AB = A_B, BC = B_C, CA = C_A;
+	if ( not O .belongs_to ( BC ) )  //  A == O
+	{	AB = B_C;  BC = C_A;  CA = A_B;  }
+	if ( not O .belongs_to ( CA ) )  //  B == O
+	{	AB = C_A;  BC = A_B;  CA = B_C;  }
 
-	Cell A = find_common_vertex ( C_A, A_B );
-	Cell B = find_common_vertex ( A_B, B_C );	
+	Cell A = find_common_vertex ( CA, AB );
+	Cell B = find_common_vertex ( AB, BC );	
 
 	// 'build_common' builds all triangles but the last four, near C
-	std::list < Cell > ground = build_common  ( *this, A_B, B_C, C_A, A, B, O, false );
+	// recall that C == O
+	Manifold::Action winding_C_from_A;
+	Cell seg1 ( tag::non_existent ), seg2 ( tag::non_existent );
+	build_common ( *this, AB, BC, CA, A, B, O, seg1, seg2, winding_C_from_A, false );
 	// last argument false means there is a singularity, skip some checkings
-		
+
 	// build last four triangles
-	// ground must contain two segments
-	Cell seg_on_CA = C_A .cell_in_front_of ( C );
-	Cell seg_on_BC = B_C .cell_behind ( C );
-	assert ( not ground.empty() );
-	Cell ground_seg = *(ground.begin());
-	// assert ( seg_on_BC.winding() + seg_on_CA.winding() + ground_seg.winding() == 0 );
-	// assertion above is often false
-	Cell tri ( tag::triangle, seg_on_BC, seg_on_CA, ground_seg );
-	tri.add_to_mesh ( *this );  // 'this' is the mesh we are building
+	// 'build_common' provides two segments (elements of 'ground')
+	// and also 'winding_C_via_B'
+	// recall that C == O
+	Cell OE = CA .cell_in_front_of ( O );
+	Cell E = OE .tip();
+	Cell EF = CA. cell_in_front_of ( E );
+	Cell F = EF .tip();
+	assert ( F == seg1 .base() .reverse() );
+	Cell I = seg1 .tip();
+	assert ( I == seg2 .base() .reverse() );
+	Cell H = seg2 .tip();
+	assert ( H .belongs_to ( BC ) );
+	Cell HG = BC .cell_in_front_of ( H );
+	Cell G = HG .tip();
+	Cell GO = BC .cell_in_front_of ( G );
+	assert ( GO .tip() == O );
+	Cell IE ( tag::segment, I .reverse(), E );
+	IE .winding() = EF .winding() + seg1 .winding();
+	Cell GI ( tag::segment, G .reverse(), I );
+	GI .winding() = - seg2 .winding() - HG .winding();
+	Cell GE ( tag::segment, G .reverse(), E );
+	GE .winding() = - IE .winding() - GI .winding();
+	// assert ( GE .winding() == CE .winding() - GC .winding() );
+	// assertion above is usually false
+	Cell FIE ( tag::triangle, seg1, IE, EF );
+	FIE .add_to_mesh ( *this );
+	Cell GIH ( tag::triangle, GI, seg2, HG );
+	GIH .add_to_mesh ( *this );
+
+	// now the last triangle
+	// vertices G and E may be one and the same (if BC == CA .reverse() )
+	// recall that C == O
+	if ( E == G )  // we must create one more vertex
+	{	Manifold::Action winding_E = winding_C_from_A + OE .winding(),
+		                 winding_G = winding_E - IE .winding() - GI .winding();
+		Cell shadow_E ( tag::vertex ), shadow_G ( tag::vertex );
+		std::vector < double > v = coords_q ( E, tag::winding, winding_E );
+		coords_Eu ( shadow_E ) = v;
+		v = coords_q ( G, tag::winding, winding_G );
+		coords_Eu ( shadow_G ) = v;
+		Cell S ( tag::vertex );
+		mani_Eu.interpolate ( S, 0.5, shadow_E, 0.5, shadow_G );
+		Cell ES ( tag::segment, E .reverse(), S );  // no winding
+		Cell IS ( tag::segment, I .reverse(), S );
+		IS .winding() = IE .winding();
+		Cell ISE ( tag::triangle, IS, ES .reverse(), IE .reverse() );
+		ISE .add_to_mesh ( *this );
+		Cell IG ( tag::segment, I .reverse(), G );
+		IG .winding() = seg2 .winding() + HG .winding();
+		Cell SG ( tag::segment, S .reverse(), G );
+		SG .winding() = IG .winding() - IS .winding();
+		Cell SIG ( tag::triangle, IS .reverse(), IG, SG .reverse() );
+		SIG .add_to_mesh ( *this );
+		Cell OS ( tag::segment, O .reverse(), S );
+		OS .winding() = OE .winding();  // ES .winding() == 0
+		Cell OES ( tag::triangle, OE, ES, OS .reverse() );
+		OES .add_to_mesh ( *this );
+		Cell OSG ( tag::triangle, OS, SG, GO );
+		OSG .add_to_mesh ( *this );                                  }
+		// triangle OSG does not fulfill the condition of zero winding
+	else		
+	{	Cell IGE ( tag::triangle, GI .reverse(), GE, IE .reverse() );
+		IGE .add_to_mesh ( *this );
+		Cell OEG ( tag::triangle, OE, GE .reverse(), GO );
+		OEG .add_to_mesh ( *this );                                   }
+		// triangle OEG does not fulfill the condition of zero winding
 
 } // end of Mesh::build with tag::triangle and tag::winding and tag::singular
 

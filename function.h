@@ -1600,7 +1600,9 @@ inline bool operator< ( const Function::ActionGenerator & f, const Function::Act
 //-----------------------------------------------------------------------------------------//
 
 
-class tag::Util::Action  //  aka  class Function::Action
+class tag::Util::Action  //  aka  class Function::Action, aka class Manfold::Action
+		// we define it here because we need it for Function::MultiValued
+		// but we prefer the user to see it as an attribute of class Manifold
 
 // a composition of actions, thus an element of the group
 // essentially, a multi-index, more precisely a map < Function::ActionGenerator, short int >
@@ -1612,6 +1614,8 @@ class tag::Util::Action  //  aka  class Function::Action
 
 	std::map < Function::ActionGenerator, short int > index_map;
 
+	inline Action ( ) { };
+		
 	inline Action ( short int i )
 	{	assert ( i == 0 );  }
 	
