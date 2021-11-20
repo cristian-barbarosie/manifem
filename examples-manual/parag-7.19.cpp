@@ -1,5 +1,5 @@
 
-// example presented in paragraph 7.17 of the manual
+// example presented in paragraph 7.19 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // build an intricate mesh on a torus, having two V-shaped holes
 // homogenized elastic tensor exhibits negative Poisson coefficient
