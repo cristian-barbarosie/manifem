@@ -1,5 +1,5 @@
 
-// example presented in paragraph 7.12 of the manual
+// example presented in paragraph 7.14 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // a sector of an annulus, repeated
 
