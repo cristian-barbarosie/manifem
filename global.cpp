@@ -530,8 +530,6 @@ void Mesh::build ( const tag::Triangle &,
 	Cell A = find_common_vertex ( CA, AB );
 	Cell B = find_common_vertex ( AB, BC );	
 
-	std::cout << "global.cpp line 533" << std::endl;
-	
 	// 'build_common' builds all triangles but the last four, near C
 	// recall that C == O
 	Manifold::Action winding_C_from_A;

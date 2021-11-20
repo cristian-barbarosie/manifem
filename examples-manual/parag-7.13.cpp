@@ -1,4 +1,8 @@
 
+// example presented in paragraph 7.13 of the manual
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+// a cone-like shape
+
 #include "maniFEM.h"
 using namespace maniFEM;
 
