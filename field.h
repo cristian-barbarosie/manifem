@@ -1,9 +1,9 @@
 
-//   field.h  2021.11.13
+//   field.h  2021.11.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -148,9 +148,9 @@ class Cell::Numbering::Field : public Cell::Numbering
 		
 	inline Field ( const tag::CellsOfDim &, const size_t d )
 	: field ( tag::lives_on_positive_cells, tag::of_dim, d )
-	{ Cell::init_pos_cell[d] .push_back ( & Cell::Numbering::Field::set_and_increment );
-		Cell::data_for_init_pos[d] .push_back
-			( static_cast < void* > ( this ) );                                              }
+	{ Cell::init_pos_cell [d] .push_back ( & Cell::Numbering::Field::set_and_increment );
+		Cell::data_for_init_pos [d] .push_back
+			( static_cast < void* > ( this ) );                                               }
 
 	size_t size ( )  // virtual from Cell::Numbering
 	{	return this->counter;  }
@@ -321,16 +321,16 @@ class Field::Double::TakenOnCell
 	// can be used like in  f(cll) = 2.0
 	{	Field::Double::Scalar * f_scalar = tag::Util::assert_cast
 			< Field::Double::Core*, Field::Double::Scalar* > ( f );
-		assert ( f_scalar->index_in_heap < cll->double_heap.size() );
-		return cll->double_heap[f_scalar->index_in_heap];        }
+		assert ( f_scalar->index_in_heap < cll->double_heap .size() );
+		return cll->double_heap [ f_scalar->index_in_heap ];         }
 
 	inline operator std::vector<double> ()
 	// can be used like in  vector<double> vec = f(cll)
 	{	Field::Double::Block * f_block = tag::Util::assert_cast
 			< Field::Double::Core*, Field::Double::Block* > ( f );
-		assert ( f_block->max_index_p1 <= cll->double_heap.size() );
-		return std::vector<double> { & cll->double_heap[f_block->min_index],
-		                             & cll->double_heap[f_block->max_index_p1] };  }
+		assert ( f_block->max_index_p1 <= cll->double_heap .size() );
+		return std::vector<double> { & cll->double_heap [ f_block->min_index ],
+		                             & cll->double_heap [ f_block->max_index_p1 ] };  }
 	
 	inline std::vector<double> operator= ( const std::vector<double> & x )
 	// can be used like in  f(cll) = vec
@@ -339,21 +339,20 @@ class Field::Double::TakenOnCell
 		size_t i_min    = f_block->min_index,
 		       i_max_p1 = f_block->max_index_p1;
 		for ( size_t i = i_min; i < i_max_p1; i++ )
-			cll->double_heap[i] = x[i];  // there should be a faster solution
+			cll->double_heap [i] = x[i];  // there should be a faster solution
 		return x;                                               }
-
 };
 
 
 inline short int & Field::ShortInt::on_cell ( Cell::Core * cll )
 {	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
-	assert ( this->index_in_heap < cll->short_int_heap.size() );
-	return cll->short_int_heap[this->index_in_heap];             }
+	assert ( this->index_in_heap < cll->short_int_heap .size() );
+	return cll->short_int_heap [ this->index_in_heap ];             }
 
 inline size_t & Field::SizeT::on_cell ( Cell::Core * cll )
 {	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
-	assert ( this->index_in_heap < cll->size_t_heap.size() );
-	return cll->size_t_heap[this->index_in_heap];             }
+	assert ( this->index_in_heap < cll->size_t_heap .size() );
+	return cll->size_t_heap [ this->index_in_heap ];             }
 
 inline Field::Double::TakenOnCell Field::Double::Core::on_cell ( Cell::Core * cll )
 {	assert ( this->lives_on_cells_of_dim == cll->get_dim() );
@@ -364,7 +363,7 @@ inline Field::Double Field::Double::operator[] ( size_t i )
 {	return Field::Double ( tag::whose_core_is, this->core->component(i) );  }
 	
 inline Field::Double::TakenOnCell Field::Double::operator() ( Cell cll )
-{	return this->core->on_cell(cll.core);  }
+{	return this->core->on_cell ( cll.core );  }
 
 	
 } // namespace maniFEM
