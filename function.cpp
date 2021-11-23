@@ -1,5 +1,5 @@
 
-// function.cpp 2021.11.13
+// function.cpp 2021.11.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -374,9 +374,10 @@ double Function::Scalar::MultiValued::get_value_on_cell ( Cell::Core * cll ) con
 //-----------------------------------------------------------------------------------------//
 
 
-double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual from Function::Scalar
+double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
-
+// virtual from Function::Scalar
+	
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
 	Manifold::Quotient * manif = tag::Util::assert_cast
@@ -388,16 +389,16 @@ double Function::Scalar::MultiValued::JumpIsSum::get_value_on_cell  // virtual f
 	for ( size_t i = 0; i < n; i++ )
 	{	std::map<Function::ActionGenerator,short int>::const_iterator it =
 			exp.index_map.find ( this->actions[i] );
-		assert ( it != exp.index_map.end() );
-		val += it->second * this->beta[i];                         }
-	return val;                                                          }
+		if ( it == exp.index_map.end() ) continue;
+		val += it->second * this->beta[i];                                 }
+	return val;                                                            }
 
 //-----------------------------------------------------------------------------------------//
 
 
 double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
-// virtual from Function::Scalar
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
+// virtual from Function::Scalar
 
 {	Function::Scalar * base_scalar = tag::Util::assert_cast
 		< Function::Core*, Function::Scalar* > ( this->base.core );
@@ -419,7 +420,7 @@ double Function::Scalar::MultiValued::JumpIsLinear::get_value_on_cell
 			for ( size_t j = 0; j < abs_exp_i; j++ ) val *= alpha_i;  }
 		if ( exp_i < 0 )
 		{	size_t abs_exp_i = -exp_i;
-			for ( size_t j = 0; j < abs_exp_i; j++ ) val /= alpha_i;  }  }
+			for ( size_t j = 0; j < abs_exp_i; j++ ) val /= alpha_i;  }     }
 	return val + this->gamma;                                             }
 
 //-----------------------------------------------------------------------------------------//
@@ -435,8 +436,8 @@ std::vector<double> Function::Vector::MultiValued::get_value_on_cell
 
 
 std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
-// virtual from Function::Vector
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
+// virtual from Function::Vector
 	
 {	Function::Vector * base_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( this->base.core );
@@ -455,7 +456,7 @@ std::vector<double> Function::Vector::MultiValued::JumpIsSum::get_value_on_cell
 		short int exp_i = it->second;
 		assert ( exp_i != 0 );
 		for ( size_t j = 0; j < dim; j++ )
-			val[j] += exp_i * this->beta[i][j];                       }
+			val[j] += exp_i * this->beta[i][j];                              }
 	return val;                                                            }
 
 //-----------------------------------------------------------------------------------------//
@@ -663,7 +664,7 @@ Function maniFEM::operator+ ( const Function & f, const Function & g )
 			result->terms.push_front ( *it_f );                                   }
 	else  result->terms.push_front ( f );
 
-	return Function ( tag::whose_core_is, result );                              }
+	return Function ( tag::whose_core_is, result );                                }
 
 //-----------------------------------------------------------------------------------------//
 
