@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.20
+// global.cpp 2021.11.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2987,6 +2987,9 @@ void Mesh::draw_ps_3d ( std::string file_name )
 
 void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 
+// 'numb_map' should begin at 0
+// we add 1 to each number because gmsh seems to prefer numbers to begin at 1
+
 {	// we use the current manifold
 	Manifold space = Manifold::working;
 	assert ( space.exists() );
@@ -3004,14 +3007,14 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 	if (coord.nb_of_components() == 2)
 	{	for ( it.reset() ; it.in_range(); it++ )
 		{	Cell p = *it;
-			file_msh << ver_numbering (p) << " "
+			file_msh << ver_numbering (p) + 1 << " "
 		           << x(p) << " " << y(p) << " " << 0 << std::endl;  }  }
 	else
 	{	assert  ( coord.nb_of_components() == 3 );
 		Function z = coord[2];
 		for ( it.reset() ; it.in_range(); it++ )
 		{	Cell p = *it;
-			file_msh << ver_numbering (p) << " "
+			file_msh << ver_numbering (p) + 1 << " "
 		           << x(p) << " " << y(p) << " " << z(p) << std::endl;  }  }
 	file_msh << "$EndNodes" << std::endl;
 	} // just to make variables local : it, counter, x, y
@@ -3027,9 +3030,9 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 			Cell elem = *it;
 			file_msh << counter << " 1 0 ";
 			Cell A = elem.base().reverse();
-			file_msh << ver_numbering (A) << " ";
+			file_msh << ver_numbering (A) + 1 << " ";
 			Cell B = elem.tip();
-			file_msh << ver_numbering (B) << std::endl;    }  }
+			file_msh << ver_numbering (B) + 1 << std::endl;    }  }
 	else if ( this->dim() == 2 )
 	{	CellIterator it = this->iterator ( tag::over_cells_of_dim, 2 );
 		size_t counter = 0;
@@ -3043,7 +3046,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				file_msh << counter << " 3 0 ";                                     }
 			CellIterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
 			for ( itt.reset(); itt.in_range(); ++itt )
-			{	Cell p = *itt;  file_msh << ver_numbering (p) << " ";   }
+			{	Cell p = *itt;  file_msh << ver_numbering (p) + 1 << " ";   }
 			file_msh << std::endl;                                                                 }  }
 	else
 	{	assert ( this->dim() == 3);
@@ -3065,11 +3068,11 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				// back is 0321 in gmsh's documentation
 				assert ( back.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
 				CellIterator itv = back.boundary().iterator ( tag::over_vertices, tag::backwards );
-				// reverse because we want the vertices ordered as 0, 1, 2, 3
+				// backwards because we want the vertices ordered as 0, 1, 2, 3
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_03 = back.boundary().cell_in_front_of(ver_0);
 				for ( ; itv.in_range(); ++itv )
-				{	Cell p = *itv;  file_msh << ver_numbering (p) << " ";   }
+				{	Cell p = *itv;  file_msh << ver_numbering (p) + 1 << " ";   }
 				Cell left_wall = elem.boundary().cell_in_front_of(seg_03); // square face on the left
 				// left_wall is 0473 in gmsh's documentation
 				assert ( left_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
@@ -3082,7 +3085,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				CellIterator itvv = front.boundary().iterator ( tag::over_vertices, tag::require_order );
 				itvv.reset ( tag::start_at, ver_4 );
 				for ( ; itvv.in_range(); ++itvv )
-				{	Cell p = *itvv;  file_msh << ver_numbering (p) << " ";   }                }
+				{	Cell p = *itvv;  file_msh << ver_numbering (p) + 1 << " ";   }                }
 			else
 			{	assert( n_faces == 5 );
 				// triangular prism = 6-node prism
@@ -3101,11 +3104,11 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				// base is 021 in gmsh's documentation
 				assert ( base.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
 				CellIterator itv = base.boundary().iterator ( tag::over_vertices, tag::backwards );
-				// we set it reverse because we want the vertices ordered as 0, 1, 2
+				// backwards because we want the vertices ordered as 0, 1, 2
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_02 = base.boundary().cell_in_front_of(ver_0);
 				for (  ; itv.in_range(); ++itv )
-				{	Cell p = *itv;  file_msh << ver_numbering (p) << " ";   }
+				{	Cell p = *itv;  file_msh << ver_numbering (p) + 1 << " ";   }
 				Cell right_wall = elem.boundary().cell_in_front_of(seg_02);
 				// right_wall is 0352 in gmsh's documentation
 				assert ( right_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
@@ -3118,7 +3121,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				CellIterator itvv = roof.boundary().iterator ( tag::over_vertices, tag::require_order );
 				itvv.reset ( tag::start_at, ver_3 );
 				for ( ; itvv.in_range(); ++itvv )
-				{	Cell p = *itvv;  file_msh << ver_numbering (p) << " ";  }               }
+				{	Cell p = *itvv;  file_msh << ver_numbering (p) + 1 << " ";  }               }
 			file_msh << std::endl;                                                                } }
 	file_msh << "$EndElements" << std::endl;
 	
@@ -3131,6 +3134,9 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 
 void Mesh::export_msh ( std::string f, std::map < Cell, size_t > & numb_map )
 	
+// 'numb_map' should begin at 0
+// later, 'this->export_msh ( f, numbering )' will add 1 to each number
+
 {	Cell::Numbering::Map numbering ( & numb_map );
 
 	this->export_msh ( f, numbering );
@@ -3142,6 +3148,9 @@ void Mesh::export_msh ( std::string f )
 	
 // the numbering of vertices is produced on-the-fly
 
+// we build a 'numbering' map beginning at 0
+// later, 'this->export_msh ( f, numbering )' will add 1 to each number
+	
 {	Cell::Numbering::Map numbering;
 
 	CellIterator it = this->iterator ( tag::over_vertices );

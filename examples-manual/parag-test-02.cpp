@@ -225,12 +225,12 @@ int main ( )
 	Function::Jump jump_of_u_2 = macro_strain(1,0) * x.jump() + macro_strain(1,1) * y.jump();
 	// run over all square cells composing 'torus'
 	{ // just a block of code for hiding 'it'
-	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
+	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe.dock_on ( small_tri, tag::winding );
-		// run twice over the four vertices of 'small_tri'
-		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
+		// run twice over the three vertices of 'small_tri'
+		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
 		for ( it_V.reset(); it_V.in_range(); it_V++ )
 		{	Cell V = *it_V;
 			// perhaps implement an interator returning a vertex and a segment
@@ -252,30 +252,30 @@ int main ( )
 				double int_d_psiW_dx_d_psiV_dy = fe.integrate ( d_psiW_dx * d_psiV_dy );
 				double int_d_psiW_dy_d_psiV_dx = fe.integrate ( d_psiW_dy * d_psiV_dx );
 				double int_d_psiW_dy_d_psiV_dy = fe.integrate ( d_psiW_dy * d_psiV_dy );
-				myTensor<double> energy(2,2);
-				energy(0,0) = Hooke(0,0,0,0) * int_d_psiW_dx_d_psiV_dx +
-				              Hooke(0,0,0,1) * int_d_psiW_dy_d_psiV_dx +
-				              Hooke(0,1,0,0) * int_d_psiW_dx_d_psiV_dy +
-				              Hooke(0,1,0,1) * int_d_psiW_dy_d_psiV_dy ;
-				energy(0,1) = Hooke(0,0,1,0) * int_d_psiW_dx_d_psiV_dx +
-				              Hooke(0,0,1,1) * int_d_psiW_dy_d_psiV_dx +
-				              Hooke(0,1,1,0) * int_d_psiW_dx_d_psiV_dy +
-				              Hooke(0,1,1,1) * int_d_psiW_dy_d_psiV_dy ;
-				energy(1,0) = Hooke(1,0,0,0) * int_d_psiW_dx_d_psiV_dx +
-				              Hooke(1,0,0,1) * int_d_psiW_dy_d_psiV_dx +
-				              Hooke(1,1,0,0) * int_d_psiW_dx_d_psiV_dy +
-				              Hooke(1,1,0,1) * int_d_psiW_dy_d_psiV_dy ;
-				energy(1,1) = Hooke(1,0,1,0) * int_d_psiW_dx_d_psiV_dx +
-				              Hooke(1,0,1,1) * int_d_psiW_dy_d_psiV_dx +
-				              Hooke(1,1,1,0) * int_d_psiW_dx_d_psiV_dy +
-				              Hooke(1,1,1,1) * int_d_psiW_dy_d_psiV_dy ;
+				myTensor < double > energy ( 2, 2 );
+				energy (0,0) = Hooke(0,0,0,0) * int_d_psiW_dx_d_psiV_dx +
+				               Hooke(0,0,0,1) * int_d_psiW_dy_d_psiV_dx +
+				               Hooke(0,1,0,0) * int_d_psiW_dx_d_psiV_dy +
+				               Hooke(0,1,0,1) * int_d_psiW_dy_d_psiV_dy ;
+				energy (0,1) = Hooke(0,0,1,0) * int_d_psiW_dx_d_psiV_dx +
+				               Hooke(0,0,1,1) * int_d_psiW_dy_d_psiV_dx +
+				               Hooke(0,1,1,0) * int_d_psiW_dx_d_psiV_dy +
+				               Hooke(0,1,1,1) * int_d_psiW_dy_d_psiV_dy ;
+				energy (1,0) = Hooke(1,0,0,0) * int_d_psiW_dx_d_psiV_dx +
+				               Hooke(1,0,0,1) * int_d_psiW_dy_d_psiV_dx +
+				               Hooke(1,1,0,0) * int_d_psiW_dx_d_psiV_dy +
+				               Hooke(1,1,0,1) * int_d_psiW_dy_d_psiV_dy ;
+				energy (1,1) = Hooke(1,0,1,0) * int_d_psiW_dx_d_psiV_dx +
+				               Hooke(1,0,1,1) * int_d_psiW_dy_d_psiV_dx +
+				               Hooke(1,1,1,0) * int_d_psiW_dx_d_psiV_dy +
+				               Hooke(1,1,1,1) * int_d_psiW_dy_d_psiV_dy ;
 				matrix_A.coeffRef ( 2*numbering[V], 2*numbering[W] ) += energy(0,0);
 				matrix_A.coeffRef ( 2*numbering[V], 2*numbering[W]+1 ) += energy(0,1);
 				matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[W] ) += energy(1,0);
 				matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[W]+1 ) += energy(1,1);
 				vector_b ( 2*numbering[V] ) -= jump_V_W_1 * energy(0,0) + jump_V_W_2 * energy(0,1);
 				vector_b ( 2*numbering[V]+1 ) -= jump_V_W_1 * energy(1,0) + jump_V_W_2 * energy(1,1);
-				jump_V_W_1 += jump_of_u_1 ( seg.winding() );// a*g actualiza
+				jump_V_W_1 += jump_of_u_1 ( seg.winding() );
 				jump_V_W_2 += jump_of_u_2 ( seg.winding() );
 				W = seg.tip();
 				if ( V == W ) break;
@@ -285,25 +285,34 @@ int main ( )
 		}  }
 	} // just a block of code for hiding 'it'
 
-	// we add, as the last three equations, the condition of zero translation and zero rotation
-		// run over all triangle cells composing 'torus'
+	// we add, as last three equations, the condition of zero translation and zero rotation
+	// run over all triangle cells composing 'torus'
 	{ // just a block of code for hiding 'it'
-	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri, tag::winding );
-		// run twice over the four vertices of 'small_tri'
-		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
-		double jump_V_1 = 0., jump_V_2 = 0.; 
+		fe .dock_on ( small_tri, tag::winding );
+		// run over the three vertices of 'small_tri'
+		// we want to start at a vertex not belonging to CD or DA
+		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		bool found = false;
+		Cell V ( tag::non_existent );
 		for ( it_V .reset(); it_V .in_range(); it_V++ )
-		{	Cell V = *it_V;
+		{	V = *it_V;
+			if ( V .belongs_to ( CD ) ) continue;
+			if ( V .belongs_to ( DA ) ) continue;
+			found = true;  break;                 }
+		assert ( found );
+		double jump_V_1 = 0., jump_V_2 = 0.; 
+		for ( it_V .reset ( tag::start_at, V ); it_V .in_range(); it_V++ )
+		{	V = *it_V;
 			Function psi_V = fe .basis_function ( V );
-			double int_psi = fe.integrate(psi_V);
+			double int_psi = fe .integrate ( psi_V );
 			matrix_A.coeffRef ( 2*number_dofs, 2*numbering[V] ) += int_psi;
 			vector_b ( 2*number_dofs ) -= jump_V_1 * int_psi;
 			matrix_A.coeffRef ( 2*number_dofs+1, 2*numbering[V]+1 ) += int_psi;
 			vector_b ( 2*number_dofs + 1 ) -= jump_V_2 * int_psi;
-			Cell seg = small_tri .boundary() .cell_in_front_of(V);
+			Cell seg = small_tri .boundary() .cell_in_front_of ( V );
 			jump_V_1 += jump_of_u_1 ( seg .winding() );
 			jump_V_2 += jump_of_u_2 ( seg .winding() );    
 			}   }
@@ -312,12 +321,14 @@ int main ( )
 	// on the last line we put y alternated with -x (rotation)
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell V = *it;
-		matrix_A.coeffRef ( 2*number_dofs+2, 2*numbering[V] ) = y(V, tag::winding,0);
-		matrix_A.coeffRef ( 2*number_dofs+2, 2*numbering[V]+1 ) = -x(V, tag::winding,0);  }
+		matrix_A .coeffRef ( 2*number_dofs+2, 2*numbering[V] ) = y ( V, tag::winding, 0 );
+		matrix_A .coeffRef ( 2*number_dofs+2, 2*numbering[V]+1 ) = -x ( V, tag::winding, 0 );  }
 	} // just a block of code for hiding 'it'
 
+	std::cout << "now solving the system of linear equations" << std::endl;
+	
 	matrix_A .makeCompressed();
 
 	Eigen::SparseQR < Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;
@@ -351,14 +362,14 @@ int main ( )
 			         d_psi_V_dy = psi_V .deriv ( y );
 			for ( size_t i=0; i<2; i++ )
 			for ( size_t j=0; j<2; j++ )
-				macro_stress(i,j) +=
-					( vector_sol(2*numbering[V]) + jump_V_1 ) *
-					  ( Hooke(i,j,0,0) * fe.integrate(d_psi_V_dx) +
-					    Hooke(i,j,0,1) * fe.integrate(d_psi_V_dy)  ) +
-					( vector_sol(2*numbering[V]+1) + jump_V_2 ) *
-					  ( Hooke(i,j,1,0) * fe.integrate(d_psi_V_dx) +
-					    Hooke(i,j,1,1) * fe.integrate(d_psi_V_dy)  )  ;
-		Cell seg = small_tri .boundary() .cell_in_front_of(V);
+				macro_stress (i,j) +=
+					( vector_sol (2*numbering[V]) + jump_V_1 ) *
+					  ( Hooke (i,j,0,0) * fe .integrate ( d_psi_V_dx ) +
+					    Hooke (i,j,0,1) * fe .integrate ( d_psi_V_dy )  ) +
+					( vector_sol (2*numbering[V]+1) + jump_V_2 ) *
+					  ( Hooke (i,j,1,0) * fe .integrate ( d_psi_V_dx ) +
+					    Hooke (i,j,1,1) * fe .integrate ( d_psi_V_dy )  )  ;
+		Cell seg = small_tri .boundary() .cell_in_front_of (V);
 		jump_V_1 += jump_of_u_1 ( seg .winding() );
 		jump_V_2 += jump_of_u_2 ( seg .winding() );                 }             }
 	} // just a block of code for hiding 'it'

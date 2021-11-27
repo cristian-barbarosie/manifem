@@ -1,5 +1,5 @@
 
-// function.h 2021.11.13
+// function.h 2021.11.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -780,7 +780,7 @@ class Function::Step : public Function::ArithmeticExpression
 	inline Step ( const Function & aarg, std::vector < Function > & vals,
                 std::vector < double > cts )
 	: arg { aarg }, values { vals }, cuts { cts }
-	{	assert ( vals.size() == cts.size() + 1 );  }  // add asserts !!
+	{	assert ( vals .size() == cts .size() + 1 );  }  // add asserts !!
 
 	inline Step ( const Function::Step & ) = delete;
 	inline Step ( Function::Step && ) = delete;
@@ -914,10 +914,10 @@ class Function::Aggregate : public Function::Vector
 
 inline Function operator&& ( Function f, Function g )
 
-{	size_t nf = f.nb_of_components(), ng = g.nb_of_components();
+{	size_t nf = f .nb_of_components(), ng = g .nb_of_components();
 	Function::Aggregate * res = new Function::Aggregate ( tag::reserve_size, nf + ng ) ;
-	for ( size_t i = 0; i < nf; i++ ) res->components.emplace_back ( f[i] );
-	for ( size_t i = 0; i < ng; i++ ) res->components.emplace_back ( g[i] );
+	for ( size_t i = 0; i < nf; i++ ) res->components .emplace_back ( f [i] );
+	for ( size_t i = 0; i < ng; i++ ) res->components .emplace_back ( g [i] );
 	return Function ( tag::whose_core_is,	res );                                         }
 
 //-----------------------------------------------------------------------------------------//
@@ -1042,9 +1042,9 @@ inline Function::Function ( const tag::Diffeomorphism &, const tag::OneDim &,
                             const Function & geom_coords, const Function & master_coords,
                             const Function & back_geom_coords                             )
 : Function ( tag::non_existent )
-{	assert ( geom_coords.nb_of_components() == back_geom_coords.nb_of_components() );
-	assert ( master_coords.nb_of_components() == geom_coords.nb_of_components() );
-	assert ( geom_coords.nb_of_components() == 1 );
+{	assert ( geom_coords .nb_of_components() == back_geom_coords .nb_of_components() );
+	assert ( master_coords .nb_of_components() == geom_coords .nb_of_components() );
+	assert ( geom_coords .nb_of_components() == 1 );
 	this->set_core ( new Function::Diffeomorphism::OneDim
 	   ( geom_coords, master_coords, back_geom_coords, tag::build_jacobian ),
 	   tag::previously_non_existent                                           );       }
@@ -1186,7 +1186,7 @@ class Function::Diffeomorphism::HighDim
 	// Function component ( size_t i )   defined by Function::Immersion, execution forbidden
 	
 	// the two methods below defined by Function::Immersion (execution forbidden)
-	// std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector<double> & )
+	// std::vector<double> set_value_on_cell ( Cell::Core *, const std::vector < double > & )
 	// std::vector<double> get_value_on_cell ( Cell::Core * ) const
 
 	// Function deriv ( Function )
@@ -1211,9 +1211,9 @@ inline Function::Function ( const tag::Diffeomorphism &, const tag::HighDim &,
                             const Function & geom_coords, const Function & master_coords,
                             const Function & back_geom_coords                             )
 : Function ( tag::non_existent )
-{	assert ( geom_coords.nb_of_components() == back_geom_coords.nb_of_components() );
-	assert ( master_coords.nb_of_components() == geom_coords.nb_of_components() );
-	assert ( geom_coords.nb_of_components() >= 2 );
+{	assert ( geom_coords .nb_of_components() == back_geom_coords .nb_of_components() );
+	assert ( master_coords .nb_of_components() == geom_coords .nb_of_components() );
+	assert ( geom_coords .nb_of_components() >= 2 );
 	this->set_core ( new Function::Diffeomorphism::HighDim
 	   ( geom_coords, master_coords, back_geom_coords, tag::build_jacobian ),
 	   tag::previously_non_existent                                           );       }
@@ -1222,9 +1222,9 @@ inline Function::Function ( const tag::Diffeomorphism &, const tag::HighDim &,
 inline Function::Function ( const tag::Diffeomorphism &, const Function & geom_coords,
                             const Function & master_coords, const Function & back_geom_coords )
 : Function ( tag::non_existent )
-{	assert ( geom_coords.nb_of_components() == back_geom_coords.nb_of_components() );
-	assert ( master_coords.nb_of_components() == geom_coords.nb_of_components() );
-	if ( geom_coords.nb_of_components() == 1 )
+{	assert ( geom_coords .nb_of_components() == back_geom_coords .nb_of_components() );
+	assert ( master_coords .nb_of_components() == geom_coords .nb_of_components() );
+	if ( geom_coords .nb_of_components() == 1 )
 	{	this->set_core ( new Function::Diffeomorphism::OneDim
 		   ( geom_coords, master_coords, back_geom_coords, tag::build_jacobian ),
 		   tag::previously_non_existent                                           );
@@ -1296,9 +1296,9 @@ inline Function::Function
 
 : Function ( tag::non_existent )
 
-{	assert ( dynamic_cast < Function::Map* > ( f_map.core ) );
-  Function::Constant * expr_c = dynamic_cast < Function::Constant* > ( expr.core );
-	if ( expr_c ) this->set_core ( expr.core, tag::previously_non_existent );
+{	assert ( dynamic_cast < Function::Map* > ( f_map .core ) );
+  Function::Constant * expr_c = dynamic_cast < Function::Constant* > ( expr .core );
+	if ( expr_c ) this->set_core ( expr .core, tag::previously_non_existent );
 	else this->set_core ( new Function::Composition ( expr, f_map ),
                         tag::previously_non_existent               );                }
 
@@ -1386,9 +1386,9 @@ class Function::CoupledWithField::Vector
 		Function::CoupledWithField ( f )
 	{	size_t n = f->nb_of_components();
 		for ( size_t j = 0; j < n; j++ )
-//		this->components[j] = Function ( tag::whose_core_is,
-			this->components.emplace_back ( tag::whose_core_is,
-				new Function::CoupledWithField::Scalar ( field->component(j) ) );  }
+//		this->components [j] = Function ( tag::whose_core_is,
+			this->components .emplace_back ( tag::whose_core_is,
+				new Function::CoupledWithField::Scalar ( field->component (j) ) );  }
 	
 	inline Vector ( const Function::CoupledWithField::Vector & ) = delete;
 	inline Vector ( Function::CoupledWithField::Vector && ) = delete;
@@ -1568,19 +1568,21 @@ class Function::ActionGenerator
 	// after that, we can forget about them
 
 	inline ActionGenerator ( )
-	: id { Function::ActionGenerator::counter }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	:	id { Function::ActionGenerator::counter },
+		coords ( tag::non_existent ), transf ( tag::non_existent )
 	{	Function::ActionGenerator::counter++;  }
 
-	inline ActionGenerator ( const tag::Transforms &, const Function f, const tag::Into &, const Function g )
-	: id { Function::ActionGenerator::counter }, coords ( f ), transf ( g )
+	inline ActionGenerator
+	( const tag::Transforms &, const Function f, const tag::Into &, const Function g )
+	:	id { Function::ActionGenerator::counter }, coords ( f ), transf ( g )
 	{	Function::ActionGenerator::counter++;  }
 
 	inline ActionGenerator ( const Function::ActionGenerator & a )
-	: id { a.id }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	:	id { a .id }, coords ( tag::non_existent ), transf ( tag::non_existent )
 	{	}
 
 	inline ActionGenerator operator= ( const Function::ActionGenerator & a )
-	{	this->id = a.id;  return *this;  }
+	{	this->id = a .id;  return *this;  }
 	
 	inline operator Function::Action() const;
 
@@ -1590,11 +1592,11 @@ class Function::ActionGenerator
 
 
 inline bool operator== ( const Function::ActionGenerator & a, const Function::ActionGenerator & b )
-{	return a.id == b.id;  }
+{	return a .id == b .id;  }
 
 
 inline bool operator< ( const Function::ActionGenerator & f, const Function::ActionGenerator & g )
-{	return f.id < g.id;  }
+{	return f .id < g .id;  }
 // needed for Function::Action::index_map
 
 //-----------------------------------------------------------------------------------------//
@@ -1639,31 +1641,34 @@ class tag::Util::Action  //  aka  class Function::Action, aka class Manfold::Act
 
 	inline Action ( const tag::Transforms &, const Function f, const tag::Into &, const Function g )
 	{	this->index_map.emplace ( std::piecewise_construct,
-														 std::forward_as_tuple( tag::transforms, f, tag::into, g ), std::forward_as_tuple(1) );  }
+		  std::forward_as_tuple( tag::transforms, f, tag::into, g ), std::forward_as_tuple(1) );  }
 		//	{	Function::ActionGenerator a ( tag::transforms, f, tag::into, g );
-		//		this->index_map[a] = 1;                                           }
+		//		this->index_map [a] = 1;                                           }
 
 	inline Function::Action operator= ( const short int zero );
 
 };  // end of class Function::Action
 
 
-inline bool operator==
-( const Function::Action & a, const Function::Action & b )
+inline bool operator== ( const Function::Action & a, const Function::Action & b )
 
 {	{ // just a block for hiding names
-	std::map<Function::ActionGenerator,short int>::const_iterator it_a = a.index_map.begin();
-	for ( ; it_a != a.index_map.end(); it_a++ )
+	std::map <Function::ActionGenerator, short int > ::const_iterator it_a =
+		a .index_map .begin();
+	for ( ; it_a != a .index_map .end(); it_a++ )
 	{	Function::ActionGenerator aa = it_a->first;
-		std::map<Function::ActionGenerator,short int>::const_iterator it_b = b.index_map.find ( aa );
-		if ( it_b == b.index_map.end() ) return false;
+		std::map < Function::ActionGenerator, short int > ::const_iterator it_b =
+			b .index_map .find ( aa );
+		if ( it_b == b .index_map .end() ) return false;
 		if ( it_a->second != it_b->second ) return false;                              }
 	} { // just a block for hiding names
-	std::map<Function::ActionGenerator,short int>::const_iterator it_b = b.index_map.begin();
-	for ( ; it_b != b.index_map.end(); it_b++ )
+	std::map < Function::ActionGenerator, short int > ::const_iterator it_b =
+		b .index_map .begin();
+	for ( ; it_b != b .index_map .end(); it_b++ )
 	{	Function::ActionGenerator bb = it_b->first;
-		std::map<Function::ActionGenerator,short int>::const_iterator it_a = a.index_map.find ( bb );
-		if ( it_a == a.index_map.end() ) return false;
+		std::map < Function::ActionGenerator, short int > ::const_iterator it_a =
+			a .index_map .find ( bb );
+		if ( it_a == a .index_map .end() ) return false;
 		assert ( it_a->second == it_b->second );                                       }
 	} // just a block for hiding names
 	return true;                                                                       }
@@ -1677,7 +1682,7 @@ inline bool operator!=
 inline bool operator== ( const Function::Action & a, const short int zero )
 // shorthand for quering the identity action :  id == 0
 {	assert ( zero == 0 );
-	return a.index_map.size() == 0;  }
+	return a .index_map .size() == 0;  }
 
 
 inline bool operator!=
@@ -1689,8 +1694,8 @@ inline Function::Action Function::Action::operator=
 ( const short int zero )
 // shorthand for quering the identity action :  id = 0
 {	assert ( zero == 0 );
-	this->index_map.clear();
-	return *this;            }
+	this->index_map .clear();
+	return *this;             }
 
 	
 inline Function::ActionGenerator::operator Function::Action() const
@@ -1700,84 +1705,93 @@ inline Function::ActionGenerator::operator Function::Action() const
 inline Function::Action operator+
 ( const Function::Action & a, const Function::Action & b )
 {	Function::Action res = a;
-	std::map<Function::ActionGenerator,short int>::const_iterator it = b.index_map.begin();
-	for ( ; it != b.index_map.end(); it++ )
+	std::map < Function::ActionGenerator, short int > ::const_iterator it =
+		b .index_map .begin();
+	for ( ; it != b .index_map .end(); it++ )
 	{	const Function::ActionGenerator & g = it->first;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::ActionGenerator,short int>::iterator itt =
-			res.index_map.lower_bound(g);
-		if ( ( itt == res.index_map.end() ) or ( res.index_map.key_comp()(g,itt->first) ) )
+		std::map < Function::ActionGenerator, short int > ::iterator itt =
+			res .index_map .lower_bound (g);
+		if ( ( itt == res .index_map .end() ) or
+		     ( res .index_map .key_comp() ( g, itt->first ) ) )
 			// new action
-			res.index_map.emplace_hint ( itt, std::piecewise_construct,
-	      std::forward_as_tuple(g), std::forward_as_tuple(it->second) ); 
+			res .index_map .emplace_hint ( itt, std::piecewise_construct,
+	      std::forward_as_tuple (g), std::forward_as_tuple ( it->second ) ); 
 		else  // action already there
 		{	itt->second += it->second;  // could be zero
-			if ( itt->second == 0 ) res.index_map.erase ( itt );  }                           }
-	return res;                                                                             }
+			if ( itt->second == 0 ) res .index_map .erase ( itt );  }            }
+	return res;                                                                 }
 
 
 inline Function::Action operator+=
 ( Function::Action & a, const Function::Action & b )
-{	std::map<Function::ActionGenerator,short int>::const_iterator it = b.index_map.begin();
-	for ( ; it != b.index_map.end(); it++ )
+{	std::map < Function::ActionGenerator, short int > ::const_iterator it =
+		b .index_map .begin();
+	for ( ; it != b .index_map .end(); it++ )
 	{	const Function::ActionGenerator & g = it->first;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::ActionGenerator,short int>::iterator itt =
-			a.index_map.lower_bound(g);
-		if ( ( itt == a.index_map.end() ) or ( a.index_map.key_comp()(g,itt->first) ) )
+		std::map < Function::ActionGenerator, short int > ::iterator itt =
+			a .index_map .lower_bound (g);
+		if ( ( itt == a .index_map .end() ) or
+	       ( a .index_map .key_comp() ( g, itt->first ) ) )
 			// new action
-			a.index_map.emplace_hint ( itt, std::piecewise_construct,
-	      std::forward_as_tuple(g), std::forward_as_tuple(it->second) ); 
+			a .index_map .emplace_hint ( itt, std::piecewise_construct,
+	      std::forward_as_tuple (g), std::forward_as_tuple ( it->second ) ); 
 		else  // action already there
 		{	itt->second += it->second;  // could be zero
-			if ( itt->second == 0 ) a.index_map.erase ( itt );  }                           }
-	return a;                                                                             }
+			if ( itt->second == 0 ) a .index_map .erase ( itt );  }              }
+	return a;                                                                   }
 
 
 inline Function::Action operator-
 ( const Function::Action & a, const Function::Action & b )
 {	Function::Action res = a;
-	std::map<Function::ActionGenerator,short int>::const_iterator it = b.index_map.begin();
-	for ( ; it != b.index_map.end(); it++ )
+	std::map < Function::ActionGenerator, short int > ::const_iterator it =
+		b .index_map .begin();
+	for ( ; it != b .index_map .end(); it++ )
 	{	const Function::ActionGenerator & g = it->first;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::ActionGenerator,short int>::iterator itt =
-			res.index_map.lower_bound(g);
-		if ( ( itt == res.index_map.end() ) or ( res.index_map.key_comp()(g,itt->first) ) )
+		std::map < Function::ActionGenerator, short int > ::iterator itt =
+			res .index_map .lower_bound (g);
+		if ( ( itt == res .index_map .end() ) or
+	       ( res .index_map .key_comp() ( g, itt->first ) ) )
 			// new action
-			res.index_map.emplace_hint ( itt, std::piecewise_construct,
-	      std::forward_as_tuple(g), std::forward_as_tuple(-it->second) ); 
+			res .index_map .emplace_hint ( itt, std::piecewise_construct,
+	      std::forward_as_tuple (g), std::forward_as_tuple ( -it->second ) ); 
 		else  // action already there
 		{	itt->second -= it->second;  // could be zero
-			if ( itt->second == 0 ) res.index_map.erase ( itt );  }                           }
-	return res;                                                                             }
+			if ( itt->second == 0 ) res .index_map .erase ( itt );  }              }
+	return res;                                                                  }
 
 
 inline Function::Action operator-=
 ( Function::Action & a, const Function::Action & b )
-{	std::map<Function::ActionGenerator,short int>::const_iterator it = b.index_map.begin();
-	for ( ; it != b.index_map.end(); it++ )
+{	std::map < Function::ActionGenerator, short int > ::const_iterator it =
+		b .index_map .begin();
+	for ( ; it != b .index_map .end(); it++ )
 	{	const Function::ActionGenerator & g = it->first;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map<Function::ActionGenerator,short int>::iterator itt =
-			a.index_map.lower_bound(g);
-		if ( ( itt == a.index_map.end() ) or ( a.index_map.key_comp()(g,itt->first) ) )
+		std::map < Function::ActionGenerator, short int > ::iterator itt =
+			a .index_map .lower_bound (g);
+		if ( ( itt == a .index_map .end() ) or
+	       ( a .index_map .key_comp() ( g, itt->first ) ) )
 			// new action
-			a.index_map.emplace_hint ( itt, std::piecewise_construct,
-	      std::forward_as_tuple(g), std::forward_as_tuple(-it->second) ); 
+			a .index_map .emplace_hint ( itt, std::piecewise_construct,
+	      std::forward_as_tuple (g), std::forward_as_tuple ( -it->second ) ); 
 		else  // action already there
 		{	itt->second -= it->second;  // could be zero
-			if ( itt->second == 0 ) a.index_map.erase ( itt );  }                           }
-	return a;                                                                             }
+			if ( itt->second == 0 ) a .index_map .erase ( itt );  }               }
+	return a;                                                                   }
 
 
 inline Function::Action operator*
 ( const short int k, const Function::Action & a )
 {	if ( k == 0 ) return Function::Action ( 0 );
 	Function::Action res = a;
-	std::map<Function::ActionGenerator,short int>::iterator it = res.index_map.begin();
-	for ( ; it != res.index_map.end(); it++ ) it->second *= k;
-	return res;                                                                }
+	std::map < Function::ActionGenerator, short int > ::iterator it =
+		res .index_map .begin();
+	for ( ; it != res .index_map .end(); it++ ) it->second *= k;
+	return res;                                                        }
 
 
 inline Function::Action operator-
@@ -1916,13 +1930,13 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	// std::vector < Function::ActionGenerator > actions
 	
 	std::vector < double > beta;
-	// upon each action[i], the value v of the function becomes  v + beta[i]
+	// upon each action [i], the value v of the function becomes  v + beta [i]
 	// use a Function::Jump::Sum::Scalar instead !
 	
 	inline JumpIsSum ( const tag::AssociatedWith &, const Function & f,
 										 std::vector < Function::ActionGenerator > ac, std::vector < double > be )
 	:	Function::Scalar::MultiValued ( tag::associated_with, f, ac ), beta { be }
-	{	assert ( ac.size() == be.size() );  }
+	{	assert ( ac .size() == be .size() );  }
 
 	inline JumpIsSum ( const Function::Scalar::MultiValued::JumpIsSum & ) = delete;
 	inline JumpIsSum ( Function::Scalar::MultiValued::JumpIsSum && ) = delete;
@@ -1978,14 +1992,14 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	
 	std::vector < double > alpha;
 	double gamma;
-	// upon each action[i], the value v of the function becomes  alpha[i] * v + beta[i]
+	// upon each action [i], the value v of the function becomes  alpha[i] * v + beta[i]
 	// group is commutative only if  beta[i] / (alpha[i]-1.)  does not depend on i
 	// we call  gamma  the common value, so  beta[i] = gamma * (alpha[i]-1.)
 	// upon action[i], the value v of the function becomes  alpha[i] * ( v - gamma ) + gamma
 	// it is the user's responsibility to ensure that each action is invertible
-	//   that is,  alpha[i] != 0.
+	//   that is,  alpha [i] != 0.
 	// and that they commute, that is,  beta[i] / (alpha[i]-1.)  does not depend on i
-	//   often, beta[i] are all zero so this is not a problem
+	//   often, beta [i] are all zero so this is not a problem
 	
 	inline JumpIsLinear ( const Function::Scalar::MultiValued::JumpIsLinear & ) = delete;
 	inline JumpIsLinear ( Function::Scalar::MultiValued::JumpIsLinear && ) = delete;
@@ -2039,7 +2053,7 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	// std::vector < Function::ActionGenerator > actions
 
 	inline MultiValued ( const tag::AssociatedWith &, const Function & b,
-	                     std::vector < Function::ActionGenerator > a               )
+	                     std::vector < Function::ActionGenerator > a     )
 	:	Function::MultiValued ( b, a ),
 		Function::Aggregate ( tag::reserve_size, b.nb_of_components() )
 	{	}
@@ -2052,7 +2066,8 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	// Function component ( size_t i )
 	//   virtual from Function::Core, defined by Function::Aggregate
 
-	void set_value ( std::vector < double > );  // virtual from Function::Vector, delegates to base
+	void set_value ( std::vector < double > );
+	// virtual from Function::Vector, here delegates to base
 
 	std::vector < double > get_value_on_cell ( Cell::Core * ) const;
 
@@ -2101,13 +2116,13 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	                   std::vector < Function::ActionGenerator > ac,
 	                   std::vector < std::vector < double > > be        )
 	:	Function::Vector::MultiValued ( tag::associated_with, f, ac ), beta { be }
-	{	size_t n_act = ac.size();
-		assert ( n_act == be.size() );
-		size_t n_comp = f.nb_of_components();
+	{	size_t n_act = ac .size();
+		assert ( n_act == be .size() );
+		size_t n_comp = f .nb_of_components();
 		std::vector < double > beta_scalar ( n_act, 0. );
 		for ( size_t j = 0; j < n_comp; j++ )
-		{	for ( size_t i = 0; i < n_act; i++ ) beta_scalar[i] = be[i][j];
-//		this->components[j] = Function ( tag::whose_core_is,
+		{	for ( size_t i = 0; i < n_act; i++ ) beta_scalar [i] = be [i][j];
+//		this->components [j] = Function ( tag::whose_core_is,
 			this->components.emplace_back ( tag::whose_core_is,
 			  new Function::Scalar::MultiValued::JumpIsSum
 	                    ( tag::associated_with, f[j], ac, beta_scalar ) );  }  }
@@ -2162,7 +2177,7 @@ class Function::Vector::MultiValued::JumpIsLinear : public Function::Vector::Mul
 	
 	std::vector < std::vector < std::vector < double > > > A;
 	std::vector < std::vector < double > > b;
-	// upon each action[i], the value v of the function becomes  A[i]*v + b[i]
+	// upon each action [i], the value v of the function becomes  A[i]*v + b[i]
 	// it is the user's responsibility to ensure that each action is invertible
 	//   (i.e. the matrix A[i] is invertible) and that they commute
 	// often, b[i] are all zero so it suffices that the matrices A[i] commute
@@ -2176,16 +2191,16 @@ class Function::Vector::MultiValued::JumpIsLinear : public Function::Vector::Mul
 	                      std::vector < std::vector < std::vector < double > > > AA,
 	                      std::vector < std::vector < double > > bb                 )
 	:	Function::Vector::MultiValued ( tag::associated_with, f, ac ), A { AA },  b { bb }
-	{	assert ( ac.size() == AA.size() );
-		assert ( ac.size() == bb.size() );
+	{	assert ( ac .size() == AA .size() );
+		assert ( ac .size() == bb .size() );
 		// we need to compute the inverse matrices, we do this only for 2x2 matrices
 		std::vector < std::vector < std::vector < double > > > ::const_iterator it;
-		for ( it = this->A.begin(); it != this->A.end(); it++ )
+		for ( it = this->A .begin(); it != this->A .end(); it++ )
 		{	const std::vector < std::vector < double > > & mat = *it;
 			assert ( mat.size() == 2 );
 			double det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
-			this->Ainv.push_back ( { {   mat[1][1] / det, - mat[0][1] / det },
-			                         { - mat[1][0] / det,   mat[0][0] / det } } );  }  }
+			this->Ainv .push_back ( { {   mat[1][1] / det, - mat[0][1] / det },
+			                          { - mat[1][0] / det,   mat[0][0] / det } } );  }  }
 	
 	inline JumpIsLinear ( const Function::Vector::MultiValued::JumpIsLinear & ) = delete;
 	inline JumpIsLinear ( Function::Vector::MultiValued::JumpIsLinear && ) = delete;
@@ -2287,45 +2302,45 @@ Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
 // a zero-length vector means not succeeded
 // success is represented by a vector of length one
 
-{	size_t n_coord = base.nb_of_components();
-	size_t dim_expr = expression.nb_of_components();
+{	size_t n_coord = base .nb_of_components();
+	size_t dim_expr = expression .nb_of_components();
 	assert ( n_coord == 1 );
 	assert ( dim_expr == 1 );
 	Function::CoupledWithField * cf =
-		dynamic_cast < Function::CoupledWithField* > ( base.core );
+		dynamic_cast < Function::CoupledWithField* > ( base .core );
 	assert ( cf );
 	Field::Double::Scalar * fi =
 		dynamic_cast < Field::Double::Scalar * > ( cf->field );
 	assert ( fi );
 	Function::CoupledWithField * cfe =
-		dynamic_cast < Function::CoupledWithField* > ( expression.core );
+		dynamic_cast < Function::CoupledWithField* > ( expression .core );
 	if ( cfe )
 	{	Field::Double::Scalar * fie =
 			dynamic_cast < Field::Double::Scalar * > ( cfe->field );
 		if ( fie == nullptr ) return {};
 		if ( fi->index_in_heap != fie->index_in_heap ) return {};
 		return { 0. };                                             }
-	Function::Sum * sum = dynamic_cast < Function::Sum * > ( expression.core );
+	Function::Sum * sum = dynamic_cast < Function::Sum * > ( expression .core );
 	if ( sum == nullptr ) return {};
 	std::forward_list < Function > terms = sum->terms;
-	std::forward_list<Function>::iterator it = terms.begin();
-	assert ( it != terms.end() );
+	std::forward_list<Function>::iterator it = terms .begin();
+	assert ( it != terms .end() );
 	Function x = *it;
-	if ( x.core != base.core )
+	if ( x.core != base .core )
 	{	Function c = x;
 		Function::Constant * cc = dynamic_cast < Function::Constant * > ( c.core );
 		if ( cc == nullptr ) return {};
 		it++;
-		assert ( it != terms.end() );
+		assert ( it != terms .end() );
 		Function xx = *it;
-		if ( xx.core != base.core ) return {};
+		if ( xx.core != base .core ) return {};
 		return { cc->value };                                                           }
 	it++;
-	assert ( it != terms.end() );
+	assert ( it != terms .end() );
 	Function c = *it;
 	it++;
-	if ( it != terms.end() ) return {};
-	Function::Constant * cc = dynamic_cast < Function::Constant * > ( c.core );
+	if ( it != terms .end() ) return {};
+	Function::Constant * cc = dynamic_cast < Function::Constant * > ( c .core );
 	if ( cc == nullptr ) return {};
 	return { cc->value };                                                                }
 
@@ -2341,18 +2356,18 @@ Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
 // we want to identify a, b, c
 // a zero-length return vector means not succeeded
 
-{	size_t n_coord = base.nb_of_components();
-	size_t dim_expr = expression.nb_of_components();
+{	size_t n_coord = base .nb_of_components();
+	size_t dim_expr = expression .nb_of_components();
 	assert ( n_coord == dim_expr );
 	std::vector < double > res;
 	res.reserve ( n_coord );
 	for ( size_t i = 0; i < n_coord; i++ )
 	{	std::vector < double > res_i =
 			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
-			( expression[i], base[i] );
-		if ( res_i.size() == 0 ) return {};
-		assert ( res_i.size() == 1 );
-		res.push_back ( res_i[0] );                                            }
+			( expression [i], base [i] );
+		if ( res_i .size() == 0 ) return {};
+		assert ( res_i .size() == 1 );
+		res .push_back ( res_i [0] );                                          }
 	return res;                                                                }
 
 //-----------------------------------------------------------------------------------------//
@@ -2366,35 +2381,35 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 // 'expression' is a scalar expression in X  ( a1 x1 + a2 x2 + ... + b )
 // we want to identify ai and b
 
-{	size_t n_coord = base.nb_of_components();
-	size_t dim_expr = expression.nb_of_components();
+{	size_t n_coord = base .nb_of_components();
+	size_t dim_expr = expression .nb_of_components();
 	assert ( dim_expr == 1 );
 	std::pair < std::vector < double >, double > res
 		{ std::vector < double > ( n_coord, 0. ), 0. };
 	// often, 'expression' will be a sum
-	Function::Sum * expr_sum = dynamic_cast < Function::Sum* > ( expression.core );
+	Function::Sum * expr_sum = dynamic_cast < Function::Sum* > ( expression .core );
 	if ( expr_sum )
 	{	std::forward_list < Function > tl = expr_sum->terms;
 		for ( std::forward_list < Function > ::const_iterator
-					it = tl.begin(); it != tl.end(); it++           )
+					it = tl .begin(); it != tl .end(); it++           )
 		{	Function term = *it;
 			// often, 'term' will be a product
 			Function::Product * term_prod = dynamic_cast < Function::Product* > ( term.core );
 			if ( term_prod )  // we assume this product has the form  constant * variable
 			{	std::forward_list < Function > fl = term_prod->factors;
-				std::forward_list < Function > ::const_iterator itt = fl.begin();
-				assert ( itt != fl.end() );
+				std::forward_list < Function > ::const_iterator itt = fl .begin();
+				assert ( itt != fl .end() );
 				Function c = *itt;
 				Function::Constant * cc =
-					tag::Util::assert_cast < Function::Core*, Function::Constant* > ( c.core );
+					tag::Util::assert_cast < Function::Core*, Function::Constant* > ( c .core );
 				itt++;
-				assert ( itt != fl.end() );
+				assert ( itt != fl .end() );
 				Function var = *itt;
 				itt++;
-				assert ( itt == fl.end() );
+				assert ( itt == fl .end() );
 				Function::CoupledWithField::Scalar * var_cf =
 					tag::Util::assert_cast < Function::Core*,
-					                         Function::CoupledWithField::Scalar* > ( var.core );
+					                         Function::CoupledWithField::Scalar* > ( var .core );
 				Field::Double::Scalar * var_field =
 					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * > ( var_cf->field );
 				bool found_var = false;
@@ -2402,19 +2417,19 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 				for ( ; i < n_coord; i++ )
 				{	Function::CoupledWithField::Scalar * base_i_cf =
 						tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-						( base[i].core );
+						( base [i] .core );
 					Field::Double::Scalar * base_i_field =
 						tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
 						( base_i_cf->field );
 					if ( base_i_field->index_in_heap == var_field->index_in_heap )
-					{	found_var = true;  break;  }                                            }
+					{	found_var = true;  break;  }                                                   }
 				assert ( found_var );
-				assert ( res.first[i] == 0. );
-				res.first[i] = cc->value;                                                       }
+				assert ( res .first [i] == 0. );
+				res .first [i] = cc->value;                                                          }
 			else  // term is not a product
 			{	// could a variable xi or the constant b
 				Function::CoupledWithField * term_var =
-					dynamic_cast < Function::CoupledWithField* > ( term.core );
+					dynamic_cast < Function::CoupledWithField* > ( term .core );
 				if ( term_var )
 				{	Field::Double::Scalar * var_field =
 						tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
@@ -2424,39 +2439,39 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 					for ( ; i < n_coord; i++ )
 					{	Function::CoupledWithField::Scalar * base_i_cf =
 							tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-							( base[i].core );
+							( base [i] .core );
 						Field::Double::Scalar * base_i_field =
 							tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
 							( base_i_cf->field );
 						if ( base_i_field->index_in_heap == var_field->index_in_heap )
 							{	found_var = true;  break;  }                                            }
 					assert ( found_var );
-					assert ( res.first[i] == 0. );
-					res.first[i] = 1.;                                                               }
+					assert ( res .first [i] == 0. );
+					res .first [i] = 1.;                                                               }
 				else  // term must be the constant b
 				{	Function::Constant * cc =
-						tag::Util::assert_cast < Function::Core*, Function::Constant* > ( term.core );
-					assert ( res.second == 0. );
-					res.second = cc->value;
+						tag::Util::assert_cast < Function::Core*, Function::Constant* > ( term .core );
+					assert ( res .second == 0. );
+					res .second = cc->value;
 				}  }  }  }
 	else  // expression is not a sum
 	{	// could be a product
-		Function::Product * expr_prod = dynamic_cast < Function::Product* > ( expression.core );
+		Function::Product * expr_prod = dynamic_cast < Function::Product* > ( expression .core );
 		if ( expr_prod )  // we assume this product has the form  constant * variable
 		{	std::forward_list < Function > fl = expr_prod->factors;
-			std::forward_list < Function > ::const_iterator itt = fl.begin();
-			assert ( itt != fl.end() );
+			std::forward_list < Function > ::const_iterator itt = fl .begin();
+			assert ( itt != fl .end() );
 			Function c = *itt;
 			Function::Constant * cc =
-				tag::Util::assert_cast < Function::Core*, Function::Constant* > ( c.core );
+				tag::Util::assert_cast < Function::Core*, Function::Constant* > ( c .core );
 			itt++;
-			assert ( itt != fl.end() );
+			assert ( itt != fl .end() );
 			Function var = *itt;
 			itt++;
-			assert ( itt == fl.end() );
+			assert ( itt == fl .end() );
 			Function::CoupledWithField::Scalar * var_cf =
 				tag::Util::assert_cast < Function::Core*,
-				                         Function::CoupledWithField::Scalar* > ( var.core );
+				                         Function::CoupledWithField::Scalar* > ( var .core );
 			Field::Double::Scalar * var_field =
 				tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * > ( var_cf->field );
 			bool found_var = false;
@@ -2464,7 +2479,7 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 			for ( ; i < n_coord; i++ )
 			{	Function::CoupledWithField::Scalar * base_i_cf =
 					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-					( base[i].core );
+					( base [i] .core );
 				Field::Double::Scalar * base_i_field =
 					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
 					( base_i_cf->field );
@@ -2472,12 +2487,12 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 				{	found_var = true;  break;  }                                            }
 			assert ( found_var );
 			assert ( res.first[i] == 0. );
-			res.first[i] = cc->value;                                                       }
+			res .first [i] = cc->value;                                                       }
 		else  // expression is not a sum, not a product
 		{	// must be a variable xi
 			Function::CoupledWithField::Scalar * expr_var =
 				tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-				( expression.core );
+				( expression .core );
 			Field::Double::Scalar * var_field =
 				tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
 				( expr_var->field );
@@ -2486,15 +2501,15 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 			for ( ; i < n_coord; i++ )
 			{	Function::CoupledWithField::Scalar * base_i_cf =
 					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-					( base[i].core );
+					( base [i] .core );
 				Field::Double::Scalar * base_i_field =
 					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
 					( base_i_cf->field );
 				if ( base_i_field->index_in_heap == var_field->index_in_heap )
 				{	found_var = true;  break;  }                                            }
 			assert ( found_var );
-			assert ( res.first[i] == 0. );
-			res.first[i] = 1.;                                                               }  }
+			assert ( res .first [i] == 0. );
+			res .first [i] = 1.;                                                               }  }
 	return res;
 	
 }  // end of Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
@@ -2502,26 +2517,26 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 //-----------------------------------------------------------------------------------------//
 
 
-inline std::pair < std::vector < std::vector < double > >, std::vector < double > >  // static
-Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression
+inline std::pair < std::vector < std::vector < double > >, std::vector < double > >
+Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression  // static
 ( Function expression, Function base )
 
 // 'base' is a set of variables, say X
 // 'expression' is a vector expression in X :  A X + b
 // we want to identify A and b
 
-{	size_t n_coord = base.nb_of_components();
-	size_t dim_expr = expression.nb_of_components();
+{	size_t n_coord = base .nb_of_components();
+	size_t dim_expr = expression .nb_of_components();
 	assert ( n_coord == dim_expr );
 	std::pair < std::vector < std::vector < double > >, std::vector < double > > res;
 	for ( size_t i = 0; i < n_coord; i++ )
 		{	std::pair < std::vector < double >, double > res_i =
 			Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
-			( expression[i], base );
-		assert ( res_i.first.size() == n_coord );
-		res.first.push_back ( std::move ( res_i.first ) );
-		res.second.push_back ( res_i.second );                                   }
-	return res;                                                                  }
+			( expression [i], base );
+		assert ( res_i .first .size() == n_coord );
+		res .first .push_back ( std::move ( res_i .first ) );
+		res .second .push_back ( res_i.second );                                   }
+	return res;                                                                    }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -2549,55 +2564,55 @@ class Function::TakenOnCell
 	
 	inline Function::TakenOnCell & operator= ( const Function::TakenOnCell & other )
 	{	if ( this->f->nb_of_components() == 1 )
-		{	(*this) = static_cast <double> (other);
+		{	(*this) = static_cast < double > (other);
 			return *this;                            }
 		else
-		{	(*this) = static_cast <std::vector<double>> (other);
-			return *this;                                          }  }
+		{	(*this) = static_cast < std::vector < double > > (other);
+			return *this;                                             }  }
 
 	inline Function::TakenOnCell & operator= ( const Function::TakenOnCell && other )
 	{	if ( this->f->nb_of_components() == 1 )
-		{	(*this) = static_cast <double> (other);
+		{	(*this) = static_cast < double > (other);
 			return *this;                            }
 		else
-		{	(*this) = static_cast <std::vector<double>> (other);
-			return *this;                                          }  }
+		{	(*this) = static_cast < std::vector < double > > (other);
+			return *this;                                             }  }
 	
 	inline operator double() const
-	// can be used like in  double x = f(cll)  or  cout << f(cll)
+	// can be used like in  double x = f ( cll )  or  cout << f ( cll )
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->get_value_on_cell ( this->cll );                            }
 		
 	inline double operator= ( const double & x )
-	// can be used like in  f(cll) = 2.0
+	// can be used like in  f ( cll ) = 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell ( this->cll, x );                         }
 
 	inline double operator+= ( const double & x )
-	// can be used like in  f(cll) += 2.0
+	// can be used like in  f ( cll ) += 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) + x );              }
 
 	inline double operator-= ( const double & x )
-	// can be used like in  f(cll) -= 2.0
+	// can be used like in  f ( cll ) -= 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) - x );              }
 
 	inline double operator*= ( const double & x )
-	// can be used like in  f(cll) *= 2.0
+	// can be used like in  f ( cll ) *= 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) * x );              }
 
 	inline double operator/= ( const double & x )
-	// can be used like in  f(cll) /= 2.0
+	// can be used like in  f ( cll ) /= 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
@@ -2609,8 +2624,8 @@ class Function::TakenOnCell
 			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
 	  return f_vect->get_value_on_cell ( this->cll );                              }
 		
-	inline std::vector<double> operator= ( const std::vector<double> & x )
-	// can be used like in  f(cll) = vec
+	inline std::vector<double> operator= ( const std::vector < double > & x )
+	// can be used like in  f ( cll ) = vec
 	{	Function::Vector * f_vect =
 			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
 		return f_vect->set_value_on_cell ( this->cll, x );                           }
@@ -2635,7 +2650,7 @@ class Function::TakenOnWindingCell
 
 	inline TakenOnWindingCell ( const Function & ff, const Cell & c,
                                const Function::Action & exp )
-	:	f { ff.core }, winding { exp }, cll { c.core }
+	:	f { ff .core }, winding { exp }, cll { c .core }
 	{	}
 
 	TakenOnWindingCell ( const Function::TakenOnWindingCell & other ) = delete;
@@ -2643,68 +2658,68 @@ class Function::TakenOnWindingCell
 	
 	inline Function::TakenOnWindingCell & operator= ( const Function::TakenOnWindingCell & other )
 	{	if ( this->f->nb_of_components() == 1 )
-		{	(*this) = static_cast <double> ( other );
+		{	(*this) = static_cast < double > ( other );
 			return *this;                            }
 		else
-		{	(*this) = static_cast <std::vector<double>> ( other );
+		{	(*this) = static_cast < std::vector < double > > ( other );
 			return *this;                                          }  }
 
 	inline Function::TakenOnWindingCell & operator= ( const Function::TakenOnWindingCell && other )
 	{	if ( this->f->nb_of_components() == 1 )
-		{	(*this) = static_cast <double> ( other );
+		{	(*this) = static_cast < double > ( other );
 			return *this;                             }
 		else
-		{	(*this) = static_cast <std::vector<double>> ( other );
+		{	(*this) = static_cast < std::vector < double > > ( other );
 			return *this;                                          }  }
 	
 	inline operator double() const
-	// can be used like in  double x = f(cll)  or  cout << f(cll)
+	// can be used like in  double x = f ( cll )  or  cout << f ( cll )
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->get_value_on_cell ( this->cll, tag::winding, this->winding );     }
 		
 	inline double operator= ( const double & x )
-	// can be used like in  f(cll) = 2.0
+	// can be used like in  f ( cll ) = 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell ( this->cll, x );                         }
 
 	inline double operator+= ( const double & x )
-	// can be used like in  f(cll) += 2.0
+	// can be used like in  f ( cll ) += 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) + x );              }
 
 	inline double operator-= ( const double & x )
-	// can be used like in  f(cll) -= 2.0
+	// can be used like in  f ( cll ) -= 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) - x );              }
 
 	inline double operator*= ( const double & x )
-	// can be used like in  f(cll) *= 2.0
+	// can be used like in  f ( cll ) *= 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) * x );              }
 
 	inline double operator/= ( const double & x )
-	// can be used like in  f(cll) /= 2.0
+	// can be used like in  f ( cll ) /= 2.0
 	{	Function::Scalar * f_scalar =
 			tag::Util::assert_cast < Function::Core*, Function::Scalar* > ( this->f );
 		return f_scalar->set_value_on_cell
 			( this->cll, f_scalar->get_value_on_cell ( this->cll ) / x );              }
 
 	inline operator std::vector<double>() const
-	// can be used like in  vector<double> vec = f(cll)
+	// can be used like in  vector<double> vec = f ( cll )
 	{	Function::Vector * f_vect =
 			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
-	  return f_vect->get_value_on_cell ( this->cll, tag::winding, this->winding );       }
+	  return f_vect->get_value_on_cell ( this->cll, tag::winding, this->winding );  }
 		
 	inline std::vector<double> operator= ( const std::vector<double> & x )
-	// can be used like in  f(cll) = vec
+	// can be used like in  f ( cll ) = vec
 	{	Function::Vector * f_vect =
 			tag::Util::assert_cast < Function::Core*, Function::Vector* > ( this->f );
 		return f_vect->set_value_on_cell ( this->cll, x );                           }
@@ -2793,13 +2808,15 @@ inline Function::Inequality::LessThan::operator Function::Inequality::LessThanZe
 {	return Function::Inequality::LessThanZero { this->low - this->high };  }
 
 inline Function::Inequality::LessThan::operator Function::Inequality::Set() const
-{	return Function::Inequality::Set { { Function::Inequality::LessThanZero { this->low - this->high } } };  }
+{	return Function::Inequality::Set
+		{ { Function::Inequality::LessThanZero { this->low - this->high } } };  }
 
 inline Function::Inequality::GreaterThan::operator Function::Inequality::LessThanZero() const
 {	return Function::Inequality::LessThanZero { this->low - this->high };  }
 
 inline Function::Inequality::GreaterThan::operator Function::Inequality::Set() const
-{	return Function::Inequality::Set { { Function::Inequality::LessThanZero { this->low - this->high } } };  }
+{	return Function::Inequality::Set
+		{ { Function::Inequality::LessThanZero { this->low - this->high } } };  }
 
 inline Function::Inequality::LessThanZero::operator Function::Inequality::Set() const
 {	return Function::Inequality::Set { { *this } };  }
@@ -2809,29 +2826,29 @@ inline Function::Inequality::Set operator&&
 ( const Function::Inequality::Set & f, const Function::Inequality::Set & g )
 
 {	Function::Inequality::Set res;
-	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
-        it = f.vec.begin(); it != f.vec.end(); it++                     )
-		res.vec.push_back ( *it );
-	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
-        it = g.vec.begin(); it != g.vec.end(); it++                     )
-		res.vec.push_back ( *it );
+	for ( std::vector < Function::Inequality::LessThanZero > ::const_iterator
+        it = f .vec .begin(); it != f .vec .end(); it++                     )
+		res .vec .push_back ( *it );
+	for ( std::vector < Function::Inequality::LessThanZero > ::const_iterator
+        it = g .vec .begin(); it != g .vec .end(); it++                     )
+		res .vec .push_back ( *it );
 	return res;                                                                   }
 // optimize !!
 
 
 inline bool Function::Inequality::Set::on_cell ( const Cell & cll ) const
 
-{	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
-        it = this->vec.begin(); it != this->vec.end(); it++             )
+{	for ( std::vector < Function::Inequality::LessThanZero > ::const_iterator
+        it = this->vec .begin(); it != this->vec .end(); it++               )
 		if ( ( it->expr ) ( cll ) > 0. ) return false;
-	return true;                                                             }
+	return true;                                                               }
 
 
 inline bool Function::Inequality::Set::on_cell
 ( const Cell & cll, const tag::Winding &, const Function::Action & a ) const
 
-{	for ( std::vector<Function::Inequality::LessThanZero>::const_iterator
-        it = this->vec.begin(); it != this->vec.end(); it++             )
+{	for ( std::vector < Function::Inequality::LessThanZero > ::const_iterator
+        it = this->vec .begin(); it != this->vec .end(); it++               )
 		if ( ( it->expr ) ( cll, tag::winding, a ) > 0. ) return false;
 	return true;                                                             }
 
@@ -2856,29 +2873,29 @@ inline Function::Inequality::Set operator<=   //  f <= g <= h
 ( const Function::Inequality::LessThan & fg, const Function & h )
 {	Function::Inequality::Set res;
 	res.vec.push_back ( fg );
-	res.vec.push_back ( fg.high < h );
-	return res;                       }
+	res.vec.push_back ( fg .high < h );
+	return res;                         }
 
 inline Function::Inequality::Set operator<   //  f < g < h
 ( const Function::Inequality::LessThan & fg, const Function & h )
 {	Function::Inequality::Set res;
 	res.vec.push_back ( fg );
-	res.vec.push_back ( fg.high < h );
-	return res;                       }
+	res.vec.push_back ( fg .high < h );
+	return res;                         }
 
 inline Function::Inequality::Set operator>=   //  f >= g >= h
 ( const Function::Inequality::GreaterThan & fg, const Function & h )
 {	Function::Inequality::Set res;
 	res.vec.push_back ( fg );
-	res.vec.push_back ( fg.low > h );
-	return res;                       }
+	res.vec.push_back ( fg .low > h );
+	return res;                        }
 
 inline Function::Inequality::Set operator>   //  f > g > h
 ( const Function::Inequality::GreaterThan & fg, const Function & h )
 {	Function::Inequality::Set res;
 	res.vec.push_back ( fg );
-	res.vec.push_back ( fg.low > h );
-	return res;                       }
+	res.vec.push_back ( fg .low > h );
+	return res;                        }
 
 
 inline size_t Function::nb_of_components ( ) const

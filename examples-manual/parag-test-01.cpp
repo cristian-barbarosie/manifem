@@ -1,5 +1,6 @@
 
 // solve a celullar problem, elasticity, given macroscopic strain
+// instead of zero average we impose sum zero
 // square periodicity, triangular elements, circular hole
 // identification of opposite sides based order (when exporting msh)
 
@@ -127,7 +128,7 @@ int main ( )
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0], y = xy[1];
 
-	size_t n = 20;
+	size_t n = 10;
 	double d = 2.6 / double(n);
 
 	Cell A ( tag::vertex );  x(A) = -1.3;  y(A) = -1.3;
@@ -309,7 +310,8 @@ int main ( )
 	vector_sol = solver.solve ( vector_b );
 	if ( solver.info() != Eigen::Success )
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
-		exit ( 0 );                                  }
+		exit ( 0 );                                             }
+	
 		
 	myTensor<double> macro_stress(2,2);
 	for(size_t i=0; i<2; i++ )
@@ -368,30 +370,27 @@ int main ( )
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t j = numbering [ P ];
-		solution_file << j << " " << vector_sol[2*j] << " "
+		solution_file << j + 1 << " " << vector_sol[2*j] << " "
 	                            << vector_sol[2*j+1] << " 0. "<< std::endl;  }
 	size_t j = numbering [ B ];
 	assert ( not A .belongs_to ( torus ) );
-	solution_file << numbering[A] << " "
+	solution_file << numbering[A] + 1 << " "
 		<< vector_sol[2*j] + macro_strain(0,0) * ( x ( A ) - x ( B ) )
 		                 + macro_strain(0,1) * ( y ( A ) - y ( B ) ) <<" " 
 		<< vector_sol[2*j+1] + macro_strain(1,0) * ( x ( A ) - x ( B ) )
-		                 + macro_strain(1,1) * ( y ( A ) - y ( B ) ) << " 0."
-						 << std::endl;
+		                 + macro_strain(1,1) * ( y ( A ) - y ( B ) ) << " 0." << std::endl;
 	assert ( not C .belongs_to ( torus ) );
-	solution_file << numbering[C] << " "
+	solution_file << numbering[C] + 1 << " "
 		<< vector_sol[2*j] + macro_strain(0,0) * ( x ( C ) - x ( B ) )
 		                 + macro_strain(0,1) * ( y ( C ) - y ( B ) ) <<" " 
 		<< vector_sol[2*j+1] + macro_strain(1,0) * ( x ( C ) - x ( B ) )
-		                 + macro_strain(1,1) * ( y ( C ) - y ( B ) ) << " 0."
-						 << std::endl;
+		                 + macro_strain(1,1) * ( y ( C ) - y ( B ) ) << " 0." << std::endl;
 	assert ( not D .belongs_to ( torus ) );
-	solution_file << numbering[D] << " "
+	solution_file << numbering[D] + 1 << " "
 		<< vector_sol[2*j] + macro_strain(0,0) * ( x ( D ) - x ( B ) )
 		                 + macro_strain(0,1) * ( y ( D ) - y ( B ) ) <<" " 
 		<< vector_sol[2*j+1] + macro_strain(1,0) * ( x ( D ) - x ( B ) )
-		                 + macro_strain(1,1) * ( y ( D ) - y ( B ) ) << " 0."
-						 << std::endl;
+		                 + macro_strain(1,1) * ( y ( D ) - y ( B ) ) << " 0." << std::endl;
 	CellIterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
 	it_AB .reset();  assert ( it_AB .in_range() );
@@ -404,12 +403,11 @@ int main ( )
 		if ( V == B )  {  assert ( W == C );  break;  }
 		assert ( not W .belongs_to ( torus ) );
 		j = numbering [ V ];
-		solution_file << numbering[W] << " "
+		solution_file << numbering[W] + 1 << " "
 	    << vector_sol[2*j] + macro_strain(0,0) * ( x ( W ) - x ( V ) )
 		                 + macro_strain(0,1) * ( y ( W ) - y ( V ) ) <<" " 
 		  << vector_sol[2*j+1] + macro_strain(1,0) * ( x ( W ) - x ( V ) )
-		                 + macro_strain(1,1) * ( y ( W ) - y ( V ) ) << " 0."
-	    << std::endl;                                                       }
+		                 + macro_strain(1,1) * ( y ( W ) - y ( V ) ) << " 0." << std::endl;  }
 	CellIterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
 	it_BC .reset();  assert ( it_BC .in_range() );
@@ -422,12 +420,11 @@ int main ( )
 		if ( V == C )  {  assert ( W == D );  break;  }
 		assert ( not W .belongs_to ( torus ) );
 		j = numbering [ V ];
-		solution_file << numbering[W] << " "
+		solution_file << numbering[W] + 1 << " "
 		  << vector_sol[2*j] + macro_strain(0,0) * ( x ( W ) - x ( V ) )
 		                 + macro_strain(0,1) * ( y ( W ) - y ( V ) ) <<" " 
 		  << vector_sol[2*j+1] + macro_strain(1,0) * ( x ( W ) - x ( V ) )
-		                 + macro_strain(1,1) * ( y ( W ) - y ( V ) ) << " 0."
-		  << std::endl;                                                        }
+		                 + macro_strain(1,1) * ( y ( W ) - y ( V ) ) << " 0." << std::endl;  }
 	} // just a block of code
 
 	std::cout << "produced file cell-elast-strain.msh" << std::endl;

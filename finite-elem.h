@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.11.13
+// finite-elem.h 2021.11.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -41,7 +41,7 @@ namespace tag {
 	struct WithMaster { };  static const WithMaster with_master;
 	enum gauss_quadrature { seg_2, seg_3, seg_4, seg_5, seg_6,
                           tri_3, tri_3_Oden, tri_4, tri_4_Oden, tri_6,
-                          quad_4, quad_9 };
+                          quad_4, quad_9                              };
 	struct FromFiniteElementWithMaster { };
 	static const FromFiniteElementWithMaster from_finite_element_with_master;
 	struct ThroughDockedFiniteElement { };
@@ -215,11 +215,13 @@ class FiniteElement
 	
 //-----------------------------------------------------------------------------------------//
 
+
 inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
                                 const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
 :	core { new Integrator::Gauss ( q, tag::from_finite_element_with_master, fe ) }  { }
 
 //-----------------------------------------------------------------------------------------//
+
 
 class FiniteElement::Core
 
@@ -256,16 +258,16 @@ inline void FiniteElement::dock_on ( const Cell & cll, const tag::Winding & )
 
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::Vertices & )
-{	assert ( this->numbers.size() );
-	return * this->numbers[0];       }
+{	assert ( this->numbers .size() );
+	return * this->numbers [0];       }
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::Segments & )
-{	assert ( this->numbers.size() > 1 );
-	return * this->numbers[1];           }
+{	assert ( this->numbers .size() > 1 );
+	return * this->numbers [1];           }
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::CellsOfDim &, const size_t d )
-{	assert ( this->numbers.size() > d );
-	return * this->numbers[d];           }
+{	assert ( this->numbers .size() > d );
+	return * this->numbers [d];           }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -307,37 +309,37 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 
 inline Function FiniteElement::WithMaster::basis_function ( Cell::Core * cll )
 {	std::map < Cell::Core *, Function > :: iterator it =
-		this->base_fun_1.find ( cll );
-	assert ( it != this->base_fun_1.end() );
-  return it->second;                                           }
+		this->base_fun_1 .find ( cll );
+	assert ( it != this->base_fun_1 .end() );
+  return it->second;                                   }
 	
 inline Function FiniteElement::WithMaster::basis_function ( Cell::Core * c1, Cell::Core * c2 )
 {	std::map < Cell::Core *, std::map < Cell::Core *, Function > >
-		:: iterator it = this->base_fun_2.find ( c1 );
-	assert ( it != this->base_fun_2.end() );
+		:: iterator it = this->base_fun_2 .find ( c1 );
+	assert ( it != this->base_fun_2 .end() );
 	std::map < Cell::Core *, Function > :: iterator itt =
-		it->second.find ( c2 );
-	assert ( itt != it->second.end() );
-  return itt->second;                                                          }
+		it->second .find ( c2 );
+	assert ( itt != it->second .end() );
+  return itt->second;                                             }
 
 inline Function FiniteElement::basis_function ( const Cell cll )
 {	FiniteElement::WithMaster * fe_core =
 		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
 	assert ( fe_core );
-	return fe_core->basis_function ( cll.core );                        }
+	return fe_core->basis_function ( cll .core );                        }
 
 inline Function FiniteElement::basis_function ( const Cell c1, const Cell c2 )
 {	FiniteElement::WithMaster * fe_core =
 		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
 	assert ( fe_core );
-	return fe_core->basis_function ( c1.core, c2.core );                }
+	return fe_core->basis_function ( c1 .core, c2 .core );          }
 
 inline double FiniteElement::integrate ( const Function & f )
 {	// assert that 'this' is already docked :
 	FiniteElement::WithMaster * fe_core =
 		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
 	assert ( fe_core );
-	assert ( fe_core->docked_on.exists() );
+	assert ( fe_core->docked_on .exists() );
 	return this->core->integr ( f, tag::through_docked_finite_element, *this );  }
 
 //-----------------------------------------------------------------------------------------//
@@ -430,16 +432,16 @@ inline FiniteElement::FiniteElement
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR_master ( tag::Euclid, tag::of_dim, 1 );
-	Function t = RR_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function t = RR_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
 
 	// std::vector < Cell::Numbering::Field * > numbers;
-	// this->numbers .emplace ( this->numbers.end(), tag::vertices );
-	this->numbers.push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+	// this->numbers .emplace ( this->numbers .end(), tag::vertices );
+	this->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
 
 	this->core = new FiniteElement::WithMaster::Segment ( RR_master );
 	
-	work_manif.set_as_working_manifold();                                                   }
+	work_manif .set_as_working_manifold();                                                 }
 
 
 inline FiniteElement::FiniteElement
@@ -454,13 +456,13 @@ inline FiniteElement::FiniteElement
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
-	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
-	// Function xi = xi_eta[0], eta = xi_eta[1];
+	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Triangle ( RR2_master );
 	
-	work_manif.set_as_working_manifold();                                                       }
+	work_manif .set_as_working_manifold();                                                      }
 
 
 inline FiniteElement::FiniteElement
@@ -476,17 +478,17 @@ inline FiniteElement::FiniteElement
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
-	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
-	// Function xi = xi_eta[0], eta = xi_eta[1];
+	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	// std::vector < Cell::Numbering::Field * > numbers;
-	// this->numbers .emplace ( this->numbers.end(), tag::vertices );
-	this->numbers.push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+	// this->numbers .emplace ( this->numbers .end(), tag::vertices );
+	this->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
 
 	this->core = new FiniteElement::WithMaster::Triangle ( RR2_master );
 	
-	work_manif.set_as_working_manifold();                                                       }
+	work_manif .set_as_working_manifold();                                                      }
 
 
 inline FiniteElement::FiniteElement
@@ -501,13 +503,13 @@ inline FiniteElement::FiniteElement
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
-	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
-	// Function xi = xi_eta[0], eta = xi_eta[1];
+	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Quadrangle ( RR2_master );
 	
-	work_manif.set_as_working_manifold();                                                       }
+	work_manif .set_as_working_manifold();                                                      }
 
 
 inline FiniteElement::FiniteElement
@@ -523,17 +525,17 @@ inline FiniteElement::FiniteElement
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
-	Function xi_eta = RR2_master.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
-	// Function xi = xi_eta[0], eta = xi_eta[1];
+	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	// std::vector < Cell::Numbering::Field * > numbers;
-	// this->numbers .emplace ( this->numbers.end(), tag::vertices );
-	this->numbers.push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+	// this->numbers .emplace ( this->numbers .end(), tag::vertices );
+	this->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
 
 	this->core = new FiniteElement::WithMaster::Quadrangle ( RR2_master );
 	
-	work_manif.set_as_working_manifold();                                                       }
+	work_manif .set_as_working_manifold();                                                      }
 
 
 inline Integrator FiniteElement::set_integrator
@@ -542,7 +544,7 @@ inline Integrator FiniteElement::set_integrator
 { FiniteElement::WithMaster * this_core =
 		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
 	assert ( this_core );
-	this_core->integr.core =
+	this_core->integr .core =
 		new Integrator::Gauss ( q, tag::from_finite_element_with_master, *this );
 	return this_core->integr;                                                    }
 
