@@ -1,6 +1,6 @@
 
 // solve a celullar problem, elasticity, given macroscopic strain
-// square periodicity, triangular elements, circular hole
+// square periodicity, square elements, no rotation imposed
 // identification of opposite sides based on order (when exporting msh)
 
 
@@ -127,28 +127,20 @@ int main ( )
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0], y = xy[1];
 
-	size_t n = 10;
-	double l = 2.6;
-	double d = l / double(n);
-	double areaY = l*l ;
+	Cell A ( tag::vertex );  x(A) = 0.;  y(A) = 0;
+	Cell B ( tag::vertex );  x(B) = 1.;  y(B) = 0.;
+	Cell C ( tag::vertex );  x(C) = 1.;  y(C) = 1.;
+	Cell D ( tag::vertex );  x(D) = 0.;  y(D) = 1.;
 
-	Cell A ( tag::vertex );  x(A) = -l/2.;  y(A) = -l/2.;
-	Cell B ( tag::vertex );  x(B) =  l/2.;  y(B) = -l/2.;
-	Cell C ( tag::vertex );  x(C) =  l/2.;  y(C) =  l/2.;
-	Cell D ( tag::vertex );  x(D) = -l/2.;  y(D) =  l/2.;
-
+	int n = 4;
+	double areaY = 1.;
+	
 	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, n );
 	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, n );
 	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, n );
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, n );
 
-	Manifold circle = RR2.implicit ( x*x + y*y == 0.7 );
-	Mesh inner ( tag::progressive, tag::entire_manifold, circle, tag::desired_length, d );
-
-	Mesh bdry ( tag::join, AB, BC, CD, DA, inner.reverse() );
-
-	RR2.set_as_working_manifold();
-	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
+	Mesh square ( tag::rectangle, BC, CD, DA, AB, tag::with_triangles );
 
 	Mesh torus = square.fold ( tag::identify, AB, tag::with, CD.reverse(),
 	                           tag::identify, BC, tag::with, DA.reverse(),
@@ -190,13 +182,13 @@ int main ( )
 	} // just a block of code
 
 	size_t number_dofs = numbering.size();
-	std::cout << "global matrix " << 2*number_dofs + 3 << "x" << 2*number_dofs << std::endl;
-	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs + 3, 2*number_dofs );
+	std::cout << "global matrix " << 2*number_dofs + 2 << "x" << 2*number_dofs << std::endl;
+	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs + 2, 2*number_dofs );
 	
-	matrix_A.reserve ( Eigen::VectorXi::Constant ( 2*number_dofs, 17 ) );
-	// since we will be working with a mesh of triangles,
-	// there will be, in average, 17=2*(6+1)+3 non-zero elements per column
-	// the diagonal entry plus six neighbour vertices plus the last three equations
+	matrix_A.reserve ( Eigen::VectorXi::Constant ( 2*number_dofs, 20 ) );
+	// since we will be working with a mesh of squares,
+	// there will be, in average, 20=2*9+2 non-zero elements per column
+	// the diagonal entry plus eight neighbour vertices plus the last two equations
 
 	// we fill the main diagonal with ones
 	// then we put zero for vertices belonging to 'torus'
@@ -209,7 +201,7 @@ int main ( )
 		matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
 	} // just a block of code for hiding 'it'
 	
-	Eigen::VectorXd vector_b ( 2*number_dofs + 3 ), vector_sol ( 2*number_dofs );
+	Eigen::VectorXd vector_b ( 2*number_dofs + 2 ), vector_sol ( 2*number_dofs );
 	vector_b.setZero();
 
 	xy = Manifold::working.coordinates();
@@ -217,24 +209,24 @@ int main ( )
 
 	// macroscopic temperature gradient
 	myTensor < double > macro_strain(2,2);
-	macro_strain(0,0)=1.;
-	macro_strain(0,1)=0.;
-	macro_strain(1,0)=0.;
-	macro_strain(1,1)=1.;
+	macro_strain(0,0) = 1.;
+	macro_strain(0,1) = 0.;
+	macro_strain(1,0) = 0.;
+	macro_strain(1,1) = 1.;
 	Function::Jump jump_of_u_1 = macro_strain(0,0) * x.jump() + macro_strain(0,1) * y.jump();
 	Function::Jump jump_of_u_2 = macro_strain(1,0) * x.jump() + macro_strain(1,1) * y.jump();
-	// run over all triangular cells composing 'torus'
+	// run over all rectangular cells composing 'torus'
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
-	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri, tag::winding );
-		// run twice over the three vertices of 'small_tri'
-		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+	{	Cell small_sq = *it;
+		fe.dock_on ( small_sq, tag::winding );
+		// run twice over the three vertices of 'small_sq'
+		CellIterator it_V = small_sq .boundary() .iterator ( tag::over_vertices );
 		for ( it_V.reset(); it_V.in_range(); it_V++ )
 		{	Cell V = *it_V;
 			// perhaps implement an interator returning a vertex and a segment
-			Cell seg = small_tri .boundary() .cell_in_front_of ( V );
+			Cell seg = small_sq .boundary() .cell_in_front_of ( V );
 			Cell W = V;
 			Function psi_V = fe .basis_function ( V ),
 			         d_psiV_dx = psi_V .deriv ( x ),
@@ -247,7 +239,7 @@ int main ( )
 				Function psi_W = fe .basis_function ( W ),
 				         d_psiW_dx = psi_W .deriv ( x ),
 				         d_psiW_dy = psi_W .deriv ( y );
-				// 'fe' is already docked on 'small_tri' so this will be the domain of integration
+				// 'fe' is already docked on 'small_sq' so this will be the domain of integration
 				double int_d_psiW_dx_d_psiV_dx = fe.integrate ( d_psiW_dx * d_psiV_dx );
 				double int_d_psiW_dx_d_psiV_dy = fe.integrate ( d_psiW_dx * d_psiV_dy );
 				double int_d_psiW_dy_d_psiV_dx = fe.integrate ( d_psiW_dy * d_psiV_dx );
@@ -279,22 +271,22 @@ int main ( )
 				jump_V_W_2 += jump_of_u_2 ( seg.winding() );
 				W = seg.tip();
 				if ( V == W ) break;
-				seg = small_tri .boundary() .cell_in_front_of ( seg.tip() );                          }
+				seg = small_sq .boundary() .cell_in_front_of ( seg.tip() );                          }
 			// here  jump_V_W_1 and jump_V_W_2  should be zero again
 			// but we do not assert that, rounding errors may mess up things
 		}  }
 	} // just a block of code for hiding 'it'
 
-	// we add, as last three equations, the condition of zero translation and zero rotation
-	// run over all triangular cells composing 'torus'
+	// we add, as last two equations, the condition of zero translation
+	// run over all quadrangular cells composing 'torus'
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
-	{	Cell small_tri = *it;
-		fe .dock_on ( small_tri, tag::winding );
-		// run over the three vertices of 'small_tri'
+	{	Cell small_sq = *it;
+		fe .dock_on ( small_sq, tag::winding );
+		// run over the three vertices of 'small_sq'
 		// we want to start at a vertex not belonging to CD or DA
-		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		CellIterator it_V = small_sq .boundary() .iterator ( tag::over_vertices );
 		bool found = false;
 		Cell V ( tag::non_existent );
 		for ( it_V .reset(); it_V .in_range(); it_V++ )
@@ -312,21 +304,11 @@ int main ( )
 			vector_b ( 2*number_dofs ) -= jump_V_1 * int_psi;
 			matrix_A.coeffRef ( 2*number_dofs+1, 2*numbering[V]+1 ) += int_psi;
 			vector_b ( 2*number_dofs + 1 ) -= jump_V_2 * int_psi;
-			Cell seg = small_tri .boundary() .cell_in_front_of ( V );
+			Cell seg = small_sq .boundary() .cell_in_front_of ( V );
 			jump_V_1 += jump_of_u_1 ( seg .winding() );
-			jump_V_2 += jump_of_u_2 ( seg .winding() );    
-			}   }
+			jump_V_2 += jump_of_u_2 ( seg .winding() );                           }   }
 	} // just a block of code for hiding 'it'
 			
-	// on the last line we put y alternated with -x (rotation)
-	{ // just a block of code for hiding 'it'
-	CellIterator it = torus.iterator ( tag::over_vertices );
-	for ( it .reset(); it .in_range(); it++ )
-	{	Cell V = *it;
-		matrix_A .coeffRef ( 2*number_dofs+2, 2*numbering[V] ) = y ( V, tag::winding, 0 );
-		matrix_A .coeffRef ( 2*number_dofs+2, 2*numbering[V]+1 ) = -x ( V, tag::winding, 0 );  }
-	} // just a block of code for hiding 'it'
-
 	std::cout << "now solving the system of linear equations" << std::endl;
 	
 	matrix_A .makeCompressed();
@@ -343,6 +325,16 @@ int main ( )
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
 		
+	for ( size_t i = 0; i < number_dofs; i ++ )
+		std::cout << "sol[" << 2*i << "] = " << vector_sol ( 2*i ) << std::endl;
+	for ( size_t i = 0; i < number_dofs; i ++ )
+		std::cout << "sol[" << 2*i+1 << "] = " << vector_sol ( 2*i+1 ) << std::endl;
+
+	Eigen::VectorXd new_b = matrix_A * vector_sol;
+	for ( size_t i = 0; i < 2*number_dofs + 2; i ++ )
+		std::cout << "b_orig[" << i << "] = " << vector_b ( i ) 
+		          << "    b_prod[" << i << "] = " << new_b ( i ) << std::endl;
+
 	myTensor<double> macro_stress(2,2);
 	for(size_t i=0; i<2; i++ )
 	for(size_t j=0; j<2; j++)
@@ -350,10 +342,10 @@ int main ( )
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ )
-	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri, tag::winding );
-		// run twice over the four vertices of 'small_tri'
-		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
+	{	Cell small_sq = *it;
+		fe.dock_on ( small_sq, tag::winding );
+		// run over the four vertices of 'small_sq'
+		CellIterator it_V = small_sq.boundary().iterator ( tag::over_vertices );
 		double jump_V_1 = 0., jump_V_2 = 0.; 
 		for ( it_V .reset(); it_V .in_range(); it_V++ )
 		{	Cell V = *it_V;
@@ -369,7 +361,7 @@ int main ( )
 					( vector_sol (2*numbering[V]+1) + jump_V_2 ) *
 					  ( Hooke (i,j,1,0) * fe .integrate ( d_psi_V_dx ) +
 					    Hooke (i,j,1,1) * fe .integrate ( d_psi_V_dy )  )  ;
-		Cell seg = small_tri .boundary() .cell_in_front_of (V);
+		Cell seg = small_sq .boundary() .cell_in_front_of (V);
 		jump_V_1 += jump_of_u_1 ( seg .winding() );
 		jump_V_2 += jump_of_u_2 ( seg .winding() );                 }             }
 	} // just a block of code for hiding 'it'

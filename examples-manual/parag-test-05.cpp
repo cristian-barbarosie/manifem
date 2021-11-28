@@ -1,6 +1,6 @@
 
 // solve a celullar problem, elasticity, given macroscopic strain
-// square periodicity, triangular elements, circular hole
+// square periodicity, triangular elements, circular hole, no rotation imposed
 // identification of opposite sides based on order (when exporting msh)
 
 
@@ -148,7 +148,9 @@ int main ( )
 	Mesh bdry ( tag::join, AB, BC, CD, DA, inner.reverse() );
 
 	RR2.set_as_working_manifold();
-	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
+	Mesh square_hole ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
+	Mesh disk ( tag::progressive, tag::boundary, inner, tag::desired_length, d );
+	Mesh square ( tag::join, square_hole, disk );
 
 	Mesh torus = square.fold ( tag::identify, AB, tag::with, CD.reverse(),
 	                           tag::identify, BC, tag::with, DA.reverse(),
@@ -190,13 +192,13 @@ int main ( )
 	} // just a block of code
 
 	size_t number_dofs = numbering.size();
-	std::cout << "global matrix " << 2*number_dofs + 3 << "x" << 2*number_dofs << std::endl;
-	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs + 3, 2*number_dofs );
+	std::cout << "global matrix " << 2*number_dofs + 2 << "x" << 2*number_dofs << std::endl;
+	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs + 2, 2*number_dofs );
 	
-	matrix_A.reserve ( Eigen::VectorXi::Constant ( 2*number_dofs, 17 ) );
+	matrix_A.reserve ( Eigen::VectorXi::Constant ( 2*number_dofs, 16 ) );
 	// since we will be working with a mesh of triangles,
-	// there will be, in average, 17=2*(6+1)+3 non-zero elements per column
-	// the diagonal entry plus six neighbour vertices plus the last three equations
+	// there will be, in average, 16 = 2*(6+1)+2 non-zero elements per column
+	// the diagonal entry plus six neighbour vertices plus the last two equations
 
 	// we fill the main diagonal with ones
 	// then we put zero for vertices belonging to 'torus'
@@ -209,7 +211,7 @@ int main ( )
 		matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
 	} // just a block of code for hiding 'it'
 	
-	Eigen::VectorXd vector_b ( 2*number_dofs + 3 ), vector_sol ( 2*number_dofs );
+	Eigen::VectorXd vector_b ( 2*number_dofs + 2 ), vector_sol ( 2*number_dofs );
 	vector_b.setZero();
 
 	xy = Manifold::working.coordinates();
@@ -217,10 +219,10 @@ int main ( )
 
 	// macroscopic temperature gradient
 	myTensor < double > macro_strain(2,2);
-	macro_strain(0,0)=1.;
-	macro_strain(0,1)=0.;
-	macro_strain(1,0)=0.;
-	macro_strain(1,1)=1.;
+	macro_strain(0,0) = 1.;
+	macro_strain(0,1) = 0.;
+	macro_strain(1,0) = 0.;
+	macro_strain(1,1) = 1.;
 	Function::Jump jump_of_u_1 = macro_strain(0,0) * x.jump() + macro_strain(0,1) * y.jump();
 	Function::Jump jump_of_u_2 = macro_strain(1,0) * x.jump() + macro_strain(1,1) * y.jump();
 	// run over all triangular cells composing 'torus'
@@ -285,7 +287,7 @@ int main ( )
 		}  }
 	} // just a block of code for hiding 'it'
 
-	// we add, as last three equations, the condition of zero translation and zero rotation
+	// we add, as last two equations, the condition of zero translation
 	// run over all triangular cells composing 'torus'
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
@@ -314,19 +316,9 @@ int main ( )
 			vector_b ( 2*number_dofs + 1 ) -= jump_V_2 * int_psi;
 			Cell seg = small_tri .boundary() .cell_in_front_of ( V );
 			jump_V_1 += jump_of_u_1 ( seg .winding() );
-			jump_V_2 += jump_of_u_2 ( seg .winding() );    
-			}   }
+			jump_V_2 += jump_of_u_2 ( seg .winding() );                           }   }
 	} // just a block of code for hiding 'it'
 			
-	// on the last line we put y alternated with -x (rotation)
-	{ // just a block of code for hiding 'it'
-	CellIterator it = torus.iterator ( tag::over_vertices );
-	for ( it .reset(); it .in_range(); it++ )
-	{	Cell V = *it;
-		matrix_A .coeffRef ( 2*number_dofs+2, 2*numbering[V] ) = y ( V, tag::winding, 0 );
-		matrix_A .coeffRef ( 2*number_dofs+2, 2*numbering[V]+1 ) = -x ( V, tag::winding, 0 );  }
-	} // just a block of code for hiding 'it'
-
 	std::cout << "now solving the system of linear equations" << std::endl;
 	
 	matrix_A .makeCompressed();
@@ -343,6 +335,11 @@ int main ( )
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
 		
+	Eigen::VectorXd new_b = matrix_A * vector_sol;
+	for ( size_t i = 0; i < 2*number_dofs + 2; i ++ )
+		std::cout << "b_orig[" << i << "] = " << vector_b ( i ) 
+		          << "    b_prod[" << i << "] = " << new_b ( i ) << std::endl;
+
 	myTensor<double> macro_stress(2,2);
 	for(size_t i=0; i<2; i++ )
 	for(size_t j=0; j<2; j++)
