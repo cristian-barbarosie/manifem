@@ -1,5 +1,5 @@
 
-// iterator.cpp 2021.11.04
+// iterator.cpp 2021.11.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -4064,7 +4064,10 @@ void CellIterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::reset ( )
 	{ this->current_segment = nullptr;  return;  }
 	Cell neg_ver = this->msh->first_ver;
 	assert ( neg_ver.exists() );  assert ( not neg_ver.is_positive() );
-	this->current_segment = neg_ver.core->cell_behind_within[this->msh].core;
+	std::map < Mesh::Core *, Cell > ::iterator it =
+		neg_ver .core->cell_behind_within .find ( this->msh );
+	assert ( it != neg_ver .core->cell_behind_within .end() );
+	this->current_segment = ( it->second ) .core;
 	assert ( this->current_segment );
 	this->last_vertex = this->msh->last_ver.core;
 	assert ( this->last_vertex->is_positive() );                               }
@@ -4077,7 +4080,10 @@ void CellIterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::reset ( )
 	{ this->current_segment = nullptr;  return;  }
 	Cell pos_ver = this->msh->last_ver;
 	assert ( pos_ver.exists() );  assert ( pos_ver.is_positive() );
-	this->current_segment = pos_ver.core->cell_behind_within[this->msh].core;
+	std::map < Mesh::Core *, Cell > ::iterator it =
+		pos_ver .core->cell_behind_within .find ( this->msh );
+	assert ( it != pos_ver .core->cell_behind_within .end() );
+	this->current_segment = ( it->second ) .core;
 	assert ( this->current_segment );
 	this->last_vertex = this->msh->first_ver.core;
 	assert ( not this->last_vertex->is_positive() );                           }

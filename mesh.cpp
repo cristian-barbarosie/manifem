@@ -1829,6 +1829,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 // see paragraph 11.9 in the manual
 	
 {	assert ( cll );
+
 	assert ( msh->get_dim_plus_one() > 1 );
 	// make_deep_connections_0d deals with the case of a vertex cll
 	// make_deep_connections_1d deals with the case of a segment cll
@@ -1843,24 +1844,24 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	add_link_same_dim ( cll, msh );
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	CellIterator it = cll_bdry .iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell::Core * face = (*it).core;  // add link from face to 'msh'
+	for ( it .reset(); it .in_range(); it ++ )
+	{	Cell::Core * face = ( * it ) .core;  // add link from face to 'msh'
 		short int cp, cn;
-		face->compute_sign ( cp, cn, cll_bdry.core );
+		face->compute_sign ( cp, cn, cll_bdry .core );
 		assert ( ( ( cp == 1 ) and ( cn == 0 ) ) or ( ( cp == 0 ) and ( cn == 1 ) ) );
 	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	CellIterator itt = cll_bdry .iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
-		for ( itt.reset(); itt.in_range(); itt++ )
-		{	Cell::Core * fface = (*itt).core;  // add link from face to 'msh'
+		for ( itt .reset(); itt .in_range(); itt ++ )
+		{	Cell::Core * fface = ( * itt ) .core;  // add link from face to 'msh'
 			short int cp, cn;
-			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
+			compute_cp_cn ( cp, cn, fface, cll_bdry .core );
 			link_face_to_msh ( fface, cll, msh, cp, cn );   }     }
 
 } // end of make_deep_connections_hd with tag::mesh_is_not_bdry
@@ -4658,10 +4659,10 @@ void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' does not belong yet to 'this' mesh
 	assert ( cll->meshes_same_dim.find(this) == cll->meshes_same_dim.end() );
-	
+
 	make_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
 	
-	add_cell_behind_below_pos_hd ( cll, this );                                     }
+	add_cell_behind_below_pos_hd ( cll, this );                                }
 
 
 void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
@@ -4676,8 +4677,8 @@ void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
 	add_cell_behind_below_pos_hd ( cll, this );                                             }
 
 
-void Mesh::NotZeroDim::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
-// virtual from Mesh::Core
+void Mesh::NotZeroDim::add_pos_hd_cell  // virtual from Mesh::Core
+( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
 	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' does not belong yet to 'this' mesh
@@ -5024,7 +5025,7 @@ Mesh::Core * Mesh::NotZeroDim::build_deep_copy ( )
 // in contrast, for two or more dimensions, 'baricenter' will act even
 // on a vertex on the boundary of 'this' mesh
 // depending on the current working manifold, the resulting coordinates
-// will be projected on the boundary or not
+// may be projected on the boundary or not
 
 void Mesh::baricenter ( const Cell & ver )
 

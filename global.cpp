@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.25
+// global.cpp 2021.11.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -974,40 +974,66 @@ namespace { // anonymous namespace, mimics static linkage
 
 Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg )
 
+// new segments have already been buit, kept in 'corresp_seg'
+// build new cells (polygons)
+	
 {	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
 
-	CellIterator it_cll = msh.iterator ( tag::over_cells_of_dim, 2 );
-	for ( it_cll.reset(); it_cll.in_range(); it_cll++ )
-	{	Cell cll = *it_cll;
+	CellIterator it_cll = msh .iterator ( tag::over_cells_of_dim, 2 );
+	for ( it_cll .reset(); it_cll .in_range(); it_cll++ )
+	{	Cell cll = * it_cll;
 		std::list < Cell > faces;
-		CellIterator it_bdry = cll.boundary() .iterator ( tag::over_segments );
-		for ( it_bdry.reset(); it_bdry.in_range(); it_bdry++ )
-		{	Cell seg = *it_bdry;
-			// no need for glue_on_bdry_of :
-			// new_cll has just been created, it has no meshes above
-			// we call add_to_mesh instead (as if the mesh were not a boundary)
-			if ( seg.is_positive() )
-			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg.find ( seg );
-				assert ( it != corresp_seg.end() );
-				faces .push_back ( it->second );                                       }
-				// faces .push_back ( corresp_seg [ seg ] );
+		CellIterator it_bdry = cll .boundary() .iterator ( tag::over_segments );
+		for ( it_bdry .reset(); it_bdry .in_range(); it_bdry ++ )
+		{	Cell seg = * it_bdry;
+			if ( seg .is_positive() )
+			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg .find ( seg );
+				assert ( it != corresp_seg .end() );
+				faces .push_back ( it->second );                                         }
+//				it->second .core ->add_to_mesh
+//					( new_cll .boundary() .core, tag::do_not_bother );                     }
+				// it ->second == corresp_seg [ seg ] );
 			else
-			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg.find ( seg.reverse() );
-				assert ( it != corresp_seg.end() );
-				faces .push_back ( it->second .reverse() );                                      } }
-				// faces .push_back ( corresp_seg [ seg.reverse() ] .reverse() );       }
-		assert ( faces.size() == 3 );
-		std::list < Cell > :: const_iterator it_faces = faces.begin();
-		assert ( it_faces != faces.end() );
-		Cell f1 = * it_faces;
-		it_faces ++;  assert ( it_faces != faces.end() );
-		Cell f2 = * it_faces;
-		it_faces ++;  assert ( it_faces != faces.end() );
-		Cell f3 = * it_faces;
-		it_faces ++;  assert ( it_faces == faces.end() );
-		// em attic/manifem.cpp esta' uma versao que deveria funcionar mas nao funciona
-		Cell new_cll ( tag::triangle, f1, f2, f3 );
-		new_cll.add_to_mesh ( result );                                                 	} 
+			{	std::map < Cell, Cell > ::const_iterator it =
+					corresp_seg.find ( seg .reverse() );
+				assert ( it != corresp_seg .end() );
+				faces .push_back ( it->second .reverse() );                                 }  }
+//				it->second .reverse() .core ->add_to_mesh
+//					( new_cll .boundary() .core, tag::do_not_bother );   }                    }
+				// it ->second == corresp_seg [ seg ] );
+		std::list < Cell > ::iterator itf = faces .begin();
+		assert ( itf != faces .end() );
+		Cell f1 = * itf;
+		itf ++;  assert ( itf != faces .end() );
+		Cell f2 = * itf;
+		itf ++;  assert ( itf != faces .end() );
+		Cell f3 = * itf;
+		itf ++;
+		if ( itf == faces .end() )  // triangle
+		{	Cell new_tri ( tag::triangle, f1, f2, f3 );
+			new_tri .add_to_mesh ( result );            }
+		else  // quadrangle
+		{	Cell f4 = * itf;
+			itf ++;  assert ( itf == faces .end() );
+			Cell new_sq ( tag::quadrangle, f1, f2, f3, f4 );
+			new_sq .add_to_mesh ( result );            }
+		//  code below does not work -- why ?!!
+		//  see also above, within the loopp with it_bdry : list of faces should not be necessary
+		if ( false )
+		{	Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
+				( tag::whose_boundary_is,
+					Mesh ( tag::whose_core_is,
+				         new Mesh::Connected::OneDim ( tag::with,
+			           cll .boundary() .number_of ( tag::segments ),
+		               tag::segments, tag::one_dummy_wrapper       ),
+		         tag::freshly_created                                 ),
+					tag::one_dummy_wrapper                                     );
+			Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
+			f1 .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
+			f2 .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
+			f3 .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
+			new_cll .boundary() .closed_loop ( f3 .tip() );
+			new_cll .add_to_mesh ( result );                                         }  }
 
 	return result;
 
@@ -1133,6 +1159,9 @@ Mesh fold_common_4
   const std::map < Cell, std::pair < Cell, Manifold::Action > > & corresp_ver,
   const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4        )
 
+// build 'corresp_seg', taking care to identify side_1 with side_2 and side_3 with side_4
+// then call fold_common_1
+	
 {	assert ( msh.dim() == 2 );
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, Cell > corresp_seg;
@@ -1154,7 +1183,7 @@ Mesh fold_common_4
 		               it_base_rev->second.first.reverse(), it_tip->second.first );
 		new_seg.winding() = it_tip->second.second - it_base_rev->second.second;
 		// new_seg.winding() = corresp_ver [ seg.tip()            ] .second -
-		//	                corresp_ver [ seg.base().reverse() ] .second  ;
+		//	                   corresp_ver [ seg.base().reverse() ] .second  ;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
 		assert ( ( it_map == corresp_seg.end() ) or
@@ -1214,6 +1243,10 @@ Mesh fold_common_5
   const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4,
   const Mesh & side_5, const Mesh & side_6                                                  )
 
+// build 'corresp_seg', taking care to identify
+//   side_1 with side_2, side_3 with side_4 and side_5 with side_6
+// then call fold_common_1
+	
 {	assert ( msh.dim() == 2 );
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, Cell > corresp_seg;

@@ -1,5 +1,5 @@
 
-// iterator.h 2021.07.25
+// iterator.h 2021.11.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2230,7 +2230,8 @@ inline void rotate_backwards_for_seg ( CellIterator::Around::OneCell::OfCodimTwo
 // which is not difficult to implement
 
 
-inline void rotate_forward_for_seg ( CellIterator::Around::OneCell::OfCodimTwo::OverSegments * that )
+inline void rotate_forward_for_seg
+( CellIterator::Around::OneCell::OfCodimTwo::OverSegments * that )
 
 {	Cell this_center ( tag::whose_core_is, that->center,
 	                   tag::previously_existing, tag::surely_not_null );
