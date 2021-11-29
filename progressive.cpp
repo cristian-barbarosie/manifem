@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.11.13
+// progressive.cpp 2021.11.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1035,7 +1035,7 @@ inline Cell build_normals ( const Cell & start )
 
 {	assert ( start.belongs_to ( progress_interface, tag::same_dim, tag::oriented ) );
 	#ifndef NDEBUG
-	std::cout << "building normals" << std::endl;
+	// std::cout << "building normals" << std::endl;
 	#endif
 
 	// we keep local copies of desired_len_at_point and sq_desired_len_at_point
@@ -1834,7 +1834,7 @@ angles_60 :
 			{	progress_fill_last_triangle < manif_type >
 					( A, point_60, B, prev_seg, next_seg, seg_next_to_B, cloud );
 				#ifndef NDEBUG
-				std::cout << "shrinking triangle " << ++current_name << std::endl;
+				// std::cout << "shrinking triangle " << ++current_name << std::endl;
 				if ( current_name == stopping_criterion ) return;
 				#endif
 				goto search_for_start;  	                                                        }
@@ -1843,7 +1843,7 @@ angles_60 :
 			AB.add_to_mesh ( progress_interface );
 			build_one_normal ( A, B, AB );  // based on previous segment
 			#ifndef NDEBUG
-			std::cout << "found angle around 60 deg " << ++current_name << std::endl;
+			// std::cout << "found angle around 60 deg " << ++current_name << std::endl;
 			if ( current_name == stopping_criterion ) return;
 			#endif
 			if ( stop_point_120 == B )
@@ -1876,7 +1876,7 @@ angles_60 :
 		assert ( point_120.belongs_to
 			( progress_interface, tag::cell_has_low_dim, tag::not_oriented ) );
 		#ifndef NDEBUG
-		std::cout << "touch " << ++current_name << std::endl;
+		// std::cout << "touch " << ++current_name << std::endl;
 		if ( current_name == stopping_criterion ) return;
 		#endif
 		point_60 = point_120;  stop_point_60 = point_60;  stop_point_120 = point_60;
@@ -1910,7 +1910,7 @@ angles_60 :
 			if ( ver_prev_to_A == ver_next_to_B )  // quadrangle
 			{	// check orientations : correct side ?
 				#ifndef NDEBUG
-				std::cout << "shrinking quadrangle" << std::endl;
+				// std::cout << "shrinking quadrangle" << std::endl;
 				#endif
 				// choose the shortest diagonal, add two triangles to the mesh under construction
 				if ( Manifold::working.dist_sq ( A, B ) <
@@ -1972,7 +1972,7 @@ angles_60 :
 			if ( point_120 .is_inner_to ( mesh_under_constr ) ) msh.baricenter ( point_120 );
 			progress_add_point < manif_type > ( P, cloud );
 			#ifndef NDEBUG
-			std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
+			// std::cout << "found angle around 120 deg " << ++current_name << std::endl << std::flush;
 			if ( current_name == stopping_criterion ) return;
 			#endif
 			if ( stop_point_120 == point_120 )  // we have all the loop to cover
@@ -2023,7 +2023,7 @@ angles_60 :
 	stop_point_120 = progress_interface.cell_in_front_of(B).tip();
 
 	#ifndef NDEBUG
-	std::cout << "building brand new triangle " << ++current_name << std::endl;
+	// std::cout << "building brand new triangle " << ++current_name << std::endl;
 	if ( current_name == stopping_criterion ) return;
 	#endif
 
@@ -2044,7 +2044,7 @@ search_for_start :  // execution only reaches this point through 'goto'
 	if ( progress_interface.number_of ( tag::segments ) == 0 ) return;
 	// empty interface, meshing process ended
 	#ifndef NDEBUG
-	std::cout << "search for start " << current_name << std::endl;
+	// std::cout << "search for start " << current_name << std::endl;
 	#endif
 	CellIterator it = progress_interface.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
@@ -2184,7 +2184,7 @@ inline void progressive_construct
 	assert ( start.reverse().core->belongs_to
 			( interf_rev.core, tag::same_dim, tag::oriented ) );
 
-	std::cout << "wait a minute ..." << std::endl;
+	// std::cout << "wait a minute ..." << std::endl;
 	// build the mesh on the other side of 'interface'
 	for ( size_t i = 0; i < 3; i++ )  nor[i] *= -1.;
 	Mesh msh2 ( tag::whose_core_is,   // of dimesion two

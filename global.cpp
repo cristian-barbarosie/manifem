@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.26
+// global.cpp 2021.11.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1001,39 +1001,22 @@ Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_s
 //				it->second .reverse() .core ->add_to_mesh
 //					( new_cll .boundary() .core, tag::do_not_bother );   }                    }
 				// it ->second == corresp_seg [ seg ] );
+		Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
+			( tag::whose_boundary_is,
+				Mesh ( tag::whose_core_is,
+			         new Mesh::Connected::OneDim ( tag::with,
+		           cll .boundary() .number_of ( tag::segments ),
+	               tag::segments, tag::one_dummy_wrapper       ),
+	         tag::freshly_created                                 ),
+				tag::one_dummy_wrapper                                     );
+		Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
 		std::list < Cell > ::iterator itf = faces .begin();
 		assert ( itf != faces .end() );
 		Cell f1 = * itf;
-		itf ++;  assert ( itf != faces .end() );
-		Cell f2 = * itf;
-		itf ++;  assert ( itf != faces .end() );
-		Cell f3 = * itf;
-		itf ++;
-		if ( itf == faces .end() )  // triangle
-		{	Cell new_tri ( tag::triangle, f1, f2, f3 );
-			new_tri .add_to_mesh ( result );            }
-		else  // quadrangle
-		{	Cell f4 = * itf;
-			itf ++;  assert ( itf == faces .end() );
-			Cell new_sq ( tag::quadrangle, f1, f2, f3, f4 );
-			new_sq .add_to_mesh ( result );            }
-		//  code below does not work -- why ?!!
-		//  see also above, within the loopp with it_bdry : list of faces should not be necessary
-		if ( false )
-		{	Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
-				( tag::whose_boundary_is,
-					Mesh ( tag::whose_core_is,
-				         new Mesh::Connected::OneDim ( tag::with,
-			           cll .boundary() .number_of ( tag::segments ),
-		               tag::segments, tag::one_dummy_wrapper       ),
-		         tag::freshly_created                                 ),
-					tag::one_dummy_wrapper                                     );
-			Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
-			f1 .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
-			f2 .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
-			f3 .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
-			new_cll .boundary() .closed_loop ( f3 .tip() );
-			new_cll .add_to_mesh ( result );                                         }  }
+		for ( ; itf != faces .end(); itf ++ )
+			( * itf ) .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
+		new_cll .boundary() .closed_loop ( f1 .tip() );
+		new_cll .add_to_mesh ( result );                                                   }
 
 	return result;
 
