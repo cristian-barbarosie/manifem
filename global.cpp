@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.27
+// global.cpp 2021.11.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -974,7 +974,7 @@ namespace { // anonymous namespace, mimics static linkage
 
 Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg )
 
-// new segments have already been buit, kept in 'corresp_seg'
+// new segments have already been built, kept in 'corresp_seg'
 // build new cells (polygons)
 	
 {	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
@@ -982,25 +982,6 @@ Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_s
 	CellIterator it_cll = msh .iterator ( tag::over_cells_of_dim, 2 );
 	for ( it_cll .reset(); it_cll .in_range(); it_cll++ )
 	{	Cell cll = * it_cll;
-		std::list < Cell > faces;
-		CellIterator it_bdry = cll .boundary() .iterator ( tag::over_segments );
-		for ( it_bdry .reset(); it_bdry .in_range(); it_bdry ++ )
-		{	Cell seg = * it_bdry;
-			if ( seg .is_positive() )
-			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg .find ( seg );
-				assert ( it != corresp_seg .end() );
-				faces .push_back ( it->second );                                         }
-//				it->second .core ->add_to_mesh
-//					( new_cll .boundary() .core, tag::do_not_bother );                     }
-				// it ->second == corresp_seg [ seg ] );
-			else
-			{	std::map < Cell, Cell > ::const_iterator it =
-					corresp_seg.find ( seg .reverse() );
-				assert ( it != corresp_seg .end() );
-				faces .push_back ( it->second .reverse() );                                 }  }
-//				it->second .reverse() .core ->add_to_mesh
-//					( new_cll .boundary() .core, tag::do_not_bother );   }                    }
-				// it ->second == corresp_seg [ seg ] );
 		Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
 			( tag::whose_boundary_is,
 				Mesh ( tag::whose_core_is,
@@ -1010,13 +991,27 @@ Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_s
 	         tag::freshly_created                                 ),
 				tag::one_dummy_wrapper                                     );
 		Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
-		std::list < Cell > ::iterator itf = faces .begin();
-		assert ( itf != faces .end() );
-		Cell f1 = * itf;
-		for ( ; itf != faces .end(); itf ++ )
-			( * itf ) .core->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
-		new_cll .boundary() .closed_loop ( f1 .tip() );
-		new_cll .add_to_mesh ( result );                                                   }
+		Cell kept_seg ( tag::non_existent );
+		CellIterator it_bdry = cll .boundary() .iterator ( tag::over_segments );
+		for ( it_bdry .reset(); it_bdry .in_range(); it_bdry ++ )
+		{	Cell seg = * it_bdry;
+			if ( seg .is_positive() )
+			{	std::map < Cell, Cell > ::const_iterator it = corresp_seg .find ( seg );
+				assert ( it != corresp_seg .end() );
+				kept_seg = it->second;                                                   }
+				// it ->second == corresp_seg [ seg ] );
+			else
+			{	std::map < Cell, Cell > ::const_iterator it =
+					corresp_seg.find ( seg .reverse() );
+				assert ( it != corresp_seg .end() );
+				kept_seg = it->second .reverse();              }
+				// it ->second == corresp_seg [ seg ] );
+			assert ( kept_seg .exists() );
+			kept_seg .core ->add_to_mesh
+				( new_cll .boundary() .core, tag::do_not_bother );                            }
+		assert ( kept_seg .exists() );
+		new_cll .boundary() .closed_loop ( kept_seg .tip() );
+		new_cll .add_to_mesh ( result );                                                     }
 
 	return result;
 

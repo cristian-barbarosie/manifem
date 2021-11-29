@@ -146,13 +146,13 @@ int main ( )
 	                           tag::identify, BC, tag::with, DA.reverse(),
 	                           tag::use_existing_vertices                 );
 							   
-	// Hooke's Law 
-	double lambda = 1., mu = 3.;
+	// Hooke's Law,  E = 1.,  nu = 0.3
+	double lambda = 0.576923, mu = 0.38461538;
 
 	myTensor <double> Hooke (2,2,2,2);
-	Hooke (0,0,0,0) = 2*mu+lambda;
-	Hooke (0,0,0,1) = lambda;
-	Hooke (0,0,1,0) = lambda;
+	Hooke (0,0,0,0) = 2*mu + lambda;
+	Hooke (0,0,0,1) = 0.;
+	Hooke (0,0,1,0) = 0.;
 	Hooke (0,0,1,1) = lambda;
 	Hooke (0,1,0,0) = 0.;
 	Hooke (0,1,0,1) = mu;
@@ -163,9 +163,9 @@ int main ( )
 	Hooke (1,0,1,0) = mu;
 	Hooke (1,0,1,1) = 0.;
 	Hooke (1,1,0,0) = lambda;
-	Hooke (1,1,0,1) = lambda;
-	Hooke (1,1,1,0) = lambda;
-	Hooke (1,1,1,1) = 2*mu+lambda;
+	Hooke (1,1,0,1) = 0.;
+	Hooke (1,1,1,0) = 0.;
+	Hooke (1,1,1,1) = 2*mu + lambda;
 
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );

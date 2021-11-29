@@ -8,7 +8,9 @@ using namespace maniFEM;
 
 int main ( )
 
-{	Cell A ( tag::vertex);
+{	Mesh m ( tag::fuzzy, tag::of_dim, 2 );
+
+	Cell A ( tag::vertex);
 	Cell B ( tag::vertex);
 	Cell C ( tag::vertex);
 
@@ -31,6 +33,31 @@ int main ( )
 	CA .core->add_to_mesh ( ABC_bdry .core, tag::do_not_bother );
 
 	ABC_bdry .closed_loop ( A );
+
+	ABC .add_to_mesh ( m );
+
+	Cell D ( tag::vertex );
+
+	Cell AD ( tag::segment, A .reverse(), D );
+	Cell BD ( tag::segment, B .reverse(), D );
+
+	new_cll_ptr = new Cell::Positive::HighDim
+		( tag::whose_boundary_is,
+			Mesh ( tag::whose_core_is,
+		         new Mesh::Connected::OneDim ( tag::with, 3,
+		           tag::segments, tag::one_dummy_wrapper       ),
+         tag::freshly_created                                 ),
+			tag::one_dummy_wrapper                                     );
+	Cell BAD ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
+	Mesh BAD_bdry = BAD .boundary();
+
+	AB .reverse() .core->add_to_mesh ( BAD_bdry .core, tag::do_not_bother );
+	AD .core->add_to_mesh ( BAD_bdry .core, tag::do_not_bother );
+	BD .reverse() .core->add_to_mesh ( BAD_bdry .core, tag::do_not_bother );
+
+	BAD_bdry .closed_loop ( A );
+
+	BAD .add_to_mesh ( m );
 
 	CellIterator it = ABC_bdry .iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );

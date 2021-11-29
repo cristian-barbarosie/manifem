@@ -169,18 +169,18 @@ int main ( )
 
 	limit_number_of_neighbours ( torus );
 
-	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
+	// std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
 	
-	torus.draw_ps ( "torus.eps", tag::unfold,
-                  tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+	// torus.draw_ps ( "torus.eps", tag::unfold,
+  //                 tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	// Hooke's Law 
-	double lambda = 1., mu = 3.;
+	// Hooke's Law,  E = 1.,  nu = 0.3
+	double lambda = 0.576923, mu = 0.38461538;
 
 	myTensor <double> Hooke (2,2,2,2);
-	Hooke (0,0,0,0) = 2*mu+lambda;
-	Hooke (0,0,0,1) = lambda;
-	Hooke (0,0,1,0) = lambda;
+	Hooke (0,0,0,0) = 2*mu + lambda;
+	Hooke (0,0,0,1) = 0.;
+	Hooke (0,0,1,0) = 0.;
 	Hooke (0,0,1,1) = lambda;
 	Hooke (0,1,0,0) = 0.;
 	Hooke (0,1,0,1) = mu;
@@ -191,9 +191,9 @@ int main ( )
 	Hooke (1,0,1,0) = mu;
 	Hooke (1,0,1,1) = 0.;
 	Hooke (1,1,0,0) = lambda;
-	Hooke (1,1,0,1) = lambda;
-	Hooke (1,1,1,0) = lambda;
-	Hooke (1,1,1,1) = 2*mu+lambda;
+	Hooke (1,1,0,1) = 0.;
+	Hooke (1,1,1,0) = 0.;
+	Hooke (1,1,1,1) = 2*mu + lambda;
 
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
@@ -229,26 +229,28 @@ int main ( )
 	macro_strain (0,1) = 0.;
 	macro_strain (1,0) = 0.;
 	macro_strain (1,1) = 1.;
-	Function::Jump jump_of_u_1 = macro_strain(0,0) * x.jump() + macro_strain(0,1) * y.jump();
-	Function::Jump jump_of_u_2 = macro_strain(1,0) * x.jump() + macro_strain(1,1) * y.jump();
+
+	Function::Jump jump_of_u_x = macro_strain(0,0) * x.jump() + macro_strain(0,1) * y.jump();
+	Function::Jump jump_of_u_y = macro_strain(1,0) * x.jump() + macro_strain(1,1) * y.jump();
+
 	// run over all triangular cells composing 'torus'
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
-	for ( it.reset(); it.in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri, tag::winding );
+		fe .dock_on ( small_tri, tag::winding );
 		// run twice over the three vertices of 'small_tri'
 		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
-		for ( it_V.reset(); it_V.in_range(); it_V++ )
-		{	Cell V = *it_V;
-			// perhaps implement an interator returning a vertex and a segment
+		for ( it_V .reset(); it_V .in_range(); it_V ++ )
+		{	Cell V = * it_V;
+			// perhaps implement an iterator returning a vertex and a segment
 			Cell seg = small_tri .boundary() .cell_in_front_of ( V );
 			Cell W = V;
 			Function psi_V = fe .basis_function ( V ),
 			         d_psiV_dx = psi_V .deriv ( x ),
 			         d_psiV_dy = psi_V .deriv ( y );
-			double jump_V_W_1 = 0.;
-			double jump_V_W_2 = 0.;
+			double jump_V_W_u_x = 0.;
+			double jump_V_W_u_y = 0.;
 			while ( true )
 			{	assert ( W == seg .base() .reverse() );
 				// V may be the same as W, no problem about that
@@ -262,24 +264,28 @@ int main ( )
 				double int_d_psiW_dy_d_psiV_dy = fe .integrate ( d_psiW_dy * d_psiV_dy );
 				myTensor < double > energy ( 2, 2 );
 				for ( size_t i = 0; i < 2; i ++ )
-				for ( size_t j = 0; j < 2; j ++ )
-					energy (i,j) = Hooke (i,0,j,0) * int_d_psiW_dx_d_psiV_dx +
-					               Hooke (i,0,j,1) * int_d_psiW_dy_d_psiV_dx +
-					               Hooke (i,1,j,0) * int_d_psiW_dx_d_psiV_dy +
+				for ( size_t k = 0; k < 2; k ++ )
+					energy (i,k) = Hooke (i,0,k,0) * int_d_psiW_dx_d_psiV_dx +
+					               Hooke (i,0,k,1) * int_d_psiW_dy_d_psiV_dx +
+					               Hooke (i,1,k,0) * int_d_psiW_dx_d_psiV_dy +
+				                 Hooke (i,1,k,1) * int_d_psiW_dy_d_psiV_dy ;
 				matrix_A .coeffRef ( 2*numbering[V], 2*numbering[W] ) += energy(0,0);
 				matrix_A .coeffRef ( 2*numbering[V], 2*numbering[W]+1 ) += energy(0,1);
 				matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[W] ) += energy(1,0);
 				matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[W]+1 ) += energy(1,1);
-				vector_b ( 2*numbering[V] ) -= jump_V_W_1 * energy(0,0) + jump_V_W_2 * energy(0,1);
-				vector_b ( 2*numbering[V]+1 ) -= jump_V_W_1 * energy(1,0) + jump_V_W_2 * energy(1,1);
-				jump_V_W_1 += jump_of_u_1 ( seg .winding() );
-				jump_V_W_2 += jump_of_u_2 ( seg .winding() );
+				vector_b ( 2*numbering[V] ) -=
+					jump_V_W_u_x * energy(0,0) + jump_V_W_u_y * energy(0,1);
+				vector_b ( 2*numbering[V]+1 ) -=
+					jump_V_W_u_x * energy(1,0) + jump_V_W_u_y * energy(1,1);
+				jump_V_W_u_x += jump_of_u_x ( seg .winding() );
+				jump_V_W_u_y += jump_of_u_y ( seg .winding() );
 				W = seg.tip();
 				if ( V == W ) break;
-				seg = small_tri .boundary() .cell_in_front_of ( seg .tip() );                          }
-			// here  jump_V_W_1 and jump_V_W_2  should be zero again
+				seg = small_tri .boundary() .cell_in_front_of ( W );                        }
+			// end of loop in W
+			// here  jump_V_W_u_x and jump_V_W_u_y  should be zero again
 			// but we do not assert that, rounding errors may mess up things
-		}  }
+		}  }  // end of loop in V, end of loop in small_tri
 	} // just a block of code for hiding 'it'
 
 	std::cout << "now solving the system of linear equations" << std::endl;
@@ -301,17 +307,17 @@ int main ( )
 	Eigen::VectorXd new_b = matrix_A * vector_sol;
 
 	myTensor<double> macro_stress(2,2);
-	for(size_t i=0; i<2; i++ )
-	for(size_t j=0; j<2; j++)
-		macro_stress(i,j) = 0.;
+	for ( size_t i=0; i<2; i++ )
+	for ( size_t j=0; j<2; j++ )  macro_stress (i,j) = 0.;
+
 	{ // just a block of code for hiding 'it'
-	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
-		fe.dock_on ( small_tri, tag::winding );
+		fe .dock_on ( small_tri, tag::winding );
 		// run twice over the four vertices of 'small_tri'
-		CellIterator it_V = small_tri.boundary().iterator ( tag::over_vertices );
-		double jump_V_1 = 0., jump_V_2 = 0.; 
+		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		double jump_V_u_x = 0., jump_V_u_y = 0.; 
 		for ( it_V .reset(); it_V .in_range(); it_V++ )
 		{	Cell V = *it_V;
 			Function psi_V = fe .basis_function ( V ),
@@ -320,25 +326,27 @@ int main ( )
 			for ( size_t i=0; i<2; i++ )
 			for ( size_t j=0; j<2; j++ )
 				macro_stress (i,j) +=
-					( vector_sol (2*numbering[V]) + jump_V_1 ) *
+					( vector_sol ( 2*numbering[V] ) + jump_V_u_x ) *
 					  ( Hooke (i,j,0,0) * fe .integrate ( d_psi_V_dx ) +
 					    Hooke (i,j,0,1) * fe .integrate ( d_psi_V_dy )  ) +
-					( vector_sol (2*numbering[V]+1) + jump_V_2 ) *
+					( vector_sol ( 2*numbering[V]+1 ) + jump_V_u_y ) *
 					  ( Hooke (i,j,1,0) * fe .integrate ( d_psi_V_dx ) +
 					    Hooke (i,j,1,1) * fe .integrate ( d_psi_V_dy )  )  ;
-		Cell seg = small_tri .boundary() .cell_in_front_of (V);
-		jump_V_1 += jump_of_u_1 ( seg .winding() );
-		jump_V_2 += jump_of_u_2 ( seg .winding() );                      }          }
+			Cell seg = small_tri .boundary() .cell_in_front_of (V);
+			jump_V_u_x += jump_of_u_x ( seg .winding() );
+			jump_V_u_y += jump_of_u_y ( seg .winding() );                      }          }
+			// end of loop in V, end of loop in small_tri
+			// at the end of each loop in V,  jump_V_u_x and jump_V_u_y  should be zero again
+			// but we do not assert that, rounding errors may mess up things
 	} // just a block of code for hiding 'it'
 	
 	for ( size_t i=0; i<2; i++ )
-	for ( size_t j=0; j<2; j++ )
-		macro_stress (i,j) /= areaY;
+	for ( size_t j=0; j<2; j++ )  macro_stress (i,j) /= areaY;
 	
-	cout << "macro strain " << macro_strain(0,0) << " "<< macro_strain(0,1) << " "
-	                        << macro_strain(1,0) << " "<< macro_strain(1,1) << " " << endl;
-	cout << "macro stress " << macro_stress(0,0) << " "<< macro_stress(0,1) << " "
-	                        << macro_stress(1,0) << " "<< macro_stress(1,1) << " " << endl;
+	cout << "macro strain " << macro_strain(0,0) << " " << macro_strain(0,1) << " "
+	                        << macro_strain(1,0) << " " << macro_strain(1,1) << " " << endl;
+	cout << "macro stress " << macro_stress(0,0) << " " << macro_stress(0,1) << " "
+	                        << macro_stress(1,0) << " " << macro_stress(1,1) << " " << endl;
 
 }
 
