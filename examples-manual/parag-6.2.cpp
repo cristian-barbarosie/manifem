@@ -22,26 +22,26 @@ void impose_value_of_unknown
 
 // used for imposing Dirichlet boundary conditions
 
-{	size_t size_matrix = matrix_A.innerSize();
+{	size_t size_matrix = matrix_A .innerSize();
 	vector_b(i) = val;
 	for ( size_t j = 0; j < size_matrix; j++ )
-		matrix_A.coeffRef ( i, j ) = 0.;
-	matrix_A.coeffRef ( i, i ) = 1.;
+		matrix_A .coeffRef ( i, j ) = 0.;
+	matrix_A .coeffRef ( i, i ) = 1.;
 	for ( size_t j = 0; j < size_matrix; j++ )
 	{	if ( i == j ) continue;
-		vector_b(j) -= matrix_A.coeffRef ( j, i ) * val;
-		matrix_A.coeffRef ( j, i ) = 0.;                  }  }
+		vector_b(j) -= matrix_A .coeffRef ( j, i ) * val;
+		matrix_A .coeffRef ( j, i ) = 0.;                  }  }
 
 	
 int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
-	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0],  y = xy[1];
 
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe.set_integrator ( tag::Gauss, tag::quad_4 );
+	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
 
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
@@ -59,48 +59,48 @@ int main ()
 	// one could use instead a Cell::Numbering::Map, see paragraph 6.3 in the manual
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	CellIterator it = ABCD .iterator ( tag::over_vertices );
 	size_t counter = 0;
-	for ( it.reset() ; it.in_range(); it++ )
-	{	Cell V = *it;  numbering[V] = counter;  ++counter;  }
-	assert ( counter == numbering.size() );
+	for ( it .reset() ; it .in_range(); it++ )
+	{	Cell V = *it;  numbering [V] = counter;  ++counter;  }
+	assert ( counter == numbering .size() );
 	} // just a block of code
 
-	size_t size_matrix = numbering.size();
+	size_t size_matrix = numbering .size();
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
 	Eigen::SparseMatrix <double> matrix_A ( size_matrix, size_matrix );
 	
-	matrix_A.reserve ( Eigen::VectorXi::Constant ( size_matrix, 9 ) );
+	matrix_A .reserve ( Eigen::VectorXi::Constant ( size_matrix, 9 ) );
 	// since we will be working with a mesh of squares,
 	// there will be about 9 non-zero elements per column
 	// the diagonal entry plus eight neighbour vertices
 
 	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
-	vector_b.setZero();
+	vector_b .setZero();
 
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
-	CellIterator it = ABCD.iterator ( tag::over_cells_of_max_dim );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = ABCD .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_square = *it;
-		fe.dock_on ( small_square );
+		fe .dock_on ( small_square );
 		// run twice over the four vertices of 'small_square'
-		CellIterator it1 = small_square.boundary().iterator ( tag::over_vertices );
-		CellIterator it2 = small_square.boundary().iterator ( tag::over_vertices );
-		for ( it1.reset(); it1.in_range(); it1++ )
-		for ( it2.reset(); it2.in_range(); it2++ )
+		CellIterator it1 = small_square .boundary() .iterator ( tag::over_vertices );
+		CellIterator it2 = small_square .boundary() .iterator ( tag::over_vertices );
+		for ( it1 .reset(); it1 .in_range(); it1++ )
+		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
 			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
 			// 					<< x(W) << "," << y(W) << ") " << numbering[W]) << std::endl;
-			Function psiV = fe.basis_function(V),
-			         psiW = fe.basis_function(W),
-			         d_psiV_dx = psiV.deriv(x),
-			         d_psiV_dy = psiV.deriv(y),
-			         d_psiW_dx = psiW.deriv(x),
-			         d_psiW_dy = psiW.deriv(y);
+			Function psiV = fe .basis_function (V),
+			         psiW = fe .basis_function (W),
+			         d_psiV_dx = psiV .deriv (x),
+			         d_psiV_dy = psiV .deriv (y),
+			         d_psiW_dx = psiW .deriv (x),
+			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
-			matrix_A.coeffRef ( numbering[V], numbering[W] ) +=
-				fe.integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
+			matrix_A .coeffRef ( numbering[V], numbering[W] ) +=
+				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
 		}  }
 	} // just a block of code 
 

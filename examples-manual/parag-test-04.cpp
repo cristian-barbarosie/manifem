@@ -1,5 +1,7 @@
 
 
+// see global.cpp fold_common_1
+
 #include "maniFEM.h"
 using namespace maniFEM;
 

@@ -132,7 +132,7 @@ int main ( )
 	Cell C ( tag::vertex );  x(C) = 1.;  y(C) = 1.;
 	Cell D ( tag::vertex );  x(D) = 0.;  y(D) = 1.;
 
-	int n = 4;
+	int n = 10;
 	double areaY = 1.;
 	
 	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, n );
@@ -140,7 +140,7 @@ int main ( )
 	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, n );
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, n );
 
-	Mesh square ( tag::rectangle, BC, CD, DA, AB, tag::with_triangles );
+	Mesh square ( tag::rectangle, BC, CD, DA, AB );
 
 	Mesh torus = square.fold ( tag::identify, AB, tag::with, CD.reverse(),
 	                           tag::identify, BC, tag::with, DA.reverse(),
@@ -149,60 +149,60 @@ int main ( )
 	// Hooke's Law 
 	double lambda = 1., mu = 3.;
 
-	myTensor <double> Hooke(2,2,2,2);
-	Hooke(0,0,0,0) = 2*mu+lambda;
-	Hooke(0,0,0,1) = lambda;
-	Hooke(0,0,1,0) = lambda;
-	Hooke(0,0,1,1) = lambda;
-	Hooke(0,1,0,0) = 0.;
-	Hooke(0,1,0,1) = mu;
-	Hooke(0,1,1,0) = mu;
-	Hooke(0,1,1,1) = 0.;
-	Hooke(1,0,0,0) = 0.;
-	Hooke(1,0,0,1) = mu;
-	Hooke(1,0,1,0) = mu;
-	Hooke(1,0,1,1) = 0.;
-	Hooke(1,1,0,0) = lambda;
-	Hooke(1,1,0,1) = lambda;
-	Hooke(1,1,1,0) = lambda;
-	Hooke(1,1,1,1) = 2*mu+lambda;
+	myTensor <double> Hooke (2,2,2,2);
+	Hooke (0,0,0,0) = 2*mu+lambda;
+	Hooke (0,0,0,1) = lambda;
+	Hooke (0,0,1,0) = lambda;
+	Hooke (0,0,1,1) = lambda;
+	Hooke (0,1,0,0) = 0.;
+	Hooke (0,1,0,1) = mu;
+	Hooke (0,1,1,0) = mu;
+	Hooke (0,1,1,1) = 0.;
+	Hooke (1,0,0,0) = 0.;
+	Hooke (1,0,0,1) = mu;
+	Hooke (1,0,1,0) = mu;
+	Hooke (1,0,1,1) = 0.;
+	Hooke (1,1,0,0) = lambda;
+	Hooke (1,1,0,1) = lambda;
+	Hooke (1,1,1,0) = lambda;
+	Hooke (1,1,1,1) = 2*mu+lambda;
 
 	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
-	fe.set_integrator ( tag::Gauss, tag::tri_4 );
+	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	fe .set_integrator ( tag::Gauss, tag::quad_4 );
 
 	// we number all nodes in 'square', not only those belonging to 'torus'
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = square.iterator ( tag::over_vertices );
+	CellIterator it = square .iterator ( tag::over_vertices );
 	size_t counter = 0;
-	for ( it.reset() ; it.in_range(); it++ )
+	for ( it .reset() ; it .in_range(); it++ )
 	{	Cell V = *it;  numbering[V] = counter;  ++counter;  }
-	assert ( counter == numbering.size() );
+	assert ( counter == numbering .size() );
 	} // just a block of code
 
-	size_t number_dofs = numbering.size();
-	std::cout << "global matrix " << 2*number_dofs + 2 << "x" << 2*number_dofs << std::endl;
-	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs + 2, 2*number_dofs );
+	size_t number_dofs = numbering .size();
+	std::cout << "global matrix " << 2*number_dofs << "x" << 2*number_dofs << std::endl;
+	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs, 2*number_dofs );
 	
-	matrix_A.reserve ( Eigen::VectorXi::Constant ( 2*number_dofs, 20 ) );
+	matrix_A .reserve ( Eigen::VectorXi::Constant ( 2*number_dofs, 18 ) );
 	// since we will be working with a mesh of squares,
-	// there will be, in average, 20=2*9+2 non-zero elements per column
-	// the diagonal entry plus eight neighbour vertices plus the last two equations
+	// there will be, in average, 18 = 2*9 non-zero elements per column
+	// the diagonal entry plus eight neighbour vertices
 
 	// we fill the main diagonal with ones
 	// then we put zero for vertices belonging to 'torus'
 	{ // just a block of code for hiding 'it'
 	for ( size_t i = 0; i < 2*number_dofs; i++ ) matrix_A.coeffRef ( i, i ) = 1.;
-	CellIterator it = torus.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = torus .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell V = *it;
-		matrix_A.coeffRef ( 2*numbering[V], 2*numbering[V] ) = 0.;
-		matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
+		matrix_A .coeffRef ( 2*numbering[V], 2*numbering[V] ) = 0.;
+		matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
 	} // just a block of code for hiding 'it'
 	
-	Eigen::VectorXd vector_b ( 2*number_dofs + 2 ), vector_sol ( 2*number_dofs );
-	vector_b.setZero();
+	Eigen::VectorXd vector_b ( 2*number_dofs ), vector_sol ( 2*number_dofs );
+	vector_b .setZero();
 
 	xy = Manifold::working.coordinates();
 	x = xy[0];  y = xy[1];
@@ -277,38 +277,6 @@ int main ( )
 		}  }
 	} // just a block of code for hiding 'it'
 
-	// we add, as last two equations, the condition of zero translation
-	// run over all quadrangular cells composing 'torus'
-	{ // just a block of code for hiding 'it'
-	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
-	for ( it .reset(); it .in_range(); it++ )
-	{	Cell small_sq = *it;
-		fe .dock_on ( small_sq, tag::winding );
-		// run over the three vertices of 'small_sq'
-		// we want to start at a vertex not belonging to CD or DA
-		CellIterator it_V = small_sq .boundary() .iterator ( tag::over_vertices );
-		bool found = false;
-		Cell V ( tag::non_existent );
-		for ( it_V .reset(); it_V .in_range(); it_V++ )
-		{	V = *it_V;
-			if ( V .belongs_to ( CD ) ) continue;
-			if ( V .belongs_to ( DA ) ) continue;
-			found = true;  break;                 }
-		assert ( found );
-		double jump_V_1 = 0., jump_V_2 = 0.; 
-		for ( it_V .reset ( tag::start_at, V ); it_V .in_range(); it_V++ )
-		{	V = *it_V;
-			Function psi_V = fe .basis_function ( V );
-			double int_psi = fe .integrate ( psi_V );
-			matrix_A.coeffRef ( 2*number_dofs, 2*numbering[V] ) += int_psi;
-			vector_b ( 2*number_dofs ) -= jump_V_1 * int_psi;
-			matrix_A.coeffRef ( 2*number_dofs+1, 2*numbering[V]+1 ) += int_psi;
-			vector_b ( 2*number_dofs + 1 ) -= jump_V_2 * int_psi;
-			Cell seg = small_sq .boundary() .cell_in_front_of ( V );
-			jump_V_1 += jump_of_u_1 ( seg .winding() );
-			jump_V_2 += jump_of_u_2 ( seg .winding() );                           }   }
-	} // just a block of code for hiding 'it'
-			
 	std::cout << "now solving the system of linear equations" << std::endl;
 	
 	matrix_A .makeCompressed();
@@ -331,13 +299,13 @@ int main ( )
 		std::cout << "sol[" << 2*i+1 << "] = " << vector_sol ( 2*i+1 ) << std::endl;
 
 	Eigen::VectorXd new_b = matrix_A * vector_sol;
-	for ( size_t i = 0; i < 2*number_dofs + 2; i ++ )
+	for ( size_t i = 0; i < 2*number_dofs; i ++ )
 		std::cout << "b_orig[" << i << "] = " << vector_b ( i ) 
 		          << "    b_prod[" << i << "] = " << new_b ( i ) << std::endl;
 
 	myTensor<double> macro_stress(2,2);
-	for(size_t i=0; i<2; i++ )
-	for(size_t j=0; j<2; j++)
+	for ( size_t i=0; i<2; i++ )
+	for ( size_t j=0; j<2; j++)
 		macro_stress(i,j) = 0.;
 	{ // just a block of code for hiding 'it'
 	CellIterator it = torus.iterator ( tag::over_cells_of_max_dim );
@@ -378,45 +346,34 @@ int main ( )
 	RR2 .set_as_working_manifold();
 	xy = Manifold::working.coordinates();
 	x = xy[0];  y = xy[1];
-	square.export_msh ("cell-elast-strain.msh", numbering );
+
+	// we define the solution in all vertices of 'square'	(those not belonging to 'torus')
+	// it is easier to impose the zero average condition on 'square'
+	// it is also easier to export_msh
 	
 	{ // just a block of code for hiding variables
-	std::ofstream solution_file ("cell-elast-strain.msh", std::fstream::app );
-	solution_file << "$NodeData" << std::endl;
-	solution_file << "1" << std::endl;   // one string follows
-	solution_file << "\"elastic displacement\"" << std::endl;
-	solution_file << "1" << std::endl;   //  one real follows
-	solution_file << "0.0" << std::endl;  // time [??]
-	solution_file << "3" << std::endl;   // three integers follow
-	solution_file << "0" << std::endl;   // time step [??]
-	solution_file << "3" << std::endl;  // scalar values of u
-	solution_file << square .number_of ( tag::vertices ) << std::endl;
-	// number of values listed below
-	CellIterator it = torus.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell P = *it;
-		size_t j = numbering [ P ];
-		solution_file << j + 1 << " " << vector_sol[2*j] << " "
-	                            << vector_sol[2*j+1] << " 0. "<< std::endl;  }
 	size_t j = numbering [ B ];
 	assert ( not A .belongs_to ( torus ) );
-	solution_file << numbering[A] + 1 << " "
-		<< vector_sol[2*j] + macro_strain(0,0) * ( x ( A ) - x ( B ) )
-		                 + macro_strain(0,1) * ( y ( A ) - y ( B ) ) <<" " 
-		<< vector_sol[2*j+1] + macro_strain(1,0) * ( x ( A ) - x ( B ) )
-		                 + macro_strain(1,1) * ( y ( A ) - y ( B ) ) << " 0." << std::endl;
+	vector_sol [ 2 * numbering[A] ] = vector_sol [ 2*j ]
+		+ macro_strain(0,0) * ( x ( A ) - x ( B ) )
+		+ macro_strain(0,1) * ( y ( A ) - y ( B ) );
+	vector_sol [ 2 * numbering[A] + 1 ] =  vector_sol [ 2*j+1 ]
+		+ macro_strain(1,0) * ( x ( A ) - x ( B ) )
+		+ macro_strain(1,1) * ( y ( A ) - y ( B ) );
 	assert ( not C .belongs_to ( torus ) );
-	solution_file << numbering[C] + 1 << " "
-		<< vector_sol[2*j] + macro_strain(0,0) * ( x ( C ) - x ( B ) )
-		                 + macro_strain(0,1) * ( y ( C ) - y ( B ) ) <<" " 
-		<< vector_sol[2*j+1] + macro_strain(1,0) * ( x ( C ) - x ( B ) )
-		                 + macro_strain(1,1) * ( y ( C ) - y ( B ) ) << " 0." << std::endl;
+	vector_sol [ 2 * numbering[C] ] = vector_sol [ 2*j ]
+		+ macro_strain(0,0) * ( x ( C ) - x ( B ) )
+		+ macro_strain(0,1) * ( y ( C ) - y ( B ) );
+	vector_sol [ 2 * numbering[C] + 1 ] =  vector_sol [ 2*j+1 ]
+		+ macro_strain(1,0) * ( x ( C ) - x ( B ) )
+		+ macro_strain(1,1) * ( y ( C ) - y ( B ) );
 	assert ( not D .belongs_to ( torus ) );
-	solution_file << numbering[D] + 1 << " "
-		<< vector_sol[2*j] + macro_strain(0,0) * ( x ( D ) - x ( B ) )
-		                 + macro_strain(0,1) * ( y ( D ) - y ( B ) ) <<" " 
-		<< vector_sol[2*j+1] + macro_strain(1,0) * ( x ( D ) - x ( B ) )
-		                 + macro_strain(1,1) * ( y ( D ) - y ( B ) ) << " 0." << std::endl;
+	vector_sol [ 2 * numbering[D] ] = vector_sol [ 2*j ]
+		+ macro_strain(0,0) * ( x ( D ) - x ( B ) )
+		+ macro_strain(0,1) * ( y ( D ) - y ( B ) );
+	vector_sol [ 2 * numbering[D] + 1 ] =  vector_sol [ 2*j+1 ]
+		+ macro_strain(1,0) * ( x ( D ) - x ( B ) )
+		+ macro_strain(1,1) * ( y ( D ) - y ( B ) );
 	CellIterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
 	it_AB .reset();  assert ( it_AB .in_range() );
@@ -429,11 +386,12 @@ int main ( )
 		if ( V == B )  {  assert ( W == C );  break;  }
 		assert ( not W .belongs_to ( torus ) );
 		j = numbering [ V ];
-		solution_file << numbering[W] + 1 << " "
-	    << vector_sol[2*j] + macro_strain(0,0) * ( x ( W ) - x ( V ) )
-		                 + macro_strain(0,1) * ( y ( W ) - y ( V ) ) <<" " 
-		  << vector_sol[2*j+1] + macro_strain(1,0) * ( x ( W ) - x ( V ) )
-		                 + macro_strain(1,1) * ( y ( W ) - y ( V ) ) << " 0." << std::endl;  }
+		vector_sol [ 2 * numbering[W] ] = vector_sol [ 2*j ]
+			+ macro_strain(0,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(0,1) * ( y ( W ) - y ( V ) );
+		vector_sol [ 2 * numbering[W] + 1 ] =  vector_sol [ 2*j+1 ]
+			+ macro_strain(1,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(1,1) * ( y ( W ) - y ( V ) );                 }
 	CellIterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
 	it_BC .reset();  assert ( it_BC .in_range() );
@@ -446,11 +404,47 @@ int main ( )
 		if ( V == C )  {  assert ( W == D );  break;  }
 		assert ( not W .belongs_to ( torus ) );
 		j = numbering [ V ];
-		solution_file << numbering[W] + 1 << " "
-		  << vector_sol[2*j] + macro_strain(0,0) * ( x ( W ) - x ( V ) )
-		                 + macro_strain(0,1) * ( y ( W ) - y ( V ) ) <<" " 
-		  << vector_sol[2*j+1] + macro_strain(1,0) * ( x ( W ) - x ( V ) )
-		                 + macro_strain(1,1) * ( y ( W ) - y ( V ) ) << " 0." << std::endl;  }
+		vector_sol [ 2 * numbering[W] ] = vector_sol [ 2*j ]
+			+ macro_strain(0,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(0,1) * ( y ( W ) - y ( V ) );
+		vector_sol [ 2 * numbering[W] + 1 ] =  vector_sol [ 2*j+1 ]
+			+ macro_strain(1,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(1,1) * ( y ( W ) - y ( V ) );                 }
+	} // just a block of code
+
+	// impose sum u_x = 0, sum u_y = 0
+	{ // just a block of code for hiding variables
+	double sum_x = 0., sum_y = 0.;
+	for ( size_t i = 0; i < number_dofs; i ++ )
+	{	sum_x += vector_sol [ 2*i ];
+		sum_y += vector_sol [ 2*i+1 ];  }
+	sum_x /= number_dofs;
+	sum_y /= number_dofs;
+	for ( size_t i = 0; i < number_dofs; i ++ )
+	{	vector_sol [ 2*i ] -= sum_x;
+		vector_sol [ 2*i+1 ] -= sum_y;  }	
+	} // just a block of code
+	
+	square.export_msh ("cell-elast-strain.msh", numbering );
+
+	{ // just a block of code for hiding variables
+	std::ofstream solution_file ("cell-elast-strain.msh", std::fstream::app );
+	solution_file << "$NodeData" << std::endl;
+	solution_file << "1" << std::endl;   // one string follows
+	solution_file << "\"elastic displacement\"" << std::endl;
+	solution_file << "1" << std::endl;   //  one real follows
+	solution_file << "0.0" << std::endl;  // time [??]
+	solution_file << "3" << std::endl;   // three integers follow
+	solution_file << "0" << std::endl;   // time step [??]
+	solution_file << "3" << std::endl;  // scalar values of u
+	solution_file << square .number_of ( tag::vertices ) << std::endl;
+	// number of values listed below
+	CellIterator it = square .iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell P = *it;
+		size_t j = numbering [ P ];
+		solution_file << j + 1 << " " << vector_sol [ 2*j ] << " "
+	                            << vector_sol [ 2*j+1 ] << " 0. "<< std::endl;  }
 	} // just a block of code
 
 	std::cout << "produced file cell-elast-strain.msh" << std::endl;
