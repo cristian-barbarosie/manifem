@@ -1,6 +1,5 @@
 
-// hexagonal periodicity, circular hole
-
+// square periodicity, circular hole, triangular elements, formulation in strain
 
 #include "maniFEM.h"
 #include <fstream>
@@ -136,38 +135,32 @@ int main ( )
 	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy[0], y = xy[1];
 
-	const double d = 0.13;
-	const size_t n = 1.5 / d, m = 2.598 / d;
-	const double areaY = 3. * 2.598;
+	size_t n = 10;
+	double l = 2.6;
+	double d = l / double(n);
+	double areaY = l*l ;
 
-	Cell A ( tag::vertex );  x(A) = -1.5;  y(A) = -1.299;
-	Cell B ( tag::vertex );  x(B) =  0. ;  y(B) = -1.299;
-	Cell C ( tag::vertex );  x(C) =  1.5;  y(C) = -1.299;
-	Cell D ( tag::vertex );  x(D) =  1.5;  y(D) =  1.299;
-	Cell E ( tag::vertex );  x(E) =  0. ;  y(E) =  1.299;
-	Cell F ( tag::vertex );  x(F) = -1.5;  y(F) =  1.299;
+	Cell A ( tag::vertex );  x(A) = -l/2.;  y(A) = -l/2.;
+	Cell B ( tag::vertex );  x(B) =  l/2.;  y(B) = -l/2.;
+	Cell C ( tag::vertex );  x(C) =  l/2.;  y(C) =  l/2.;
+	Cell D ( tag::vertex );  x(D) = -l/2.;  y(D) =  l/2.;
 
 	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, n );
 	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, n );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, m );
-	Mesh DE ( tag::segment, D.reverse(), E, tag::divided_in, n );
-	Mesh EF ( tag::segment, E.reverse(), F, tag::divided_in, n );
-	Mesh FA ( tag::segment, F.reverse(), A, tag::divided_in, m );
+	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, n );
+	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, n );
 
-	Manifold circle = RR2.implicit ( x*x + y*y == 1. );
+	Manifold circle = RR2.implicit ( x*x + y*y == 0.7 );
 	Mesh inner ( tag::progressive, tag::entire_manifold, circle, tag::desired_length, d );
 
-	Mesh bdry ( tag::join, { AB, BC, CD, DE, EF, FA, inner.reverse() } );
+	Mesh bdry ( tag::join, AB, BC, CD, DA, inner.reverse() );
 
 	RR2.set_as_working_manifold();
 	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
 
-	Mesh torus = square.fold ( tag::identify, CD, tag::with, FA.reverse(),
-	                           tag::identify, BC, tag::with, EF.reverse(),
-	                           tag::identify, AB, tag::with, DE.reverse(),
+	Mesh torus = square.fold ( tag::identify, AB, tag::with, CD.reverse(),
+	                           tag::identify, BC, tag::with, DA.reverse(),
 	                           tag::use_existing_vertices                 );
-
-	limit_number_of_neighbours ( torus );
 
 	// std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
 	
@@ -201,7 +194,7 @@ int main ( )
 
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = torus .iterator ( tag::over_vertices );
+	CellIterator it = square .iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it .reset() ; it .in_range(); it ++ )
 	{	Cell V = *it;  numbering [V] = counter;  ++ counter;  }
@@ -217,6 +210,17 @@ int main ( )
 	// there will be, in average, 14 = 2*(6+1) non-zero elements per column
 	// the diagonal entry plus six neighbour vertices
 
+	// we fill the main diagonal with ones
+	// then we put zero for vertices belonging to 'torus'
+	{ // just a block of code for hiding 'it'
+	for ( size_t i = 0; i < 2*number_dofs; i++ ) matrix_A.coeffRef ( i, i ) = 1.;
+	CellIterator it = torus.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell V = *it;
+		matrix_A.coeffRef ( 2*numbering[V], 2*numbering[V] ) = 0.;
+		matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
+	} // just a block of code for hiding 'it'
+	
 	Eigen::VectorXd vector_b ( 2*number_dofs ), vector_sol ( 2*number_dofs );
 	vector_b.setZero();
 
@@ -348,7 +352,113 @@ int main ( )
 	cout << "macro stress " << macro_stress(0,0) << " " << macro_stress(0,1) << " "
 	                        << macro_stress(1,0) << " " << macro_stress(1,1) << " " << endl;
 
-}
+	RR2 .set_as_working_manifold();
+	xy = Manifold::working .coordinates();
+	x = xy[0];  y = xy[1];
+	
+	// we define the solution in all vertices of 'square'	(those not belonging to 'torus')
+	// it is easier to impose the zero average condition on 'square'
+	// it is also easier to export_msh
+	
+	{ // just a block of code for hiding variables
+	size_t j = numbering [ B ];
+	assert ( not A .belongs_to ( torus ) );
+	vector_sol [ 2 * numbering[A] ] = vector_sol [ 2*j ]
+		+ macro_strain(0,0) * ( x ( A ) - x ( B ) )
+		+ macro_strain(0,1) * ( y ( A ) - y ( B ) );
+	vector_sol [ 2 * numbering[A] + 1 ] =  vector_sol [ 2*j+1 ]
+		+ macro_strain(1,0) * ( x ( A ) - x ( B ) )
+		+ macro_strain(1,1) * ( y ( A ) - y ( B ) );
+	assert ( not C .belongs_to ( torus ) );
+	vector_sol [ 2 * numbering[C] ] = vector_sol [ 2*j ]
+		+ macro_strain(0,0) * ( x ( C ) - x ( B ) )
+		+ macro_strain(0,1) * ( y ( C ) - y ( B ) );
+	vector_sol [ 2 * numbering[C] + 1 ] =  vector_sol [ 2*j+1 ]
+		+ macro_strain(1,0) * ( x ( C ) - x ( B ) )
+		+ macro_strain(1,1) * ( y ( C ) - y ( B ) );
+	assert ( not D .belongs_to ( torus ) );
+	vector_sol [ 2 * numbering[D] ] = vector_sol [ 2*j ]
+		+ macro_strain(0,0) * ( x ( D ) - x ( B ) )
+		+ macro_strain(0,1) * ( y ( D ) - y ( B ) );
+	vector_sol [ 2 * numbering[D] + 1 ] =  vector_sol [ 2*j+1 ]
+		+ macro_strain(1,0) * ( x ( D ) - x ( B ) )
+		+ macro_strain(1,1) * ( y ( D ) - y ( B ) );
+	CellIterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
+	it_AB .reset();  assert ( it_AB .in_range() );
+	assert ( *it_AB == A );  it_AB ++;
+	it_CD .reset();  assert ( it_CD .in_range() );
+	assert ( *it_CD == D );  it_CD ++;
+	for ( ; ; it_AB ++, it_CD ++ )
+	{	assert ( it_AB .in_range() );  assert ( it_CD .in_range() );
+		Cell V = *it_AB, W = *it_CD;
+		if ( V == B )  {  assert ( W == C );  break;  }
+		assert ( not W .belongs_to ( torus ) );
+		j = numbering [ V ];
+		vector_sol [ 2 * numbering[W] ] = vector_sol [ 2*j ]
+			+ macro_strain(0,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(0,1) * ( y ( W ) - y ( V ) );
+		vector_sol [ 2 * numbering[W] + 1 ] =  vector_sol [ 2*j+1 ]
+			+ macro_strain(1,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(1,1) * ( y ( W ) - y ( V ) );                 }
+	CellIterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
+	it_BC .reset();  assert ( it_BC .in_range() );
+	assert ( *it_BC == B );  it_BC ++;
+	it_DA .reset();  assert ( it_DA .in_range() );
+	assert ( *it_DA == A );  it_DA ++;
+	for ( ; ; it_BC ++, it_DA ++ )
+	{	assert ( it_BC .in_range() );  assert ( it_DA .in_range() );
+		Cell V = *it_BC, W = *it_DA;
+		if ( V == C )  {  assert ( W == D );  break;  }
+		assert ( not W .belongs_to ( torus ) );
+		j = numbering [ V ];
+		vector_sol [ 2 * numbering[W] ] = vector_sol [ 2*j ]
+			+ macro_strain(0,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(0,1) * ( y ( W ) - y ( V ) );
+		vector_sol [ 2 * numbering[W] + 1 ] =  vector_sol [ 2*j+1 ]
+			+ macro_strain(1,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain(1,1) * ( y ( W ) - y ( V ) );                 }
+	} // just a block of code
+
+	// impose sum u_x = 0, sum u_y = 0
+	{ // just a block of code for hiding variables
+	double sum_x = 0., sum_y = 0.;
+	for ( size_t i = 0; i < number_dofs; i ++ )
+	{	sum_x += vector_sol [ 2*i ];
+		sum_y += vector_sol [ 2*i+1 ];  }
+	sum_x /= number_dofs;
+	sum_y /= number_dofs;
+	for ( size_t i = 0; i < number_dofs; i ++ )
+	{	vector_sol [ 2*i ] -= sum_x;
+		vector_sol [ 2*i+1 ] -= sum_y;  }	
+	} // just a block of code
+	
+	square.export_msh ("cell-elast-strain-cell-sq.msh", numbering );
+
+	{ // just a block of code for hiding variables
+	std::ofstream solution_file ("cell-elast-strain-cell-sq.msh", std::fstream::app );
+	solution_file << "$NodeData" << std::endl;
+	solution_file << "1" << std::endl;   // one string follows
+	solution_file << "\"elastic displacement\"" << std::endl;
+	solution_file << "1" << std::endl;   //  one real follows
+	solution_file << "0.0" << std::endl;  // time [??]
+	solution_file << "3" << std::endl;   // three integers follow
+	solution_file << "0" << std::endl;   // time step [??]
+	solution_file << "3" << std::endl;  // scalar values of u
+	solution_file << square .number_of ( tag::vertices ) << std::endl;
+	// number of values listed below
+	CellIterator it = square .iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
+	{	Cell P = *it;
+		size_t j = numbering [ P ];
+		solution_file << j + 1 << " " << vector_sol [ 2*j ] << " "
+	                            << vector_sol [ 2*j+1 ] << " 0. "<< std::endl;  }
+	} // just a block of code
+
+	std::cout << "produced file cell-elast-strain-cell-sq.msh" << std::endl;	
+							
+							}
 
 
 //-----------------------------------------------------------------------------------------
