@@ -23,13 +23,14 @@ class SqDistanceOnRn
 	
 //-----------------------------------------------------------------------------------------------//
 
-inline double SqDistanceOnRn::operator() ( const std::vector<double> & u, const std::vector<double> & v )
+inline double SqDistanceOnRn::operator()
+( const std::vector < double > & u, const std::vector < double > & v )
 
 {	double res = 0.;
-	size_t n = u.size();
-	assert ( n == v.size() );
+	size_t n = u .size();
+	assert ( n == v .size() );
 	for ( size_t i = 0; i < n; i++ )
-	{	double tmp = u[i] - v[i];
+	{	double tmp = u [i] - v [i];
 		res += tmp*tmp;           }
 	return res;                        }
 
@@ -64,31 +65,31 @@ int main ()
 		
 	int n = 30;
 	std::default_random_engine random_generator;
-	std::set<int> set_of_theta;
-	std::uniform_real_distribution<double> distr ( 0., n );
-	distr(random_generator); distr(random_generator); distr(random_generator);
-	distr(random_generator); distr(random_generator); distr(random_generator);
-	distr(random_generator); distr(random_generator); distr(random_generator); 
+	std::set < int > set_of_theta;
+	std::uniform_real_distribution < double > distr ( 0., n );
+	distr ( random_generator ); distr ( random_generator ); distr ( random_generator );
+	distr ( random_generator ); distr ( random_generator ); distr ( random_generator );
+	distr ( random_generator ); distr ( random_generator ); distr ( random_generator ); 
 	// double step = 2. * 3.14159 / n;
 	for ( int i = 0; i < 75; i++ )
-	{	// int t = distr(random_generator);
-		// if ( set_of_theta.find(t) != set_of_theta.end() ) continue;
-		// set_of_theta.insert(t);
+	{	// int t = distr ( random_generator );
+		// if ( set_of_theta .find (t) != set_of_theta .end() ) continue;
+		// set_of_theta .insert(t);
 		// double theta = t * step;
-		// std::cos(theta)
-		distr(random_generator); distr(random_generator); distr(random_generator);
-		double x = 2*distr(random_generator), y = distr(random_generator);
+		// std::cos ( theta )
+		distr ( random_generator ); distr ( random_generator ); distr ( random_generator );
+		double x = 2 * distr ( random_generator ), y = distr ( random_generator );
 		// file_ps << "0.2 setgray ";
 		// file_ps << x << " " << y << " moveto ";
 		// file_ps << x << " " << y << " 0.2 0 360 arc fill" << std::endl;
 		cloud.add ( { x, y } );  }
-	cloud.draw_ps ( file_ps );
+	cloud .draw_ps ( file_ps );
 	
 	std::vector < double > P { 10.9, 4.6 };
-	cloud.find_close_neighbours_of ( P, 5 );
+	cloud .find_close_neighbours_of ( P, 5 );
 	file_ps << "1 0 0 setrgbcolor ";
-	file_ps << P[0] << " " << P[1] << " moveto ";
-	file_ps << P[0] << " " << P[1] << " 0.3 0 360 arc fill" << std::endl;
+	file_ps << P [0] << " " << P [1] << " moveto ";
+	file_ps << P [0] << " " << P [1] << " 0.3 0 360 arc fill" << std::endl;
 	
 	file_ps << "grestore" << std::endl;
 	file_ps << "grestore" << std::endl << std::endl;
@@ -96,7 +97,7 @@ int main ()
 	file_ps << "%%Trailer" << std::endl;
 	file_ps << "%EOF" << std::endl;
 
-	cloud.remove ( cloud.root );
+	cloud .remove ( cloud .root );
 
 	std::cout << "arrows not drawn, see comments in examples-manual/parag-12.10.cpp" << std::endl;
 	// in order to get arrows, go to 'draw_arrows' in metric-tree-verbose.h and

@@ -14,15 +14,15 @@ void limit_number_of_neighbours ( Mesh msh );
 int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
-	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy[0],  y = xy[1];
+	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function x = xy [0],  y = xy [1];
 
-	RR2.implicit ( x*x + 0.7*y*y == 1. );
+	RR2 .implicit ( x*x + 0.7*y*y == 1. );
 
-	Cell A ( tag::vertex );  x(A) = 1.;  y(A) = 0.;
+	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
 	Mesh curve ( tag::progressive, tag::start_at, A, tag::desired_length, 0.33 );
 
-	RR2.set_as_working_manifold();
+	RR2 .set_as_working_manifold();
 	Mesh ellipse ( tag::progressive, tag::boundary, curve, tag::desired_length, 0.33 );
 
 	limit_number_of_neighbours ( ellipse );
@@ -30,7 +30,7 @@ int main ( )
 	// in rare occasions, we must call this function twice :
 	// limit_number_of_neighbours ( ellipse );
 
-	ellipse.export_msh ("ellipse.msh");
+	ellipse .export_msh ("ellipse.msh");
 	std::cout << "produced file ellipse.msh" << std::endl;
 }
 
@@ -49,22 +49,22 @@ inline bool flip_segment ( Mesh & msh, Cell & seg )
 // assumes there is no higher-dimensional mesh "above" 'msh'
 
 {	Cell tri2 = msh.cell_in_front_of ( seg, tag::may_not_exist );
-	if ( not tri2.exists() ) return false; 
-	Cell tri1 = msh.cell_behind ( seg, tag::may_not_exist );
-	if ( not tri1.exists() ) return false;
-	// or, equivalently :  if ( not seg.is_inner_to ( msh ) ) return false
+	if ( not tri2 .exists() ) return false; 
+	Cell tri1 = msh .cell_behind ( seg, tag::may_not_exist );
+	if ( not tri1 .exists() ) return false;
+	// or, equivalently :  if ( not seg .is_inner_to ( msh ) ) return false
 
-	Cell A = seg.base().reverse();
-	Cell B = seg.tip();
+	Cell A = seg .base() .reverse();
+	Cell B = seg .tip();
 
 	Cell BC = tri1 .boundary() .cell_in_front_of ( B, tag::surely_exists );
 	Cell CA = tri1 .boundary() .cell_behind ( A, tag::surely_exists );
 	Cell AD = tri2 .boundary() .cell_in_front_of ( A, tag::surely_exists );
 	Cell DB = tri2 .boundary() .cell_behind ( B, tag::surely_exists );
-	Cell C = BC.tip();
-	assert ( CA.base().reverse() == C );
-	Cell D = AD.tip();
-	assert ( DB.base().reverse() == D );
+	Cell C = BC .tip();
+	assert ( CA .base() .reverse() == C );
+	Cell D = AD .tip();
+	assert ( DB .base() .reverse() == D );
 	
 	B .cut_from_bdry_of ( seg, tag::do_not_bother );
 	A .reverse() .cut_from_bdry_of ( seg, tag::do_not_bother );
@@ -93,17 +93,17 @@ inline bool flip_segment ( Mesh & msh, Cell & seg )
 double length_square ( Cell AB )
 	
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
+	assert ( space .exists() );  // we use the current (quotient) manifold
 	Function coords = space .coordinates();
 	Cell A = AB .base() .reverse();
 	Cell B = AB .tip();
-	std::vector < double > A_co = coords ( A );
-	std::vector < double > B_co = coords ( B );
-	size_t n = A_co.size();
+	std::vector < double > A_co = coords (A);
+	std::vector < double > B_co = coords (B);
+	size_t n = A_co .size();
 	assert ( n == B_co .size() );
 	double len_AB_2 = 0.;
 	for ( size_t i = 0; i < n; i++ )
-		{	double v = B_co[i] - A_co[i];  len_AB_2 += v*v;  }
+		{	double v = B_co [i] - A_co [i];  len_AB_2 += v*v;  }
 	return len_AB_2;                                        }
 	
 

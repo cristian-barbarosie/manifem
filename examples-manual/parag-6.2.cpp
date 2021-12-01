@@ -14,8 +14,8 @@ using namespace maniFEM;
 
 	
 void impose_value_of_unknown
-(	Eigen::SparseMatrix <double> & matrix_A, Eigen::VectorXd & vector_b,
-	size_t i, double val                                                 )
+(	Eigen::SparseMatrix < double > & matrix_A, Eigen::VectorXd & vector_b,
+	size_t i, double val                                                   )
 
 // in a system of linear equations, destroy equation 'i' and impose u(i) = val
 // change also column 'i' of the matrix, just to preserve symmetry
@@ -37,7 +37,7 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy[0],  y = xy[1];
+	Function x = xy [0], y = xy [1];
 
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
@@ -106,28 +106,28 @@ int main ()
 
 	// impose Dirichlet boundary conditions  u = xy
 	{ // just a block of code for hiding 'it'
-	CellIterator it = AB.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = AB .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P];
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it' 
-	CellIterator it = BC.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = BC .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P];
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, y(P) );  }
 	} { // just a block of code for hiding 'it'
-	CellIterator it = CD.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = CD .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P];
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, x(P) );  }
 	} { // just a block of code for hiding 'it'
-	CellIterator it = DA.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	CellIterator it = DA .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering[P];
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} // just a block of code 
 	
@@ -146,12 +146,16 @@ int main ()
 //	std::cout << std::endl;
 
 	// solve the system of linear equations
-	Eigen::ConjugateGradient < Eigen::SparseMatrix<double>,
+	Eigen::ConjugateGradient < Eigen::SparseMatrix < double >,
 	                           Eigen::Lower|Eigen::Upper    > cg;
-	cg.compute ( matrix_A );
-	vector_sol = cg.solve ( vector_b );
+	cg .compute ( matrix_A );
 
-	ABCD.export_msh ("square-Dirichlet.msh", numbering );
+	vector_sol = cg .solve ( vector_b );
+	if ( cg .info() != Eigen::Success )
+	{	std::cout << "Eigen solver.solve failed" << std::endl;
+		exit ( 0 );                                            }
+		
+	ABCD .export_msh ("square-Dirichlet.msh", numbering );
 
   { // just a block of code for hiding variables
 	std::ofstream solution_file ("square-Dirichlet.msh", std::fstream::app );
@@ -168,7 +172,7 @@ int main ()
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P];
-		solution_file << i << " " << vector_sol[i] << std::endl;   }
+		solution_file << i + 1 << " " << vector_sol[i] << std::endl;   }
 	} // just a block of code
 
 	std::cout << "produced file square-Dirichlet.msh" << std::endl;
