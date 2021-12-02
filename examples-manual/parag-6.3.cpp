@@ -55,6 +55,12 @@ int main ()
 	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
+	// below we use a Cell::Numbering::Map
+	// which is essentially an std::map < Cell, size_t > disguised
+	// the only difference is the syntax for accessing the index of a vertex
+	// here we use operator()
+	// in order to keep the presentation simple, we do not show this
+	// different syntax in paragraph 6.3 of the manual
 	Cell::Numbering::Map numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD .iterator ( tag::over_vertices );
