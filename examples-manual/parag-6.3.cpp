@@ -28,8 +28,8 @@ void impose_value_of_unknown
 	matrix_A .coeffRef ( i, i ) = 1.;
 	for ( size_t j = 0; j < size_matrix; j++ )
 	{	if ( i == j ) continue;
-		vector_b (j) -= matrix_A .coeffRef ( j, i ) * val;
-		matrix_A .coeffRef ( j, i ) = 0.;                  }  }
+		vector_b(j) -= matrix_A .coeffRef ( j, i ) * val;
+		matrix_A .coeffRef ( j, i ) = 0.;                 }  }
 
 	
 int main ()
@@ -42,32 +42,33 @@ int main ()
 	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
 	FiniteElement fe_bdry ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ_bdry = fe_bdry.set_integrator ( tag::Gauss, tag::seg_3 );
+	Integrator integ_bdry = fe_bdry .set_integrator ( tag::Gauss, tag::seg_3 );
 
 	// build a 10x10 square mesh
-	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
-	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
-	Cell C ( tag::vertex );  x(C) = 1.;   y(C) = 1.;
-	Cell D ( tag::vertex );  x(D) = 0.;   y(D) = 1.;
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 10 );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 12 );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 10 );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
+	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
+	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
+	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
+	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 12 );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
 	// below we use a Cell::Numbering::Map
-	// which is essentially an std::map < Cell, size_t > disguised
+	// which is essentially an  std::map < Cell, size_t >  disguised
 	// the only difference is the syntax for accessing the index of a vertex
 	// here we use operator()
-	// in order to keep the presentation simple, we do not show this
-	// different syntax in paragraph 6.3 of the manual
+	// in order to keep the presentation simple, we do not show
+	// this different syntax in paragraph 6.3 of the manual
+	// a more efficient numbering is shown in paragraph 6.4 of the manual
 	Cell::Numbering::Map numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD .iterator ( tag::over_vertices );
 	size_t counter = 0;
-	for ( it .reset() ; it .in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell V = *it;  numbering (V) = counter;  ++counter;  }
-	assert ( counter == numbering.size() );
+	assert ( counter == numbering .size() );
 	} // just a block of code
 
 	size_t size_matrix = ABCD.number_of ( tag::vertices );
@@ -89,16 +90,15 @@ int main ()
 		for ( it1 .reset(); it1 .in_range(); it1++ )
 		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
-			Function psiV = fe .basis_function(V),
-			         psiW = fe .basis_function(W),
-			         d_psiV_dx = psiV .deriv(x),
-			         d_psiV_dy = psiV .deriv(y),
-			         d_psiW_dx = psiW .deriv(x),
-			         d_psiW_dy = psiW .deriv(y);
+			Function psiV = fe .basis_function (V),
+			         psiW = fe .basis_function (W),
+			         d_psiV_dx = psiV .deriv (x),
+			         d_psiV_dy = psiV .deriv (y),
+			         d_psiW_dx = psiW .deriv (x),
+			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
 			matrix_A .coeffRef ( numbering(V), numbering(W) ) +=
-				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
-		}  }
+				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
 	} // just a block of code 
 
 	Function heat_source = y*y;

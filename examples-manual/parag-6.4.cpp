@@ -22,15 +22,15 @@ void impose_value_of_unknown
 
 // used for imposing Dirichlet boundary conditions
 
-{	size_t size_matrix = matrix_A.innerSize();
-	vector_b(i) = val;
+{	size_t size_matrix = matrix_A .innerSize();
+	vector_b (i) = val;
 	for ( size_t j = 0; j < size_matrix; j++ )
-		matrix_A.coeffRef ( i, j ) = 0.;
-	matrix_A.coeffRef ( i, i ) = 1.;
+		matrix_A .coeffRef ( i, j ) = 0.;
+	matrix_A .coeffRef ( i, i ) = 1.;
 	for ( size_t j = 0; j < size_matrix; j++ )
 	{	if ( i == j ) continue;
-		vector_b(j) -= matrix_A.coeffRef ( j, i ) * val;
-		matrix_A.coeffRef ( j, i ) = 0.;                 }  }
+		vector_b(j) -= matrix_A .coeffRef ( j, i ) * val;
+		matrix_A .coeffRef ( j, i ) = 0.;                 }  }
 
 	
 int main ()
@@ -46,14 +46,14 @@ int main ()
 	Cell::Numbering & numbering = fe .numbering ( tag::vertices );
 
 	// build a 10x10 square mesh
-	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
-	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
-	Cell C ( tag::vertex );  x(C) = 1.;   y(C) = 1.;
-	Cell D ( tag::vertex );  x(D) = 0.;   y(D) = 1.;
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 10 );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 12 );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 10 );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
+	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
+	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
+	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
+	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 12 );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
 	size_t size_matrix = numbering.size();
@@ -65,7 +65,7 @@ int main ()
 	// there will be about 9 non-zero elements per column
 	// the diagonal entry plus eight neighbour vertices
 	
-	// unfortunately, the numbering provided by fe.numbers[0] is not contiguous
+	// unfortunately, the numbering provided by 'fe' is not contiguous
 	// so we fill the main diagonal with ones
 	// then we put zero for vertices belonging to ABCD
 	for ( size_t i = 0; i < size_matrix; i++ )
@@ -95,16 +95,15 @@ int main ()
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
 			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering(V) << ", W=("
 			// 					<< x(W) << "," << y(W) << ") " << numbering(W) << std::endl;
-			Function psiV = fe .basis_function(V),
-			         psiW = fe .basis_function(W),
-			         d_psiV_dx = psiV .deriv(x),
-			         d_psiV_dy = psiV .deriv(y),
-			         d_psiW_dx = psiW .deriv(x),
-			         d_psiW_dy = psiW .deriv(y);
+			Function psiV = fe .basis_function (V),
+			         psiW = fe .basis_function (W),
+			         d_psiV_dx = psiV .deriv (x),
+			         d_psiV_dy = psiV .deriv (y),
+			         d_psiW_dx = psiW .deriv (x),
+			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
 			matrix_A .coeffRef ( numbering (V), numbering (W) ) +=
-				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
-		}  }
+				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
 	} // just a block of code 
 
 	// impose Dirichlet boundary conditions  u = xy

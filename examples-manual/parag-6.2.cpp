@@ -23,14 +23,14 @@ void impose_value_of_unknown
 // used for imposing Dirichlet boundary conditions
 
 {	size_t size_matrix = matrix_A .innerSize();
-	vector_b(i) = val;
+	vector_b (i) = val;
 	for ( size_t j = 0; j < size_matrix; j++ )
 		matrix_A .coeffRef ( i, j ) = 0.;
 	matrix_A .coeffRef ( i, i ) = 1.;
 	for ( size_t j = 0; j < size_matrix; j++ )
 	{	if ( i == j ) continue;
 		vector_b(j) -= matrix_A .coeffRef ( j, i ) * val;
-		matrix_A .coeffRef ( j, i ) = 0.;                  }  }
+		matrix_A .coeffRef ( j, i ) = 0.;                 }  }
 
 	
 int main ()
@@ -48,20 +48,20 @@ int main ()
 	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
 	Cell C ( tag::vertex );  x(C) = 1.;   y(C) = 1.;
 	Cell D ( tag::vertex );  x(D) = 0.;   y(D) = 1.;
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, 10 );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, 12 );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, 10 );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, 12 );
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 12 );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
 	// a different solution for numbering vertices is shown in paragraph 6.4 of the manual
 	// below we use an std::map<Cell,size_t>
-	// one could use instead a Cell::Numbering::Map, see paragraph 6.3 in the manual
+	// one could use instead a Cell::Numbering::Map, see parag-6.3.cpp
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	CellIterator it = ABCD .iterator ( tag::over_vertices );
 	size_t counter = 0;
-	for ( it .reset() ; it .in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell V = *it;  numbering [V] = counter;  ++counter;  }
 	assert ( counter == numbering .size() );
 	} // just a block of code
@@ -100,8 +100,7 @@ int main ()
 			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
 			matrix_A .coeffRef ( numbering[V], numbering[W] ) +=
-				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );
-		}  }
+				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
 	} // just a block of code 
 
 	// impose Dirichlet boundary conditions  u = xy

@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.11.23
+// finite-elem.h 2021.12.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -47,6 +47,9 @@ namespace tag {
 	struct ThroughDockedFiniteElement { };
 	static const ThroughDockedFiniteElement through_docked_finite_element;
 	struct EnumerateCells { };  static const EnumerateCells enumerate_cells;
+	struct ForAGiven { };  static const ForAGiven for_a_given;
+	struct BasisFunction { };  static const BasisFunction basis_function;
+	struct IntegralOf { };  static const IntegralOf integral_of;
 }
 
 class FiniteElement;
@@ -152,6 +155,7 @@ class Integrator::Gauss : public Integrator::Core
 //-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
 
+	
 // Again ...
 // What is a finite element ?
 
@@ -161,7 +165,7 @@ class FiniteElement
 	
 {	public :
 
-	class Core;  class WithMaster;  class Lagrange;
+	class Core;  class WithMaster;  class StandAlone;
 	
 	FiniteElement::Core * core;
 
@@ -169,6 +173,8 @@ class FiniteElement
 
 	// constructor
 
+	inline FiniteElement ( const tag::Triangle &,  // no master, stand-alone
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
@@ -207,6 +213,9 @@ class FiniteElement
 
 	inline double integrate ( const Function & );
 
+	inline void pre_compute ( const tag::ForAGiven &, const tag::BasisFunction &,
+	                          Function bf, const tag::IntegralOf &, std::vector < Function > v );
+
 	inline Cell::Numbering & numbering ( const tag::Vertices & );
 	inline Cell::Numbering & numbering ( const tag::Segments & );
 	inline Cell::Numbering & numbering ( const tag::CellsOfDim &, const size_t d );
@@ -231,9 +240,16 @@ class FiniteElement::Core
 
 	Integrator integr;
 
+	std::map < Cell::Core *, Function > base_fun_1;
+	std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2;
+
+	// at the beginning, 'docked_on' is a non-existent cell
+	// later, we shall dock the finite element on a physical cell
+	Cell docked_on;
+
 	// constructor
 
-	inline Core () : integr ( tag::non_existent ) { };
+	inline Core () : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { };
 
 	// destructor
 
@@ -242,6 +258,10 @@ class FiniteElement::Core
 	virtual void dock_on ( const Cell & cll ) = 0;
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 	
+	virtual void pre_compute ( const Function bf, std::vector < Function > result ) = 0;
+	virtual void pre_compute ( const Function bf1, const Function bf2,
+                             std::vector < Function > result        ) = 0;
+
 };  // end of  class FiniteElement::Core
 
 //-----------------------------------------------------------------------------------------//
@@ -278,19 +298,19 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 
 {	public :
 
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+
 	Manifold master_manif;
 	Function transf;
-	std::map < Cell::Core *, Function > base_fun_1;
-	std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2;
-
-	// at the beginning, 'docked_on' is a non-existent cell
-	// later, we shall dock the finite element on a physical cell
-	Cell docked_on;
 
 	// constructor
 
 	inline WithMaster ( Manifold m )
-	: FiniteElement::Core (), master_manif (m), transf ( 0. ), docked_on ( tag::non_existent )
+	: FiniteElement::Core (), master_manif (m), transf ( 0. )
 	{ }
 
 	// get basis functions associated to vertices, to segments, etc
@@ -300,6 +320,11 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) = 0;
 	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+
+	//  pre_compute  virtual from FiniteElement::Core, here execution forbidden
+	void pre_compute ( const Function bf, std::vector < Function > result );
+	void pre_compute ( const Function bf1, const Function bf2,
+                     std::vector < Function > result        );
 
 	class Segment;  class Triangle;  class Quadrangle;
 	
@@ -342,6 +367,11 @@ inline double FiniteElement::integrate ( const Function & f )
 	assert ( fe_core->docked_on .exists() );
 	return this->core->integr ( f, tag::through_docked_finite_element, *this );  }
 
+inline void FiniteElement::pre_compute
+( const tag::ForAGiven &, const tag::BasisFunction &,
+  Function bf, const tag::IntegralOf &, std::vector < Function > v )
+{	this->core->pre_compute ( bf, v );  }
+
 //-----------------------------------------------------------------------------------------//
 
 class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
@@ -350,6 +380,16 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
 {	public :
 
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
 	// constructor
 
 	inline Segment ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
@@ -357,6 +397,9 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two versions of pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
 
 };  // end of  class FiniteElement::WithMaster::Segment
 
@@ -368,6 +411,16 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
 {	public :
 
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
 	// constructor
 
 	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
@@ -375,6 +428,9 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two versions of pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
 
 };  // end of  class FiniteElement::withMaster::Triangle
 
@@ -386,6 +442,16 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 
 {	public :
 
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
 	// constructor
 
 	inline Quadrangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
@@ -393,6 +459,9 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two versions of pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
 
 };  // end of  class FiniteElement::withMaster::Quadrangle
 
@@ -547,6 +616,119 @@ inline Integrator FiniteElement::set_integrator
 	this_core->integr .core =
 		new Integrator::Gauss ( q, tag::from_finite_element_with_master, *this );
 	return this_core->integr;                                                    }
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone : public FiniteElement::Core
+
+// finite elements with no master
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	std::map < Cell, size_t > local_numbering_1;
+	
+	// constructor
+
+	inline StandAlone ( ) : FiniteElement::Core ()  { }
+
+	// get basis functions associated to vertices, to segments, etc
+	inline Function basis_function ( Cell::Core * cll );
+	inline Function basis_function ( Cell::Core * c1, Cell::Core * c2 );
+
+	//  dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll ) = 0;
+	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+
+	// two versions of  pre_compute  stay pure virtual from FiniteElement::Core
+
+	class TypeOne;
+	
+};  // end of  class FiniteElement::StandAlone
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
+
+// finite elements with no master
+// searches for the basis function provided by 'integrate'
+// uses an std::map < Function, size_t > index_of_basis_function
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	// attribute inherited from FiniteElement::StandAlone :
+	// std::map < Cell, size_t > local_numbering
+
+	std::map < Function, size_t > index_of_basis_function;
+	
+	// constructor
+
+	inline StandAlone ( ) : FiniteElement::Core ()  { }
+
+	// get basis functions associated to vertices, to segments, etc
+	inline Function basis_function ( Cell::Core * cll );
+	inline Function basis_function ( Cell::Core * c1, Cell::Core * c2 );
+
+	// dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll ) = 0;
+	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+
+	// two versions of  pre_compute  stay pure virtual from FiniteElement::Core
+
+	class Segment;  class Triangle;  class Quadrangle;
+	
+};  // end of  class FiniteElement::StandAlone
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::StandAlone::TypeOne
+
+// triangular finite elements, no master element
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	// constructor
+
+	inline Triangle ( ) : FiniteElement::StandAlone::TypeOne()  { }
+	// define three basis function, mere symbols
+	
+	// dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	//  pre_compute  virtual from FiniteElement::Core
+	void pre_compute ( const Function bf, std::vector < Function > result );
+	void pre_compute ( const Function bf1, const Function bf2, std::vector < Function > result );
+
+};  // end of  class FiniteElement::StandAlone::Triangle
+
+//-----------------------------------------------------------------------------------------//
+
+
+inline FiniteElement::FiniteElement  // no master, stand-alone
+( const tag::Triangle &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	this->core = new FiniteElement::StandAlone::TypeOne::Triangle();  }
+
 
 
 }  // end of  namespace maniFEM
