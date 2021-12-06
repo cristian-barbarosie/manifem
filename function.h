@@ -213,7 +213,7 @@ class Function::Core
 
 	virtual Function component ( size_t i ) = 0;
 
-	virtual Function deriv ( Function ) const = 0;
+	virtual Function deriv ( Function ) = 0;
 
 	virtual Function replace ( const Function & x, const Function & y ) = 0;
 	// in an expression, replace x by y
@@ -386,8 +386,7 @@ class Function::Constant : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -440,8 +439,7 @@ class Function::Sum : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -488,8 +486,7 @@ class Function::Product : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -539,8 +536,7 @@ class Function::Power : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -588,8 +584,7 @@ class Function::Sqrt : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -642,8 +637,7 @@ class Function::Sin : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -696,8 +690,7 @@ class Function::Cos : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -808,8 +801,7 @@ class Function::Step : public Function::ArithmeticExpression
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -856,8 +848,7 @@ class Function::MereSymbol : public Function::Scalar
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -903,8 +894,7 @@ class Function::DelayedDerivative : public Function::Scalar
 	//   virtual from Function::Scalar
 	//   defined by Function::ArithmeticExpression (execution forbidden)
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -942,7 +932,7 @@ class Function::Vector : public Function::Core
 	( Cell::Core *, const std::vector<double> & ) = 0;
 	// assign a numeric vector to the function on the cell and return that vector
 	
-	Function deriv ( Function ) const;
+	Function deriv ( Function );
 	//  virtual from Function::Core, here execution forbidden, to change
 
 	Function replace ( const Function & x, const Function & y );
@@ -1119,8 +1109,7 @@ class Function::Diffeomorphism::OneDim
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Vector
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -1369,8 +1358,7 @@ class Function::Composition : public Function::Scalar
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Scalar
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -1451,8 +1439,7 @@ class Function::CoupledWithField::Scalar
 	double set_value_on_cell ( Cell::Core *, const double & );
 	// virtual from Function::Scalar
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -1997,8 +1984,7 @@ class Function::Scalar::MultiValued : public Function::MultiValued, public Funct
 	double set_value_on_cell ( Cell::Core *, const double & );
 	//   virtual from Function::Scalar, here execution forbidden
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core
@@ -2176,8 +2162,7 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	std::vector < double > set_value_on_cell ( Cell::Core *, const std::vector < double > & );
 	// virtual from Function::Vector
 
-	Function deriv ( Function ) const;
-	//  virtual from Function::Core
+	Function deriv ( Function );  // virtual from Function::Core
 
 	Function replace ( const Function & x, const Function & y );
 	//  virtual from Function::Core

@@ -789,17 +789,17 @@ Function maniFEM::power ( const Function & f, double e )
 //-----------------------------------------------------------------------------------------//
 
 
-Function Function::Constant::deriv ( Function ) const  //  virtual from Function::Core
+Function Function::Constant::deriv ( Function )  //  virtual from Function::Core
 {	return Function ( 0. );  }
 
-Function Function::Step::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Step::deriv ( Function x )  //  virtual from Function::Core
 {	std::vector < Function > derivs;
 	for ( size_t i = 0; i < this->values.size(); i++ )
 		derivs.push_back ( this->values[i].deriv ( x ) );
 	return Function ( tag::whose_core_is, new Function::Step ( this->arg, derivs, this->cuts ) );  }
 
 
-Function Function::Sum::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Sum::deriv ( Function x )  //  virtual from Function::Core
 {	std::forward_list<Function>::const_iterator it = this->terms.begin();
 	Function result = 0.;
 	for ( ; it != this->terms.end(); it++ )
@@ -807,7 +807,7 @@ Function Function::Sum::deriv ( Function x ) const  //  virtual from Function::C
 	return result;                                                    }
 
 
-Function Function::Product::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Product::deriv ( Function x )  //  virtual from Function::Core
 {	Function result = 0.;
   std::forward_list<Function>::const_iterator it1, it2;
 	size_t c1, c2;
@@ -826,27 +826,27 @@ Function Function::Product::deriv ( Function x ) const  //  virtual from Functio
 	return result;                                            }
 
 
-Function Function::Power::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Power::deriv ( Function x )  //  virtual from Function::Core
 {	Function result = this->exponent;
 	result *= power ( this->base, this->exponent - 1. );
 	result *= this->base.core->deriv ( x );
 	return result;                                         }
 
-Function Function::Sqrt::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Sqrt::deriv ( Function x )  //  virtual from Function::Core
 {	return 0.5 * this->base.deriv(x) / sqrt ( this->base );    }
 
-Function Function::Sin::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Sin::deriv ( Function x )  //  virtual from Function::Core
 {	return cos ( this->base ) * this->base.deriv(x);  }
 
-Function Function::Cos::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::Cos::deriv ( Function x )  //  virtual from Function::Core
 {	return - sin ( this->base ) * this->base.deriv(x);  }
 
-Function Function::CoupledWithField::Scalar::deriv ( Function x ) const
+Function Function::CoupledWithField::Scalar::deriv ( Function x )
 //  virtual from Function::Core
 {	if ( this == x.core ) return Function ( 1. );
 	return Function ( 0. );                        }
 
-Function Function::MereSymbol::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::MereSymbol::deriv ( Function x )  //  virtual from Function::Core
 {	return Function ( tag::whose_core_is, new Function::DelayedDerivative
 										  ( Function ( tag::whose_core_is, this ), x )       );  }
 
@@ -854,27 +854,23 @@ Function Function::DelayedDerivative::deriv ( Function x ) const  //  virtual fr
 {	return Function ( tag::whose_core_is, new Function::DelayedDerivative
 										  ( Function ( tag::whose_core_is, this ), x )       );  }
 
-Function Function::Vector::deriv ( Function x ) const
-//  virtual from Function::Core
+Function Function::Vector::deriv ( Function x )  //  virtual from Function::Core
 { assert ( false ); 
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
-Function Function::Diffeomorphism::OneDim::deriv ( Function x ) const
-//  virtual from Function::Core
-{ assert ( false );
+Function Function::Diffeomorphism::OneDim::deriv ( Function x )
+{ assert ( false );  //  virtual from Function::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
-Function Function::Scalar::MultiValued::deriv ( Function x ) const
-//  virtual from Function::Core
-{ assert ( false );
+Function Function::Scalar::MultiValued::deriv ( Function x )
+{ assert ( false );  //  virtual from Function::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
-Function Function::Vector::MultiValued::deriv ( Function x ) const
-//  virtual from Function::Core
-{ assert ( false );
+Function Function::Vector::MultiValued::deriv ( Function x )
+{ assert ( false );  //  virtual from Function::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
