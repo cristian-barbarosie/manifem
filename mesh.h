@@ -124,6 +124,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Adapt { };  static const Adapt adapt;
 	struct Identify { };  static const Identify identify;
 	struct With { };  static const With with;
+	struct Within { };  static const Within within;
 	struct OfDegree { };  static const OfDegree of_degree;
 	struct MeshIsBdry { };  static const MeshIsBdry mesh_is_bdry;
 	struct MeshIsNotBdry { };  static const MeshIsNotBdry mesh_is_not_bdry;

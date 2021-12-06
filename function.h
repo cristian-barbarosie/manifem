@@ -47,6 +47,7 @@ namespace tag
 	struct Iff { };  static const Iff iff;
 	struct PreviouslyNonExistent { };
 	  static const PreviouslyNonExistent previously_non_existent;
+	struct BasisFunction { };  static const BasisFunction basis_function;
 	struct LessThan { };  static const LessThan less_than;
 	struct IfLessThan { };  static const IfLessThan if_less_than;
 	struct Otherwise { };  static const Otherwise otherwise;
@@ -57,7 +58,7 @@ namespace tag
 	struct Into { };  static const Into into;                                 }
 	
 
-class Manifold;
+class Manifold;  class FiniteElement;
 	
 
 class Function
@@ -108,6 +109,9 @@ class Function
                     const tag::ComposedWith &, const Function & map );
 	// an 'expr'ession involving master coordinates ( e.g.  1. - xi - eta )
 	// composed with a map (diffeomorphism or immersion) sending it in the physical space
+
+	inline Function ( const tag::BasisFunction &, const tag::Within &,
+	                  const FiniteElement &                           );
 
 	class ActionGenerator;  // a generator of a discrete group
 	// an action will act on functions, particularly on coordinates of a quotient manifold
@@ -825,6 +829,8 @@ class Function::MereSymbol : public Function::Scalar
 
 	// no data
 
+	inline MereSymbol ( ) { };
+
 	inline MereSymbol ( const Function::MereSymbol & ) = delete;
 	inline MereSymbol ( Function::MereSymbol && ) = delete;
 	
@@ -844,9 +850,8 @@ class Function::MereSymbol : public Function::Scalar
 	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar, here execution forbidden
 
-	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   virtual from Function::Scalar
-	//   defined by Function::ArithmeticExpression (execution forbidden)
+	double set_value_on_cell ( Cell::Core *, const double & );
+	//   virtual from Function::Scalar, here execution forbidden
 
 	Function deriv ( Function );  // virtual from Function::Core
 
@@ -864,12 +869,25 @@ class Function::MereSymbol : public Function::Scalar
 
 //-----------------------------------------------------------------------------------------//
 
+inline Function::Function ( const tag::BasisFunction &, const tag::Within &,
+                            const FiniteElement &                           )
+:	Function ( tag::whose_core_is, new Function::MereSymbol )
+{	}
+
+//-----------------------------------------------------------------------------------------//
+
 
 class Function::DelayedDerivative : public Function::Scalar
-	
+
+// a function 'base' differentiated with respect to 'variable'
+
 {	public :
 
 	Function base, variable;  // we use wrappers as a pointers
+
+	inline DelayedDerivative ( const Function & b, const Function & v )
+	:	base { b }, variable { v }
+	{	}
 
 	inline DelayedDerivative ( const Function::DelayedDerivative & ) = delete;
 	inline DelayedDerivative ( Function::DelayedDerivative && ) = delete;
@@ -890,9 +908,8 @@ class Function::DelayedDerivative : public Function::Scalar
 	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
 	// virtual from Function::Scalar, here execution forbidden
 
-	// double set_value_on_cell ( Cell::Core *, const double & )
-	//   virtual from Function::Scalar
-	//   defined by Function::ArithmeticExpression (execution forbidden)
+	double set_value_on_cell ( Cell::Core *, const double & );
+	//   virtual from Function::Scalar, here execution forbidden
 
 	Function deriv ( Function );  // virtual from Function::Core
 

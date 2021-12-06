@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.05
+// finite-elem.cpp 2021.12.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -344,6 +344,48 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 	}  // end of  switch ( q )
 
 }  // end of  Integrator::Gauss::Gauss
+	
+//-----------------------------------------------------------------------------------------//
+
+
+void Integrator::Gauss::pre_compute ( Function bf, std::vector < Function > & v )
+// virtual from Integrator::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
+	exit ( 1 );                                                                                     }
+
+
+void Integrator::Gauss::pre_compute ( Function bf1, Function bf2, std::vector < Function > & v )
+// virtual from Integrator::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
+	exit ( 1 );                                                                                     }
+
+
+void Integrator::UFL_FFC::pre_compute ( Function bf, std::vector < Function > & v )
+// virtual from Integrator::Core
+
+// bf is an arbitrary basis function (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
+
+// we delegate this analysis to the finite element
+
+{	this->fe .pre_compute ( tag::for_a_given, tag::basis_function, bf,
+	                        tag::integral_of, v                       );  }
+
+
+void Integrator::UFL_FFC::pre_compute
+( Function bf1, Function bf2, std::vector < Function > & v )
+// virtual from Integrator::Core
+
+// bf is an arbitrary basis function (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
+
+// we delegate this analysis to the finite element
+
+{	this->fe .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
+	                        tag::integral_of, v                            );  }
+
 	
 //-----------------------------------------------------------------------------------------//
 
@@ -832,3 +874,18 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre-compute does not apply to elements with master" << std::endl;
 	exit ( 1 );                                                                     }
+
+
+void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
+( const Function bf, std::vector < Function > result )  // virtual from FiniteElement::Core
+
+// we must analyse syntactically expressions listed in 'v'
+// and identify cases previously studied and hard-coded
+// otherwise, stop with error mesage
+
+{	
+
+
+	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "pre_compute unsuccessful" << std::endl;
+	exit ( 1 );                                                                                     }	

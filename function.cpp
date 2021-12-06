@@ -105,8 +105,7 @@ Function Function::Vector::MultiValued::JumpIsLinear::component ( size_t i )
 //-----------------------------------------------------------------------------------------//
 	
 
-void Function::Constant::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Constant::set_value ( double v )  // virtual from Function::Scalar
 { this->value = v;  }
 
 double Function::Constant::get_value_on_cell ( Cell::Core * cll ) const
@@ -118,8 +117,7 @@ double Function::Constant::get_value_on_cell
 // virtual from Function::Scalar
 { return this->value;  }
 
-void Function::Sum::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Sum::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Sum::get_value_on_cell ( Cell::Core * cll ) const
@@ -143,8 +141,7 @@ double Function::Sum::get_value_on_cell
 		sum += term_scalar->get_value_on_cell ( cll, tag::winding, exp );  }
 	return sum;                                                           }
 
-void Function::Product::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Product::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Product::get_value_on_cell ( Cell::Core * cll ) const
@@ -168,8 +165,7 @@ double Function::Product::get_value_on_cell
 		prod *= fact_scalar->get_value_on_cell ( cll, tag::winding, exp );  }
 	return prod;                                                            }
 	
-void Function::Power::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Power::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Power::get_value_on_cell ( Cell::Core * cll ) const
@@ -185,8 +181,7 @@ double Function::Power::get_value_on_cell
 		< Function::Core*, Function::Scalar* > ( this->base .core );
 	return std::pow ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ), this->exponent );  }
 	
-void Function::Sqrt::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Sqrt::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Sqrt::get_value_on_cell ( Cell::Core * cll ) const
@@ -202,8 +197,7 @@ double Function::Sqrt::get_value_on_cell
 		< Function::Core*, Function::Scalar* > ( this->base .core );
 	return std::sqrt ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ) );  }
 	
-void Function::Sin::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Sin::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Sin::get_value_on_cell ( Cell::Core * cll ) const
@@ -219,8 +213,7 @@ double Function::Sin::get_value_on_cell
 		< Function::Core*, Function::Scalar* > ( this->base .core );
 	return std::sin ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ) );  }
 	
-void Function::Cos::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Cos::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Cos::get_value_on_cell ( Cell::Core * cll ) const
@@ -236,8 +229,7 @@ double Function::Cos::get_value_on_cell
 		< Function::Core*, Function::Scalar* > ( this->base .core );
 	return std::cos ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ) );  }
 	
-void Function::Step::set_value ( double v )
-// virtual from Function::Scalar
+void Function::Step::set_value ( double v )  // virtual from Function::Scalar
 { assert ( false );  }
 
 double Function::Step::get_value_on_cell ( Cell::Core * cll ) const
@@ -302,8 +294,7 @@ double Function::CoupledWithField::Scalar::get_value_on_cell
 // { return this->field->on_cell ( cll ) .reference();  }
 
 void Function::Diffeomorphism::OneDim::set_value ( double v )
-// virtual from Function::Scalar
-{ assert ( false );  }
+{ assert ( false );  }  // virtual from Function::Scalar
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell ( Cell::Core * cll ) const
 { assert ( false );   // virtual from Function::Scalar
@@ -311,6 +302,34 @@ double Function::Diffeomorphism::OneDim::get_value_on_cell ( Cell::Core * cll ) 
 	return 0;          }
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell
+( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
+{ assert ( false );    // virtual from Function::Scalar
+	// we return zero just to avoid compilation errors
+	return 0;         }
+	
+void Function::MereSymbol::set_value ( double v ) // virtual from Function::Scalar
+{ assert ( false );  }
+
+double Function::MereSymbol::get_value_on_cell ( Cell::Core * cll ) const
+{ assert ( false );   // virtual from Function::Scalar
+	// we return zero just to avoid compilation errors
+	return 0;          }
+	
+double Function::MereSymbol::get_value_on_cell
+( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
+{ assert ( false );    // virtual from Function::Scalar
+	// we return zero just to avoid compilation errors
+	return 0;         }
+	
+void Function::DelayedDerivative::set_value ( double v ) // virtual from Function::Scalar
+{ assert ( false );  }
+
+double Function::DelayedDerivative::get_value_on_cell ( Cell::Core * cll ) const
+{ assert ( false );   // virtual from Function::Scalar
+	// we return zero just to avoid compilation errors
+	return 0;          }
+	
+double Function::DelayedDerivative::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
 { assert ( false );    // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
@@ -850,7 +869,7 @@ Function Function::MereSymbol::deriv ( Function x )  //  virtual from Function::
 {	return Function ( tag::whose_core_is, new Function::DelayedDerivative
 										  ( Function ( tag::whose_core_is, this ), x )       );  }
 
-Function Function::DelayedDerivative::deriv ( Function x ) const  //  virtual from Function::Core
+Function Function::DelayedDerivative::deriv ( Function x )  //  virtual from Function::Core
 {	return Function ( tag::whose_core_is, new Function::DelayedDerivative
 										  ( Function ( tag::whose_core_is, this ), x )       );  }
 
@@ -971,7 +990,7 @@ Function::Diffeomorphism::HighDim::HighDim
 	assert ( this->jacobian.find(geom_coords[1]) != this->jacobian.end() );                   }
 
 
-Function Function::Composition::deriv ( Function x ) const
+Function Function::Composition::deriv ( Function x )
 	
 // there are two kinds of derivatives for a Function::Composition
 // if x is a master coordinate, then we return the usual arithmetic derivative

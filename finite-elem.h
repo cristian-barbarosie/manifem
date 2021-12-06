@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.05
+// finite-elem.h 2021.12.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -44,12 +44,15 @@ namespace tag {
                           quad_4, quad_9                              };
 	struct FromFiniteElementWithMaster { };
 	static const FromFiniteElementWithMaster from_finite_element_with_master;
+	struct FromFiniteElement { };  static const FromFiniteElement from_finite_element;
 	struct ThroughDockedFiniteElement { };
 	static const ThroughDockedFiniteElement through_docked_finite_element;
 	struct EnumerateCells { };  static const EnumerateCells enumerate_cells;
+	struct ForGiven { };  static const ForGiven for_given;
 	struct ForAGiven { };  static const ForAGiven for_a_given;
-	struct BasisFunction { };  static const BasisFunction basis_function;
+	struct BasisFunctions { };  static const BasisFunctions basis_functions;
 	struct IntegralOf { };  static const IntegralOf integral_of;
+	struct UFL_FFC { };  static const UFL_FFC ufl_ffc;
 }
 
 class FiniteElement;
@@ -64,7 +67,7 @@ class Integrator
 
 {	public :
 
-	class Core;  class Gauss;
+	class Core;  class Gauss;  class UFL_FFC;
 	
 	Integrator::Core * core;
 
@@ -89,6 +92,15 @@ class Integrator
 
 	inline double operator()
 	( const Function & f, const tag::ThroughDockedFiniteElement &, const FiniteElement & fe );
+
+	// UFL_FFC integrators require a 'pre_compute' step
+	inline void pre_compute
+	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
+	  tag::IntegralOf &, std::vector < Function > &                   );
+	inline void pre_compute
+	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
+	  tag::IntegralOf &, std::vector < Function > &                                  );
+														
 	
 };  // end of  class Integrator
 
@@ -113,6 +125,10 @@ class Integrator::Core
 	// operator()
 	
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
+
+	// 'pre_compute' is only meaningful for UFL_FFC integrators
+	virtual void pre_compute ( Function bf, std::vector < Function > & v ) = 0;
+	virtual void pre_compute ( Function bf1, Function bf2, std::vector < Function > & v ) = 0;
 	
 };  // end of  class Integrator::Core
 
@@ -123,8 +139,29 @@ inline double Integrator::operator()
 
 {	return this->core->action ( f, fe );  }
 
+
+inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
+( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
+  tag::IntegralOf &, std::vector < Function > & v                 )
+
+// bf is an arbitrary basis function (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
+
+{	this->core->pre_compute ( bf, v );  }
+	
+
+inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
+( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
+  tag::IntegralOf &, std::vector < Function > & v                                )
+
+// bf1 and bf2 are arbitrary basis functions (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
+
+{	this->core->pre_compute ( bf1, bf2, v );  }
+
 //-----------------------------------------------------------------------------------------//
 
+	
 class Integrator::Gauss : public Integrator::Core
 
 {	public :
@@ -150,7 +187,12 @@ class Integrator::Gauss : public Integrator::Core
 	double action ( Function f, const FiniteElement & fe );
 	// virtual from Integrator::Core
 	
+	//  pre_compute  is virtual from Integrator::Core, here execution forbidden
+	void pre_compute ( Function bf, std::vector < Function > & v );
+	void pre_compute ( Function bf1, Function bf2, std::vector < Function > & v );
+
 };  // end of  class Integrator::Gauss
+
 
 //-----------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------//
@@ -207,14 +249,19 @@ class FiniteElement
 	inline Function basis_function ( const Cell c1, const Cell c2 );
 
 	inline Integrator set_integrator ( const tag::gauss &, const tag::gauss_quadrature & );
+	inline Integrator set_integrator ( const tag::UFL_FFC & );
 
 	inline void dock_on ( const Cell & cll );
 	inline void dock_on ( const Cell & cll, const tag::Winding & );
 
 	inline double integrate ( const Function & );
 
-	inline void pre_compute ( const tag::ForAGiven &, const tag::BasisFunction &,
-	                          Function bf, const tag::IntegralOf &, std::vector < Function > v );
+	inline void pre_compute
+	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf, 
+	  const tag::IntegralOf &, std::vector < Function > v             );
+	inline void pre_compute
+	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2, 
+	  const tag::IntegralOf &, std::vector < Function > v                            );
 
 	inline Cell::Numbering & numbering ( const tag::Vertices & );
 	inline Cell::Numbering & numbering ( const tag::Segments & );
@@ -224,6 +271,39 @@ class FiniteElement
 	
 //-----------------------------------------------------------------------------------------//
 
+
+class Integrator::UFL_FFC : public Integrator::Core
+
+// sort of symbolic integrator, obtained using UFL and FFC
+// https://fenics.readthedocs.io/projects/ufl/en/latest/
+// https://fenics.readthedocs.io/projects/ffc/en/latest/
+// resulting code manipulated by hand for each case
+// TODO : further optimize the code using symbolic computation and genetic/stochastic optimization
+
+{	public :
+
+	// this type of integrator is tightly linked to a finite element,
+	// so we include it as an attribute
+	FiniteElement fe;
+
+	//constructor
+	
+	UFL_FFC ( const tag::FromFiniteElement &, FiniteElement & fe );
+
+	// operator()
+	
+	double action ( Function f, const FiniteElement & fe );
+	// virtual from Integrator::Core
+	
+	// this type of integrator benefits from an early declaration of
+	// the integrals we intend to compute later (after docking on a cell)
+	//  pre_compute  is virtual from Integrator::Core
+	void pre_compute ( Function bf, std::vector < Function > & v );
+	void pre_compute ( Function bf1, Function bf2, std::vector < Function > & v );
+
+};  // end of  class Integrator::UFL_FFC
+
+//-----------------------------------------------------------------------------------------//
 
 inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
                                 const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
@@ -368,11 +448,17 @@ inline double FiniteElement::integrate ( const Function & f )
 	return this->core->integr ( f, tag::through_docked_finite_element, *this );  }
 
 inline void FiniteElement::pre_compute
-( const tag::ForAGiven &, const tag::BasisFunction &,
-  Function bf, const tag::IntegralOf &, std::vector < Function > v )
+( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
+  const tag::IntegralOf &, std::vector < Function > v             )
 {	this->core->pre_compute ( bf, v );  }
 
+inline void FiniteElement::pre_compute
+( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
+  const tag::IntegralOf &, std::vector < Function > v                            )
+{	this->core->pre_compute ( bf1, bf2, v );  }
+
 //-----------------------------------------------------------------------------------------//
+
 
 class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
@@ -610,9 +696,8 @@ inline FiniteElement::FiniteElement
 inline Integrator FiniteElement::set_integrator
 ( const tag::gauss &, const tag::gauss_quadrature & q )
 	
-{ FiniteElement::WithMaster * this_core =
-		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
-	assert ( this_core );
+{ FiniteElement::WithMaster * this_core = tag::Util::assert_cast
+		< FiniteElement::Core *, FiniteElement::WithMaster * > ( this->core );
 	this_core->integr .core =
 		new Integrator::Gauss ( q, tag::from_finite_element_with_master, *this );
 	return this_core->integr;                                                    }
@@ -692,7 +777,7 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
 	class Segment;  class Triangle;  class Quadrangle;
 	
-};  // end of  class FiniteElement::StandAlone
+};  // end of  class FiniteElement::StandAlone::TypeOne
 
 //-----------------------------------------------------------------------------------------//
 
@@ -721,7 +806,7 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	void pre_compute ( const Function bf, std::vector < Function > result );
 	void pre_compute ( const Function bf1, const Function bf2, std::vector < Function > result );
 
-};  // end of  class FiniteElement::StandAlone::Triangle
+};  // end of  class FiniteElement::StandAlone::TypeOne::Triangle
 
 //-----------------------------------------------------------------------------------------//
 
@@ -735,6 +820,14 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 
 	this->core = new FiniteElement::StandAlone::TypeOne::Triangle();  }
 
+
+inline Integrator FiniteElement::set_integrator ( const tag::UFL_FFC & )
+	
+{ FiniteElement::StandAlone::TypeOne * this_core = tag::Util::assert_cast
+		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->core );
+	this_core->integr .core =
+		new Integrator::UFL_FFC ( tag::from_finite_element, *this );
+	return this_core->integr;                                                         }
 
 
 }  // end of  namespace maniFEM
