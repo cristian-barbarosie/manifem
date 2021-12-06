@@ -630,7 +630,14 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
-	std::map < Cell, size_t > local_numbering_1;
+	std::map < Cell::Core *, size_t > local_numbering_1;
+	std::map < Function::Core *, size_t > basis_numbering_1;
+
+	// at doking, this finite element will perform all computations
+	// (previously declared in 'pre_compute') and store the results in 'result_of_integr'
+	// the first index identifies a basis function (with the aid of 'basis_numbering')
+	// the second index simply identifies the required computation
+	std::vector < std::vector < double > > result_of_integr;
 	
 	// constructor
 
@@ -666,13 +673,12 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
 	// attribute inherited from FiniteElement::StandAlone :
-	// std::map < Cell, size_t > local_numbering
+	// std::map < Cell::Core *, size_t > local_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering_1
 
-	std::map < Function, size_t > index_of_basis_function;
-	
 	// constructor
 
-	inline StandAlone ( ) : FiniteElement::Core ()  { }
+	inline TypeOne ( ) : FiniteElement::StandAlone ()  { }
 
 	// get basis functions associated to vertices, to segments, etc
 	inline Function basis_function ( Cell::Core * cll );
@@ -682,7 +688,7 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	void dock_on ( const Cell & cll ) = 0;
 	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 
-	// two versions of  pre_compute  stay pure virtual from FiniteElement::Core
+	// two versions of 'pre_compute' stay pure virtual from FiniteElement::Core
 
 	class Segment;  class Triangle;  class Quadrangle;
 	

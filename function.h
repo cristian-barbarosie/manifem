@@ -1,5 +1,5 @@
 
-// function.h 2021.11.23
+// function.h 2021.12.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -77,6 +77,8 @@ class Function
 	#endif
 
 	Function::Core * core;
+
+	inline Function ( ) { assert ( false );  };
 
 	inline Function ( const tag::NonExistent & ) : core ( nullptr ) { };
 
@@ -173,7 +175,7 @@ class Function
 	class Vector;  class Aggregate;  class CoupledWithField;
 	class Sum;  class Product;  class Power;  class Sqrt;  class Sin;  class Cos;  class Step;
 	class Map;  class Diffeomorphism;  class Immersion;  class Composition;
-	class MultiValued;
+	class MultiValued;  class MereSymbol;  class DelayedDerivative;
 	class Equality;
 	struct Inequality
 	{ class LessThanZero;  class LessThan;  class GreaterThan;
@@ -350,6 +352,7 @@ class Function::ArithmeticExpression : public Function::Scalar
 };  // end of  class Function::ArithmeticExpression
 
 //-----------------------------------------------------------------------------------------//
+
 
 class Function::Constant : public Function::ArithmeticExpression
 	
@@ -821,6 +824,102 @@ class Function::Step : public Function::ArithmeticExpression
 }; // end of  class Function::Step
 
 //-----------------------------------------------------------------------------------------//
+
+class Function::MereSymbol : public Function::Scalar
+
+// used by some finite elements as (slack) basis function
+	
+{	public :
+
+	// no data
+
+	inline MereSymbol ( const Function::MereSymbol & ) = delete;
+	inline MereSymbol ( Function::MereSymbol && ) = delete;
+	
+	inline Function::MereSymbol operator= ( const Function::MereSymbol & ) = delete;
+	inline Function::MereSymbol operator= ( Function::MereSymbol && ) = delete;
+
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
+
+	void set_value ( double );  // virtual from Function::Scalar, here execution forbidden
+
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
+	// virtual from Function::Scalar, here execution forbidden
+
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
+	//   defined by Function::ArithmeticExpression (execution forbidden)
+
+	Function deriv ( Function ) const;
+	//  virtual from Function::Core
+
+	Function replace ( const Function & x, const Function & y );
+	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
+	#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	// virtual from Function::Core
+	#endif
+
+};  // end of  class Function::MereSymbol
+
+//-----------------------------------------------------------------------------------------//
+
+
+class Function::DelayedDerivative : public Function::Scalar
+	
+{	public :
+
+	Function base, variable;  // we use wrappers as a pointers
+
+	inline DelayedDerivative ( const Function::DelayedDerivative & ) = delete;
+	inline DelayedDerivative ( Function::DelayedDerivative && ) = delete;
+	
+	inline Function::DelayedDerivative operator= ( const Function::DelayedDerivative & ) = delete;
+	inline Function::DelayedDerivative operator= ( Function::DelayedDerivative && ) = delete;
+
+	// size_t nb_of_components ( )
+	//   virtual from Function::Core, defined by Function::Scalar, returns 1
+
+	// Function component ( size_t i )  virtual from Function::Core,
+	//   defined by Function::Scalar, returns self, never actually used
+
+	void set_value ( double );  // virtual from Function::Scalar, here execution forbidden
+
+	double get_value_on_cell ( Cell::Core * ) const;
+	double get_value_on_cell
+	( Cell::Core *, const tag::Winding &, const Function::Action & exp ) const;
+	// virtual from Function::Scalar, here execution forbidden
+
+	// double set_value_on_cell ( Cell::Core *, const double & )
+	//   virtual from Function::Scalar
+	//   defined by Function::ArithmeticExpression (execution forbidden)
+
+	Function deriv ( Function ) const;
+	//  virtual from Function::Core
+
+	Function replace ( const Function & x, const Function & y );
+	//  virtual from Function::Core
+	
+	// Function::Jump jump ( )  virtual, defined by Function::Core, execution forbidden
+	
+	#ifndef NDEBUG	
+	std::string repr ( const Function::From & from = Function::from_void ) const;
+	// virtual from Function::Core
+	#endif
+
+};  // end of  class Function::DelayedDerivative
+
+//-----------------------------------------------------------------------------------------//
+
 
 class Function::Vector : public Function::Core
 	

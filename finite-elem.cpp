@@ -443,11 +443,11 @@ void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll, const tag::
 		this->transf = Function ( tag::diffeomorphism, tag::one_dim, xyz, t, x_c ); }
 	else  // geometric dimension >= 2
 	{	Function x = xyz [0];
-		double xP = x(P), xQ = x(Q);
+		double xP = x (P), xQ = x (Q);
 		Function xyz_c = ( xP * (1.-t) + xQ * (1.+t) ) / 2.;
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x(P), xQ = x(Q);
+		  xP = x (P), xQ = x (Q);
 			xyz_c = xyz_c && ( ( xP * (1.-t) + xQ * (1.+t) ) / 2. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 		this->transf = Function ( tag::immersion, xyz, t, xyz_c );     }
@@ -491,8 +491,8 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
 	if ( geom_dim == 2 )
 
 	{	Function x = xyz [0],  y = xyz [1];
-		double xP = x(P), xQ = x(Q), xR = x(R);
-		double yP = y(P), yQ = y(Q), yR = y(R);
+		double xP = x (P), xQ = x (Q), xR = x (R);
+		double yP = y (P), yQ = y (Q), yR = y (R);
 
 		Function x_c = xP * one_m_xi_m_eta + xQ * xi + xR * eta;
 		Function y_c = yP * one_m_xi_m_eta + yQ * xi + yR * eta;
@@ -508,7 +508,7 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x(P), xQ = x(Q), xR = x(R);
+		  xP = x (P), xQ = x (Q), xR = x (R);
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -580,12 +580,12 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag:
 	else  // geometric dimension >= 3
 		
 	{	Function x = xyz [0];
-		double xP = x(P), xQ = x(Q), xR = x(R);
+		double xP = x (P), xQ = x (Q), xR = x (R);
 		Function xyz_c = xP * one_m_xi_m_eta + xQ * xi + xR * eta;
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x(P), xQ = x(Q), xR = x(R);
+		  xP = x (P), xQ = x (Q), xR = x (R);
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -639,8 +639,8 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 	if ( geom_dim == 2 )
 
 	{	Function x = xyz [0],  y = xyz [1];
-		double xP = x(P), xQ = x(Q), xR = x(R), xS = x(S);
-		double yP = y(P), yQ = y(Q), yR = y(R), yS = y(S);
+		double xP = x (P), xQ = x (Q), xR = x (R), xS = x (S);
+		double yP = y (P), yQ = y (Q), yR = y (R), yS = y (S);
 
 		Function x_c = ( xP * psiP + xQ * psiQ + xR * psiR + xS * psiS ) / 4.;
 		Function y_c = ( yP * psiP + yQ * psiQ + yR * psiR + yS * psiS ) / 4.;
@@ -738,7 +738,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 	else  // geometric dimension >= 3
 		
 	{	Function x = xyz [0];
-		double xP = x(P), xQ = x(Q), xR = x(R), xS = x(S);
+		double xP = x (P), xQ = x (Q), xR = x (R), xS = x (S);
 		Function xyz_c = ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4.;
 
 		for ( size_t d = 1; d < geom_dim; d++ )
@@ -784,16 +784,17 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	assert ( geom_dim >= 2 );
 
 	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz[1];
 
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
-	this->local_numbering_1 [ this->base_fun_1 [P] ] = 0;
-	this->local_numbering_1 [ this->base_fun_1 [Q] ] = 1;
-	this->local_numbering_1 [ this->base_fun_1 [R] ] = 2;
+	this->basis_numbering_1 [ this->base_fun_1 [ P.core ] .core ] = 0;
+	this->basis_numbering_1 [ this->base_fun_1 [ Q.core ] .core ] = 1;
+	this->basis_numbering_1 [ this->base_fun_1 [ R.core ] .core ] = 2;
 
-	const double xP = x(P), xQ = x(Q), xR = x(R);
-	const double yP = y(P), yQ = y(Q), yR = y(R);
+	const double xP = x (P), xQ = x (Q), xR = x (R);
+	const double yP = y (P), yQ = y (Q), yR = y (R);
 
 	// suppose we want integrals of both partial derivatives of one basis function
 	// for the moment, only the x derivative :
@@ -805,19 +806,19 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	assert ( sp2 > 0. );  // det = 2. * area
 	#endif
 	
-	result[0][0] =   0.5 * ( J_c2 - J_c3 );  // int psi^P_,x
-	result[1][0] =   0.5 * J_c3;             // int psi^Q_,x
-	result[2][0] = - 0.5 * J_c2;             // int psi^R_,x
-	result[0][1] =   0.5 * ( J_c1 - J_c0 );  // int psi^P_,y
-	result[1][1] = - 0.5 * J_c1;             // int psi^Q_,y
-	result[2][1] =   0.5 * J_c0;             // int psi^R_,y
+	this->result_of_integr [0][0] =   0.5 * ( J_c2 - J_c3 );  // int psi^P_,x
+	this->result_of_integr [1][0] =   0.5 * J_c3;             // int psi^Q_,x
+	this->result_of_integr [2][0] = - 0.5 * J_c2;             // int psi^R_,x
+	this->result_of_integr [0][1] =   0.5 * ( J_c1 - J_c0 );  // int psi^P_,y
+	this->result_of_integr [1][1] = - 0.5 * J_c1;             // int psi^Q_,y
+	this->result_of_integr [2][1] =   0.5 * J_c0;             // int psi^R_,y
 	
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
 //-----------------------------------------------------------------------------------------//
 
 
-void FiniteElement::withMaster::pre_compute  // virtual from FiniteElement::Core
+void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 ( const Function bf, std::vector < Function > result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
@@ -825,7 +826,7 @@ void FiniteElement::withMaster::pre_compute  // virtual from FiniteElement::Core
 	exit ( 1 );                                                                     }
 
 
-void FiniteElement::withMaster::pre_compute  // virtual from FiniteElement::Core
+void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 ( const Function bf1, const Function bf2, std::vector < Function > result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
