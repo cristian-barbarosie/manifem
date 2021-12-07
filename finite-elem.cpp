@@ -348,21 +348,35 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 //-----------------------------------------------------------------------------------------//
 
 
-void Integrator::Gauss::pre_compute ( Function bf, std::vector < Function > & v )
+void Integrator::Gauss::pre_compute ( Function bf, const std::vector < Function > & v )
 // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
 	exit ( 1 );                                                                                     }
 
 
-void Integrator::Gauss::pre_compute ( Function bf1, Function bf2, std::vector < Function > & v )
-// virtual from Integrator::Core
+void Integrator::Gauss::pre_compute  // virtual from Integrator::Core
+( Function bf1, Function bf2, const std::vector < Function > & v )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
 	exit ( 1 );                                                                                     }
 
 
-void Integrator::UFL_FFC::pre_compute ( Function bf, std::vector < Function > & v )
+void Integrator::Gauss::retrieve_precomputed ( const Function & bf )
+// virtual from Integrator::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
+	exit ( 1 );                                                                                     }
+
+
+void Integrator::Gauss::retrieve_precomputed ( const Function &, const Function & )
+// virtual from Integrator::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
+	exit ( 1 );                                                                                     }
+
+
+void Integrator::UFL_FFC::pre_compute ( Function bf, const std::vector < Function > & v )
 // virtual from Integrator::Core
 
 // bf is an arbitrary basis function (Function::MereSymbol) in the finite element
@@ -374,9 +388,8 @@ void Integrator::UFL_FFC::pre_compute ( Function bf, std::vector < Function > & 
 	                        tag::integral_of, v                       );  }
 
 
-void Integrator::UFL_FFC::pre_compute
-( Function bf1, Function bf2, std::vector < Function > & v )
-// virtual from Integrator::Core
+void Integrator::UFL_FFC::pre_compute  // virtual from Integrator::Core
+( Function bf1, Function bf2, const std::vector < Function > & v )
 
 // bf is an arbitrary basis function (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'v'
@@ -386,7 +399,17 @@ void Integrator::UFL_FFC::pre_compute
 {	this->fe .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
 	                        tag::integral_of, v                            );  }
 
-	
+
+void Integrator::StandAlone::retrieve_precomputed ( const Function & bf )
+// virtual from Integrator::Core
+{
+}
+
+void Integrator::StandAlone::retrieve_precomputed  // virtual from Integrator::Core
+( const Function & bf1, const Function & bf2 )
+{
+}
+
 //-----------------------------------------------------------------------------------------//
 
 
@@ -411,7 +434,7 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 	size_t geom_dim = tran->geom_coords .nb_of_components();
 	assert ( geom_dim == tran->back_geom_coords .nb_of_components() );
 	for ( size_t i = 0; i < geom_dim; i++ )
-		f = f.replace ( tran->geom_coords [i], tran->back_geom_coords [i] );
+		f = f .replace ( tran->geom_coords [i], tran->back_geom_coords [i] );
 
 	double res = 0.;
 	std::vector < double > ::iterator it_weight = this->weights .begin();
@@ -424,6 +447,16 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 		it_weight++;                                              }
 	assert ( it_weight == this->weights .end() );
 	return res;                                                                        }
+
+//-----------------------------------------------------------------------------------------//
+
+double Integrator::UFL_FFC::action ( Function f, const FiniteElement & fe )
+// virtual from Integrator::Core
+
+// assumes the finite element is already docked on a cell
+
+{
+}
 
 //-----------------------------------------------------------------------------------------//
 
@@ -861,7 +894,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
 
 void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
-( const Function bf, std::vector < Function > result )
+( const Function bf, const std::vector < Function > & result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre-compute does not apply to elements with master" << std::endl;
@@ -869,7 +902,7 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 
 
 void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
-( const Function bf1, const Function bf2, std::vector < Function > result )
+( const Function bf1, const Function bf2, const std::vector < Function > & result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre-compute does not apply to elements with master" << std::endl;
@@ -877,7 +910,8 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 
 
 void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
-( const Function bf, std::vector < Function > result )  // virtual from FiniteElement::Core
+( const Function bf, const std::vector < Function > & result )
+// virtual from FiniteElement::Core
 
 // we must analyse syntactically expressions listed in 'v'
 // and identify cases previously studied and hard-coded

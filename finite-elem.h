@@ -96,11 +96,15 @@ class Integrator
 	// UFL_FFC integrators require a 'pre_compute' step
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
-	  tag::IntegralOf &, std::vector < Function > &                   );
+	  const tag::IntegralOf &, const std::vector < Function > &       );
 	inline void pre_compute
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
-	  tag::IntegralOf &, std::vector < Function > &                                  );
-														
+	  const tag::IntegralOf &, const std::vector < Function > &                      );
+
+	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
+	// and replace values of coordinates of vertices of the docked_on cell
+	inline double retrieve_precomputed ( const Function & f );
+	inline double retrieve_precomputed ( const Function & f, const Function & g );
 	
 };  // end of  class Integrator
 
@@ -127,8 +131,9 @@ class Integrator::Core
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
 
 	// 'pre_compute' is only meaningful for UFL_FFC integrators
-	virtual void pre_compute ( Function bf, std::vector < Function > & v ) = 0;
-	virtual void pre_compute ( Function bf1, Function bf2, std::vector < Function > & v ) = 0;
+	virtual void pre_compute ( Function bf, const std::vector < Function > & v ) = 0;
+	virtual void pre_compute
+	( Function bf1, Function bf2, const std::vector < Function > & v ) = 0;
 	
 };  // end of  class Integrator::Core
 
@@ -142,7 +147,7 @@ inline double Integrator::operator()
 
 inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 ( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
-  tag::IntegralOf &, std::vector < Function > & v                 )
+  const tag::IntegralOf &, const std::vector < Function > & v     )
 
 // bf is an arbitrary basis function (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'v'
@@ -152,13 +157,20 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 
 inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 ( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
-  tag::IntegralOf &, std::vector < Function > & v                                )
+  const tag::IntegralOf &, const std::vector < Function > & v                    )
 
 // bf1 and bf2 are arbitrary basis functions (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'v'
 
 {	this->core->pre_compute ( bf1, bf2, v );  }
 
+
+inline double Integrator::retrieve_precomputed ( const Function & f )
+{	return this->core->retrieve_precomputed ( f );  }
+	
+inline double Integrator::retrieve_precomputed ( const Function & f, const Function & g )
+{	return this->core->retrieve_precomputed ( f, g );  }
+	
 //-----------------------------------------------------------------------------------------//
 
 	
@@ -187,9 +199,12 @@ class Integrator::Gauss : public Integrator::Core
 	double action ( Function f, const FiniteElement & fe );
 	// virtual from Integrator::Core
 	
-	//  pre_compute  is virtual from Integrator::Core, here execution forbidden
-	void pre_compute ( Function bf, std::vector < Function > & v );
-	void pre_compute ( Function bf1, Function bf2, std::vector < Function > & v );
+	//  pre_compute  and  retrieve_precomputed  are virtual from Integrator::Core,
+	// here execution forbidden
+	void pre_compute ( Function bf, const std::vector < Function > & v );
+	void pre_compute ( Function bf1, Function bf2, const std::vector < Function > & v );
+	inline double retrieve_precomputed ( const Function & f );
+	inline double retrieve_precomputed ( const Function & f, const Function & g );
 
 };  // end of  class Integrator::Gauss
 
@@ -221,29 +236,22 @@ class FiniteElement
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
 	                       const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::EnumerateCells &                               );
+	                       const tag::EnumerateCells &                              );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::EnumerateCells &                               );
+	                       const tag::EnumerateCells &                              );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::EnumerateCells &                               );
+	                       const tag::EnumerateCells &                              );
 
 	// destructor
 	
 	inline ~FiniteElement ();
 	
-	// forbid copying
-
-	FiniteElement ( const FiniteElement & ) = delete;
-	FiniteElement ( const FiniteElement && ) = delete;
-	FiniteElement & operator= ( const FiniteElement & ) = delete;
-	FiniteElement & operator= ( const FiniteElement && ) = delete;
-
 	// get basis functions associated to vertices, to segments, etc
 	inline Function basis_function ( const Cell cll );
 	inline Function basis_function ( const Cell c1, const Cell c2 );
@@ -255,13 +263,15 @@ class FiniteElement
 	inline void dock_on ( const Cell & cll, const tag::Winding & );
 
 	inline double integrate ( const Function & );
+	inline double integrate ( const tag::PreComputed &, const Function & );
+	inline double integrate ( const tag::PreComputed &, const Function &, const Function & );
 
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf, 
-	  const tag::IntegralOf &, std::vector < Function > v             );
+	  const tag::IntegralOf &, const std::vector < Function > & v     );
 	inline void pre_compute
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2, 
-	  const tag::IntegralOf &, std::vector < Function > v                            );
+	  const tag::IntegralOf &, const std::vector < Function > & v                    );
 
 	inline Cell::Numbering & numbering ( const tag::Vertices & );
 	inline Cell::Numbering & numbering ( const tag::Segments & );
@@ -288,7 +298,9 @@ class Integrator::UFL_FFC : public Integrator::Core
 
 	//constructor
 	
-	UFL_FFC ( const tag::FromFiniteElement &, FiniteElement & fe );
+	inline UFL_FFC ( const tag::FromFiniteElement &, FiniteElement & f )
+	:	fe { f }
+	{	};
 
 	// operator()
 	
@@ -298,8 +310,14 @@ class Integrator::UFL_FFC : public Integrator::Core
 	// this type of integrator benefits from an early declaration of
 	// the integrals we intend to compute later (after docking on a cell)
 	//  pre_compute  is virtual from Integrator::Core
-	void pre_compute ( Function bf, std::vector < Function > & v );
-	void pre_compute ( Function bf1, Function bf2, std::vector < Function > & v );
+	void pre_compute ( Function bf, const std::vector < Function > & v );
+	void pre_compute ( Function bf1, Function bf2, const std::vector < Function > & v );
+
+	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
+	// and replace values of coordinates of vertices of the docked_on cell
+	//  retrieve_precomputed  is virtual from Integrator::Core
+	inline double retrieve_precomputed ( const Function & f );
+	inline double retrieve_precomputed ( const Function & f, const Function & g );
 
 };  // end of  class Integrator::UFL_FFC
 
@@ -314,7 +332,9 @@ inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature 
 
 class FiniteElement::Core
 
-// a base class for FiniteElements
+// a base class for several types of FiniteElements
+// abstract class, instantiated in FiniteElement::WithMaster::***
+//                             and FiniteElement::StandAlone::Type***::***
 
 {	public :
 
@@ -334,13 +354,13 @@ class FiniteElement::Core
 	// destructor
 
 	virtual ~Core()  { };
-
+	
 	virtual void dock_on ( const Cell & cll ) = 0;
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 	
-	virtual void pre_compute ( const Function bf, std::vector < Function > result ) = 0;
+	virtual void pre_compute ( const Function bf, const std::vector < Function > & ) = 0;
 	virtual void pre_compute ( const Function bf1, const Function bf2,
-                             std::vector < Function > result        ) = 0;
+                             const std::vector < Function > &       ) = 0;
 
 };  // end of  class FiniteElement::Core
 
@@ -348,6 +368,22 @@ class FiniteElement::Core
 
 
 inline FiniteElement::~FiniteElement ()  {  delete this->core;  }
+
+
+inline Function FiniteElement::basis_function ( const Cell cll )
+{	std::map < Cell::Core *, Function > :: iterator it =
+		this->core->base_fun_1 .find ( cll );
+	assert ( it != this->core->base_fun_1 .end() );
+  return it->second;                                   }
+	
+inline Function FiniteElement::basis_function ( const Cell c1, const Cell c2 )
+{	std::map < Cell::Core *, std::map < Cell::Core *, Function > >
+		:: iterator it = this->core->base_fun_2 .find ( c1 );
+	assert ( it != this->core->base_fun_2 .end() );
+	std::map < Cell::Core *, Function > :: iterator itt =
+		it->second .find ( c2 );
+	assert ( itt != it->second .end() );
+  return itt->second;                                               }
 
 
 inline void FiniteElement::dock_on ( const Cell & cll )
@@ -375,6 +411,7 @@ inline Cell::Numbering & FiniteElement::numbering ( const tag::CellsOfDim &, con
 class FiniteElement::WithMaster : public FiniteElement::Core
 
 // finite elements which use a master element
+// abstract class, instantiated in FiniteElement::WithMaster::***
 
 {	public :
 
@@ -393,18 +430,13 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	: FiniteElement::Core (), master_manif (m), transf ( 0. )
 	{ }
 
-	// get basis functions associated to vertices, to segments, etc
-	inline Function basis_function ( Cell::Core * cll );
-	inline Function basis_function ( Cell::Core * c1, Cell::Core * c2 );
-
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) = 0;
 	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 
 	//  pre_compute  virtual from FiniteElement::Core, here execution forbidden
-	void pre_compute ( const Function bf, std::vector < Function > result );
-	void pre_compute ( const Function bf1, const Function bf2,
-                     std::vector < Function > result        );
+	void pre_compute ( Function bf, const std::vector < Function > & result );
+	void pre_compute ( Function bf1, Function bf2, const std::vector < Function > & );
 
 	class Segment;  class Triangle;  class Quadrangle;
 	
@@ -412,49 +444,27 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 
 //-----------------------------------------------------------------------------------------//
 
-inline Function FiniteElement::WithMaster::basis_function ( Cell::Core * cll )
-{	std::map < Cell::Core *, Function > :: iterator it =
-		this->base_fun_1 .find ( cll );
-	assert ( it != this->base_fun_1 .end() );
-  return it->second;                                   }
-	
-inline Function FiniteElement::WithMaster::basis_function ( Cell::Core * c1, Cell::Core * c2 )
-{	std::map < Cell::Core *, std::map < Cell::Core *, Function > >
-		:: iterator it = this->base_fun_2 .find ( c1 );
-	assert ( it != this->base_fun_2 .end() );
-	std::map < Cell::Core *, Function > :: iterator itt =
-		it->second .find ( c2 );
-	assert ( itt != it->second .end() );
-  return itt->second;                                             }
-
-inline Function FiniteElement::basis_function ( const Cell cll )
-{	FiniteElement::WithMaster * fe_core =
-		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
-	assert ( fe_core );
-	return fe_core->basis_function ( cll .core );                        }
-
-inline Function FiniteElement::basis_function ( const Cell c1, const Cell c2 )
-{	FiniteElement::WithMaster * fe_core =
-		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
-	assert ( fe_core );
-	return fe_core->basis_function ( c1 .core, c2 .core );          }
-
 inline double FiniteElement::integrate ( const Function & f )
 {	// assert that 'this' is already docked :
-	FiniteElement::WithMaster * fe_core =
-		dynamic_cast < FiniteElement::WithMaster * > ( this->core );
-	assert ( fe_core );
-	assert ( fe_core->docked_on .exists() );
+	assert ( fe->core->docked_on .exists() );
 	return this->core->integr ( f, tag::through_docked_finite_element, *this );  }
+
+inline double FiniteElement::integrate ( const tag::PreComputed &, const Function & f )
+{	return this->core->integr .retrieve_precomputed ( f );  }
+
+inline double FiniteElement::integrate
+( const tag::PreComputed &, const Function & f, const Function & g )
+{	return this->core->integr .retrieve_precomputed ( f, g );  }
+
 
 inline void FiniteElement::pre_compute
 ( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
-  const tag::IntegralOf &, std::vector < Function > v             )
+  const tag::IntegralOf &, const std::vector < Function > & v     )
 {	this->core->pre_compute ( bf, v );  }
 
 inline void FiniteElement::pre_compute
 ( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
-  const tag::IntegralOf &, std::vector < Function > v                            )
+  const tag::IntegralOf &, const std::vector < Function > & v                    )
 {	this->core->pre_compute ( bf1, bf2, v );  }
 
 //-----------------------------------------------------------------------------------------//
@@ -708,6 +718,7 @@ inline Integrator FiniteElement::set_integrator
 class FiniteElement::StandAlone : public FiniteElement::Core
 
 // finite elements with no master
+// abstract class, instantiated in FiniteElement::StandAlone::Type***::***
 
 {	public :
 
@@ -728,10 +739,6 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 
 	inline StandAlone ( ) : FiniteElement::Core ()  { }
 
-	// get basis functions associated to vertices, to segments, etc
-	inline Function basis_function ( Cell::Core * cll );
-	inline Function basis_function ( Cell::Core * c1, Cell::Core * c2 );
-
 	//  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) = 0;
 	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
@@ -751,6 +758,8 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 // searches for the basis function provided by 'integrate'
 // uses an std::map < Function, size_t > index_of_basis_function
 
+// abstract class, instantiated in FiniteElement::StandAlone::TypeOne::***
+
 {	public :
 
 	// attributes inherited from FiniteElement::Core :
@@ -764,10 +773,6 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	// constructor
 
 	inline TypeOne ( ) : FiniteElement::StandAlone ()  { }
-
-	// get basis functions associated to vertices, to segments, etc
-	inline Function basis_function ( Cell::Core * cll );
-	inline Function basis_function ( Cell::Core * c1, Cell::Core * c2 );
 
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) = 0;
@@ -803,8 +808,8 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	void dock_on ( const Cell & cll, const tag::Winding & );
 
 	//  pre_compute  virtual from FiniteElement::Core
-	void pre_compute ( const Function bf, std::vector < Function > result );
-	void pre_compute ( const Function bf1, const Function bf2, std::vector < Function > result );
+	void pre_compute ( Function bf, const std::vector < Function > & result );
+	void pre_compute ( Function bf1, Function bf2, const std::vector < Function > & );
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Triangle
 

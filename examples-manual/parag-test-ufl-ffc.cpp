@@ -37,10 +37,10 @@ int main ()
 	fe .dock_on ( ABC );
 	Function psi_A = fe .basis_function (A);
 	Function psi_B = fe .basis_function (B);
-	std::vector < double > result = fe .integrate ( tag::pre_computed, psi_A );
+	std::vector < double > result; // = fe .integrate ( tag::pre_computed, psi_A );
 	assert ( result .size() == 2 );
 	std::cout << result [0] << " " << result [1] << std::endl;
-	result = fe .integrate ( tag::pre_computed, psi_B );
+	// result = fe .integrate ( tag::pre_computed, psi_B );
 	assert ( result .size() == 2 );
 	std::cout << result [0] << " " << result [1] << std::endl;
 
