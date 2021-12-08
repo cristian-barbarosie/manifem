@@ -48,6 +48,7 @@ namespace tag {
 	struct ThroughDockedFiniteElement { };
 	static const ThroughDockedFiniteElement through_docked_finite_element;
 	struct EnumerateCells { };  static const EnumerateCells enumerate_cells;
+	struct PreComputed { };  static const PreComputed pre_computed;
 	struct ForGiven { };  static const ForGiven for_given;
 	struct ForAGiven { };  static const ForAGiven for_a_given;
 	struct BasisFunctions { };  static const BasisFunctions basis_functions;
@@ -103,8 +104,8 @@ class Integrator
 
 	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
 	// and replace values of coordinates of vertices of the docked_on cell
-	inline double retrieve_precomputed ( const Function & f );
-	inline double retrieve_precomputed ( const Function & f, const Function & g );
+	inline std::vector < double > & retrieve_precomputed ( const Function & f );
+	inline std::vector < double > & retrieve_precomputed ( const Function & f, const Function & g );
 	
 };  // end of  class Integrator
 
@@ -134,6 +135,9 @@ class Integrator::Core
 	virtual void pre_compute ( Function bf, const std::vector < Function > & v ) = 0;
 	virtual void pre_compute
 	( Function bf1, Function bf2, const std::vector < Function > & v ) = 0;
+	virtual std::vector < double > & retrieve_precomputed ( const Function & f ) = 0;
+	virtual std::vector < double > & retrieve_precomputed
+	( const Function & f, const Function & g ) = 0;
 	
 };  // end of  class Integrator::Core
 
@@ -165,10 +169,11 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 {	this->core->pre_compute ( bf1, bf2, v );  }
 
 
-inline double Integrator::retrieve_precomputed ( const Function & f )
+inline std::vector < double > &  Integrator::retrieve_precomputed ( const Function & f )
 {	return this->core->retrieve_precomputed ( f );  }
 	
-inline double Integrator::retrieve_precomputed ( const Function & f, const Function & g )
+inline std::vector < double > &  Integrator::retrieve_precomputed
+( const Function & f, const Function & g )
 {	return this->core->retrieve_precomputed ( f, g );  }
 	
 //-----------------------------------------------------------------------------------------//
@@ -203,8 +208,8 @@ class Integrator::Gauss : public Integrator::Core
 	// here execution forbidden
 	void pre_compute ( Function bf, const std::vector < Function > & v );
 	void pre_compute ( Function bf1, Function bf2, const std::vector < Function > & v );
-	inline double retrieve_precomputed ( const Function & f );
-	inline double retrieve_precomputed ( const Function & f, const Function & g );
+	std::vector < double > & retrieve_precomputed ( const Function & f );
+	std::vector < double > & retrieve_precomputed ( const Function & f, const Function & g );
 
 };  // end of  class Integrator::Gauss
 
@@ -263,8 +268,9 @@ class FiniteElement
 	inline void dock_on ( const Cell & cll, const tag::Winding & );
 
 	inline double integrate ( const Function & );
-	inline double integrate ( const tag::PreComputed &, const Function & );
-	inline double integrate ( const tag::PreComputed &, const Function &, const Function & );
+	inline std::vector < double > & integrate ( const tag::PreComputed &, const Function & );
+	inline std::vector < double > & integrate
+	( const tag::PreComputed &, const Function &, const Function & );
 
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf, 
@@ -316,8 +322,8 @@ class Integrator::UFL_FFC : public Integrator::Core
 	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
 	// and replace values of coordinates of vertices of the docked_on cell
 	//  retrieve_precomputed  is virtual from Integrator::Core
-	inline double retrieve_precomputed ( const Function & f );
-	inline double retrieve_precomputed ( const Function & f, const Function & g );
+	inline std::vector < double > & retrieve_precomputed ( const Function & f );
+	inline std::vector < double > & retrieve_precomputed ( const Function & f, const Function & g );
 
 };  // end of  class Integrator::UFL_FFC
 
@@ -372,16 +378,16 @@ inline FiniteElement::~FiniteElement ()  {  delete this->core;  }
 
 inline Function FiniteElement::basis_function ( const Cell cll )
 {	std::map < Cell::Core *, Function > :: iterator it =
-		this->core->base_fun_1 .find ( cll );
+		this->core->base_fun_1 .find ( cll .core );
 	assert ( it != this->core->base_fun_1 .end() );
   return it->second;                                   }
 	
 inline Function FiniteElement::basis_function ( const Cell c1, const Cell c2 )
 {	std::map < Cell::Core *, std::map < Cell::Core *, Function > >
-		:: iterator it = this->core->base_fun_2 .find ( c1 );
+		:: iterator it = this->core->base_fun_2 .find ( c1 .core );
 	assert ( it != this->core->base_fun_2 .end() );
 	std::map < Cell::Core *, Function > :: iterator itt =
-		it->second .find ( c2 );
+		it->second .find ( c2 .core );
 	assert ( itt != it->second .end() );
   return itt->second;                                               }
 
@@ -446,13 +452,14 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 
 inline double FiniteElement::integrate ( const Function & f )
 {	// assert that 'this' is already docked :
-	assert ( fe->core->docked_on .exists() );
+	assert ( this->core->docked_on .exists() );
 	return this->core->integr ( f, tag::through_docked_finite_element, *this );  }
 
-inline double FiniteElement::integrate ( const tag::PreComputed &, const Function & f )
+inline std::vector < double > & FiniteElement::integrate
+( const tag::PreComputed &, const Function & f )
 {	return this->core->integr .retrieve_precomputed ( f );  }
 
-inline double FiniteElement::integrate
+inline std::vector < double > & FiniteElement::integrate
 ( const tag::PreComputed &, const Function & f, const Function & g )
 {	return this->core->integr .retrieve_precomputed ( f, g );  }
 
@@ -727,13 +734,13 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
 	std::map < Cell::Core *, size_t > local_numbering_1;
-	std::map < Function::Core *, size_t > basis_numbering_1;
+	std::map < Function::Core *, size_t > basis_numbering;
 
 	// at doking, this finite element will perform all computations
 	// (previously declared in 'pre_compute') and store the results in 'result_of_integr'
 	// the first index identifies a basis function (with the aid of 'basis_numbering')
 	// the second index simply identifies the required computation
-	std::vector < std::vector < double > > result_of_integr;
+	std::vector < std::vector < std::vector < double > > > result_of_integr;
 	
 	// constructor
 
@@ -756,7 +763,7 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
 // finite elements with no master
 // searches for the basis function provided by 'integrate'
-// uses an std::map < Function, size_t > index_of_basis_function
+// uses  std::map < Function::Core *, size_t > basis_numbering
 
 // abstract class, instantiated in FiniteElement::StandAlone::TypeOne::***
 
@@ -768,7 +775,7 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
 	// attribute inherited from FiniteElement::StandAlone :
 	// std::map < Cell::Core *, size_t > local_numbering_1
-	// std::map < Function::Core *, size_t > basis_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering
 
 	// constructor
 

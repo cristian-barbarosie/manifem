@@ -132,35 +132,35 @@ void baricenters ( Mesh & msh );
 int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
-	Function xy = RR2.build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy[0], y = xy[1];
+	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function x = xy [0], y = xy [1];
 
 	size_t n = 10;
 	double l = 2.6;
 	double d = l / double(n);
 	double areaY = l*l ;
 
-	Cell A ( tag::vertex );  x(A) = -l/2.;  y(A) = -l/2.;
-	Cell B ( tag::vertex );  x(B) =  l/2.;  y(B) = -l/2.;
-	Cell C ( tag::vertex );  x(C) =  l/2.;  y(C) =  l/2.;
-	Cell D ( tag::vertex );  x(D) = -l/2.;  y(D) =  l/2.;
+	Cell A ( tag::vertex );  x (A) = -l/2.;  y (A) = -l/2.;
+	Cell B ( tag::vertex );  x (B) =  l/2.;  y (B) = -l/2.;
+	Cell C ( tag::vertex );  x (C) =  l/2.;  y (C) =  l/2.;
+	Cell D ( tag::vertex );  x (D) = -l/2.;  y (D) =  l/2.;
 
-	Mesh AB ( tag::segment, A.reverse(), B, tag::divided_in, n );
-	Mesh BC ( tag::segment, B.reverse(), C, tag::divided_in, n );
-	Mesh CD ( tag::segment, C.reverse(), D, tag::divided_in, n );
-	Mesh DA ( tag::segment, D.reverse(), A, tag::divided_in, n );
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, n );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, n );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, n );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, n );
 
-	Manifold circle = RR2.implicit ( x*x + y*y == 0.7 );
+	Manifold circle = RR2 .implicit ( x*x + y*y == 0.7 );
 	Mesh inner ( tag::progressive, tag::entire_manifold, circle, tag::desired_length, d );
 
-	Mesh bdry ( tag::join, AB, BC, CD, DA, inner.reverse() );
+	Mesh bdry ( tag::join, AB, BC, CD, DA, inner .reverse() );
 
-	RR2.set_as_working_manifold();
+	RR2 .set_as_working_manifold();
 	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
 
-	Mesh torus = square.fold ( tag::identify, AB, tag::with, CD.reverse(),
-	                           tag::identify, BC, tag::with, DA.reverse(),
-	                           tag::use_existing_vertices                 );
+	Mesh torus = square .fold ( tag::identify, AB, tag::with, CD.reverse(),
+	                            tag::identify, BC, tag::with, DA.reverse(),
+	                            tag::use_existing_vertices                 );
 
 	// std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
 	
@@ -190,7 +190,7 @@ int main ( )
 
 	// declare the type of finite element
 	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
-	fe.set_integrator ( tag::Gauss, tag::tri_6 );
+	fe .set_integrator ( tag::Gauss, tag::tri_6 );
 
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
@@ -205,7 +205,7 @@ int main ( )
 	std::cout << "global matrix " << 2*number_dofs + 4 << "x" << 2*number_dofs + 4 << std::endl;
 	Eigen::SparseMatrix < double > matrix_A ( 2*number_dofs + 4, 2*number_dofs + 4 );
 	
-	matrix_A.reserve ( Eigen::VectorXi::Constant ( 2*number_dofs + 4, 18 ) );
+	matrix_A .reserve ( Eigen::VectorXi::Constant ( 2*number_dofs + 4, 18 ) );
 	// since we will be working with a mesh of triangles,
 	// there will be, in average, 18 = 2*(6+1) + 4 non-zero elements per column
 	// the diagonal entry plus six neighbour vertices plus four equations
@@ -213,40 +213,42 @@ int main ( )
 	// we fill the main diagonal with ones
 	// then we put zero for vertices belonging to 'torus'
 	{ // just a block of code for hiding 'it'
-	for ( size_t i = 0; i < 2*number_dofs; i++ ) matrix_A.coeffRef ( i, i ) = 1.;
-	CellIterator it = torus.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	for ( size_t i = 0; i < 2*number_dofs; i++ ) matrix_A .coeffRef ( i, i ) = 1.;
+	CellIterator it = torus .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell V = *it;
-		matrix_A.coeffRef ( 2*numbering[V], 2*numbering[V] ) = 0.;
-		matrix_A.coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
+		matrix_A .coeffRef ( 2*numbering[V], 2*numbering[V] ) = 0.;
+		matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[V]+1 ) = 0.;		}
 	} // just a block of code for hiding 'it'
 	
-	Eigen::VectorXd vector_b ( 2*number_dofs +4 );
-	vector_b.setZero();
+	Eigen::VectorXd vector_b ( 2*number_dofs + 4 );
+	vector_b .setZero();
 
-	xy = Manifold::working.coordinates();
-	x = xy[0];  y = xy[1];
+	xy = Manifold::working .coordinates();
+	x = xy [0];  y = xy [1];
 
 	// macroscopic temperature gradient
 	myTensor < double > macro_stress (2,2);
-	macro_stress (0,0) = 1.;
-	macro_stress (0,1) = 0.;
-	macro_stress (1,0) = 0.;
-	macro_stress (1,1) = 1.;
+	macro_stress (0,0) = 0.738353;
+	macro_stress (0,1) = 0.3;
+	macro_stress (1,0) = 0.3;
+	macro_stress (1,1) = 0.738168;
 
-	Function::Jump jump_of_x =  x.jump();
-	Function::Jump jump_of_y =  y.jump();
+	Function::Jump jump_of_x = x.jump(),
+	               jump_of_y = y.jump();
 
+	// impose equilibrium equation
 	// run over all triangular cells composing 'torus'
-	{ // just a block of code for hiding 'it'
+	{  // just a block of code for hiding 'it'
 	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe .dock_on ( small_tri, tag::winding );
 		// run twice over the three vertices of 'small_tri'
-		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		CellIterator it_V = small_tri .boundary() .iterator
+			( tag::over_vertices, tag::require_order );
 		for ( it_V .reset(); it_V .in_range(); it_V ++ )
-		{	Cell V = * it_V;
+		{	Cell V = * it_V;   // the test function is psi_V
 			// perhaps implement an iterator returning a vertex and a segment
 			Cell seg = small_tri .boundary() .cell_in_front_of ( V );
 			Cell W = V;
@@ -274,41 +276,52 @@ int main ( )
 					               Hooke (i,0,k,1) * int_d_psiW_dy_d_psiV_dx +
 					               Hooke (i,1,k,0) * int_d_psiW_dx_d_psiV_dy +
 				                 Hooke (i,1,k,1) * int_d_psiW_dy_d_psiV_dy ;
-				matrix_A .coeffRef ( 2*numbering[V], 2*numbering[W] ) += energy(0,0);
-				matrix_A .coeffRef ( 2*numbering[V], 2*numbering[W]+1 ) += energy(0,1);
-				matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[W] ) += energy(1,0);
-				matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[W]+1 ) += energy(1,1);
-				//vector_b ( 2*numbering[V] ) -=
-				//	jump_V_W_u_x * energy(0,0) + jump_V_W_u_y * energy(0,1);
-				//vector_b ( 2*numbering[V]+1 ) -=
-				//	jump_V_W_u_x * energy(1,0) + jump_V_W_u_y * energy(1,1);
-				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs ) += jump_of_x(winding_V_W)*energy(0,0);
-				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs +1 ) += jump_of_y(winding_V_W)*energy(0,0);
-				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs +2 ) += jump_of_x(winding_V_W)*energy(0,1);
-				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs +3 ) += jump_of_y(winding_V_W)*energy(0,1);
-				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs ) += jump_of_x(winding_V_W)*energy(1,0);
-				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs +1 ) += jump_of_y(winding_V_W)*energy(1,0);
-				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs +2) += jump_of_x(winding_V_W)*energy(1,1);
-				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs +3 ) += jump_of_y(winding_V_W)*energy(1,1);
+				matrix_A .coeffRef ( 2*numbering[V],   2*numbering[W]   ) += energy (0,0);
+				matrix_A .coeffRef ( 2*numbering[V],   2*numbering[W]+1 ) += energy (0,1);
+				matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[W]   ) += energy (1,0);
+				matrix_A .coeffRef ( 2*numbering[V]+1, 2*numbering[W]+1 ) += energy (1,1);
+				// vector_b ( 2*numbering[V] ) -=
+				// 	jump_V_W_u_x * energy(0,0) + jump_V_W_u_y * energy(0,1);
+				// vector_b ( 2*numbering[V]+1 ) -=
+				// 	jump_V_W_u_x * energy(1,0) + jump_V_W_u_y * energy(1,1);
+				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs ) +=   //  strain 00
+					jump_of_x (winding_V_W) * energy (0,0);
+				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs+1 ) +=   //  strain 01
+					jump_of_y (winding_V_W) * energy (0,0);
+				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs+2 ) +=   //  strain 10
+					jump_of_x (winding_V_W) * energy (0,1);
+				matrix_A .coeffRef ( 2*numbering[V], 2*number_dofs+3 ) +=   //  strain 11
+					jump_of_y (winding_V_W) * energy (0,1);
+				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs ) +=   //  strain 00
+					jump_of_x (winding_V_W) * energy (1,0);
+				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs+1 ) +=   //  strain 01
+					jump_of_y (winding_V_W) * energy (1,0);
+				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs+2 ) +=   //  strain 10
+					jump_of_x (winding_V_W) * energy (1,1);
+				matrix_A .coeffRef ( 2*numbering[V]+1, 2*number_dofs+3 ) +=   //  strain 11
+					jump_of_y (winding_V_W) * energy (1,1);
 				//jump_V_W_u_x += jump_of_u_x ( seg .winding() );
 				//jump_V_W_u_y += jump_of_u_y ( seg .winding() );
-				winding_V_W += seg.winding() ;
-				W = seg.tip();
+				winding_V_W += seg .winding() ;
+				W = seg .tip();
 				if ( V == W ) break;
-				seg = small_tri .boundary() .cell_in_front_of ( W );                        }
-			// end of loop in W
+				seg = small_tri .boundary() .cell_in_front_of ( W );
+			}  // end of loop in W
 			// here winding_V_W should be zero again
-		       assert(winding_V_W==0);
+			assert ( winding_V_W == 0 );
 		}  }  // end of loop in V, end of loop in small_tri
-	} // just a block of code for hiding 'it'
-	
-		{ // just a block of code for hiding 'it'
+	}  // just a block of code for hiding 'it'
+
+	// now define the last four equations, relating macro_strain to macro_stress
+	// run over all triangular cells composing 'torus'
+	{  // just a block of code for hiding 'it'
 	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe .dock_on ( small_tri, tag::winding );
 		// run over the three vertices of 'small_tri'
-		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		CellIterator it_V = small_tri .boundary() .iterator
+			( tag::over_vertices, tag::require_order );
 		Manifold::Action winding_V = 0; // g de V
 		for ( it_V .reset(); it_V .in_range(); it_V ++ )
 		{	Cell V = * it_V;
@@ -317,59 +330,89 @@ int main ( )
 			Function psi_V = fe .basis_function ( V ),
 			         d_psiV_dx = psi_V .deriv ( x ),
 			         d_psiV_dy = psi_V .deriv ( y );
-			double int_psi_x = fe.integrate(d_psiV_dx);
-			double int_psi_y = fe.integrate(d_psiV_dy);
-			for(size_t i=0; i<2; i++){
-				for(size_t j=0; j<2; j++){
-					for(size_t k=0; k<2; k++){
-					double integral = Hooke(i,j,k,0)*int_psi_x 
-					       + Hooke(i,j,k,1)*int_psi_y;
-				    matrix_A .coeffRef ( 2*number_dofs + 2*i+j, 2*numbering[V]+k ) += integral;
-					matrix_A .coeffRef ( 2*number_dofs + 2*i+j, 2*number_dofs+2*k ) += integral*jump_of_x(winding_V);
-					matrix_A .coeffRef ( 2*number_dofs + 2*i+j, 2*number_dofs+2*k+1 ) += integral*jump_of_y(winding_V);
-					vector_b (2*number_dofs + 2*i+j) += areaY * macro_stress(i,j);
-					}
-				}
-			}
-			winding_V += seg.winding() ;
-		}
+			double int_psi_x = fe .integrate ( d_psiV_dx ),
+			       int_psi_y = fe .integrate ( d_psiV_dy );
+			for ( size_t i = 0; i < 2; i++ )
+			for ( size_t j = 0; j < 2; j++ )
+			for ( size_t k = 0; k < 2; k++ )
+			{	double integral = Hooke (i,j,k,0) * int_psi_x + Hooke (i,j,k,1) * int_psi_y;
+				matrix_A .coeffRef ( 2*number_dofs + 2*i+j, 2*numbering[V] + k ) += integral;
+				matrix_A .coeffRef ( 2*number_dofs + 2*i+j, 2*number_dofs + 2*k ) +=
+					integral * jump_of_x ( winding_V );
+				matrix_A .coeffRef ( 2*number_dofs + 2*i+j, 2*number_dofs + 2*k+1 ) +=
+					integral * jump_of_y ( winding_V );                                         }
+			winding_V += seg .winding() ;
+		}  // // end of loop in V
 		// here winding_V should be zero again
-		assert(winding_V==0);
-	    }  // end of loop in V, end of loop in small_tri
-	} // just a block of code for hiding 'it'
+		assert ( winding_V == 0 );
+	}  // end of loop in small_tri
+	}  // just a block of code for hiding 'it'
 
+	for ( size_t i = 0; i < 2; i++ )
+	for ( size_t j = 0; j < 2; j++ )
+		vector_b ( 2*number_dofs + 2*i+j ) = areaY * macro_stress (i,j);
+	
 	std::cout << "now solving the system of linear equations" << std::endl;
 	
 	matrix_A .makeCompressed();
 
 	Eigen::SparseQR < Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;
 
-	solver.compute ( matrix_A );
-	if ( solver.info() != Eigen::Success )
+	solver .compute ( matrix_A );
+	if ( solver .info() != Eigen::Success )
 	{	std::cout << "Eigen solver.compute failed" << std::endl;
 		exit ( 0 );                                              }
 
-	Eigen::VectorXd vector_sol = solver.solve ( vector_b );
-	if ( solver.info() != Eigen::Success )
+	Eigen::VectorXd vector_sol = solver .solve ( vector_b );
+	if ( solver .info() != Eigen::Success )
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
-		
-	// Eigen::VectorXd new_b = matrix_A * vector_sol;
-	
-	myTensor<double> macro_strain(2,2);
-	for ( size_t i=0; i<2; i++ )
-	for ( size_t j=0; j<2; j++ )  macro_strain (i,j) = vector_sol (2*number_dofs +2*i +j);
-	
-	cout << "macro strain " << macro_strain(0,0) << " " << macro_strain(0,1) << " "
-	                        << macro_strain(1,0) << " " << macro_strain(1,1) << " " << endl;
-	cout << "macro stress " << macro_stress(0,0) << " " << macro_stress(0,1) << " "
-	                        << macro_stress(1,0) << " " << macro_stress(1,1) << " " << endl;
 
+	myTensor < double > macro_strain (2,2);
+	for ( size_t i = 0; i < 2; i++ )
+	for ( size_t j = 0; j < 2; j++ )
+		macro_strain (i,j) = vector_sol ( 2*number_dofs + 2*i+j );
+	
+	cout << "macro strain " << macro_strain (0,0) << " " << macro_strain (0,1) << " "
+	                        << macro_strain (1,0) << " " << macro_strain (1,1) << " " << endl;
+	cout << "macro stress " << macro_stress (0,0) << " " << macro_stress (0,1) << " "
+	                        << macro_stress (1,0) << " " << macro_stress (1,1) << " " << endl;
+
+	Eigen::VectorXd new_b = matrix_A * vector_sol;
+	std::cout << "residual " << ( vector_b - new_b ) .norm() << std::endl;
+	
+	double deviation = 0.5 * (   vector_sol ( 2*number_dofs + 1 ) // -
+                            -  vector_sol ( 2*number_dofs + 2 ) );
+	// double other = vector_sol ( 2*number_dofs + 1 );
+	vector_sol ( 2*number_dofs + 1 ) -= deviation;
+	vector_sol ( 2*number_dofs + 2 ) += deviation;
+	
 	RR2 .set_as_working_manifold();
 	xy = Manifold::working .coordinates();
-	x = xy[0];  y = xy[1];
+	x = xy [0];  y = xy [1];
+
+	// run over all vertices of 'torus'
+	{  // just a block of code for hiding 'it'
+	CellIterator it = torus .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell V = *it;
+		vector_sol [ 2*numbering[V]    ] -= deviation * y (V);
+		vector_sol [ 2*numbering[V] +1 ] += deviation * x (V);  }	
+	}  // just a block of code for hiding 'it'
 	
-	// we define the solution in all vertices of 'square'	(those not belonging to 'torus')
+	for ( size_t i = 0; i < 2; i++ )
+	for ( size_t j = 0; j < 2; j++ )
+		macro_strain (i,j) = vector_sol ( 2*number_dofs + 2*i+j );
+	
+	cout << "macro strain " << macro_strain (0,0) << " " << macro_strain (0,1) << " "
+	                        << macro_strain (1,0) << " " << macro_strain (1,1) << " " << endl;
+	cout << "macro stress " << macro_stress (0,0) << " " << macro_stress (0,1) << " "
+	                        << macro_stress (1,0) << " " << macro_stress (1,1) << " " << endl;
+
+	new_b = matrix_A * vector_sol;
+	std::cout << "residual " << ( vector_b - new_b ) .norm() << std::endl;
+	
+	// we extend the solution to all vertices of 'square'	(those not belonging to 'torus')
 	// it is easier to impose the zero average condition on 'square'
 	// it is also easier to export_msh
 	
@@ -377,25 +420,25 @@ int main ( )
 	size_t j = numbering [ B ];
 	assert ( not A .belongs_to ( torus ) );
 	vector_sol [ 2 * numbering[A] ] = vector_sol [ 2*j ]
-		+ macro_strain(0,0) * ( x ( A ) - x ( B ) )
-		+ macro_strain(0,1) * ( y ( A ) - y ( B ) );
+		+ macro_strain (0,0) * ( x ( A ) - x ( B ) )
+		+ macro_strain (0,1) * ( y ( A ) - y ( B ) );
 	vector_sol [ 2 * numbering[A] + 1 ] =  vector_sol [ 2*j+1 ]
-		+ macro_strain(1,0) * ( x ( A ) - x ( B ) )
-		+ macro_strain(1,1) * ( y ( A ) - y ( B ) );
+		+ macro_strain (1,0) * ( x ( A ) - x ( B ) )
+		+ macro_strain (1,1) * ( y ( A ) - y ( B ) );
 	assert ( not C .belongs_to ( torus ) );
 	vector_sol [ 2 * numbering[C] ] = vector_sol [ 2*j ]
-		+ macro_strain(0,0) * ( x ( C ) - x ( B ) )
-		+ macro_strain(0,1) * ( y ( C ) - y ( B ) );
+		+ macro_strain (0,0) * ( x ( C ) - x ( B ) )
+		+ macro_strain (0,1) * ( y ( C ) - y ( B ) );
 	vector_sol [ 2 * numbering[C] + 1 ] =  vector_sol [ 2*j+1 ]
-		+ macro_strain(1,0) * ( x ( C ) - x ( B ) )
-		+ macro_strain(1,1) * ( y ( C ) - y ( B ) );
+		+ macro_strain (1,0) * ( x ( C ) - x ( B ) )
+		+ macro_strain (1,1) * ( y ( C ) - y ( B ) );
 	assert ( not D .belongs_to ( torus ) );
 	vector_sol [ 2 * numbering[D] ] = vector_sol [ 2*j ]
-		+ macro_strain(0,0) * ( x ( D ) - x ( B ) )
-		+ macro_strain(0,1) * ( y ( D ) - y ( B ) );
+		+ macro_strain (0,0) * ( x ( D ) - x ( B ) )
+		+ macro_strain (0,1) * ( y ( D ) - y ( B ) );
 	vector_sol [ 2 * numbering[D] + 1 ] =  vector_sol [ 2*j+1 ]
-		+ macro_strain(1,0) * ( x ( D ) - x ( B ) )
-		+ macro_strain(1,1) * ( y ( D ) - y ( B ) );
+		+ macro_strain (1,0) * ( x ( D ) - x ( B ) )
+		+ macro_strain (1,1) * ( y ( D ) - y ( B ) );
 	CellIterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
 	it_AB .reset();  assert ( it_AB .in_range() );
@@ -409,11 +452,11 @@ int main ( )
 		assert ( not W .belongs_to ( torus ) );
 		j = numbering [ V ];
 		vector_sol [ 2 * numbering[W] ] = vector_sol [ 2*j ]
-			+ macro_strain(0,0) * ( x ( W ) - x ( V ) )
-			+ macro_strain(0,1) * ( y ( W ) - y ( V ) );
+			+ macro_strain (0,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain (0,1) * ( y ( W ) - y ( V ) );
 		vector_sol [ 2 * numbering[W] + 1 ] =  vector_sol [ 2*j+1 ]
-			+ macro_strain(1,0) * ( x ( W ) - x ( V ) )
-			+ macro_strain(1,1) * ( y ( W ) - y ( V ) );                 }
+			+ macro_strain (1,0) * ( x ( W ) - x ( V ) )
+			+ macro_strain (1,1) * ( y ( W ) - y ( V ) );               }
 	CellIterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
 	CellIterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
 	it_BC .reset();  assert ( it_BC .in_range() );
@@ -447,10 +490,10 @@ int main ( )
 		vector_sol [ 2*i+1 ] -= sum_y;  }	
 	} // just a block of code
 	
-	square.export_msh ("cell-elast-strain-cell-sq.msh", numbering );
+	square .export_msh ("cell-elast-stress-cell-sq.msh", numbering );
 
 	{ // just a block of code for hiding variables
-	std::ofstream solution_file ("cell-elast-strain-cell-sq.msh", std::fstream::app );
+	std::ofstream solution_file ("cell-elast-stress-cell-sq.msh", std::fstream::app );
 	solution_file << "$NodeData" << std::endl;
 	solution_file << "1" << std::endl;   // one string follows
 	solution_file << "\"elastic displacement\"" << std::endl;
@@ -462,16 +505,16 @@ int main ( )
 	solution_file << square .number_of ( tag::vertices ) << std::endl;
 	// number of values listed below
 	CellIterator it = square .iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t j = numbering [ P ];
 		solution_file << j + 1 << " " << vector_sol [ 2*j ] << " "
-	                            << vector_sol [ 2*j+1 ] << " 0. "<< std::endl;  }
+	                                << vector_sol [ 2*j+1 ] << " 0. "<< std::endl;  }
 	} // just a block of code
 
-	std::cout << "produced file cell-elast-strain-cell-sq.msh" << std::endl;	
+	std::cout << "produced file cell-elast-stress-cell-sq.msh" << std::endl;	
 							
-							}
+}  //  end of 'main'
 
 
 //-----------------------------------------------------------------------------------------

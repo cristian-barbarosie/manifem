@@ -362,15 +362,15 @@ void Integrator::Gauss::pre_compute  // virtual from Integrator::Core
 	exit ( 1 );                                                                                     }
 
 
-void Integrator::Gauss::retrieve_precomputed ( const Function & bf )
+std::vector < double > &  Integrator::Gauss::retrieve_precomputed ( const Function & bf )
 // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
 	exit ( 1 );                                                                                     }
 
 
-void Integrator::Gauss::retrieve_precomputed ( const Function &, const Function & )
-// virtual from Integrator::Core
+std::vector < double > &  Integrator::Gauss::retrieve_precomputed
+( const Function &, const Function & )  // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
 	exit ( 1 );                                                                                     }
@@ -400,16 +400,27 @@ void Integrator::UFL_FFC::pre_compute  // virtual from Integrator::Core
 	                        tag::integral_of, v                            );  }
 
 
-void Integrator::StandAlone::retrieve_precomputed ( const Function & bf )
+std::vector < double > &  Integrator::UFL_FFC::retrieve_precomputed ( const Function & bf )
 // virtual from Integrator::Core
-{
-}
 
-void Integrator::StandAlone::retrieve_precomputed  // virtual from Integrator::Core
-( const Function & bf1, const Function & bf2 )
-{
-}
+{	FiniteElement::StandAlone * fesa = tag::Util::assert_cast
+		< FiniteElement::Core *, FiniteElement::StandAlone * > ( this->fe .core);
+	assert ( fesa->result_of_integr .size() == 1 );
+	assert ( fesa->basis_numbering [ bf .core ] < fesa->result_of_integr [0] .size() );
+	return fesa->result_of_integr [0] [ fesa->basis_numbering [ bf .core ] ];           }
 
+
+std::vector < double > &  Integrator::UFL_FFC::retrieve_precomputed
+( const Function & bf1, const Function & bf2 )  // virtual from Integrator::Core
+
+{	FiniteElement::StandAlone * fesa = tag::Util::assert_cast
+		< FiniteElement::Core *, FiniteElement::StandAlone * > ( this->fe .core);
+	assert ( fesa->basis_numbering [ bf1 .core ] < fesa->result_of_integr .size()  );
+	assert ( fesa->basis_numbering [ bf2 .core ] <
+					 fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ] .size() );
+	return fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ]
+	                              [ fesa->basis_numbering [ bf2 .core ] ];             }
+	
 //-----------------------------------------------------------------------------------------//
 
 
@@ -450,13 +461,12 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 
 //-----------------------------------------------------------------------------------------//
 
-double Integrator::UFL_FFC::action ( Function f, const FiniteElement & fe )
+double Integrator::UFL_FFC::action ( Function f, const FiniteElement & )
 // virtual from Integrator::Core
 
 // assumes the finite element is already docked on a cell
 
-{
-}
+{	assert ( false );  return 0.;   }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -864,9 +874,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
-	this->basis_numbering_1 [ this->base_fun_1 [ P.core ] .core ] = 0;
-	this->basis_numbering_1 [ this->base_fun_1 [ Q.core ] .core ] = 1;
-	this->basis_numbering_1 [ this->base_fun_1 [ R.core ] .core ] = 2;
+	this->basis_numbering [ this->base_fun_1 [ P.core ] .core ] = 0;
+	this->basis_numbering [ this->base_fun_1 [ Q.core ] .core ] = 1;
+	this->basis_numbering [ this->base_fun_1 [ R.core ] .core ] = 2;
 
 	const double xP = x (P), xQ = x (Q), xR = x (R);
 	const double yP = y (P), yQ = y (Q), yR = y (R);
@@ -881,12 +891,12 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	assert ( sp2 > 0. );  // det = 2. * area
 	#endif
 	
-	this->result_of_integr [0][0] =   0.5 * ( J_c2 - J_c3 );  // int psi^P_,x
-	this->result_of_integr [1][0] =   0.5 * J_c3;             // int psi^Q_,x
-	this->result_of_integr [2][0] = - 0.5 * J_c2;             // int psi^R_,x
-	this->result_of_integr [0][1] =   0.5 * ( J_c1 - J_c0 );  // int psi^P_,y
-	this->result_of_integr [1][1] = - 0.5 * J_c1;             // int psi^Q_,y
-	this->result_of_integr [2][1] =   0.5 * J_c0;             // int psi^R_,y
+	this->result_of_integr [0][0][0] =   0.5 * ( J_c2 - J_c3 );  // int psi^P_,x
+	this->result_of_integr [0][1][0] =   0.5 * J_c3;             // int psi^Q_,x
+	this->result_of_integr [0][2][0] = - 0.5 * J_c2;             // int psi^R_,x
+	this->result_of_integr [0][0][1] =   0.5 * ( J_c1 - J_c0 );  // int psi^P_,y
+	this->result_of_integr [0][1][1] = - 0.5 * J_c1;             // int psi^Q_,y
+	this->result_of_integr [0][2][1] =   0.5 * J_c0;             // int psi^R_,y
 	
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 

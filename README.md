@@ -15,7 +15,7 @@ The user should have some understanding of programming and of C++.
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
 
 Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
-[FEniCS/Dolphin](https://fenicsproject.org/)
+[FEniCS/Dolphin](https://fenicsproject.org/), [deal.II](https://dealii.org/)
 
 In its current version, release 21.11, maniFEM works well for mesh generation,
 including meshes on quotient manifolds. 
