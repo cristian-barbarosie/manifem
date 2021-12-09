@@ -348,35 +348,28 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 //-----------------------------------------------------------------------------------------//
 
 
-void Integrator::Gauss::pre_compute ( Function bf, const std::vector < Function > & v )
+void Integrator::Gauss::pre_compute ( const std::vector < Function > & v )
 // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
 	exit ( 1 );                                                                                 }
 
 
-void Integrator::Gauss::pre_compute  // virtual from Integrator::Core
-( Function bf1, Function bf2, const std::vector < Function > & v )
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
-	exit ( 1 );                                                                                 }
-
-
-std::vector < double > &  Integrator::Gauss::retrieve_precomputed ( const Function & bf )
+Integrator::Result  Integrator::Gauss::retrieve_precomputed ( const Function & bf )
 // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
 	exit ( 1 );                                                                                 }
 
 
-std::vector < double > &  Integrator::Gauss::retrieve_precomputed
+Integrator::Result  Integrator::Gauss::retrieve_precomputed
 ( const Function &, const Function & )  // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
-	exit ( 1 );                                                                                     }
+	exit ( 1 );                                                                                 }
 
 
-void Integrator::UFL_FFC::pre_compute ( Function bf, const std::vector < Function > & v )
+void Integrator::UFL_FFC::pre_compute ( const std::vector < Function > & v )
 // virtual from Integrator::Core
 
 // bf is an arbitrary basis function (Function::MereSymbol) in the finite element
@@ -384,33 +377,22 @@ void Integrator::UFL_FFC::pre_compute ( Function bf, const std::vector < Functio
 
 // we delegate this analysis to the finite element
 
-{	this->fe .pre_compute ( tag::for_a_given, tag::basis_function, bf,
-	                        tag::integral_of, v                       );  }
+{	this->fe .core->pre_compute ( v );  }
 
 
-void Integrator::UFL_FFC::pre_compute  // virtual from Integrator::Core
-( Function bf1, Function bf2, const std::vector < Function > & v )
-
-// bf is an arbitrary basis function (Function::MereSymbol) in the finite element
-// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
-
-// we delegate this analysis to the finite element
-
-{	this->fe .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
-	                        tag::integral_of, v                            );  }
-
-
-std::vector < double > &  Integrator::UFL_FFC::retrieve_precomputed ( const Function & bf )
+Integrator::Result Integrator::UFL_FFC::retrieve_precomputed ( const Function & bf )
 // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone * fesa = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::StandAlone * > ( this->fe .core);
 	assert ( fesa->result_of_integr .size() == 1 );
 	assert ( fesa->basis_numbering [ bf .core ] < fesa->result_of_integr [0] .size() );
-	return fesa->result_of_integr [0] [ fesa->basis_numbering [ bf .core ] ];           }
+	// return fesa->result_of_integr [0] [ fesa->basis_numbering [ bf .core ] ]
+	return Integrator::Result ( fesa->selector,
+	 	    fesa->result_of_integr [ 0 ] [ fesa->basis_numbering [ bf .core ] ]  );       }
 
 
-std::vector < double > &  Integrator::UFL_FFC::retrieve_precomputed
+Integrator::Result Integrator::UFL_FFC::retrieve_precomputed
 ( const Function & bf1, const Function & bf2 )  // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone * fesa = tag::Util::assert_cast
@@ -418,8 +400,11 @@ std::vector < double > &  Integrator::UFL_FFC::retrieve_precomputed
 	assert ( fesa->basis_numbering [ bf1 .core ] < fesa->result_of_integr .size()  );
 	assert ( fesa->basis_numbering [ bf2 .core ] <
 					 fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ] .size() );
-	return fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ]
-	                              [ fesa->basis_numbering [ bf2 .core ] ];             }
+	// return fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ]
+	//                               [ fesa->basis_numbering [ bf2 .core ] ]
+	return Integrator::Result ( fesa->selector,
+	 	    fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ]
+	                             [ fesa->basis_numbering [ bf2 .core ] ]  );            }
 	
 //-----------------------------------------------------------------------------------------//
 
@@ -852,6 +837,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 	
 //-----------------------------------------------------------------------------------------//
 
+
 namespace { // anonymous namespace, mimics static linkage
 
 inline void dock_on_common ( const double & xP, const double & yP,
@@ -860,28 +846,64 @@ inline void dock_on_common ( const double & xP, const double & yP,
 														 const size_t & c,  // case
 		  std::vector < std::vector < std::vector < double > > > & result )
 
+// this function is speed-critical
+	
 {	// names of variables come from output of UFL FFC
 
+	const double J_c0 = xQ - xP, J_c1 = xR - xP,
+	             J_c2 = yQ - yP, J_c3 = yR - yP;
+
+	// below we use a switch statement
+	// we trust that the compiler implements it by means of a list of addresses
+	// and not as a cascade of ifs (which would be rather slow)
+	// we could use instead a vector of pointers to functions
+			
 	switch ( c )
 		
 	{	case  0 :
 			std::cout << "UFL-FFC integrators require pre_compute" << std::endl;
 			exit ( 1 );
 
-		case  1 :  // { int bf.deriv(x), int bf.deriv(y) }
-		{	const double J_c0 = xQ - xP, J_c1 = xR - xP,
-			             J_c2 = yQ - yP, J_c3 = yR - yP;
+		case  1 :  // { int psi }
+			
+		{	const double sp2 = J_c0 * J_c3 - J_c1 * J_c2;
+			assert ( sp2 > 0. );  // det = 2. * area
+			double tmp = 0.1666666666666667 * sp2;
+			result [0][0][0] = tmp;                    // int psi^P
+			result [0][1][0] = tmp;                    // int psi^Q
+			result [0][2][0] = tmp;                 }  // int psi^R
+			break;
+
+		case  2 :  // { int psi1 * psi2 }
+			
+		{	const double sp2 = J_c0 * J_c3 - J_c1 * J_c2;
+			assert ( sp2 > 0. );  // det = 2. * area
+			double tmp_1 = 0.08333333333333333 * sp2,
+			       tmp_2 = 0.04166666666666666 * sp2;
+			result [0][0][0] = tmp_1;                     // int psi^P * psi^P
+			result [0][1][0] = tmp_2;                     // int psi^P * psi^Q
+			result [0][2][0] = tmp_2;                     // int psi^P * psi^R
+			result [1][0][0] = tmp_2;                     // int psi^Q * psi^P
+			result [1][1][0] = tmp_1;                     // int psi^Q * psi^Q
+			result [1][2][0] = tmp_2;                     // int psi^Q * psi^R
+			result [2][0][0] = tmp_2;                     // int psi^R * psi^P
+			result [2][1][0] = tmp_2;                     // int psi^R * psi^Q
+			result [2][2][0] = tmp_1;                  }  // int psi^R * psi^R
+			break;
+
+		case  3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		{
 			#ifndef NDEBUG
 			const double sp2 = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( sp2 > 0. );  // det = 2. * area
 			#endif
 	
-			result [0][0][0] =   0.5 * ( J_c2 - J_c3 );       // int psi^P_,x
-			result [0][1][0] =   0.5 * J_c3;                  // int psi^Q_,x
-			result [0][2][0] = - 0.5 * J_c2;                  // int psi^R_,x
-			result [0][0][1] =   0.5 * ( J_c1 - J_c0 );       // int psi^P_,y
-			result [0][1][1] = - 0.5 * J_c1;                  // int psi^Q_,y
-			result [0][2][1] =   0.5 * J_c0;               }  // int psi^R_,y
+			result [0][0][0] =   0.5 * ( J_c2 - J_c3 );      // int psi^P,x
+			result [0][0][1] =   0.5 * ( J_c1 - J_c0 );      // int psi^P,y
+			result [0][1][0] =   0.5 * J_c3;                 // int psi^Q,x
+			result [0][1][1] = - 0.5 * J_c1;                 // int psi^Q,y
+			result [0][2][0] = - 0.5 * J_c2;                 // int psi^R,x
+			result [0][2][1] =   0.5 * J_c0;             }   // int psi^R,y
 			break;
 
 		default : assert ( false );
@@ -917,11 +939,15 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
 	// const double xP = x (P), xQ = x (Q), xR = x (R);
 	// const double yP = y (P), yQ = y (Q), yR = y (R);
-	
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P.core, bf1 ) );
-	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q.core, bf2 ) );
-	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R.core, bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
@@ -931,50 +957,15 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 void FiniteElement::StandAlone::TypeOne::Triangle::dock_on  
 ( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
 
-// right now it is identical to version with one argument only -- to change !!
 
-{	assert ( cll .dim() == 2 );
-	this->docked_on = cll;
-	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
-	it .reset();  assert ( it .in_range() );  Cell P = *it;
-	it++;  assert ( it .in_range() );  Cell Q = *it;
-	it++;  assert ( it .in_range() );  Cell R = *it;
-	it++;  assert ( not it .in_range() );
-	
-	Function xyz = Manifold::working .coordinates();
-	size_t geom_dim = xyz .nb_of_components();
-	assert ( geom_dim >= 2 );
-
-	assert ( geom_dim == 2 );
-	Function x = xyz [0], y = xyz[1];
-
-	// using Cell::Core::short_int_heap for local numbering of vertices
-	// should be slightly faster
-
-	this->basis_numbering [ this->base_fun_1 [ P.core ] .core ] = 0;
-	this->basis_numbering [ this->base_fun_1 [ Q.core ] .core ] = 1;
-	this->basis_numbering [ this->base_fun_1 [ R.core ] .core ] = 2;
-
-	dock_on_common ( x(P), y(P), x(Q), y(Q), x(R), y(R), this->cas, result_of_integr );
-
-	// const double xP = x (P), xQ = x (Q), xR = x (R);
-	// const double yP = y (P), yQ = y (Q), yR = y (R);
-	
+{	
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on  with tag::winding
 
 //-----------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
-( const Function bf, const std::vector < Function > & result )
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-	          << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "pre-compute does not apply to elements with master" << std::endl;
-	exit ( 1 );                                                                     }
-
-
-void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
-( const Function bf1, const Function bf2, const std::vector < Function > & result )
+( const std::vector < Function > & result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre-compute does not apply to elements with master" << std::endl;
@@ -982,10 +973,9 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 
 
 void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
-( const Function bf, const std::vector < Function > & result )
-// virtual from FiniteElement::Core
+( const std::vector < Function > & result )  // virtual from FiniteElement::Core
 
-{	// we must analyse syntactically expressions listed in 'result'
+{	// we analyse syntactically expressions listed in 'result'
 	// and identify cases previously studied and hard-coded
 	// otherwise, stop with error mesage
 
@@ -1000,7 +990,8 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	//  8. 1 and 3
 	//  9. 3 and 4
 	// 10. 2 and 5
-	// 11. everything
+	// 11. everything but 5
+	// 12. everything
 
 	bool int_psi = false, int_psi_psi = false, int_dpsi = false,
 	     int_dpsi_dpsi = false, int_grad_grad = false, int_psi_dpsi = false;
@@ -1012,10 +1003,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 		Function::DelayedDerivative * dd =
 			dynamic_cast < Function::DelayedDerivative* > ( expr .core );
 		if ( dd )
-		{ Function::MereSymbol * b =
-				dynamic_cast < Function::MereSymbol* > ( dd->base .core );
-			assert (b);
-			int_dpsi = true;  continue;                                  }
+		{ if ( dynamic_cast < Function::MereSymbol* > ( dd->base .core ) == nullptr )
+				goto error;
+			int_dpsi = true;  continue;                                                 }
 		Function::Product * prod = dynamic_cast < Function::Product* > ( expr .core );
 		if ( prod )
 		{	std::forward_list < Function > ::const_iterator itt = prod->factors .begin();
@@ -1025,32 +1015,37 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 			{	itt++;  assert ( itt != prod->factors .end() );
 				ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
 				if ( ms )
-				{	itt++;  assert ( itt == prod->factors .end() );
-					int_psi_psi = true;  continue;                   }
+				{	itt++;  if ( itt != prod->factors .end() ) goto error;
+					int_psi_psi = true;  continue;                         }
 				dd = dynamic_cast < Function::DelayedDerivative* > ( itt->core );
-				assert ( dd );
-				assert ( dynamic_cast < Function::MereSymbol* > ( dd->core ) );
-				itt++;  assert ( itt == prod->factors .end() );
-				int_psi_dpsi = true;  continue;                                     }
+				if ( dd == nullptr ) goto error;
+				if ( dynamic_cast < Function::MereSymbol* > ( dd->base .core ) == nullptr )
+					goto error;
+				itt++;  if ( itt != prod->factors .end() ) goto error;
+				int_psi_dpsi = true;  continue;                                       }
 			dd = dynamic_cast < Function::DelayedDerivative* > ( itt->core );
-			assert ( dd );
-			assert ( dynamic_cast < Function::MereSymbol* > ( dd->core ) );
+			if ( dd == nullptr ) goto error;
+			if ( dynamic_cast < Function::MereSymbol* > ( dd->base .core ) == nullptr )
+				goto error;
 			it++;  assert ( itt != prod->factors .end() );
-			Function::MereSymbol * ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+			ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
 			if ( ms )
-			{	it++;  assert ( itt == prod->factors .end() );
-				int_psi_dpsi = true;  continue;                }
+			{	it++;  if ( itt != prod->factors .end() ) goto error;
+				int_psi_dpsi = true;  continue;                       }
 			dd = dynamic_cast < Function::DelayedDerivative* > ( itt->core );
-			assert ( dd );
-			assert ( dynamic_cast < Function::MereSymbol* > ( dd->core ) );
-			it++;  assert ( itt == prod->factors .end() );
-			int_dpdi_dpsi = true;  continue;                                                   }
-		Function::Sum * s = dynamic_cast < Function::Sum > ( expr .core );
+			if ( dd == nullptr ) goto error;
+			if ( dynamic_cast < Function::MereSymbol* > ( dd->base .core ) == nullptr )
+				goto error;
+			it++;  if ( itt != prod->factors .end() ) goto error;
+			int_dpsi_dpsi = true;  continue;                                                   }
+		Function::Sum * s = dynamic_cast < Function::Sum* > ( expr .core );
+		if ( s == nullptr ) goto error;
+		// analyse the case of a sum
 	}  // end of for over vector 'result'
 
-	if ( int_psi and not int_psipsi and not int_dpsi and
-	     not int_dpsidpsi and not int_gradgrad and not int_psidpsi )
-	{	this->cas = 1;  // case one
+	if ( int_psi and not int_psi_psi and not int_dpsi and
+	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
+	{	this->cas = 1;  // case one : int_psi
 		assert ( result .size() == 1 );
 		this->result_of_integr .resize ( 1 );
 		this->result_of_integr [0] .resize ( 3 );
@@ -1058,9 +1053,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 		this->selector = { 0 };
 		return;                                                                        }
 
-	if ( not int_psi and int_psipsi and not int_dpsi and
-	     not int_dpsidpsi and not int_gradgrad and not int_psidpsi )
-	{	this->cas = 2;  // case two
+	if ( not int_psi and int_psi_psi and not int_dpsi and
+	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
+	{	this->cas = 2;  // case two : int_psi_psi
 		assert ( result .size() == 1 );
 		this->result_of_integr .resize ( 3 );
 		for ( size_t i = 0; i < 3; i++ )
@@ -1070,9 +1065,37 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 		this->selector = { 0 };
 		return;                                               }
 	
-	if ( int_psi and int_psipsi and not int_dpsi and
-	     not int_dpsidpsi and not int_gradgrad and not int_psidpsi )
-	{	this->cas = 7;  // case seven
+	if ( not int_psi and not int_psi_psi and int_dpsi and
+	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
+	{	this->cas = 3;  // case three : int_dpsi
+		Function xy = Manifold::working .coordinates();
+		assert ( xy .nb_of_components() == 2 );
+		assert ( result .size() <= 2 );
+		this->result_of_integr .resize ( 1 );
+		this->result_of_integr [0] .resize ( 3 );
+		for ( size_t i = 0; i < 3; i++ )
+			this->result_of_integr [0] [i] .resize ( 2 );
+		// we analyse again the requested 'result' to see which derivatives are wanted
+		assert ( result .size() > 0 );
+		Function::DelayedDerivative * dd0 = tag::Util::assert_cast
+			< Function::Core*, Function::DelayedDerivative* > ( result [0] .core );
+		if ( dd0->variable .core == xy[0] .core )  selector .push_back ( 0 );
+		else
+		{	assert ( dd0->variable .core == xy[1] .core );
+			selector .push_back ( 1 );                     }
+		if ( result .size() == 1 ) return;
+		Function::DelayedDerivative * dd1 = tag::Util::assert_cast
+			< Function::Core*, Function::DelayedDerivative* > ( result [1] .core );
+		if ( dd0->variable .core == dd1->variable .core ) goto error;
+		if ( dd1->variable .core == xy[0] .core )  selector .push_back ( 0 );
+		else
+		{	assert ( dd1->variable .core == xy[1] .core );
+			selector .push_back ( 1 );                     }
+		return;                                                                    }
+	
+	if ( int_psi and int_psi_psi and not int_dpsi and
+	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
+	{	this->cas = 7;  // case seven : int_psi and int_psi_psi
 		assert ( result .size() == 2 );
 		this->result_of_integr .resize ( 3 );
 		for ( size_t i = 0; i < 3; i++ )
@@ -1091,24 +1114,14 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 			this->selector = { 1, 0 };                                      }
 		return;                                                                             }
 
+	std::cout << int_psi << int_psi_psi << int_dpsi <<
+		int_dpsi_dpsi << int_grad_grad << int_psi_dpsi << std::endl;
+	
 	error :
 	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute unsuccessful" << std::endl;
-	exit ( 1 );                                                                                 }
-
-
-void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
-( const Function bf_1, const Function bf_2, const std::vector < Function > & result )
-// virtual from FiniteElement::Core
-
-// we must analyse syntactically expressions listed in 'result'
-// and identify cases previously studied and hard-coded
-// otherwise, stop with error mesage
-
-{	
-
-
-	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "pre_compute unsuccessful" << std::endl;
 	exit ( 1 );
-}	
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
+
+
