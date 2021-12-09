@@ -1,5 +1,5 @@
 
-// function.h 2021.12.06
+// function.h 2021.12.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -51,6 +51,7 @@ namespace tag
 	struct LessThan { };  static const LessThan less_than;
 	struct IfLessThan { };  static const IfLessThan if_less_than;
 	struct Otherwise { };  static const Otherwise otherwise;
+	struct MereSymbol { };  static const MereSymbol mere_symbol;
 	struct AssociatedWith { };  static const AssociatedWith associated_with;
 	struct Through { };  static const Through through;
 	struct Becomes { };  static const Becomes becomes;
@@ -110,8 +111,9 @@ class Function
 	// an 'expr'ession involving master coordinates ( e.g.  1. - xi - eta )
 	// composed with a map (diffeomorphism or immersion) sending it in the physical space
 
-	inline Function ( const tag::BasisFunction &, const tag::Within &,
-	                  const FiniteElement &                           );
+	inline Function ( const tag::BasisFunction &, const tag::Within &, FiniteElement & );
+
+	inline Function ( const tag::MereSymbol & );
 
 	class ActionGenerator;  // a generator of a discrete group
 	// an action will act on functions, particularly on coordinates of a quotient manifold
@@ -869,8 +871,12 @@ class Function::MereSymbol : public Function::Scalar
 
 //-----------------------------------------------------------------------------------------//
 
-inline Function::Function ( const tag::BasisFunction &, const tag::Within &,
-                            const FiniteElement &                           )
+inline Function::Function
+( const tag::BasisFunction &, const tag::Within &, FiniteElement & )
+:	Function ( tag::whose_core_is, new Function::MereSymbol )
+{	}
+
+inline Function::Function ( const tag::MereSymbol & )
 :	Function ( tag::whose_core_is, new Function::MereSymbol )
 {	}
 

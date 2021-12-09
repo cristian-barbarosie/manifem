@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.06
+// finite-elem.h 2021.12.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -733,13 +733,18 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
+	// for UFL FFC integrators, we study previously several cases
+	// and hard-code the necessary expressions
+	size_t cas { 0 };
+	
 	std::map < Cell::Core *, size_t > local_numbering_1;
 	std::map < Function::Core *, size_t > basis_numbering;
 
 	// at doking, this finite element will perform all computations
 	// (previously declared in 'pre_compute') and store the results in 'result_of_integr'
-	// the first index identifies a basis function (with the aid of 'basis_numbering')
-	// the second index simply identifies the required computation
+	// the first and second indices identify one or two basis functions
+	// (with the aid of 'basis_numbering')
+	// the third index simply identifies the required computation
 	std::vector < std::vector < std::vector < double > > > result_of_integr;
 	
 	// constructor
@@ -773,7 +778,8 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
-	// attribute inherited from FiniteElement::StandAlone :
+	// attributes inherited from FiniteElement::StandAlone :
+	// size_t case { 0 }
 	// std::map < Cell::Core *, size_t > local_numbering_1
 	// std::map < Function::Core *, size_t > basis_numbering
 
@@ -805,10 +811,21 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
+	// attributes inherited from FiniteElement::StandAlone :
+	// size_t case { 0 }
+	// std::map < Cell::Core *, size_t > local_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering
+
+	Function bf1, bf2, bf3;
+
 	// constructor
 
-	inline Triangle ( ) : FiniteElement::StandAlone::TypeOne()  { }
-	// define three basis function, mere symbols
+	inline Triangle ( )
+	: FiniteElement::StandAlone::TypeOne(), bf1 ( tag::mere_symbol ),
+		bf2 ( tag::mere_symbol ), bf3 ( tag::mere_symbol )
+	{ this->basis_numbering [ bf1.core ] = 0;
+		this->basis_numbering [ bf2.core ] = 1;
+		this->basis_numbering [ bf3.core ] = 2;  }
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );

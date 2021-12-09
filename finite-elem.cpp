@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.06
+// finite-elem.cpp 2021.12.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -352,21 +352,21 @@ void Integrator::Gauss::pre_compute ( Function bf, const std::vector < Function 
 // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
-	exit ( 1 );                                                                                     }
+	exit ( 1 );                                                                                 }
 
 
 void Integrator::Gauss::pre_compute  // virtual from Integrator::Core
 ( Function bf1, Function bf2, const std::vector < Function > & v )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute is not necessary for Gauss integrators" << std::endl;
-	exit ( 1 );                                                                                     }
+	exit ( 1 );                                                                                 }
 
 
 std::vector < double > &  Integrator::Gauss::retrieve_precomputed ( const Function & bf )
 // virtual from Integrator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Gauss integrators do not pre-compute expressions" << std::endl;
-	exit ( 1 );                                                                                     }
+	exit ( 1 );                                                                                 }
 
 
 std::vector < double > &  Integrator::Gauss::retrieve_precomputed
@@ -852,9 +852,86 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 	
 //-----------------------------------------------------------------------------------------//
 
+namespace { // anonymous namespace, mimics static linkage
+
+inline void dock_on_common ( const double & xP, const double & yP,
+                             const double & xQ, const double & yQ,
+                             const double & xR, const double & yR,
+														 const size_t & c,  // case
+		  std::vector < std::vector < std::vector < double > > > & result )
+
+{	// names of variables come from output of UFL FFC
+
+	switch ( c )
+		
+	{	case  0 :
+			std::cout << "UFL-FFC integrators require pre_compute" << std::endl;
+			exit ( 1 );
+
+		case  1 :  // { int bf.deriv(x), int bf.deriv(y) }
+		{	const double J_c0 = xQ - xP, J_c1 = xR - xP,
+			             J_c2 = yQ - yP, J_c3 = yR - yP;
+			#ifndef NDEBUG
+			const double sp2 = J_c0 * J_c3 - J_c1 * J_c2;
+			assert ( sp2 > 0. );  // det = 2. * area
+			#endif
+	
+			result [0][0][0] =   0.5 * ( J_c2 - J_c3 );       // int psi^P_,x
+			result [0][1][0] =   0.5 * J_c3;                  // int psi^Q_,x
+			result [0][2][0] = - 0.5 * J_c2;                  // int psi^R_,x
+			result [0][0][1] =   0.5 * ( J_c1 - J_c0 );       // int psi^P_,y
+			result [0][1][1] = - 0.5 * J_c1;                  // int psi^Q_,y
+			result [0][2][1] =   0.5 * J_c0;               }  // int psi^R_,y
+			break;
+
+		default : assert ( false );
+	}  // end of  switch  statement
+}  // end of dock_on_common
+	
+}  // anonymous namespace
+
 
 void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 // virtual from FiniteElement::Core
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	it++;  assert ( not it .in_range() );
+	
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+	dock_on_common ( x(P), y(P), x(Q), y(Q), x(R), y(R),
+	                 this->cas, this->result_of_integr  );
+
+	// const double xP = x (P), xQ = x (Q), xR = x (R);
+	// const double yP = y (P), yQ = y (Q), yR = y (R);
+	
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P.core, bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q.core, bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R.core, bf3 ) );
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Triangle::dock_on  
+( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
+
+// right now it is identical to version with one argument only -- to change !!
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
@@ -878,27 +955,12 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	this->basis_numbering [ this->base_fun_1 [ Q.core ] .core ] = 1;
 	this->basis_numbering [ this->base_fun_1 [ R.core ] .core ] = 2;
 
-	const double xP = x (P), xQ = x (Q), xR = x (R);
-	const double yP = y (P), yQ = y (Q), yR = y (R);
+	dock_on_common ( x(P), y(P), x(Q), y(Q), x(R), y(R), this->cas, result_of_integr );
 
-	// suppose we want integrals of both partial derivatives of one basis function
-	// for the moment, only the x derivative :
-
-	// names come from output of UFL FFC
-	const double J_c0 = xQ - xP, J_c1 = xR - xP, J_c2 = yQ - yP, J_c3 = yR - yP;
-	#ifndef NDEBUG
-	const double sp2 = J_c0 * J_c3 - J_c1 * J_c2;
-	assert ( sp2 > 0. );  // det = 2. * area
-	#endif
+	// const double xP = x (P), xQ = x (Q), xR = x (R);
+	// const double yP = y (P), yQ = y (Q), yR = y (R);
 	
-	this->result_of_integr [0][0][0] =   0.5 * ( J_c2 - J_c3 );  // int psi^P_,x
-	this->result_of_integr [0][1][0] =   0.5 * J_c3;             // int psi^Q_,x
-	this->result_of_integr [0][2][0] = - 0.5 * J_c2;             // int psi^R_,x
-	this->result_of_integr [0][0][1] =   0.5 * ( J_c1 - J_c0 );  // int psi^P_,y
-	this->result_of_integr [0][1][1] = - 0.5 * J_c1;             // int psi^Q_,y
-	this->result_of_integr [0][2][1] =   0.5 * J_c0;             // int psi^R_,y
-	
-}  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
+}  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on  with tag::winding
 
 //-----------------------------------------------------------------------------------------//
 
@@ -923,7 +985,123 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 ( const Function bf, const std::vector < Function > & result )
 // virtual from FiniteElement::Core
 
-// we must analyse syntactically expressions listed in 'v'
+{	// we must analyse syntactically expressions listed in 'result'
+	// and identify cases previously studied and hard-coded
+	// otherwise, stop with error mesage
+
+	// possible situations :
+	//  1. integral of psi
+	//  2. integral of psi * psi
+	//  3. integral of d_psi_dx
+	//  4. integral of d_psi_dx * d_psi_dx
+	//  5. integral of grad psi * grad psi
+	//  6. integral of psi * d_psi_dx
+	//  7. 1 and 2
+	//  8. 1 and 3
+	//  9. 3 and 4
+	// 10. 2 and 5
+	// 11. everything
+
+	bool int_psi = false, int_psi_psi = false, int_dpsi = false,
+	     int_dpsi_dpsi = false, int_grad_grad = false, int_psi_dpsi = false;
+	for ( std::vector < Function > ::const_iterator it = result .begin();
+	      it != result .end(); it++                                       )
+	{	Function expr = *it;
+		Function::MereSymbol * ms = dynamic_cast < Function::MereSymbol* > ( expr .core );
+		if ( ms ) { int_psi = true;  continue;  }
+		Function::DelayedDerivative * dd =
+			dynamic_cast < Function::DelayedDerivative* > ( expr .core );
+		if ( dd )
+		{ Function::MereSymbol * b =
+				dynamic_cast < Function::MereSymbol* > ( dd->base .core );
+			assert (b);
+			int_dpsi = true;  continue;                                  }
+		Function::Product * prod = dynamic_cast < Function::Product* > ( expr .core );
+		if ( prod )
+		{	std::forward_list < Function > ::const_iterator itt = prod->factors .begin();
+			assert ( itt != prod->factors .end() );
+			ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+			if ( ms )
+			{	itt++;  assert ( itt != prod->factors .end() );
+				ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+				if ( ms )
+				{	itt++;  assert ( itt == prod->factors .end() );
+					int_psi_psi = true;  continue;                   }
+				dd = dynamic_cast < Function::DelayedDerivative* > ( itt->core );
+				assert ( dd );
+				assert ( dynamic_cast < Function::MereSymbol* > ( dd->core ) );
+				itt++;  assert ( itt == prod->factors .end() );
+				int_psi_dpsi = true;  continue;                                     }
+			dd = dynamic_cast < Function::DelayedDerivative* > ( itt->core );
+			assert ( dd );
+			assert ( dynamic_cast < Function::MereSymbol* > ( dd->core ) );
+			it++;  assert ( itt != prod->factors .end() );
+			Function::MereSymbol * ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+			if ( ms )
+			{	it++;  assert ( itt == prod->factors .end() );
+				int_psi_dpsi = true;  continue;                }
+			dd = dynamic_cast < Function::DelayedDerivative* > ( itt->core );
+			assert ( dd );
+			assert ( dynamic_cast < Function::MereSymbol* > ( dd->core ) );
+			it++;  assert ( itt == prod->factors .end() );
+			int_dpdi_dpsi = true;  continue;                                                   }
+		Function::Sum * s = dynamic_cast < Function::Sum > ( expr .core );
+	}  // end of for over vector 'result'
+
+	if ( int_psi and not int_psipsi and not int_dpsi and
+	     not int_dpsidpsi and not int_gradgrad and not int_psidpsi )
+	{	this->cas = 1;  // case one
+		assert ( result .size() == 1 );
+		this->result_of_integr .resize ( 1 );
+		this->result_of_integr [0] .resize ( 3 );
+		for ( size_t i = 0; i < 3; i++ ) this->result_of_integr [0] [i] .resize ( 1 );
+		this->selector = { 0 };
+		return;                                                                        }
+
+	if ( not int_psi and int_psipsi and not int_dpsi and
+	     not int_dpsidpsi and not int_gradgrad and not int_psidpsi )
+	{	this->cas = 2;  // case two
+		assert ( result .size() == 1 );
+		this->result_of_integr .resize ( 3 );
+		for ( size_t i = 0; i < 3; i++ )
+		{	this->result_of_integr [i] .resize ( 3 );
+			for ( size_t j = 0; j < 3; j++ )
+				this->result_of_integr [i] [j] .resize ( 1 );  }
+		this->selector = { 0 };
+		return;                                               }
+	
+	if ( int_psi and int_psipsi and not int_dpsi and
+	     not int_dpsidpsi and not int_gradgrad and not int_psidpsi )
+	{	this->cas = 7;  // case seven
+		assert ( result .size() == 2 );
+		this->result_of_integr .resize ( 3 );
+		for ( size_t i = 0; i < 3; i++ )
+		{	this->result_of_integr [i] .resize ( 3 );
+			for ( size_t j = 0; j < 3; j++ )
+				this->result_of_integr [i] [j] .resize ( 1 );  }
+		// which is first in the list requested by user ?
+		Function f0 = result [0], f1 = result [1];
+		Function::MereSymbol * ff0 = dynamic_cast < Function::MereSymbol* > ( f0 .core );
+		if ( ff0 )
+		{	assert ( dynamic_cast < Function::Product* > ( f1 .core ) );
+			this->selector = { 0, 1 };                                   }
+		else
+		{	assert ( dynamic_cast < Function::Product* > ( f0 .core ) );
+			assert ( dynamic_cast < Function::MereSymbol* > ( f1 .core ) );
+			this->selector = { 1, 0 };                                      }
+		return;                                                                             }
+
+	error :
+	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "pre_compute unsuccessful" << std::endl;
+	exit ( 1 );                                                                                 }
+
+
+void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
+( const Function bf_1, const Function bf_2, const std::vector < Function > & result )
+// virtual from FiniteElement::Core
+
+// we must analyse syntactically expressions listed in 'result'
 // and identify cases previously studied and hard-coded
 // otherwise, stop with error mesage
 
@@ -932,4 +1110,5 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 
 	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "pre_compute unsuccessful" << std::endl;
-	exit ( 1 );                                                                                     }	
+	exit ( 1 );
+}	

@@ -1,5 +1,5 @@
 
-// function.cpp 2021.12.06
+// function.cpp 2021.12.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -530,6 +530,20 @@ double Function::ArithmeticExpression::set_value_on_cell
 	std::cout << "Cannot assign to an arithmetic expression." << std::endl;
 	exit ( 1 );                                                              }
 	
+double Function::MereSymbol::set_value_on_cell
+( Cell::Core * cll, const double & )  // virtual from Function::Scalar
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot assign to a mere symbol." << std::endl;
+	exit ( 1 );                                                  }
+	
+double Function::DelayedDerivative::set_value_on_cell
+( Cell::Core * cll, const double & )  // virtual from Function::Scalar
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+            << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Cannot assign to a delayed derivative." << std::endl;
+	exit ( 1 );                                                         }
+	
 std::vector < double > Function::Aggregate::set_value_on_cell
 ( Cell::Core * cll, const std::vector < double > & x )  // virtual from Function::Vector
 // there should be a faster way !!
@@ -585,15 +599,15 @@ std::vector < double > Function::Vector::MultiValued::set_value_on_cell
 std::string Function::Constant::repr ( const Function::From & from ) const
 {	std::stringstream ss;
 	ss << this->value; 
-	std::string s = ss.str();
+	std::string s = ss .str();
 	if ( ( this->value < 0. ) and ( from != Function::from_void ) ) s = "(" + s + ")";
 	return s;                         }
 
 std::string Function::Sum::repr ( const Function::From & from ) const
-{ std::forward_list<Function>::const_iterator it = this->terms.begin();
-	assert ( it != terms.end() );
+{ std::forward_list<Function>::const_iterator it = this->terms .begin();
+	assert ( it != terms .end() );
 	std::string s = it->core->repr ( Function::from_sum );
-	for ( it++; it != terms.end(); it++ )
+	for ( it++; it != terms .end(); it++ )
 		s = s + '+' + it->core->repr ( Function::from_sum );
 	if ( ( from == Function::from_power ) or ( from == Function::from_product )
        or ( from == Function::from_function ) )  s = "(" + s + ")";
@@ -601,51 +615,58 @@ std::string Function::Sum::repr ( const Function::From & from ) const
 
 std::string Function::Product::repr ( const Function::From & from ) const
 { std::forward_list<Function>::const_iterator it = this->factors.begin();
-	assert ( it != factors.end() );
+	assert ( it != factors .end() );
 	std::string s = it->core->repr ( Function::from_product );
-	for ( it++; it != factors.end(); it++ )
+	for ( it++; it != factors .end(); it++ )
 		s = s + '*' + it->core->repr ( Function::from_product );
 	if ( ( from == Function::from_power ) or ( from == Function::from_function ) )
 		s = "(" + s + ")";
 	return s;                                                    }
 
 std::string Function::Power::repr ( const Function::From & from ) const
-{	std::string s = this->base.core->repr ( Function::from_power ) + "^";
+{	std::string s = this->base .core->repr ( Function::from_power ) + "^";
 	std::stringstream ss;
 	if ( exponent >= 0. )  ss << exponent;
 	else  ss << "(" << exponent << ")";
-	return s+ss.str();                      }
+	return s + ss .str();                      }
 
 std::string Function::Sqrt::repr ( const Function::From & from ) const
-{	return "sqrt" + this->base.core->repr ( Function::from_function );  }
+{	return "sqrt" + this->base .core->repr ( Function::from_function );  }
 
 std::string Function::Sin::repr ( const Function::From & from ) const
-{	return "sin" + this->base.core->repr ( Function::from_function );  }
+{	return "sin" + this->base .core->repr ( Function::from_function );  }
 
 std::string Function::Cos::repr ( const Function::From & from ) const
-{	return "cos" + this->base.core->repr ( Function::from_function );  }
+{	return "cos" + this->base .core->repr ( Function::from_function );  }
 
 std::string Function::Step::repr ( const Function::From & from ) const
 {	return "step";  }
+
+std::string Function::MereSymbol::repr ( const Function::From & from ) const
+{	return "symbol";  }
+
+std::string Function::DelayedDerivative::repr ( const Function::From & from ) const
+{	return this->base .core->repr ( Function::from_product ) + "," +
+	       this->variable .core->repr ( Function::from_product );     }
 
 std::string Function::Vector::repr ( const Function::From & from ) const
 {	return "vector";  }
 
 std::string Function::CoupledWithField::Scalar::repr ( const Function::From & from ) const
-{	if ( Function::name.find(this) != Function::name.end() )
+{	if ( Function::name .find (this) != Function::name .end() )
 		return Function::name[this];
 	std::stringstream ss;
 	ss << this->field;
-	return "scalar"+ss.str();                                      }
+	return "scalar" + ss .str();                                }
 
 std::string Function::Composition::repr ( const Function::From & from ) const
-{	return this->base.core->repr ( Function::from_product ) + "º";  }
+{	return this->base .core->repr ( Function::from_product ) + "º";  }
 
 std::string Function::Diffeomorphism::OneDim::repr ( const Function::From & from ) const
 { assert ( false );  }
 
 std::string Function::Scalar::MultiValued::repr ( const Function::From & from ) const
-{	return "multi" + this->base.core->repr ( Function::from_function );  }
+{	return "multi" + this->base .core->repr ( Function::from_function );  }
 
 std::string Function::Vector::MultiValued::repr ( const Function::From & from ) const
 { assert ( false );  }
@@ -658,30 +679,30 @@ std::string Function::Vector::MultiValued::repr ( const Function::From & from ) 
 Function maniFEM::operator+ ( const Function & f, const Function & g )
 
 {	// both should be scalar
-	assert ( dynamic_cast < Function::Scalar* > ( f.core ) );
-	assert ( dynamic_cast < Function::Scalar* > ( g.core ) );
+	assert ( dynamic_cast < Function::Scalar* > ( f .core ) );
+	assert ( dynamic_cast < Function::Scalar* > ( g .core ) );
 
 	// if one of them is zero :
-  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
+  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
 	if ( f_const )  if ( f_const->value == 0. )  return g;
-  Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g.core );
+  Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g .core );
 	if ( g_const )  if ( g_const->value == 0. )  return f;
 	
 	// if one of them is a sum, or both :
-  Function::Sum * f_sum = dynamic_cast < Function::Sum * > ( f.core );
-  Function::Sum * g_sum = dynamic_cast < Function::Sum * > ( g.core );
+  Function::Sum * f_sum = dynamic_cast < Function::Sum * > ( f .core );
+  Function::Sum * g_sum = dynamic_cast < Function::Sum * > ( g .core );
 
   Function::Sum * result = new Function::Sum;  // empty sum
 	if ( g_sum )  // g is a sum
 	{	std::forward_list<Function>::iterator it_g;
-		for ( it_g = g_sum->terms.begin(); it_g != g_sum->terms.end(); it_g++ )
-			result->terms.push_front ( *it_g );                                   }
-	else  result->terms.push_front ( g );
+		for ( it_g = g_sum->terms .begin(); it_g != g_sum->terms .end(); it_g++ )
+			result->terms .push_front ( *it_g );                                   }
+	else  result->terms .push_front ( g );
 	if ( f_sum )  // f is a sum
 	{	std::forward_list<Function>::iterator it_f;
-		for ( it_f = f_sum->terms.begin(); it_f != f_sum->terms.end(); it_f++ )
-			result->terms.push_front ( *it_f );                                   }
-	else  result->terms.push_front ( f );
+		for ( it_f = f_sum->terms .begin(); it_f != f_sum->terms .end(); it_f++ )
+			result->terms .push_front ( *it_f );                                   }
+	else  result->terms .push_front ( f );
 
 	return Function ( tag::whose_core_is, result );                                }
 
@@ -691,81 +712,81 @@ Function maniFEM::operator+ ( const Function & f, const Function & g )
 Function maniFEM::operator* ( const Function & f, const Function & g )
 
 {	// both should be scalar
-	assert ( dynamic_cast < Function::Scalar* > ( f.core ) );
-	assert ( dynamic_cast < Function::Scalar* > ( g.core ) );
+	assert ( dynamic_cast < Function::Scalar* > ( f .core ) );
+	assert ( dynamic_cast < Function::Scalar* > ( g .core ) );
 
 	// if any one of them is zero or one :
-  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
+  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
 	if ( f_const )
 	{	if ( f_const->value == 0. ) return f;
 		if ( f_const->value == 1. ) return g;
 		// is g a product ?
-		Function::Product * g_prod = dynamic_cast < Function::Product * > ( g.core );
+		Function::Product * g_prod = dynamic_cast < Function::Product * > ( g .core );
 		if ( g_prod )
 		{	Function::Product * result = new Function::Product;  // empty product
 			bool constant_not_yet_used = true;
 			// we make a copy of the list of factors so to keep the original order
 			std::forward_list < Function > list_fact;
 			std::forward_list<Function>::iterator it_g;
-			for ( it_g = g_prod->factors.begin(); it_g != g_prod->factors.end(); it_g++ )
-				list_fact.push_front ( *it_g );
-			for ( it_g = list_fact.begin(); it_g != list_fact.end(); it_g++ )
+			for ( it_g = g_prod->factors .begin(); it_g != g_prod->factors .end(); it_g++ )
+				list_fact .push_front ( *it_g );
+			for ( it_g = list_fact .begin(); it_g != list_fact .end(); it_g++ )
 			{	Function fact = *it_g;
 				if ( constant_not_yet_used )
 				{	Function::Constant * fact_const =
-						dynamic_cast < Function::Constant * > ( fact.core );
+						dynamic_cast < Function::Constant * > ( fact .core );
 					if ( fact_const )
 					{	constant_not_yet_used = false;
-						result->factors.push_front ( f * fact );  }
-					else result->factors.push_front ( fact );              }
-				else result->factors.push_front ( fact );                   }
-			if ( constant_not_yet_used ) result->factors.push_front ( f );
+						result->factors .push_front ( f * fact );  }
+					else result->factors .push_front ( fact );              }
+				else result->factors .push_front ( fact );                   }
+			if ( constant_not_yet_used ) result->factors .push_front ( f );
 			return Function ( tag::whose_core_is, result );                               }  }
-  Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g.core );
+  Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g .core );
 	if ( g_const )
 	{	if ( g_const->value == 0. ) return g;
 		if ( g_const->value == 1. ) return f;
 		// is f a product ?
-		Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
+		Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
 		if ( f_prod )
 		{	Function::Product * result = new Function::Product;  // empty product
 			bool constant_not_yet_used = true;
 			// we make a copy of the list of factors so to keep the original order
 			std::forward_list < Function > list_fact;
 			std::forward_list<Function>::iterator it_f;
-			for ( it_f = f_prod->factors.begin(); it_f != f_prod->factors.end(); it_f++ )
-				list_fact.push_front ( *it_f );
-			for ( it_f = list_fact.begin(); it_f != list_fact.end(); it_f++ )
+			for ( it_f = f_prod->factors .begin(); it_f != f_prod->factors .end(); it_f++ )
+				list_fact .push_front ( *it_f );
+			for ( it_f = list_fact .begin(); it_f != list_fact .end(); it_f++ )
 			{	Function fact = *it_f;
 				if ( constant_not_yet_used )
 				{	Function::Constant * fact_const =
-						dynamic_cast < Function::Constant * > ( fact.core );
+						dynamic_cast < Function::Constant * > ( fact .core );
 					if ( fact_const )
 					{	constant_not_yet_used = false;
-						result->factors.push_front ( g * fact );  }
-					else result->factors.push_front ( fact );              }
-				else result->factors.push_front ( fact );                   }
-			if ( constant_not_yet_used ) result->factors.push_front ( g );
+						result->factors .push_front ( g * fact );  }
+					else result->factors .push_front ( fact );              }
+				else result->factors .push_front ( fact );                   }
+			if ( constant_not_yet_used ) result->factors .push_front ( g );
 			return Function ( tag::whose_core_is, result );                               }  }
 
 	// if both are constant :
 	if ( f_const and g_const ) return Function ( f_const->value * g_const->value );
 	
 	// if one of them is a product, or both :
-  Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
-  Function::Product * g_prod = dynamic_cast < Function::Product * > ( g.core );
+  Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
+  Function::Product * g_prod = dynamic_cast < Function::Product * > ( g .core );
 
 	Function::Product * result = new Function::Product;  // empty product
 	if ( g_prod )  // g is a product
 	{	std::forward_list<Function>::iterator it_g;
-		for ( it_g = g_prod->factors.begin(); it_g != g_prod->factors.end(); it_g++ )
-			result->factors.push_front ( *it_g );                                       }
-	else  result->factors.push_front ( g );
+		for ( it_g = g_prod->factors .begin(); it_g != g_prod->factors .end(); it_g++ )
+			result->factors .push_front ( *it_g );                                        }
+	else  result->factors .push_front ( g );
 	if ( f_prod )  // f is a product
 	{	std::forward_list<Function>::iterator it_f;
-		for ( it_f = f_prod->factors.begin(); it_f != f_prod->factors.end(); it_f++ )
-			result->factors.push_front ( *it_f );                                       }
-	else  result->factors.push_front ( f );
+		for ( it_f = f_prod->factors .begin(); it_f != f_prod->factors .end(); it_f++ )
+			result->factors .push_front ( *it_f );                                        }
+	else  result->factors .push_front ( f );
 
 	return Function ( tag::whose_core_is, result );                                   }
 
@@ -780,7 +801,7 @@ Function maniFEM::power ( const Function & f, double e )
 	if ( e == 1. ) return f;
 	if ( e == 2. ) return f*f;
 	
-  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f.core );
+  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
 	if ( f_const )
 	{	if ( f_const->value == 0. ) return Function ( 0. );
 		if ( f_const->value == 1. ) return Function ( 1. );
@@ -791,14 +812,14 @@ Function maniFEM::power ( const Function & f, double e )
 	// for instance, if we replace power(x*x,0.5) by power(x,0.5)*power(x,0.5)
 	// we will get in trouble if x is negative
 	
-  // Function::Power * f_pow = dynamic_cast < Function::Power * > ( f.core );
+  // Function::Power * f_pow = dynamic_cast < Function::Power * > ( f .core );
 	// if ( f_pow ) return power ( f_pow->base, f_pow->exponent * e );
 
-  // Function::Product * f_prod = dynamic_cast < Function::Product * > ( f.core );
+  // Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
 	// if ( f_prod )  // f is a product
 	// { Function::Product * result = new Function::Product;  // empty product
 	// 	std::forward_list<Function>::iterator it;
-	// 	for ( it = f_prod->factors.begin(); it != f_prod->factors.end(); it++ )
+	// 	for ( it = f_prod->factors .begin(); it != f_prod->factors .end(); it++ )
 	// 	{	Function g = *it;
 	// 		result->factors.push_front ( power ( g, e ) );  }
 	// 	return Function ( tag::whose_core_is, result );                              }
@@ -815,13 +836,14 @@ Function Function::Step::deriv ( Function x )  //  virtual from Function::Core
 {	std::vector < Function > derivs;
 	for ( size_t i = 0; i < this->values.size(); i++ )
 		derivs.push_back ( this->values[i].deriv ( x ) );
-	return Function ( tag::whose_core_is, new Function::Step ( this->arg, derivs, this->cuts ) );  }
+	return Function ( tag::whose_core_is,
+	                  new Function::Step ( this->arg, derivs, this->cuts ) );  }
 
 
 Function Function::Sum::deriv ( Function x )  //  virtual from Function::Core
-{	std::forward_list<Function>::const_iterator it = this->terms.begin();
+{	std::forward_list<Function>::const_iterator it = this->terms .begin();
 	Function result = 0.;
-	for ( ; it != this->terms.end(); it++ )
+	for ( ; it != this->terms .end(); it++ )
 		result += it->core->deriv(x);
 	return result;                                                    }
 
@@ -830,8 +852,8 @@ Function Function::Product::deriv ( Function x )  //  virtual from Function::Cor
 {	Function result = 0.;
   std::forward_list<Function>::const_iterator it1, it2;
 	size_t c1, c2;
-	for ( it1 = this->factors.begin(), c1 = 0;
-        it1 != this->factors.end(); it1++, c1++ )
+	for ( it1 = this->factors .begin(), c1 = 0;
+        it1 != this->factors .end(); it1++, c1++ )
 	{ Function partial_res = 1.;
 		for ( it2 = this->factors.begin(), c2 = 0;
 	        it2 != this->factors.end(); it2++, c2++ )
