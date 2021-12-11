@@ -1028,7 +1028,10 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 ( const std::vector < Function > & result )  // virtual from FiniteElement::Core
 
-{	// we analyse syntactically expressions listed in 'result'
+{	this->result_of_integr .clear();
+	this->selector .clear();
+	
+	// we analyse syntactically expressions listed in 'result'
 	// and identify cases previously studied and hard-coded
 	// if none matches, stop with error mesage
 
@@ -1185,8 +1188,6 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 				else
 				{	assert ( v2 == xy [1] .core );
 					selector .push_back ( 3 );     }  }                              }
-		for ( size_t i = 0; i < result .size(); i++ )
-			std::cout << selector[i] << " ";   std::cout << std::endl;
 		return;                                                                   }
 	
 	if ( int_psi and int_psi_psi and not int_dpsi and
@@ -1210,6 +1211,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 			this->selector = { 1, 0 };                                      }
 		return;                                                                             }
 
+	std::cout << "boolean variables at end of pre_compute : ";
 	std::cout << int_psi << int_psi_psi << int_dpsi <<
 		int_dpsi_dpsi << int_grad_grad << int_psi_dpsi << std::endl;
 	
