@@ -158,12 +158,13 @@ int main ( )
 	RR2.set_as_working_manifold();
 	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
 
+	std::map < Cell, Cell > m;
 	Mesh torus = square .fold ( tag::identify, AB, tag::with, CD.reverse(),
 	                            tag::identify, BC, tag::with, DA.reverse(),
-	                            tag::use_existing_vertices                 );
+	                            tag::use_existing_vertices, tag::return_map_between,
+															tag::cells_of_dim, 2, m                             );
 
-	// std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
-	
+	// std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;	
 	// torus.draw_ps ( "torus.eps", tag::unfold,
   //                 tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 

@@ -1016,7 +1016,8 @@ Mesh fold_common ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg
 		new_cll .boundary() .closed_loop ( kept_seg .tip() );
 		if ( keep_map )
 		{	assert ( m .find ( new_cll ) == m .end() );
-			m [ new_cll ] = cll;                        }
+			m .insert ( std::pair < Cell, Cell > ( new_cll, cll ) );  }
+			// m [ new_cll ] = cll;
 		new_cll .add_to_mesh ( result );                                                     }
 
 	return result;
