@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.12.01
+//   mesh.h  2021.12.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -140,6 +140,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Winding { };  static const Winding winding;
 	struct Singular { };  static const Singular singular;
 	struct Unfold { };  static const Unfold unfold;
+	struct ReturnMapBetween { };  static const ReturnMapBetween return_map_between;
 	struct OverRegion { };  static const OverRegion over_region;
 	struct OneGenerator { };  static const OneGenerator one_generator;
 	struct TwoGenerators { };  static const TwoGenerators two_generators;
@@ -897,33 +898,84 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	Mesh fold ( const tag::BuildNewVertices & );
 
+	Mesh fold ( const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
+
 	inline Mesh wrap ( const tag::BuildNewVertices & )
 	{	return this->fold ( tag::build_new_vertices );  }
 
+	inline Mesh wrap ( const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 )
+	{	return this->fold ( tag::build_new_vertices, tag::return_map_between,
+												tag::cells_of_dim, dim, m                         );  }
+
 	Mesh fold ( const tag::UseExistingVertices & );
 
+	Mesh fold ( const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
+	
 	inline Mesh wrap ( const tag::UseExistingVertices & )
 	{	return this->fold ( tag::use_existing_vertices );  }
 
+	inline Mesh wrap ( const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 )
+	{	return this->fold ( tag::use_existing_vertices, tag::return_map_between,
+												tag::cells_of_dim, dim, m                         );  }
+
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::BuildNewVertices &                                                  );
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
 
 	inline Mesh wrap
 	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	  const tag::BuildNewVertices &                                                   )
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::build_new_vertices );  }
 
+	inline Mesh wrap
+		( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::build_new_vertices, tag::return_map_between,
+												tag::cells_of_dim, dim, m  );  }
+
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::UseExistingVertices &                                               );
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
 
 	inline Mesh wrap
 	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	  const tag::UseExistingVertices &                                                )
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::use_existing_vertices );  }
 
+	inline Mesh wrap ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::use_existing_vertices, tag::return_map_between,
+												tag::cells_of_dim, dim, m  );  }
+
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
 	            const tag::BuildNewVertices &                                                  );
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
 
 	inline Mesh wrap
 	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
@@ -932,9 +984,24 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
 		                    tag::identify, msh3, tag::with, msh4, tag::build_new_vertices );  }
 
+	inline Mesh wrap ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
+												tag::identify, msh3, tag::with, msh4, tag::build_new_vertices, tag::return_map_between,
+												tag::cells_of_dim, dim, m  );  }
+	
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
 	            const tag::UseExistingVertices &                                               );
+	
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
 	
 	inline Mesh wrap
 	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
@@ -947,6 +1014,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
 	            const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
 	            const tag::BuildNewVertices &                                                  );
+
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
+	            const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
 
 	inline Mesh wrap
 	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
@@ -961,6 +1035,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
 	            const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
 	            const tag::UseExistingVertices &                                               );
+	
+	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
+	            const tag::Identify &, const Mesh & msh5, const tag::With &, const Mesh & msh6,
+	            const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+										size_t dim, std::map < Cell, Cell > & m                 );
 	
 	inline Mesh wrap
 	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,

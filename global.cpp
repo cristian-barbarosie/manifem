@@ -1,5 +1,5 @@
 
-// global.cpp 2021.11.29
+// global.cpp 2021.12.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -972,12 +972,15 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 namespace { // anonymous namespace, mimics static linkage
 
-Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg )
+Mesh fold_common ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg,
+                     size_t dim, bool keep_map, std::map < Cell, Cell > & m      )
 
 // new segments have already been built, kept in 'corresp_seg'
 // build new cells (polygons)
 	
-{	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+{	assert ( dim == 2 );
+	
+	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
 
 	CellIterator it_cll = msh .iterator ( tag::over_cells_of_dim, 2 );
 	for ( it_cll .reset(); it_cll .in_range(); it_cll++ )
@@ -1011,17 +1014,25 @@ Mesh fold_common_1 ( const Mesh & msh, const std::map < Cell, Cell > & corresp_s
 				( new_cll .boundary() .core, tag::do_not_bother );                            }
 		assert ( kept_seg .exists() );
 		new_cll .boundary() .closed_loop ( kept_seg .tip() );
+		if ( keep_map )
+		{	assert ( m .find ( new_cll ) == m .end() );
+			m [ new_cll ] = cll;                        }
 		new_cll .add_to_mesh ( result );                                                     }
 
 	return result;
 
-}  // end of  fold_common_1
+}  // end of  fold_common
+
+//----------------------------------------------------------------------------------//
 
 	
-Mesh fold_common_2
+Mesh fold_common_no_sides
 ( const Mesh & msh,
-	const std::map < Cell, std::pair < Cell, Manifold::Action > > & corresp_ver )
+	const std::map < Cell, std::pair < Cell, Manifold::Action > > & corresp_ver,
+  size_t dim, bool keep_map, std::map < Cell, Cell > & m                      )
 
+// build 'corresp_seg' then call fold_common
+	
 {	if ( msh.dim() == 1 )
 	{	Mesh result ( tag::fuzzy, tag::of_dim, 1 );
 		CellIterator it_seg = msh.iterator ( tag::over_segments );
@@ -1069,16 +1080,102 @@ Mesh fold_common_2
 			  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
 		// corresp_seg [ seg ] = new_seg;               
 
-		return fold_common_1 ( msh, corresp_seg );                                    }
+		return fold_common ( msh, corresp_seg, dim, keep_map, m );                       }
 
-}  // end of  fold_common_2
+}  // end of  fold_common_no_sides
+
+//----------------------------------------------------------------------------------//
+
+
+Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+
+// take a mesh and fold it around the current working manifold,
+// which must be a quotient manifold
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
+
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		Cell new_V ( tag::vertex );
+		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
+		// corresp_ver [ V ] = { new_V, 0 };
+
+	return fold_common_no_sides ( *that, corresp_ver, dim, keep_map, m );     }
+	
+//----------------------------------------------------------------------------------//
 
 	
-Mesh fold_common_3
+Mesh fold_no_sides ( Mesh * that, const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+
+// take a mesh and fold it around the current working manifold,
+// which must be a quotient manifold
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+	Function x = coords_Eu[0],  y = coords_Eu[1];
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
+
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { V, 0 } ) );  }
+		// corresp_ver [ V ] = { V, 0 };
+
+	return fold_common_no_sides ( *that, corresp_ver, dim, keep_map, m );               }
+	
+//----------------------------------------------------------------------------------//
+
+	
+Mesh fold_common_two_sides
 ( const Mesh & msh,
   const std::map < Cell, std::pair < Cell, Manifold::Action > > & corresp_ver,
-  const Mesh & side_1, const Mesh & side_2                                                  )
+  const Mesh & side_1, const Mesh & side_2,
+  size_t dim, bool keep_map, std::map < Cell, Cell > & m )
 
+// build 'corresp_seg', taking care to identify side_1 with side_2
+// then call fold_common
+	
 {	assert ( msh.dim() == 2 );
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, Cell > corresp_seg;
@@ -1127,18 +1224,186 @@ Mesh fold_common_3
 		// corresp_seg [ seg_2 ] = corresp_seg [ seg_1 ];               
 	assert ( not it_seg_2 .in_range() );
 		
-	return fold_common_1 ( msh, corresp_seg );
+	return fold_common ( msh, corresp_seg, dim, keep_map, m );
 
-}  // end of  fold_common_3
+}  // end of  fold_common_two_sides
 	
+//----------------------------------------------------------------------------------//
 
-Mesh fold_common_4
+
+Mesh fold_two_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+
+// take a mesh whose external boundary has two parallel segments
+// and identify these two segments
+
+// a quotient manifold will be built with one action generator
+	
+{	// we use the current (Euclidian) manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0], y = coord[1];
+
+	// first we need to identify a translation which moves side_1 into side_2
+
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
+
+	double dx = x(D) - x(A), dy = y(D) - y(A);
+	double norm = std::sqrt ( dx*dx + dy*dy );
+	assert ( std::abs ( dx - ( x(C) - x(B) ) ) < 1.e-4 * norm );
+	assert ( std::abs ( dy - ( y(C) - y(B) ) ) < 1.e-4 * norm );
+
+	// the desired translation is ( dx, dy )
+	Manifold::Action g ( tag::transforms, coord, tag::into, (x+dx) && ( y+dy) );
+	Manifold manif_q = space.quotient ( g );
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
+
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		Cell new_V ( tag::vertex );
+		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
+		// corresp_ver [ V ] = { new_V, 0 };
+
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
+	{	assert ( it2.in_range() );
+		Cell V = *it1;  Cell W = *it2;
+		assert ( std::abs ( dx - ( x(W) - x(V) ) ) < 1.e-4 * norm );
+		assert ( std::abs ( dy - ( y(W) - y(V) ) ) < 1.e-4 * norm );
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_V = corresp_ver.find ( V );
+		assert ( it_V != corresp_ver.end() );
+		assert ( it_V->second.second == 0 );
+		Cell new_V = it_V->second.first;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_W = corresp_ver.lower_bound ( W );
+		assert ( ( it_W == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_W->first) ) );
+		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { new_V, g } ) );  }
+		// corresp_ver [ W ] = { new_V, g };
+	assert ( not it2.in_range() );
+						 
+	return fold_common_two_sides ( *that, corresp_ver, side_1, side_2, dim, keep_map, m );
+
+}  // end of fold_two_sides with tag::build_new_vertices
+
+	
+//----------------------------------------------------------------------------------//
+
+	
+Mesh fold_two_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+
+// take a mesh whose external boundary has two parallel segments
+// and identify these two segments
+
+// a quotient manifold will be built with one action generator
+	
+{	// we use the current (Euclidian) manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0], y = coord[1];
+
+	// first we need to identify a translation which moves side_1 into side_2
+
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
+
+	double dx = x(D) - x(A), dy = y(D) - y(A);
+	double norm = std::sqrt ( dx*dx + dy*dy );
+	assert ( std::abs ( dx - ( x(C) - x(B) ) ) < 1.e-4 * norm );
+	assert ( std::abs ( dy - ( y(C) - y(B) ) ) < 1.e-4 * norm );
+
+	// the desired translation is ( dx, dy )
+	Manifold::Action g ( tag::transforms, coord, tag::into, (x+dx) && ( y+dy) );
+	Manifold manif_q = space.quotient ( g );
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
+
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { V, 0 } ) );  }
+		// corresp_ver [ V ] = { V, 0 };
+
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
+	{	assert ( it2.in_range() );
+		Cell V = *it1;  Cell W = *it2;
+		assert ( std::abs ( dx - ( x(W) - x(V) ) ) < 1.e-4 * norm );
+		assert ( std::abs ( dy - ( y(W) - y(V) ) ) < 1.e-4 * norm );
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_W = corresp_ver.lower_bound ( W );
+		assert ( ( it_W == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_W->first) ) );
+		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { V, g } ) );  }
+		// corresp_ver [ W ] = { V, g };
+	assert ( not it2.in_range() );
+						 
+	return fold_common_two_sides ( *that, corresp_ver, side_1, side_2, dim, keep_map, m );
+
+}  // end of fold_two_sides with tag::use_existing_vertices
+
+	
+//----------------------------------------------------------------------------------//
+
+	
+Mesh fold_common_four_sides
 ( const Mesh & msh,
   const std::map < Cell, std::pair < Cell, Manifold::Action > > & corresp_ver,
-  const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4        )
+  const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4,
+  size_t dim, bool keep_map, std::map < Cell, Cell > & m                             )
 
 // build 'corresp_seg', taking care to identify side_1 with side_2 and side_3 with side_4
-// then call fold_common_1
+// then call fold_common
 	
 {	assert ( msh.dim() == 2 );
 	// we use a map -- for a faster code, we could use Cell::Core::hook
@@ -1210,20 +1475,309 @@ Mesh fold_common_4
 		// corresp_seg [ seg_4 ] = corresp_seg [ seg_3 ];               
 	assert ( not it_seg_4 .in_range() );
 		
-	return fold_common_1 ( msh, corresp_seg );
+	return fold_common ( msh, corresp_seg, dim, keep_map, m );
 
-}  // end of  fold_common_4
+}  // end of  fold_common_four_sides
 	
+//----------------------------------------------------------------------------------//
 
-Mesh fold_common_5
+
+Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+
+// take a mesh having as external boundary a parallelogram
+// and identify two pairs of opposite sides
+
+// a quotient manifold with two action generators will be built
+	
+{	// we use the current manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0],  y = coord[1];
+
+	// we need to identify two translations, one which moves side_1 into side_2
+	// and another one which moves side_3 into side_4
+
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
+
+	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
+	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
+	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
+	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
+
+	A = side_3.first_vertex().reverse();
+	B = side_3.last_vertex();
+	C = side_4.last_vertex();
+	D = side_4.first_vertex().reverse();
+
+	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
+	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
+	assert ( std::abs ( dx34 - ( x(C) - x(B) ) ) < 1.e-4 * norm34 );
+	assert ( std::abs ( dy34 - ( y(C) - y(B) ) ) < 1.e-4 * norm34 );
+
+	// the desired translations are ( dx12, dy12 ), ( dx34, dy34 )
+	Manifold::Action g12 ( tag::transforms, coord, tag::into, (x+dx12) && ( y+dy12) );
+	Manifold::Action g34 ( tag::transforms, coord, tag::into, (x+dx34) && ( y+dy34) );
+	Manifold manif_q = space.quotient ( g12, g34 );
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
+
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
+		Cell new_V ( tag::vertex );
+		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
+		// corresp_ver [ V ] = { new_V, 0 };
+
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
+	{	assert ( it2.in_range() );
+		Cell V = *it1;  Cell W = *it2;
+		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
+		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
+		if ( V.belongs_to ( side_4 ) ) continue;
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_V = corresp_ver.find ( V );
+		assert ( it_V != corresp_ver.end() );
+		assert ( it_V->second.second == 0 );
+		Cell VV = it_V->second.first;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_W = corresp_ver.lower_bound ( W );
+		assert ( ( it_W == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_W->first) ) );
+		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { VV, g12 } ) );  }
+		// corresp_ver [ W ] = { VV, g12 };
+	assert ( not it2.in_range() );
+
+	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
+	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
+	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
+	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
+	{	assert ( it4.in_range() );
+		Cell V = *it3;  Cell W = *it4;
+		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
+		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
+		if ( W .belongs_to ( side_2 ) )
+		{	std::map < Cell, std::pair < Cell, Manifold::Action > >
+				::iterator it_W = corresp_ver.find ( W );
+			assert ( it_W == corresp_ver.end() );
+			std::map < Cell, std::pair < Cell, Manifold::Action > >
+				::iterator it_V = corresp_ver.find ( V );
+			assert ( it_V != corresp_ver.end() );
+			assert ( it_V->second .second == g12 );
+			origin = it_V->second .first;
+			corner = W;
+			continue;                                                             }
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_V = corresp_ver.find ( V );
+		assert ( it_V != corresp_ver.end() );
+		assert ( it_V->second.second == 0 );
+		Cell new_V = it_V->second.first;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_W = corresp_ver.lower_bound ( W );
+		assert ( ( it_W == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_W->first) ) );
+		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { new_V, g34 } ) );  }
+		// corresp_ver [ W ] = { new_V, g34 };
+	assert ( not it4.in_range() );
+
+	assert ( origin.exists() );  assert ( corner.exists() );
+	// inspired in item 24 of the book : Scott Meyers, Effective STL
+	std::map < Cell, std::pair < Cell, Manifold::Action > >
+		::iterator it_c = corresp_ver.lower_bound ( corner );
+	assert ( ( it_c == corresp_ver.end() ) or
+	         ( corresp_ver.key_comp()(corner,it_c->first) ) );
+	corresp_ver.emplace_hint ( it_c, std::piecewise_construct,
+	    std::forward_as_tuple ( corner ), std::forward_as_tuple
+	    ( std::pair < Cell, Manifold::Action > { origin, g12 + g34 } ) );
+	// corresp_ver [ corner ] = { origin, g12 + g34 };
+	
+	return fold_common_four_sides
+		( *that, corresp_ver, side_1, side_2, side_3, side_4, dim, keep_map, m );
+
+}  // end of fold_four_sides with tag::build_new_vertices
+
+//----------------------------------------------------------------------------------//
+
+	
+Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+
+// take a mesh having as external boundary a parallelogram
+// and identify two pairs of opposite sides
+
+// a quotient manifold with two action generators will be built
+	
+{	// we use the current manifold
+	Manifold space = Manifold::working;
+	assert ( space.exists() );
+	Function coord = space.coordinates();
+	assert ( coord.nb_of_components() == 2 );
+	// we split 'coord' into its components
+	Function x = coord[0],  y = coord[1];
+
+	// we need to identify two translations, one which moves side_1 into side_2
+	// and another one which moves side_3 into side_4
+
+	Cell A = side_1.first_vertex().reverse();
+	Cell B = side_1.last_vertex();
+	Cell C = side_2.last_vertex();
+	Cell D = side_2.first_vertex().reverse();
+
+	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
+	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
+	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
+	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
+
+	A = side_3.first_vertex().reverse();
+	B = side_3.last_vertex();
+	C = side_4.last_vertex();
+	D = side_4.first_vertex().reverse();
+
+	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
+	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
+	assert ( std::abs ( dx34 - ( x(C) - x(B) ) ) < 1.e-4 * norm34 );
+	assert ( std::abs ( dy34 - ( y(C) - y(B) ) ) < 1.e-4 * norm34 );
+
+	// the desired translations are ( dx12, dy12 ), ( dx34, dy34 )
+	Manifold::Action g12 ( tag::transforms, coord, tag::into, (x+dx12) && ( y+dy12) );
+	Manifold::Action g34 ( tag::transforms, coord, tag::into, (x+dx34) && ( y+dy34) );
+	Manifold manif_q = space.quotient ( g12, g34 );
+
+	// we use a map -- for a faster code, we could use Cell::Core::hook
+	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
+
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	{	Cell V = *it_ver;
+		if ( V.belongs_to ( side_2 ) ) continue;
+		if ( V.belongs_to ( side_4 ) ) continue;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_map = corresp_ver.lower_bound ( V );
+		assert ( ( it_map == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(V,it_map->first) ) );
+		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		    std::forward_as_tuple ( V ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { V, 0 } ) );  }
+		// corresp_ver [ V ] = { V, 0 };
+
+	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
+	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
+	{	assert ( it2.in_range() );
+		Cell V = *it1;  Cell W = *it2;
+		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
+		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
+		if ( V.belongs_to ( side_4 ) ) continue;
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_W = corresp_ver.lower_bound ( W );
+		assert ( ( it_W == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_W->first) ) );
+		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { V, g12 } ) );  }
+		// corresp_ver [ W ] = { V, g12 };
+	assert ( not it2.in_range() );
+
+	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
+	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
+	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
+	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
+	{	assert ( it4.in_range() );
+		Cell V = *it3;  Cell W = *it4;
+		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
+		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
+		if ( W .belongs_to ( side_2 ) )
+		{	std::map < Cell, std::pair < Cell, Manifold::Action > >
+				::iterator it_W = corresp_ver.find ( W );
+			assert ( it_W == corresp_ver.end() );
+			std::map < Cell, std::pair < Cell, Manifold::Action > >
+				::iterator it_V = corresp_ver.find ( V );
+			assert ( it_V != corresp_ver.end() );
+			assert ( it_V->second .second == g12 );
+			origin = it_V->second .first;
+			corner = W;
+			continue;                                                             }
+		// inspired in item 24 of the book : Scott Meyers, Effective STL
+		std::map < Cell, std::pair < Cell, Manifold::Action > >
+			::iterator it_W = corresp_ver.lower_bound ( W );
+		assert ( ( it_W == corresp_ver.end() ) or
+		         ( corresp_ver.key_comp()(W,it_W->first) ) );
+		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
+		    std::forward_as_tuple ( W ), std::forward_as_tuple
+		    ( std::pair < Cell, Manifold::Action > { V, g34 } ) );  }
+		// corresp_ver [ W ] = { V, g34 };
+	assert ( not it4.in_range() );
+
+	assert ( origin.exists() );  assert ( corner.exists() );
+	// inspired in item 24 of the book : Scott Meyers, Effective STL
+	std::map < Cell, std::pair < Cell, Manifold::Action > >
+		::iterator it_c = corresp_ver.lower_bound ( corner );
+	assert ( ( it_c == corresp_ver.end() ) or
+	         ( corresp_ver.key_comp()(corner,it_c->first) ) );
+	corresp_ver.emplace_hint ( it_c, std::piecewise_construct,
+	    std::forward_as_tuple ( corner ), std::forward_as_tuple
+	    ( std::pair < Cell, Manifold::Action > { origin, g12 + g34 } ) );
+	// corresp_ver [ corner ] = { origin, g12 + g34 };
+	
+	return fold_common_four_sides
+		( *that, corresp_ver, side_1, side_2, side_3, side_4, dim, keep_map, m );
+
+}  // end of fold_four_sides with tag::use_existing_vertices
+	
+//----------------------------------------------------------------------------------//
+
+	
+Mesh fold_common_six_sides
 ( const Mesh & msh,
   const std::map < Cell, std::pair < Cell, Manifold::Action > > & corresp_ver,
   const Mesh & side_1, const Mesh & side_2, const Mesh & side_3, const Mesh & side_4,
-  const Mesh & side_5, const Mesh & side_6                                                  )
+  const Mesh & side_5, const Mesh & side_6,
+  size_t dim, bool keep_map, std::map < Cell, Cell > & m                             )
 
 // build 'corresp_seg', taking care to identify
 //   side_1 with side_2, side_3 with side_4 and side_5 with side_6
-// then call fold_common_1
+// then call fold_common
 	
 {	assert ( msh.dim() == 2 );
 	// we use a map -- for a faster code, we could use Cell::Core::hook
@@ -1317,531 +1871,24 @@ Mesh fold_common_5
 		// corresp_seg [ seg_6 ] = corresp_seg [ seg_5 ];               
 	assert ( not it_seg_6 .in_range() );
 		
-	return fold_common_1 ( msh, corresp_seg );
+	return fold_common ( msh, corresp_seg, dim, keep_map, m );
 
-}  // end of  fold_common_5
+}  // end of  fold_common_six_sides
 	
-}  // anonymous namespace
-
-//----------------------------------------------------------------------------------//
-
-
-Mesh Mesh::fold ( const tag::BuildNewVertices & )
-
-// take a mesh and fold it around the current working manifold,
-// which must be a quotient manifold
-
-{	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
-	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	assert ( manif_q );
-	Function coords_q = space.coordinates();
-	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
-	Function x = coords_Eu[0],  y = coords_Eu[1];
-
-	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
-
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
-	{	Cell V = *it_ver;
-		Cell new_V ( tag::vertex );
-		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
-		    std::forward_as_tuple ( V ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
-		// corresp_ver [ V ] = { new_V, 0 };
-
-	return fold_common_2 ( *this, corresp_ver );                                         }
-
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::UseExistingVertices & )
-
-// take a mesh and fold it around the current working manifold,
-// which must be a quotient manifold
-
-{	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
-	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	assert ( manif_q );
-	Function coords_q = space.coordinates();
-	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
-	Function x = coords_Eu[0],  y = coords_Eu[1];
-
-	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
-
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
-	{	Cell V = *it_ver;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
-		    std::forward_as_tuple ( V ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, 0 } ) );  }
-		// corresp_ver [ V ] = { V, 0 };
-
-	return fold_common_2 ( *this, corresp_ver );                                         }
-
-//----------------------------------------------------------------------------------//
-
-	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
-                      const tag::With &, const Mesh & side_2,
-                  const tag::BuildNewVertices &              )
-
-// take a mesh whose external boundary has two parallel segments
-// and identify these two segments
-
-// a quotient manifold will be built with one action generator
-	
-{	// we use the current (Euclidian) manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
-	Function coord = space.coordinates();
-	assert ( coord.nb_of_components() == 2 );
-	// we split 'coord' into its components
-	Function x = coord[0], y = coord[1];
-
-	// first we need to identify a translation which moves side_1 into side_2
-
-	Cell A = side_1.first_vertex().reverse();
-	Cell B = side_1.last_vertex();
-	Cell C = side_2.last_vertex();
-	Cell D = side_2.first_vertex().reverse();
-
-	double dx = x(D) - x(A), dy = y(D) - y(A);
-	double norm = std::sqrt ( dx*dx + dy*dy );
-	assert ( std::abs ( dx - ( x(C) - x(B) ) ) < 1.e-4 * norm );
-	assert ( std::abs ( dy - ( y(C) - y(B) ) ) < 1.e-4 * norm );
-
-	// the desired translation is ( dx, dy )
-	Manifold::Action g ( tag::transforms, coord, tag::into, (x+dx) && ( y+dy) );
-	Manifold manif_q = space.quotient ( g );
-
-	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
-
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
-	{	Cell V = *it_ver;
-		if ( V.belongs_to ( side_2 ) ) continue;
-		Cell new_V ( tag::vertex );
-		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
-		    std::forward_as_tuple ( V ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
-		// corresp_ver [ V ] = { new_V, 0 };
-
-	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
-	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
-	{	assert ( it2.in_range() );
-		Cell V = *it1;  Cell W = *it2;
-		assert ( std::abs ( dx - ( x(W) - x(V) ) ) < 1.e-4 * norm );
-		assert ( std::abs ( dy - ( y(W) - y(V) ) ) < 1.e-4 * norm );
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_V = corresp_ver.find ( V );
-		assert ( it_V != corresp_ver.end() );
-		assert ( it_V->second.second == 0 );
-		Cell new_V = it_V->second.first;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_W = corresp_ver.lower_bound ( W );
-		assert ( ( it_W == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(W,it_W->first) ) );
-		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
-		    std::forward_as_tuple ( W ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { new_V, g } ) );  }
-		// corresp_ver [ W ] = { new_V, g };
-	assert ( not it2.in_range() );
-						 
-	return fold_common_3 ( *this, corresp_ver, side_1, side_2 );                         }
-
-//----------------------------------------------------------------------------------//
-
-	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
-                      const tag::With &, const Mesh & side_2,
-                  const tag::UseExistingVertices &           )
-
-// take a mesh whose external boundary has two parallel segments
-// and identify these two segments
-
-// a quotient manifold will be built with one action generator
-	
-{	// we use the current (Euclidian) manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
-	Function coord = space.coordinates();
-	assert ( coord.nb_of_components() == 2 );
-	// we split 'coord' into its components
-	Function x = coord[0], y = coord[1];
-
-	// first we need to identify a translation which moves side_1 into side_2
-
-	Cell A = side_1.first_vertex().reverse();
-	Cell B = side_1.last_vertex();
-	Cell C = side_2.last_vertex();
-	Cell D = side_2.first_vertex().reverse();
-
-	double dx = x(D) - x(A), dy = y(D) - y(A);
-	double norm = std::sqrt ( dx*dx + dy*dy );
-	assert ( std::abs ( dx - ( x(C) - x(B) ) ) < 1.e-4 * norm );
-	assert ( std::abs ( dy - ( y(C) - y(B) ) ) < 1.e-4 * norm );
-
-	// the desired translation is ( dx, dy )
-	Manifold::Action g ( tag::transforms, coord, tag::into, (x+dx) && ( y+dy) );
-	Manifold manif_q = space.quotient ( g );
-
-	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
-
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
-	{	Cell V = *it_ver;
-		if ( V.belongs_to ( side_2 ) ) continue;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
-		    std::forward_as_tuple ( V ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, 0 } ) );  }
-		// corresp_ver [ V ] = { V, 0 };
-
-	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
-	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
-	{	assert ( it2.in_range() );
-		Cell V = *it1;  Cell W = *it2;
-		assert ( std::abs ( dx - ( x(W) - x(V) ) ) < 1.e-4 * norm );
-		assert ( std::abs ( dy - ( y(W) - y(V) ) ) < 1.e-4 * norm );
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_W = corresp_ver.lower_bound ( W );
-		assert ( ( it_W == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(W,it_W->first) ) );
-		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
-		    std::forward_as_tuple ( W ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, g } ) );  }
-		// corresp_ver [ W ] = { V, g };
-	assert ( not it2.in_range() );
-						 
-	return fold_common_3 ( *this, corresp_ver, side_1, side_2 );                         }
-
-//----------------------------------------------------------------------------------//
-
-	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
-                      const tag::With &, const Mesh & side_2,
-                  const tag::Identify &, const Mesh & side_3,
-                      const tag::With &, const Mesh & side_4,
-                  const tag::BuildNewVertices &              )
-
-// take a mesh having as external boundary a parallelogram
-// and identify two pairs of opposite sides
-
-// a quotient manifold with two action generators will be built
-	
-{	// we use the current manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
-	Function coord = space.coordinates();
-	assert ( coord.nb_of_components() == 2 );
-	// we split 'coord' into its components
-	Function x = coord[0],  y = coord[1];
-
-	// we need to identify two translations, one which moves side_1 into side_2
-	// and another one which moves side_3 into side_4
-
-	Cell A = side_1.first_vertex().reverse();
-	Cell B = side_1.last_vertex();
-	Cell C = side_2.last_vertex();
-	Cell D = side_2.first_vertex().reverse();
-
-	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
-	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
-	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
-	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
-
-	A = side_3.first_vertex().reverse();
-	B = side_3.last_vertex();
-	C = side_4.last_vertex();
-	D = side_4.first_vertex().reverse();
-
-	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
-	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
-	assert ( std::abs ( dx34 - ( x(C) - x(B) ) ) < 1.e-4 * norm34 );
-	assert ( std::abs ( dy34 - ( y(C) - y(B) ) ) < 1.e-4 * norm34 );
-
-	// the desired translations are ( dx12, dy12 ), ( dx34, dy34 )
-	Manifold::Action g12 ( tag::transforms, coord, tag::into, (x+dx12) && ( y+dy12) );
-	Manifold::Action g34 ( tag::transforms, coord, tag::into, (x+dx34) && ( y+dy34) );
-	Manifold manif_q = space.quotient ( g12, g34 );
-
-	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
-
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
-	{	Cell V = *it_ver;
-		if ( V.belongs_to ( side_2 ) ) continue;
-		if ( V.belongs_to ( side_4 ) ) continue;
-		Cell new_V ( tag::vertex );
-		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
-		    std::forward_as_tuple ( V ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
-		// corresp_ver [ V ] = { new_V, 0 };
-
-	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
-	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
-	{	assert ( it2.in_range() );
-		Cell V = *it1;  Cell W = *it2;
-		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
-		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
-		if ( V.belongs_to ( side_4 ) ) continue;
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_V = corresp_ver.find ( V );
-		assert ( it_V != corresp_ver.end() );
-		assert ( it_V->second.second == 0 );
-		Cell VV = it_V->second.first;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_W = corresp_ver.lower_bound ( W );
-		assert ( ( it_W == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(W,it_W->first) ) );
-		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
-		    std::forward_as_tuple ( W ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { VV, g12 } ) );  }
-		// corresp_ver [ W ] = { VV, g12 };
-	assert ( not it2.in_range() );
-
-	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
-	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
-	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
-	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
-	{	assert ( it4.in_range() );
-		Cell V = *it3;  Cell W = *it4;
-		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
-		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
-		if ( W .belongs_to ( side_2 ) )
-		{	std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::iterator it_W = corresp_ver.find ( W );
-			assert ( it_W == corresp_ver.end() );
-			std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::iterator it_V = corresp_ver.find ( V );
-			assert ( it_V != corresp_ver.end() );
-			assert ( it_V->second .second == g12 );
-			origin = it_V->second .first;
-			corner = W;
-			continue;                                                             }
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_V = corresp_ver.find ( V );
-		assert ( it_V != corresp_ver.end() );
-		assert ( it_V->second.second == 0 );
-		Cell new_V = it_V->second.first;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_W = corresp_ver.lower_bound ( W );
-		assert ( ( it_W == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(W,it_W->first) ) );
-		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
-		    std::forward_as_tuple ( W ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { new_V, g34 } ) );  }
-		// corresp_ver [ W ] = { new_V, g34 };
-	assert ( not it4.in_range() );
-
-	assert ( origin.exists() );  assert ( corner.exists() );
-	// inspired in item 24 of the book : Scott Meyers, Effective STL
-	std::map < Cell, std::pair < Cell, Manifold::Action > >
-		::iterator it_c = corresp_ver.lower_bound ( corner );
-	assert ( ( it_c == corresp_ver.end() ) or
-	         ( corresp_ver.key_comp()(corner,it_c->first) ) );
-	corresp_ver.emplace_hint ( it_c, std::piecewise_construct,
-	    std::forward_as_tuple ( corner ), std::forward_as_tuple
-	    ( std::pair < Cell, Manifold::Action > { origin, g12 + g34 } ) );
-	// corresp_ver [ corner ] = { origin, g12 + g34 };
-	
-	return fold_common_4 ( *this, corresp_ver, side_1, side_2, side_3, side_4 );        }
-
-//----------------------------------------------------------------------------------//
-
-	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
-                      const tag::With &, const Mesh & side_2,
-                  const tag::Identify &, const Mesh & side_3,
-                      const tag::With &, const Mesh & side_4,
-                  const tag::UseExistingVertices &           )
-
-// take a mesh having as external boundary a parallelogram
-// and identify two pairs of opposite sides
-
-// a quotient manifold with two action generators will be built
-	
-{	// we use the current manifold
-	Manifold space = Manifold::working;
-	assert ( space.exists() );
-	Function coord = space.coordinates();
-	assert ( coord.nb_of_components() == 2 );
-	// we split 'coord' into its components
-	Function x = coord[0],  y = coord[1];
-
-	// we need to identify two translations, one which moves side_1 into side_2
-	// and another one which moves side_3 into side_4
-
-	Cell A = side_1.first_vertex().reverse();
-	Cell B = side_1.last_vertex();
-	Cell C = side_2.last_vertex();
-	Cell D = side_2.first_vertex().reverse();
-
-	double dx12 = x(D) - x(A), dy12 = y(D) - y(A);
-	double norm12 = std::sqrt ( dx12*dx12 + dy12*dy12 );
-	assert ( std::abs ( dx12 - ( x(C) - x(B) ) ) < 1.e-4 * norm12 );
-	assert ( std::abs ( dy12 - ( y(C) - y(B) ) ) < 1.e-4 * norm12 );
-
-	A = side_3.first_vertex().reverse();
-	B = side_3.last_vertex();
-	C = side_4.last_vertex();
-	D = side_4.first_vertex().reverse();
-
-	double dx34 = x(D) - x(A), dy34 = y(D) - y(A);
-	double norm34 = std::sqrt ( dx34*dx34 + dy34*dy34 );
-	assert ( std::abs ( dx34 - ( x(C) - x(B) ) ) < 1.e-4 * norm34 );
-	assert ( std::abs ( dy34 - ( y(C) - y(B) ) ) < 1.e-4 * norm34 );
-
-	// the desired translations are ( dx12, dy12 ), ( dx34, dy34 )
-	Manifold::Action g12 ( tag::transforms, coord, tag::into, (x+dx12) && ( y+dy12) );
-	Manifold::Action g34 ( tag::transforms, coord, tag::into, (x+dx34) && ( y+dy34) );
-	Manifold manif_q = space.quotient ( g12, g34 );
-
-	// we use a map -- for a faster code, we could use Cell::Core::hook
-	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
-
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
-	{	Cell V = *it_ver;
-		if ( V.belongs_to ( side_2 ) ) continue;
-		if ( V.belongs_to ( side_4 ) ) continue;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
-		    std::forward_as_tuple ( V ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, 0 } ) );  }
-		// corresp_ver [ V ] = { V, 0 };
-
-	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
-	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
-	{	assert ( it2.in_range() );
-		Cell V = *it1;  Cell W = *it2;
-		assert ( std::abs ( dx12 - ( x(W) - x(V) ) ) < 1.e-4 * norm12 );
-		assert ( std::abs ( dy12 - ( y(W) - y(V) ) ) < 1.e-4 * norm12 );
-		if ( V.belongs_to ( side_4 ) ) continue;
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_W = corresp_ver.lower_bound ( W );
-		assert ( ( it_W == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(W,it_W->first) ) );
-		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
-		    std::forward_as_tuple ( W ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, g12 } ) );  }
-		// corresp_ver [ W ] = { V, g12 };
-	assert ( not it2.in_range() );
-
-	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
-	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
-	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
-	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
-	{	assert ( it4.in_range() );
-		Cell V = *it3;  Cell W = *it4;
-		assert ( std::abs ( dx34 - ( x(W) - x(V) ) ) < 1.e-4 * norm34 );
-		assert ( std::abs ( dy34 - ( y(W) - y(V) ) ) < 1.e-4 * norm34 );
-		if ( W .belongs_to ( side_2 ) )
-		{	std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::iterator it_W = corresp_ver.find ( W );
-			assert ( it_W == corresp_ver.end() );
-			std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::iterator it_V = corresp_ver.find ( V );
-			assert ( it_V != corresp_ver.end() );
-			assert ( it_V->second .second == g12 );
-			origin = it_V->second .first;
-			corner = W;
-			continue;                                                             }
-		// inspired in item 24 of the book : Scott Meyers, Effective STL
-		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_W = corresp_ver.lower_bound ( W );
-		assert ( ( it_W == corresp_ver.end() ) or
-		         ( corresp_ver.key_comp()(W,it_W->first) ) );
-		corresp_ver.emplace_hint ( it_W, std::piecewise_construct,
-		    std::forward_as_tuple ( W ), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, g34 } ) );  }
-		// corresp_ver [ W ] = { V, g34 };
-	assert ( not it4.in_range() );
-
-	assert ( origin.exists() );  assert ( corner.exists() );
-	// inspired in item 24 of the book : Scott Meyers, Effective STL
-	std::map < Cell, std::pair < Cell, Manifold::Action > >
-		::iterator it_c = corresp_ver.lower_bound ( corner );
-	assert ( ( it_c == corresp_ver.end() ) or
-	         ( corresp_ver.key_comp()(corner,it_c->first) ) );
-	corresp_ver.emplace_hint ( it_c, std::piecewise_construct,
-	    std::forward_as_tuple ( corner ), std::forward_as_tuple
-	    ( std::pair < Cell, Manifold::Action > { origin, g12 + g34 } ) );
-	// corresp_ver [ corner ] = { origin, g12 + g34 };
-	
-	return fold_common_4 ( *this, corresp_ver, side_1, side_2, side_3, side_4 );        }
-
-//----------------------------------------------------------------------------------//
-
-
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
                       const tag::With &, const Mesh & side_2,
                   const tag::Identify &, const Mesh & side3,
                       const tag::With &, const Mesh & side4,
                   const tag::Identify &, const Mesh & side5,
                       const tag::With &, const Mesh & side6,
-                  const tag::BuildNewVertices &             )
+                  const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
 
-// take a mesh having as external boundary a hexahedron
+// take a mesh having as external boundary a hexagon
 // and identify three pairs of opposite sides
 
 // a quotient manifold with two action generators will be built
@@ -1930,7 +1977,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -2094,24 +2141,29 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 		// corresp_ver [ W ] = { new_V, g56 };
 	assert ( not it6.in_range() );
 
-	return fold_common_5 ( *this, corresp_ver, side_1, side_2, side_3, side_4, side_5, side_6 ); }
+	return fold_common_six_sides
+		( *that, corresp_ver, side_1, side_2, side_3, side_4, side_5, side_6, dim, keep_map, m );
 
+}  // end of fold_six_sides with tag::build_new_vertices
+	
 //----------------------------------------------------------------------------------//
 
 	
-Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
                       const tag::With &, const Mesh & side_2,
                   const tag::Identify &, const Mesh & side3,
                       const tag::With &, const Mesh & side4,
                   const tag::Identify &, const Mesh & side5,
                       const tag::With &, const Mesh & side6,
-                  const tag::UseExistingVertices &          )
+                  const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
 
-// take a mesh having as external boundary a hexahedron
+// take a mesh having as external boundary a hexagon
 // and identify three pairs of opposite sides
 
 // a quotient manifold with two action generators will be built
-	
+		
 {	// we use the current manifold
 	Manifold space = Manifold::working;
 	assert ( space.exists() );
@@ -2196,7 +2248,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = this->iterator ( tag::over_vertices );
+	CellIterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -2343,7 +2395,233 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 		// corresp_ver [ W ] = { V, g56 };
 	assert ( not it6.in_range() );
 
-	return fold_common_5 ( *this, corresp_ver, side_1, side_2, side_3, side_4, side_5, side_6 ); }
+	return fold_common_six_sides
+		( *that, corresp_ver, side_1, side_2, side_3, side_4, side_5, side_6, dim, keep_map, m );
+
+}  // end of fold_six_sides with tag::use_existing_vertices
+
+}  // anonymous namespace
+
+//----------------------------------------------------------------------------------//
+
+
+// take a mesh and fold it around the current working manifold,
+// which must be a quotient manifold
+
+Mesh Mesh::fold ( const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_no_sides ( this, tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+
+
+Mesh Mesh::fold ( const tag::BuildNewVertices & )
+
+{	std::map < Cell, Cell > m;
+	return fold_no_sides ( this, tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                             );  }
+
+	
+Mesh Mesh::fold ( const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_no_sides ( this, tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+	
+	
+Mesh Mesh::fold ( const tag::UseExistingVertices & )
+
+{	std::map < Cell, Cell > m;
+	return fold_no_sides ( this, tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                               );  }
+
+//----------------------------------------------------------------------------------//
+
+	
+// take a mesh whose external boundary has two parallel segments
+// and identify these two segments
+
+// a quotient manifold will be built with one action generator
+	
+
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_two_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+	
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::BuildNewVertices &           )
+
+{	std::map < Cell, Cell > m;
+	return fold_two_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                       );  }
+	
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_two_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::UseExistingVertices &           )
+
+{	std::map < Cell, Cell > m;
+	return fold_two_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                       );  }
+
+//----------------------------------------------------------------------------------//
+
+	
+// take a mesh having as external boundary a parallelogram
+// and identify two pairs of opposite sides
+
+// a quotient manifold with two action generators will be built
+
+
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_four_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+	
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::BuildNewVertices &           )
+
+{	std::map < Cell, Cell > m;
+	return fold_four_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                       );  }
+
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_four_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+	
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::UseExistingVertices &           )
+
+{	std::map < Cell, Cell > m;
+	return fold_four_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                       );  }
+
+//----------------------------------------------------------------------------------//
+
+
+// take a mesh having as external boundary a hexagon
+// and identify three pairs of opposite sides
+
+// a quotient manifold with two action generators will be built
+	
+
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::Identify &, const Mesh & side_5,
+                      const tag::With &, const Mesh & side_6,
+                  const tag::BuildNewVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_six_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::identify, side_5, tag::with, side_6,
+											tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::Identify &, const Mesh & side_5,
+                      const tag::With &, const Mesh & side_6,
+                  const tag::BuildNewVertices &              )
+
+{	std::map < Cell, Cell > m;
+	return fold_six_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::identify, side_5, tag::with, side_6,
+											tag::build_new_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                       );  }
+
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::Identify &, const Mesh & side_5,
+                      const tag::With &, const Mesh & side_6,
+                  const tag::UseExistingVertices &,
+									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+									size_t dim, std::map < Cell, Cell > & m                 )
+
+{	return fold_six_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::identify, side_5, tag::with, side_6,
+											tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, dim, true, m                     );  }
+  
+	
+Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
+                      const tag::With &, const Mesh & side_2,
+                  const tag::Identify &, const Mesh & side_3,
+                      const tag::With &, const Mesh & side_4,
+                  const tag::Identify &, const Mesh & side_5,
+                      const tag::With &, const Mesh & side_6,
+                  const tag::UseExistingVertices &              )
+
+{	std::map < Cell, Cell > m;
+	return fold_six_sides ( this, tag::identify, side_1, tag::with, side_2,
+											tag::identify, side_3, tag::with, side_4,
+											tag::identify, side_5, tag::with, side_6,
+											tag::use_existing_vertices, tag::return_map_between,
+											tag::cells_of_dim, 2, false, m                       );  }
 
 //----------------------------------------------------------------------------------//
 
@@ -2762,7 +3040,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
 void Mesh::draw_ps ( std::string file_name,
          const tag::Unfold &, const std::vector < Manifold::Action > & v,
-         const tag::OverRegion &, const Function::Inequality::Set & constraints        )
+         const tag::OverRegion &, const Function::Inequality::Set & constraints )
 
 // we draw several translations (or, more generally, transformations)
 // of each segment, within the region described by the constraints
