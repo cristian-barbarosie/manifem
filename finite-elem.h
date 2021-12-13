@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.09
+// finite-elem.h 2021.12.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -129,10 +129,13 @@ class Integrator::Core
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
 
 	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for UFL_FFC integrators
-	virtual void pre_compute ( const std::vector < Function > & v ) = 0;
-	virtual Integrator::Result retrieve_precomputed ( const Function & f ) = 0;
-	virtual Integrator::Result retrieve_precomputed
-	( const Function & f, const Function & g ) = 0;
+	virtual void pre_compute ( const std::vector < Function > & bf,
+                             const std::vector < Function > & v  ) = 0;
+	virtual std::vector < double > retrieve_precomputed
+	( const Function & bf, const Function & psi ) = 0;
+	virtual std::vector < double > retrieve_precomputed
+	( const Function & bf1, const Function & psi1,
+	  const Function & bf2, const Function & psi2 ) = 0;
 	
 };  // end of  class Integrator::Core
 
@@ -151,7 +154,7 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 // bf is an arbitrary basis function (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'v'
 
-{	this->core->pre_compute ( v );  }
+{	this->core->pre_compute ( { bf }, v );  }
 	
 
 inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
@@ -161,7 +164,7 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 // bf1 and bf2 are arbitrary basis functions (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'v'
 
-{	this->core->pre_compute ( v );  }
+{	this->core->pre_compute ( { bf1, bf2 }, v );  }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -193,9 +196,12 @@ class Integrator::Gauss : public Integrator::Core
 	
 	//  pre_compute  and  retrieve_precomputed  are virtual from Integrator::Core,
 	// here execution forbidden
-	void pre_compute ( const std::vector < Function > & v );
-	Integrator::Result retrieve_precomputed ( const Function & f );
-	Integrator::Result retrieve_precomputed ( const Function & f, const Function & g );
+	void pre_compute ( const std::vector < Function > & bf,
+                     const std::vector < Function > & v  );
+	std::vector < double > retrieve_precomputed ( const Function & bf, const Function & psi );
+	std::vector < double > retrieve_precomputed
+	( const Function & bf1, const Function & psi1,
+	  const Function & bf2, const Function & psi2 );
 
 };  // end of  class Integrator::Gauss
 
@@ -254,9 +260,14 @@ class FiniteElement
 	inline void dock_on ( const Cell & cll, const tag::Winding & );
 
 	inline double integrate ( const Function & );
-	inline Integrator::Result integrate ( const tag::PreComputed &, const Function & );
-	inline Integrator::Result integrate
-	( const tag::PreComputed &, const Function &, const Function & );
+	inline std::vector < double > integrate
+	( const tag::PreComputed &, const tag::Replace &, const Function &,
+	                            const tag::By &,      const Function & );
+	inline std::vector < double > integrate
+	( const tag::PreComputed &, const tag::Replace &, const Function &,
+	                            const tag::By &,      const Function &,
+                              const tag::Replace &, const Function &,
+	                            const tag::By &,      const Function & );
 
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf, 
@@ -276,11 +287,9 @@ class FiniteElement
 
 class Integrator::UFL_FFC : public Integrator::Core
 
-// sort of symbolic integrator, obtained using UFL and FFC
+// sort of symbolic integrator, inspired in UFL and FFC
 // https://fenics.readthedocs.io/projects/ufl/en/latest/
 // https://fenics.readthedocs.io/projects/ffc/en/latest/
-// resulting code manipulated by hand for each case
-// TODO : further optimize the code using symbolic computation and genetic/stochastic optimization
 
 {	public :
 
@@ -302,13 +311,16 @@ class Integrator::UFL_FFC : public Integrator::Core
 	// this type of integrator benefits from an early declaration of
 	// the integrals we intend to compute later (after docking on a cell)
 	//  pre_compute  is virtual from Integrator::Core
-	void pre_compute ( const std::vector < Function > & v );
+	void pre_compute ( const std::vector < Function > & bf,
+                     const std::vector < Function > & v  );
 
 	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
 	// and replace values of coordinates of vertices of the docked_on cell
 	//  retrieve_precomputed  is virtual from Integrator::Core
-	inline Integrator::Result retrieve_precomputed ( const Function & f );
-	inline Integrator::Result retrieve_precomputed ( const Function & f, const Function & g );
+	std::vector < double > retrieve_precomputed ( const Function & bf, const Function & psi );
+	std::vector < double > retrieve_precomputed
+	( const Function & bf1, const Function & psi1,
+	  const Function & bf2, const Function & psi2 );
 
 };  // end of  class Integrator::UFL_FFC
 
@@ -349,7 +361,8 @@ class FiniteElement::Core
 	virtual void dock_on ( const Cell & cll ) = 0;
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 	
-	virtual void pre_compute ( const std::vector < Function > & ) = 0;
+	virtual void pre_compute ( const std::vector < Function > & bf,
+                             const std::vector < Function > & v  ) = 0;
 
 };  // end of  class FiniteElement::Core
 
@@ -424,43 +437,13 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 
 	//  pre_compute  virtual from FiniteElement::Core, here execution forbidden
-	void pre_compute ( const std::vector < Function > & result );
+	void pre_compute ( const std::vector < Function > & bf,
+                     const std::vector < Function > & result );
 
 	class Segment;  class Triangle;  class Quadrangle;
 	
 };  // end of  class FiniteElement::withMaster
 
-//-----------------------------------------------------------------------------------------//
-
-class Integrator::Result
-
-// for a UFL-FFC integrator, we compute a set of results which may be
-// larger than the list of quantities specified by the user
-// we must select the requested ones and this class acts as a selector
-
-{	public :
-
-	std::vector < size_t > * selector;
-	std::vector < double > * results;
-
-	inline Result ( std::vector < size_t > & sele,
-	                std::vector < double > & res  )
-	:	selector ( & sele ), results ( & res )
-	#ifdef NDEBUG
-	{	}
-	#else
-	{	for ( size_t i = 0; i < sele .size(); i++ )
-			assert ( sele[i] < res .size() );          }
-	#endif
-
-	inline size_t size ( )
-	{	return this->selector->size();  }
-
-	inline double operator[] ( size_t i )
-	{	return this->results->operator[] ( this->selector->operator[] ( i ) );  }
-
-};  // end of  class Integrator::Result
-	
 //-----------------------------------------------------------------------------------------//
 
 
@@ -469,24 +452,30 @@ inline double FiniteElement::integrate ( const Function & f )
 	assert ( this->core->docked_on .exists() );
 	return this->core->integr ( f, tag::through_docked_finite_element, *this );  }
 
-inline Integrator::Result FiniteElement::integrate
-( const tag::PreComputed &, const Function & f )
-{	return this->core->integr .core->retrieve_precomputed ( f );  }
+inline std::vector < double > FiniteElement::integrate
+( const tag::PreComputed &, const tag::Replace &, const Function & bf,
+                            const tag::By &,      const Function & psi)
+{	// assert that 'this' is already docked :
+	assert ( this->core->docked_on .exists() );
+	return this->core->integr .core->retrieve_precomputed ( bf, psi );  }
 
-inline Integrator::Result FiniteElement::integrate
-( const tag::PreComputed &, const Function & f, const Function & g )
-{	return this->core->integr .core->retrieve_precomputed ( f, g );  }
+inline std::vector < double > FiniteElement::integrate
+( const tag::PreComputed &, const tag::Replace &, const Function & bf1,
+                            const tag::By &,      const Function & psi1,
+                            const tag::Replace &, const Function & bf2,
+                            const tag::By &,      const Function & psi2 )
+{	return this->core->integr .core->retrieve_precomputed ( bf1, bf2, psi1, psi2 );  }
 
 
 inline void FiniteElement::pre_compute
 ( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
   const tag::IntegralOf &, const std::vector < Function > & v     )
-{	this->core->pre_compute ( v );  }
+{	this->core->pre_compute ( { bf }, v );  }
 
 inline void FiniteElement::pre_compute
 ( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
   const tag::IntegralOf &, const std::vector < Function > & v                    )
-{	this->core->pre_compute ( v );  }
+{	this->core->pre_compute ( { bf1, bf2 }, v );  }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -802,6 +791,9 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	// std::map < Cell::Core *, size_t > local_numbering_1
 	// std::map < Function::Core *, size_t > basis_numbering
 
+	// dummy base functions, arguments of 'pre_compute' :
+	std::vector < Function > dummy_bf;
+
 	// constructor
 
 	inline TypeOne ( ) : FiniteElement::StandAlone ()  { }
@@ -836,6 +828,9 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	// std::map < Cell::Core *, size_t > local_numbering_1
 	// std::map < Function::Core *, size_t > basis_numbering
 
+	// attributes inherited from FiniteElement::StandAlone::TypeOne :
+	// std::vector < Function > dummy_bf  dummy base functions, arguments of 'pre_compute'
+
 	Function bf1, bf2, bf3;
 
 	// constructor
@@ -852,7 +847,8 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	void dock_on ( const Cell & cll, const tag::Winding & );
 
 	//  pre_compute  virtual from FiniteElement::Core
-	void pre_compute ( const std::vector < Function > & result );
+	void pre_compute ( const std::vector < Function > & bf,
+                     const std::vector < Function > & result );
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Triangle
 
