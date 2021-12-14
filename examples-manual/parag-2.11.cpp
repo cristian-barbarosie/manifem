@@ -134,7 +134,7 @@ int main ( )
 	std::list < Mesh > lm { sect1, sect2, sect3, sect4, sect5, sect6, sect7, sect8 };
 	Mesh fisalis ( tag::join, lm ); 
 	
-	CellIterator it = fisalis .iterator ( tag::over_vertices );
+	Mesh::Iterator it = fisalis .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		x(P) *= 0.8;  y(P) *= 0.8;
@@ -147,7 +147,7 @@ int main ( )
 	std::list < Mesh > ::iterator it1;
 	for ( it1 = lm .begin(); it1 != lm .end(); it1++ )
 	{	Mesh sect = *it1;
-		CellIterator it2 = sect .iterator ( tag::over_vertices );
+		Mesh::Iterator it2 = sect .iterator ( tag::over_vertices );
 		for ( int i = 1; i < 20; i++ )
 		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell ver = *it2;

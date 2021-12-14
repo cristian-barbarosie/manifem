@@ -15,13 +15,20 @@ The user should have some understanding of programming and of C++.
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
 
 Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
-[FEniCS/Dolphin](https://fenicsproject.org/), [deal.II](https://dealii.org/)
+[FEniCS/Dolphin](https://fenicsproject.org/), [deal.II](https://dealii.org/),
+[PETSc-FEM](https://cimec.org.ar/foswiki/Main/Cimec/PETScFEM)
 
 In its current version, release 21.11, maniFEM works well for mesh generation,
-including meshes on quotient manifolds. 
-Anisotropic Riemann metrics (paragraph 3.24 in the manual) and
-variational formulations are not yet implemented. 
-Finite elements (section 6 in the manual) are implemented in a rather rudimentary manner for now.
+including meshes on quotient manifolds.
+ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
+and two-dimensional meshes (including surfaces in R^3);
+three-dimensional meshes are object of current work.
+It is possible to build meshes with large variations in the element size;
+anisotropic Riemann metrics are object of current work.
+Lagrange finite elements of degree one are implemented for triangular and quadrangular cells;
+many other types of finite elements are still to be implemented.
+In the future, variational formulations will be implemented as C++ objects,
+thus allowing for compact and elegant code.
 A changelog is available at the end of the
 [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf).
 To check which version of maniFEM is installed in your computer, see at the beginning

@@ -194,7 +194,7 @@ int main ( )
 
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = square .iterator ( tag::over_vertices );
+	Mesh::Iterator it = square .iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it .reset() ; it .in_range(); it ++ )
 	{	Cell V = *it;  numbering [V] = counter;  ++ counter;  }
@@ -214,7 +214,7 @@ int main ( )
 	// then we put zero for vertices belonging to 'torus'
 	{ // just a block of code for hiding 'it'
 	for ( size_t i = 0; i < 2*number_dofs; i++ ) matrix_A.coeffRef ( i, i ) = 1.;
-	CellIterator it = torus.iterator ( tag::over_vertices );
+	Mesh::Iterator it = torus.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell V = *it;
 		matrix_A.coeffRef ( 2*numbering[V], 2*numbering[V] ) = 0.;
@@ -239,12 +239,12 @@ int main ( )
 
 	// run over all triangular cells composing 'torus'
 	{ // just a block of code for hiding 'it'
-	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe .dock_on ( small_tri, tag::winding );
 		// run twice over the three vertices of 'small_tri'
-		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		Mesh::Iterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
 		for ( it_V .reset(); it_V .in_range(); it_V ++ )
 		{	Cell V = * it_V;
 			// perhaps implement an iterator returning a vertex and a segment
@@ -315,12 +315,12 @@ int main ( )
 	for ( size_t j=0; j<2; j++ )  macro_stress (i,j) = 0.;
 
 	{ // just a block of code for hiding 'it'
-	CellIterator it = torus .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = torus .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe .dock_on ( small_tri, tag::winding );
 		// run twice over the four vertices of 'small_tri'
-		CellIterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
+		Mesh::Iterator it_V = small_tri .boundary() .iterator ( tag::over_vertices );
 		double jump_V_u_x = 0., jump_V_u_y = 0.; 
 		for ( it_V .reset(); it_V .in_range(); it_V++ )
 		{	Cell V = *it_V;
@@ -383,8 +383,8 @@ int main ( )
 	vector_sol [ 2 * numbering[D] + 1 ] =  vector_sol [ 2*j+1 ]
 		+ macro_strain(1,0) * ( x ( D ) - x ( B ) )
 		+ macro_strain(1,1) * ( y ( D ) - y ( B ) );
-	CellIterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
+	Mesh::Iterator it_AB = AB .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it_CD = CD .iterator ( tag::over_vertices, tag::backwards );
 	it_AB .reset();  assert ( it_AB .in_range() );
 	assert ( *it_AB == A );  it_AB ++;
 	it_CD .reset();  assert ( it_CD .in_range() );
@@ -401,8 +401,8 @@ int main ( )
 		vector_sol [ 2 * numbering[W] + 1 ] =  vector_sol [ 2*j+1 ]
 			+ macro_strain(1,0) * ( x ( W ) - x ( V ) )
 			+ macro_strain(1,1) * ( y ( W ) - y ( V ) );                 }
-	CellIterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
+	Mesh::Iterator it_BC = BC .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it_DA = DA .iterator ( tag::over_vertices, tag::backwards );
 	it_BC .reset();  assert ( it_BC .in_range() );
 	assert ( *it_BC == B );  it_BC ++;
 	it_DA .reset();  assert ( it_DA .in_range() );
@@ -448,7 +448,7 @@ int main ( )
 	solution_file << "3" << std::endl;  // scalar values of u
 	solution_file << square .number_of ( tag::vertices ) << std::endl;
 	// number of values listed below
-	CellIterator it = square .iterator ( tag::over_vertices );
+	Mesh::Iterator it = square .iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t j = numbering [ P ];
@@ -678,13 +678,13 @@ void limit_number_of_neighbours ( Mesh msh )
 {	std::forward_list < Cell > has_few_neighbours, has_many_neighbours;
 
 	{ // just a block of code for hiding 'it'
-	CellIterator it = msh .iterator ( tag::over_vertices );
+	Mesh::Iterator it = msh .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = * it;
 		if ( not P .is_inner_to ( msh ) ) continue;
 		// how many neighbours does P have ?
 		size_t counter = 0;
-		CellIterator it_around_P = msh .iterator ( tag::over_segments, tag::around, P );
+		Mesh::Iterator it_around_P = msh .iterator ( tag::over_segments, tag::around, P );
 		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
 			counter ++;
 		if ( counter < 5 ) has_few_neighbours .push_front ( P );
@@ -699,7 +699,7 @@ void limit_number_of_neighbours ( Mesh msh )
 		// we count again the neighbours, configuration may have changed in the meanwhile
 		size_t counter = 0;
 		std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
-		CellIterator it_around_P =
+		Mesh::Iterator it_around_P =
 			msh .iterator ( tag::over_cells_of_dim, 2, tag::around, P );
 		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
 		{	Cell tri = * it_around_P;
@@ -724,7 +724,7 @@ void limit_number_of_neighbours ( Mesh msh )
 		// we count again the neighbours, configuration may have changed in the meanwhile
 		size_t counter = 0;
 		std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
-		CellIterator it_around_P =
+		Mesh::Iterator it_around_P =
 			msh .iterator ( tag::over_segments, tag::around, P );
 		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
 		{	Cell seg = * it_around_P;
@@ -761,7 +761,7 @@ void flip_split_long_segments ( Mesh & msh, double threshold )
 
 	std::list < Cell > list_of_segments;
 
-	CellIterator it = msh.iterator ( tag::over_segments );
+	Mesh::Iterator it = msh.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;
 
@@ -842,7 +842,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 	std::forward_list < Cell > list_of_segments;
 
-	CellIterator it = msh.iterator ( tag::over_segments );
+	Mesh::Iterator it = msh.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;
 
@@ -915,7 +915,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		{	// make a list of segments pointing towards B
 			std::forward_list < Cell > list_of_segs;
-			CellIterator it_around_B = msh.iterator ( tag::over_segments, tag::around, B );
+			Mesh::Iterator it_around_B = msh.iterator ( tag::over_segments, tag::around, B );
 			it_around_B .reset ( tag::start_at, BD.reverse() );
 			assert ( it_around_B .in_range() );
 			assert ( *it_around_B == BD.reverse() );
@@ -968,7 +968,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		{	// make a list of segments pointing towards B
 			std::forward_list < Cell > list_of_segs;
-			CellIterator it_around_B = msh.iterator ( tag::over_segments, tag::around, B );
+			Mesh::Iterator it_around_B = msh.iterator ( tag::over_segments, tag::around, B );
 			it_around_B .reset ( tag::start_at, BD.reverse() );
 			assert ( it_around_B .in_range() );
 			assert ( *it_around_B == BD.reverse() );
@@ -1015,7 +1015,7 @@ void remove_short_segments ( Mesh & msh, double threshold )
 
 		{	// make a list of segments pointing towards A
 			std::forward_list < Cell > list_of_segs;
-			CellIterator it_around_A = msh.iterator ( tag::over_segments, tag::around, A );
+			Mesh::Iterator it_around_A = msh.iterator ( tag::over_segments, tag::around, A );
 			it_around_A .reset ( tag::start_at, AC.reverse() );
 			assert ( it_around_A .in_range() );
 			assert ( *it_around_A == AC.reverse() );
@@ -1067,7 +1067,7 @@ void baricenters ( Mesh & msh )
 
 // segments on the boundary are not moved -- we use method  is_inner_to
 
-{	CellIterator it = msh.iterator ( tag::over_vertices );
+{	Mesh::Iterator it = msh.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		if ( P.is_inner_to ( msh ) ) msh.baricenter ( P, tag::winding );  }  }

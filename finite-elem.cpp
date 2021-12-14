@@ -559,7 +559,7 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll )
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
-	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
 	it .reset();  assert ( it .in_range() );  Cell P = *it;
 	it++;  assert ( it .in_range() );  Cell Q = *it;
 	it++;  assert ( it .in_range() );  Cell R = *it;
@@ -628,7 +628,7 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag:
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
 	// perhaps implement a special iterator returning points and segments
-	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
 	it .reset();  assert ( it .in_range() );  Cell P = *it;
 	Cell PQ = cll .boundary() .cell_in_front_of ( P );
 	it++;  assert ( it .in_range() );  Cell Q = *it;
@@ -704,7 +704,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll )
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
-	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
 	it .reset();  assert ( it .in_range() );  Cell P = *it;
 	it++;  assert ( it .in_range() );  Cell Q = *it;
 	it++;  assert ( it .in_range() );  Cell R = *it;
@@ -777,7 +777,7 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
-	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
 	it. reset();  assert ( it .in_range() );  Cell P = *it;
 	Cell PQ = cll .boundary() .cell_in_front_of ( P );
 	it++;  assert ( it .in_range() );  Cell Q = *it;
@@ -869,9 +869,7 @@ inline void dock_on_common ( const double & xP, const double & yP,
 
 // this function is speed-critical
 	
-{	// names of variables come from output of UFL FFC
-
-	double J_c0 = xQ - xP, J_c1 = xR - xP,
+{	double J_c0 = xQ - xP, J_c1 = xR - xP,
 	       J_c2 = yQ - yP, J_c3 = yR - yP;
 
 	// below we use a switch statement
@@ -887,29 +885,28 @@ inline void dock_on_common ( const double & xP, const double & yP,
 
 		case  1 :  // { int psi }
 			
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
-			det /= 6.;
-			result [0][0][0] = det;                    // int psi^P
-			result [0][1][0] = det;                    // int psi^Q
-			result [0][2][0] = det;                 }  // int psi^R
+			result [0][0][0] =                    // int psi^P
+			result [0][1][0] =                    // int psi^Q
+			result [0][2][0] = det / 6.;   }      // int psi^R
 			break;
 
 		case  2 :  // { int psi1 * psi2 }
 			
 		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
-			const double tmp_1 = 0.08333333333333333 * det,
-			             tmp_2 = 0.04166666666666666 * det;
-			result [0][0][0] = tmp_1;                     // int psi^P * psi^P
-			result [0][1][0] = tmp_2;                     // int psi^P * psi^Q
-			result [0][2][0] = tmp_2;                     // int psi^P * psi^R
-			result [1][0][0] = tmp_2;                     // int psi^Q * psi^P
-			result [1][1][0] = tmp_1;                     // int psi^Q * psi^Q
-			result [1][2][0] = tmp_2;                     // int psi^Q * psi^R
-			result [2][0][0] = tmp_2;                     // int psi^R * psi^P
-			result [2][1][0] = tmp_2;                     // int psi^R * psi^Q
-			result [2][2][0] = tmp_1;                  }  // int psi^R * psi^R
+			result [0][0][0] =                 // int psi^P * psi^P
+			result [1][1][0] =                 // int psi^Q * psi^Q
+			result [2][2][0] =                 // int psi^R * psi^R
+				0.08333333333333333 * det;
+			result [0][1][0] =                 // int psi^P * psi^Q
+			result [0][2][0] =                 // int psi^P * psi^R
+			result [1][0][0] =                 // int psi^Q * psi^P
+			result [1][2][0] =                 // int psi^Q * psi^R
+			result [2][0][0] =                 // int psi^R * psi^P
+			result [2][1][0] =                 // int psi^R * psi^Q
+				0.04166666666666666 * det;                    }
 			break;
 
 		case  3 :  // { int psi .deriv(x), int psi .deriv(y) }
@@ -1050,6 +1047,32 @@ inline void dock_on_common ( const double & xP, const double & yP,
 			result [2][2][3] =   J_c0;          }   // int psi^R psi^R,y
 			break;
 
+		case  7 :  // { int psi, int psi1 * psi2 }
+			
+		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+			assert ( det > 0. );  // det = 2. * area
+			result [0][0][0] =                 // int psi^P
+			result [1][0][0] =                 // int psi^P
+			result [2][0][0] =                 // int psi^P
+			result [0][1][0] =                 // int psi^Q
+			result [1][1][0] =                 // int psi^Q
+			result [2][1][0] =                 // int psi^Q
+			result [0][2][0] =                 // int psi^R
+			result [1][2][0] =                 // int psi^R
+			result [2][2][0] = det / 6.;       // int psi^R
+			result [0][0][1] =                 // int psi^P * psi^P
+			result [1][1][1] =                 // int psi^Q * psi^Q
+			result [2][2][1] =                 // int psi^R * psi^R
+				0.08333333333333333 * det;
+			result [0][1][1] =                 // int psi^P * psi^Q
+			result [0][2][1] =                 // int psi^P * psi^R
+			result [1][0][1] =                 // int psi^Q * psi^P
+			result [1][2][1] =                 // int psi^Q * psi^R
+			result [2][0][1] =                 // int psi^R * psi^P
+			result [2][1][1] =                 // int psi^R * psi^Q
+				0.04166666666666666 * det;                    }
+			break;
+
 		default : assert ( false );
 	}  // end of  switch  statement
 }  // end of dock_on_common
@@ -1062,7 +1085,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
-	CellIterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
 	it .reset();  assert ( it .in_range() );  Cell P = *it;
 	it++;  assert ( it .in_range() );  Cell Q = *it;
 	it++;  assert ( it .in_range() );  Cell R = *it;
@@ -1381,14 +1404,16 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	
 	if ( int_psi and int_psi_psi and not int_dpsi and
 	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
+	// below we do not care much about which basis function is first and
+	// which is second because for a Lagrange P1 element it makes no difference
+	// for other finite elements we must be more careful
 	{	this->cas = 7;  // case seven : int_psi and int_psi_psi
 		assert ( result .size() == 2 );
 		this->result_of_integr .resize ( 3 );
 		for ( size_t i = 0; i < 3; i++ )
 		{	this->result_of_integr [i] .resize ( 3 );
 			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 1 );  }
-		// which is first in the list requested by user ?
+				this->result_of_integr [i] [j] .resize ( 2 );  }
 		Function f0 = result [0], f1 = result [1];
 		Function::MereSymbol * ff0 = dynamic_cast < Function::MereSymbol* > ( f0 .core );
 		if ( ff0 )

@@ -192,7 +192,7 @@ int main ()
 	// there will be a more elegant and efficient way of producing the numbering
 	std::map < Cell::Core *, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	Mesh::Iterator it = ABCD.iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell p = *it;  ++counter;  numbering [p.core] = counter;  }
@@ -211,13 +211,13 @@ int main ()
 	{ // just a block of code for hiding 'it'
 	double vol_force_x = 5. ;
 	double vol_force_y = 10. ;
-	CellIterator it = ABCD.iterator ( tag::over_cells_of_dim, 2 );
+	Mesh::Iterator it = ABCD.iterator ( tag::over_cells_of_dim, 2 );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell small_square = *it;
 		fe.dock_on ( small_square );
 		// run twice over the four vertices of 'small_square'
-		CellIterator it1 = small_square.boundary().iterator ( tag::over_vertices );
-		CellIterator it2 = small_square.boundary().iterator ( tag::over_vertices );
+		Mesh::Iterator it1 = small_square.boundary().iterator ( tag::over_vertices );
+		Mesh::Iterator it2 = small_square.boundary().iterator ( tag::over_vertices );
 		for ( it1.reset(); it1.in_range(); it1++ ) {
 			Cell V = *it1 ;
 			Function psiV = fe.basis_function(V) ;
@@ -271,8 +271,8 @@ int main ()
 
 	// impose Dirichlet boundary conditions  u = xy
 	{ // just a block of code for hiding 'it'
-//	CellIterator it = Front_ABCD.iterator ( tag::over_vertices );
-    CellIterator it = AB.iterator ( tag::over_vertices );
+//	Mesh::Iterator it = Front_ABCD.iterator ( tag::over_vertices );
+    Mesh::Iterator it = AB.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P.core]-1;
@@ -318,7 +318,7 @@ int main ()
 	solution_file << "0" << endl;   // time step [??]
 	solution_file << "3" << endl;  // components of the gradient
 	solution_file << ABCD.number_of ( tag::vertices ) << endl;  // number of values listed below
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	Mesh::Iterator it = ABCD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P.core];
@@ -327,7 +327,7 @@ int main ()
 
 	std::cout << "produced file square_elast.msh" << std::endl;
 	
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	Mesh::Iterator it = ABCD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P.core];

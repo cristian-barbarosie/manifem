@@ -1,5 +1,5 @@
 
-// progressive.cpp 2021.11.29
+// progressive.cpp 2021.12.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -730,7 +730,7 @@ inline double get_z_baric ( const Cell & tri )
 // hidden in anonymous namespace
 
 {	assert ( Manifold::working.coordinates().nb_of_components() == 3 );
-	CellIterator it = tri.boundary().iterator ( tag::over_vertices );
+	Mesh::Iterator it = tri.boundary().iterator ( tag::over_vertices );
 	Function z = Manifold::working.coordinates()[2];
 	double zz = 0.;
 	size_t counter = 0;
@@ -746,7 +746,7 @@ inline bool tri_correctly_oriented ( const Cell & tri )
 
 {	assert ( tri.dim() == 2 );
 
-	CellIterator it = tri.boundary().iterator ( tag::over_segments, tag::require_order );
+	Mesh::Iterator it = tri.boundary().iterator ( tag::over_segments, tag::require_order );
 	it.reset();  assert ( it.in_range() );
 	Cell AB = *it;
 	it++;  assert ( it.in_range() );
@@ -786,7 +786,7 @@ bool correctly_oriented ( const Mesh msh )
 	if ( msh.dim() != 1 )
 	{	assert ( msh.dim() == 2 );
 		assert ( progress_nb_of_coords == 3 );
-		CellIterator it = msh.iterator ( tag::over_cells_of_max_dim );
+		Mesh::Iterator it = msh.iterator ( tag::over_cells_of_max_dim );
 		it.reset();  assert ( it.in_range() );
 		Cell trimax = *it;
 		double zmax = get_z_baric ( trimax );
@@ -799,7 +799,7 @@ bool correctly_oriented ( const Mesh msh )
 	Function x = Manifold::working.coordinates()[0];
 	Function y = Manifold::working.coordinates()[1];
 
-	CellIterator it = msh.iterator ( tag::over_vertices );
+	Mesh::Iterator it = msh.iterator ( tag::over_vertices );
 	it.reset();  assert ( it.in_range() );
 	Cell ver = *it;
 	double ymax = y(ver);
@@ -840,7 +840,7 @@ inline void switch_orientation ( Cell cll )
 {	Mesh msh = cll.boundary();
 	std::vector < Cell > vec_of_cells;
 	vec_of_cells.reserve ( msh.number_of ( tag::cells_of_max_dim ) );
-	CellIterator itt = msh.iterator ( tag::over_cells_of_max_dim, tag::force_positive );
+	Mesh::Iterator itt = msh.iterator ( tag::over_cells_of_max_dim, tag::force_positive );
 	for ( itt.reset(); itt.in_range(); itt++ )
 		vec_of_cells.push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
@@ -864,7 +864,7 @@ void switch_orientation ( Mesh msh )
 
 {	std::vector < Cell > vec_of_cells;
 	vec_of_cells.reserve ( msh.number_of ( tag::cells_of_max_dim ) );
-	CellIterator itt = msh.iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator itt = msh.iterator ( tag::over_cells_of_max_dim );
 	for ( itt.reset(); itt.in_range(); itt++ )
 		vec_of_cells.push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
@@ -1056,7 +1056,7 @@ inline Cell build_normals ( const Cell & start )
 	// they will be used to build further vectors pointing outwards
 	// (on the correct side of progress_interface)
 	while ( true )
-	// progress_interface may be disconnected, so we cannot use CellIterators
+	// progress_interface may be disconnected, so we cannot use Mesh::Iterators
 	// this loop will only cover its current connected component
 	{	desired_len_at_point = desired_length ( B );
 		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
@@ -1478,7 +1478,7 @@ inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, co
 	msh_core->last_ver = stop;
 	// now we can use an iterator
 
-	CellIterator it = msh.iterator ( tag::over_segments, tag::require_order );
+	Mesh::Iterator it = msh.iterator ( tag::over_segments, tag::require_order );
 	size_t n = 0;
 	for ( it.reset(); it.in_range(); it++ ) n++;
 	msh_core->nb_of_segs = n;                                                   }
@@ -1679,7 +1679,7 @@ void progressive_construct
 	// we compute it after the mesh is built, by counting segments
 	// but we count segments using an iterator, and the iterator won't work
 	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+	// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 	// in iterator.cpp
 	progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
                           tag::stop_at, stop );
@@ -1695,7 +1695,7 @@ void progressive_construct
 	// we compute it after the mesh is built, by counting segments
 	// but we count segments using an iterator, and the iterator won't work
 	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-	// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+	// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 	// in iterator.cpp
 	progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
                           tag::stop_at, stop                                      );
@@ -1732,7 +1732,7 @@ void progressive_construct
 	// in the future, we will want a Mesh::STSI
 	{ // just a block of code for hiding 'it', 'interface'
 	Mesh interface ( tag::fuzzy, tag::of_dim, 1 );
-	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = bdry.iterator ( tag::over_cells_of_max_dim );
 	for ( it.reset(); it.in_range(); it++ ) (*it).add_to_mesh ( interface );
 	progress_interface = interface;
 	} // just a block of code 
@@ -1762,7 +1762,7 @@ void progressive_construct
 
 	{ // just a block of code for hiding variables
 	size_t n = 0;
-  CellIterator it = progress_interface.iterator ( tag::over_vertices );
+  Mesh::Iterator it = progress_interface.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++, n++ )
 		progress_add_point < manif_type > ( *it, cloud );
 	} // just a block of code for hiding variables
@@ -2040,13 +2040,13 @@ search_for_start :  // execution only reaches this point through 'goto'
 	{ // just a block of code for hiding variables
 	// we look for a segment in 'progress_interface' which has a normal
 	// 'progress_interface' is a one-dimensional mesh, not necessarily connected
-	// so we cannot use a CellIterator - perhaps an unstructured one ?
+	// so we cannot use a Mesh::Iterator - perhaps an unstructured one ?
 	if ( progress_interface.number_of ( tag::segments ) == 0 ) return;
 	// empty interface, meshing process ended
 	#ifndef NDEBUG
 	// std::cout << "search for start " << current_name << std::endl;
 	#endif
-	CellIterator it = progress_interface.iterator ( tag::over_segments );
+	Mesh::Iterator it = progress_interface.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell tmp = *it;
 		if ( ( tmp.core->hook.find(tag::normal_vector) ) != tmp.core->hook.end() )
@@ -2084,7 +2084,7 @@ inline void progressive_construct
 		// we compute it after the mesh is built, by counting segments
 		// but we count segments using an iterator, and the iterator won't work
 		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
 		progressive_construct ( msh, tag::start_at, start, tag::towards, tangent,
 		                        tag::stop_at, start                              );
@@ -2178,7 +2178,7 @@ inline void progressive_construct
 	Mesh interf_rev ( tag::whose_core_is,   // of dimesion one
 		new Mesh::Fuzzy ( tag::of_dim, 2, tag::minus_one, tag::one_dummy_wrapper ),
 		tag::freshly_created, tag::is_positive                                      );
-	CellIterator it = interface.iterator ( tag::over_segments );
+	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 		(*it).reverse().add_to_mesh ( interf_rev );
 	assert ( start.reverse().core->belongs_to
@@ -2242,7 +2242,7 @@ void progressive_construct
 //   or in a 2D submanifold of RR^3 (random orientation)
 	
 {	// we search for a starting point
-	CellIterator it = interface.iterator ( tag::over_segments );
+	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
 	progressive_construct ( msh, tag::start_at, *it, tag::boundary, interface );  }
@@ -2259,7 +2259,7 @@ void progressive_construct
 // otherwise, random orientation
 
 {	// we search for a starting point
-	CellIterator it = interface.iterator ( tag::over_segments );
+	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
 	progressive_construct ( msh, tag::start_at, *it, tag::boundary, interface,
@@ -2405,7 +2405,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 // we compute it after the mesh is built, by counting segments
 // but we count segments using an iterator, and the iterator won't work
 // if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
@@ -2442,7 +2442,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 // we compute it after the mesh is built, by counting segments
 // but we count segments using an iterator, and the iterator won't work
 // if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
@@ -2480,7 +2480,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 // we compute it after the mesh is built, by counting segments
 // but we count segments using an iterator, and the iterator won't work
 // if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );
@@ -2509,7 +2509,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 		// we compute it after the mesh is built, by counting segments
 		// but we count segments using an iterator, and the iterator won't work
 		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
 		if ( progress_nb_of_coords == 2 )
 			progressive_construct ( *this, tag::start_at, start, tag::inherent_orientation );
@@ -2543,7 +2543,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 		// we compute it after the mesh is built, by counting segments
 		// but we count segments using an iterator, and the iterator won't work
 		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
 		progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );  // random orientation
 		// update_info_connected_one_dim ( *this, start, start );
@@ -2568,7 +2568,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 // we compute it after the mesh is built, by counting segments
 // but we count segments using an iterator, and the iterator won't work
 // if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see CellIterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
 {	temporary_vertex = Cell ( tag::vertex );

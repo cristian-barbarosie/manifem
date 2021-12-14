@@ -59,7 +59,7 @@ int main ()
 	// one could use instead a Cell::Numbering::Map, see parag-6.3.cpp
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
-	CellIterator it = ABCD .iterator ( tag::over_vertices );
+	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell V = *it;  numbering [V] = counter;  ++counter;  }
@@ -80,13 +80,13 @@ int main ()
 
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
-	CellIterator it = ABCD .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = ABCD .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_square = *it;
 		fe .dock_on ( small_square );
 		// run twice over the four vertices of 'small_square'
-		CellIterator it1 = small_square .boundary() .iterator ( tag::over_vertices );
-		CellIterator it2 = small_square .boundary() .iterator ( tag::over_vertices );
+		Mesh::Iterator it1 = small_square .boundary() .iterator ( tag::over_vertices );
+		Mesh::Iterator it2 = small_square .boundary() .iterator ( tag::over_vertices );
 		for ( it1 .reset(); it1 .in_range(); it1++ )
 		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
@@ -105,25 +105,25 @@ int main ()
 
 	// impose Dirichlet boundary conditions  u = xy
 	{ // just a block of code for hiding 'it'
-	CellIterator it = AB .iterator ( tag::over_vertices );
+	Mesh::Iterator it = AB .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it' 
-	CellIterator it = BC .iterator ( tag::over_vertices );
+	Mesh::Iterator it = BC .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, y(P) );  }
 	} { // just a block of code for hiding 'it'
-	CellIterator it = CD .iterator ( tag::over_vertices );
+	Mesh::Iterator it = CD .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, x(P) );  }
 	} { // just a block of code for hiding 'it'
-	CellIterator it = DA .iterator ( tag::over_vertices );
+	Mesh::Iterator it = DA .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering [P];
@@ -167,7 +167,7 @@ int main ()
 	solution_file << "0" << std::endl;   // time step [??]
 	solution_file << "1" << std::endl;  // scalar values of u
 	solution_file << ABCD.number_of ( tag::vertices ) << std::endl;  // number of values listed below
-	CellIterator it = ABCD.iterator ( tag::over_vertices );
+	Mesh::Iterator it = ABCD.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering[P];

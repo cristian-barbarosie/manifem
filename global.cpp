@@ -1,5 +1,5 @@
 
-// global.cpp 2021.12.12
+// global.cpp 2021.12.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -141,7 +141,7 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 	// useful for the next layer of triangles
 	std::list < Cell > ground, ceiling;
 	{ // just a block of code for hiding 'it'
-	CellIterator it = AB.iterator ( tag::over_segments, tag::require_order );
+	Mesh::Iterator it = AB.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ ) ground.push_back ( *it );
 	} // just a block of code for hiding 'it'
 
@@ -234,7 +234,7 @@ Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
 // this does not apply to closed loops of course, so we give them a different treatment
 
 {	std::vector < Cell > vec;
-	CellIterator it = seg1.iterator ( tag::over_vertices );
+	Mesh::Iterator it = seg1.iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell V = *it;
 		if ( V.belongs_to ( seg2 ) ) vec.push_back ( V );  }
@@ -286,7 +286,7 @@ void build_common
 	// useful for the next layer of triangles
 	std::list < Cell > ground, ceiling;
 	{ // just a block of code for hiding 'it'
-		CellIterator it = AB.iterator ( tag::over_segments, tag::require_order );
+		Mesh::Iterator it = AB.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ ) ground.push_back ( *it );
 	} // just a block of code for hiding 'it'
 
@@ -303,18 +303,18 @@ void build_common
 	Manifold::Action winding_B = 0;
 	// C may be singular, so we keep two different winding numbers for it
 	{ // just a block of code for hiding 'it'
-	CellIterator it = AB.iterator ( tag::over_segments );
+	Mesh::Iterator it = AB.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_B += seg.winding();  }
 	} // just a block of code for hiding 'it'
 	Manifold::Action winding_C_via_B = winding_B;
 	{ // just a block of code for hiding 'it'
-	CellIterator it = BC.iterator ( tag::over_segments );
+	Mesh::Iterator it = BC.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_C_via_B += seg.winding();  }
 	} { // just a block of code for hiding names
 	winding_C_from_A = 0;
-	CellIterator it = CA.iterator ( tag::over_segments );
+	Mesh::Iterator it = CA.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_C_from_A -= seg.winding();  }
 	if ( not_singular ) assert ( winding_C_from_A == winding_C_via_B );
@@ -633,16 +633,16 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// prepare horizon
 	std::list <Cell> horizon;
 	{ // just a block of code for hiding 'it'
-	CellIterator it = south.iterator ( tag::over_segments, tag::require_order );
+	Mesh::Iterator it = south.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  horizon.push_back ( seg );  }
 	} // just a block of code for hiding 'it'
 
 	// start mesh generation
-	CellIterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
-	CellIterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
+	Mesh::Iterator it_east = east.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it_west = west.iterator ( tag::over_vertices, tag::backwards );
+	Mesh::Iterator it_south = south.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it_north = north.iterator ( tag::over_vertices, tag::backwards );
 	it_east.reset();  it_east++;
 	it_west.reset();  it_west++;
 	for ( size_t i = 1; i < N_vert; ++i )
@@ -798,7 +798,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// prepare horizon
 	std::list <Cell> horizon;
 	{ // just a block of code for hiding 'it'
-	CellIterator it = south.iterator ( tag::over_segments, tag::require_order );
+	Mesh::Iterator it = south.iterator ( tag::over_segments, tag::require_order );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  horizon.push_back ( seg );  }
 	} // just a block of code for hiding 'it'
@@ -815,11 +815,11 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	Manifold::Action winding_NW = 0, winding_SE = 0;
 	// winding_SW is zero by our choice, winding_NE is not needed
 	{ // just a block of code for hiding 'it'
-	CellIterator it = south.iterator ( tag::over_segments );
+	Mesh::Iterator it = south.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_SE += seg.winding();  }
 	} { // just a block of code for hiding 'it'
-	CellIterator it = west.iterator ( tag::over_segments );
+	Mesh::Iterator it = west.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;  winding_NW -= seg.winding();  }
 	} // just a block of code for hiding 'it'
@@ -982,7 +982,7 @@ Mesh fold_common ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg
 	
 	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
 
-	CellIterator it_cll = msh .iterator ( tag::over_cells_of_dim, 2 );
+	Mesh::Iterator it_cll = msh .iterator ( tag::over_cells_of_dim, 2 );
 	for ( it_cll .reset(); it_cll .in_range(); it_cll++ )
 	{	Cell cll = * it_cll;
 		Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
@@ -995,7 +995,7 @@ Mesh fold_common ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg
 				tag::one_dummy_wrapper                                     );
 		Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
 		Cell kept_seg ( tag::non_existent );
-		CellIterator it_bdry = cll .boundary() .iterator ( tag::over_segments );
+		Mesh::Iterator it_bdry = cll .boundary() .iterator ( tag::over_segments );
 		for ( it_bdry .reset(); it_bdry .in_range(); it_bdry ++ )
 		{	Cell seg = * it_bdry;
 			if ( seg .is_positive() )
@@ -1036,7 +1036,7 @@ Mesh fold_common_no_sides
 	
 {	if ( msh.dim() == 1 )
 	{	Mesh result ( tag::fuzzy, tag::of_dim, 1 );
-		CellIterator it_seg = msh.iterator ( tag::over_segments );
+		Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
 		for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 		{	Cell seg = *it_seg;
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
@@ -1059,7 +1059,7 @@ Mesh fold_common_no_sides
 		// we use a map -- for a faster code, we could use Cell::Core::hook
 		std::map < Cell, Cell > corresp_seg;
 
-		CellIterator it_seg = msh.iterator ( tag::over_segments );
+		Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
 		for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 		{	Cell seg = *it_seg;
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
@@ -1109,7 +1109,7 @@ Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		Cell new_V ( tag::vertex );
@@ -1150,7 +1150,7 @@ Mesh fold_no_sides ( Mesh * that, const tag::UseExistingVertices &,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
@@ -1181,7 +1181,7 @@ Mesh fold_common_two_sides
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, Cell > corresp_seg;
 
-	CellIterator it_seg = msh.iterator ( tag::over_segments );
+	Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
@@ -1205,9 +1205,9 @@ Mesh fold_common_two_sides
 		  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
 		// corresp_seg [ seg ] = new_seg;               
 
-	CellIterator it_seg_1 = side_1.iterator
+	Mesh::Iterator it_seg_1 = side_1.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
-	CellIterator it_seg_2 = side_2.iterator
+	Mesh::Iterator it_seg_2 = side_2.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
 	for ( it_seg_1.reset(), it_seg_2.reset(); it_seg_1.in_range(); it_seg_1++, it_seg_2++ )
 	{	assert ( it_seg_2 .in_range() );
@@ -1270,7 +1270,7 @@ Mesh fold_two_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -1287,8 +1287,8 @@ Mesh fold_two_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 		// corresp_ver [ V ] = { new_V, 0 };
 
 	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -1356,7 +1356,7 @@ Mesh fold_two_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -1371,8 +1371,8 @@ Mesh fold_two_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 		// corresp_ver [ V ] = { V, 0 };
 
 	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -1410,7 +1410,7 @@ Mesh fold_common_four_sides
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, Cell > corresp_seg;
 
-	CellIterator it_seg = msh.iterator ( tag::over_segments );
+	Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
@@ -1436,9 +1436,9 @@ Mesh fold_common_four_sides
 		  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
 		// corresp_seg [ seg ] = new_seg;               
 
-	CellIterator it_seg_1 = side_1.iterator
+	Mesh::Iterator it_seg_1 = side_1.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
-	CellIterator it_seg_2 = side_2.iterator
+	Mesh::Iterator it_seg_2 = side_2.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
 	for ( it_seg_1.reset(), it_seg_2.reset(); it_seg_1.in_range(); it_seg_1++, it_seg_2++ )
 	{	assert ( it_seg_2 .in_range() );
@@ -1456,9 +1456,9 @@ Mesh fold_common_four_sides
 		// corresp_seg [ seg_2 ] = corresp_seg [ seg_1 ];               
 	assert ( not it_seg_2 .in_range() );
 		
-	CellIterator it_seg_3 = side_3.iterator
+	Mesh::Iterator it_seg_3 = side_3.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
-	CellIterator it_seg_4 = side_4.iterator
+	Mesh::Iterator it_seg_4 = side_4.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
 	for ( it_seg_3.reset(), it_seg_4.reset(); it_seg_3.in_range(); it_seg_3++, it_seg_4++ )
 	{	assert ( it_seg_4 .in_range() );
@@ -1535,7 +1535,7 @@ Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -1553,8 +1553,8 @@ Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 		// corresp_ver [ V ] = { new_V, 0 };
 
 	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -1579,8 +1579,8 @@ Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 
 	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
 	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
-	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
@@ -1684,7 +1684,7 @@ Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -1700,8 +1700,8 @@ Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 		// corresp_ver [ V ] = { V, 0 };
 
 	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -1721,8 +1721,8 @@ Mesh fold_four_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 
 	Cell origin ( tag::non_existent ), corner ( tag::non_existent );
 	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
-	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
@@ -1784,7 +1784,7 @@ Mesh fold_common_six_sides
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, Cell > corresp_seg;
 
-	CellIterator it_seg = msh.iterator ( tag::over_segments );
+	Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
@@ -1812,9 +1812,9 @@ Mesh fold_common_six_sides
 		  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
 		// corresp_seg [ seg ] = new_seg;               
 
-	CellIterator it_seg_1 = side_1.iterator
+	Mesh::Iterator it_seg_1 = side_1.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
-	CellIterator it_seg_2 = side_2.iterator
+	Mesh::Iterator it_seg_2 = side_2.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
 	for ( it_seg_1.reset(), it_seg_2.reset(); it_seg_1.in_range(); it_seg_1++, it_seg_2++ )
 	{	assert ( it_seg_2 .in_range() );
@@ -1832,9 +1832,9 @@ Mesh fold_common_six_sides
 		// corresp_seg [ seg_2 ] = corresp_seg [ seg_1 ];               
 	assert ( not it_seg_2 .in_range() );
 		
-	CellIterator it_seg_3 = side_3.iterator
+	Mesh::Iterator it_seg_3 = side_3.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
-	CellIterator it_seg_4 = side_4.iterator
+	Mesh::Iterator it_seg_4 = side_4.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
 	for ( it_seg_3.reset(), it_seg_4.reset(); it_seg_3.in_range(); it_seg_3++, it_seg_4++ )
 	{	assert ( it_seg_4 .in_range() );
@@ -1852,9 +1852,9 @@ Mesh fold_common_six_sides
 		// corresp_seg [ seg_4 ] = corresp_seg [ seg_3 ];               
 	assert ( not it_seg_4 .in_range() );
 		
-	CellIterator it_seg_5 = side_5.iterator
+	Mesh::Iterator it_seg_5 = side_5.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
-	CellIterator it_seg_6 = side_6.iterator
+	Mesh::Iterator it_seg_6 = side_6.iterator
 		( tag::over_segments, tag::require_order, tag::force_positive );
 	for ( it_seg_5.reset(), it_seg_6.reset(); it_seg_5.in_range(); it_seg_5++, it_seg_6++ )
 	{	assert ( it_seg_6 .in_range() );
@@ -1978,7 +1978,7 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -1999,8 +1999,8 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	Cell V16 ( tag::non_existent ), V24 ( tag::non_existent );
 	Cell V13 ( tag::non_existent ), V25 ( tag::non_existent );
 	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -2032,8 +2032,8 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 
 	Cell V35 ( tag::non_existent ), V46 ( tag::non_existent );
 	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
-	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
@@ -2079,8 +2079,8 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	assert ( V35.exists() );  assert ( V46.exists() );
 
 	assert ( side_5.number_of ( tag::segments ) == side_6.number_of ( tag::segments ) );
-	CellIterator it5 = side_5.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it6 = side_6.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it5 = side_5.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it6 = side_6.iterator ( tag::over_vertices, tag::require_order );
 	for ( it5.reset(), it6.reset(); it5.in_range(); it5++, it6++ )
 	{	assert ( it6.in_range() );
 		Cell V = *it5;  Cell W = *it6;
@@ -2249,7 +2249,7 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
-	CellIterator it_ver = that->iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
 	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		if ( V.belongs_to ( side_2 ) ) continue;
@@ -2268,8 +2268,8 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	Cell V16 ( tag::non_existent ), V24 ( tag::non_existent );
 	Cell V13 ( tag::non_existent ), V25 ( tag::non_existent );
 	assert ( side_1.number_of ( tag::segments ) == side_2.number_of ( tag::segments ) );
-	CellIterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it1 = side_1.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it2 = side_2.iterator ( tag::over_vertices, tag::require_order );
 	for ( it1.reset(), it2.reset(); it1.in_range(); it1++, it2++ )
 	{	assert ( it2.in_range() );
 		Cell V = *it1;  Cell W = *it2;
@@ -2296,8 +2296,8 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 
 	Cell V35 ( tag::non_existent ), V46 ( tag::non_existent );
 	assert ( side_3.number_of ( tag::segments ) == side_4.number_of ( tag::segments ) );
-	CellIterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it3 = side_3.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it4 = side_4.iterator ( tag::over_vertices, tag::require_order );
 	for ( it3.reset(), it4.reset(); it3.in_range(); it3++, it4++ )
 	{	assert ( it4.in_range() );
 		Cell V = *it3;  Cell W = *it4;
@@ -2338,8 +2338,8 @@ Mesh fold_six_sides ( Mesh * that, const tag::Identify &, const Mesh & side_1,
 	assert ( V35.exists() );  assert ( V46.exists() );
 
 	assert ( side_5.number_of ( tag::segments ) == side_6.number_of ( tag::segments ) );
-	CellIterator it5 = side_5.iterator ( tag::over_vertices, tag::require_order );
-	CellIterator it6 = side_6.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it5 = side_5.iterator ( tag::over_vertices, tag::require_order );
+	Mesh::Iterator it6 = side_6.iterator ( tag::over_vertices, tag::require_order );
 	for ( it5.reset(), it6.reset(); it5.in_range(); it5++, it6++ )
 	{	assert ( it6.in_range() );
 		Cell V = *it5;  Cell W = *it6;
@@ -2643,7 +2643,7 @@ void Mesh::draw_ps ( std::string file_name )
 	double xmin, xmax, ymin, ymax, maxside;
 
 	{ // just a block for hiding variables
-	CellIterator it = this->iterator ( tag::over_vertices );
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	it.reset();
 	assert( it.in_range() );
 	Cell Vfirst = *it;
@@ -2686,7 +2686,7 @@ void Mesh::draw_ps ( std::string file_name )
 	file_ps << "gsave " << 1.5 / scale_factor << " setlinewidth" << std::endl;
 	
 	{ // just a block for hiding variables
-	CellIterator it = this->iterator ( tag::over_segments );
+	Mesh::Iterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -2770,7 +2770,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneG
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
 
-	CellIterator it = this->iterator ( tag::over_segments );
+	Mesh::Iterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -2913,7 +2913,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
 	// and perhaps in other places
 
-	CellIterator it = this->iterator ( tag::over_segments );
+	Mesh::Iterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -3069,7 +3069,7 @@ void Mesh::draw_ps ( std::string file_name,
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
 
-	CellIterator it = this->iterator ( tag::over_segments );
+	Mesh::Iterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -3185,7 +3185,7 @@ void Mesh::draw_ps_3d ( std::string file_name )
 	double xmin, xmax, ymin, ymax, zmin, zmax, maxside;
 	
 	{ // just a block for hiding variables
-	CellIterator it = this->iterator ( tag::over_vertices );
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	it.reset();  assert( it.in_range() );
 	Cell Vfirst = *it;
 	xmin = xmax = x(Vfirst);
@@ -3249,7 +3249,7 @@ void Mesh::draw_ps_3d ( std::string file_name )
 	file_ps << "gsave " << 1.5 / scale_factor << " setlinewidth" << std::endl;
 	
 	{ // just a block for hiding variables
-	CellIterator it = this->iterator ( tag::over_segments );
+	Mesh::Iterator it = this->iterator ( tag::over_segments );
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -3292,7 +3292,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 	file_msh << "$Nodes" << std::endl << this->number_of(tag::cells_of_dim,0) << std::endl;
 
 	{ // just to make variables local : it, counter, x, y
-	CellIterator it = this->iterator ( tag::over_vertices );
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	Function x = coord[0], y = coord[1];
 	if (coord.nb_of_components() == 2)
 	{	for ( it.reset() ; it.in_range(); it++ )
@@ -3313,7 +3313,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 	file_msh << this->number_of ( tag::cells_of_dim, this->dim() ) << std::endl;
 
 	if ( this->dim() == 1 )
-	{	CellIterator it = this->iterator ( tag::over_segments );
+	{	Mesh::Iterator it = this->iterator ( tag::over_segments );
 		size_t counter = 0;
 		for ( it.reset() ; it.in_range(); it++)
 		{	++counter;
@@ -3324,7 +3324,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 			Cell B = elem.tip();
 			file_msh << ver_numbering (B) + 1 << std::endl;    }  }
 	else if ( this->dim() == 2 )
-	{	CellIterator it = this->iterator ( tag::over_cells_of_dim, 2 );
+	{	Mesh::Iterator it = this->iterator ( tag::over_cells_of_dim, 2 );
 		size_t counter = 0;
 		for ( it.reset() ; it.in_range(); it++)
 		{	++counter;
@@ -3334,13 +3334,13 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 			else // a quadrilateral
 			{	assert ( elem.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
 				file_msh << counter << " 3 0 ";                                     }
-			CellIterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
+			Mesh::Iterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
 			for ( itt.reset(); itt.in_range(); ++itt )
 			{	Cell p = *itt;  file_msh << ver_numbering (p) + 1 << " ";   }
 			file_msh << std::endl;                                                                 }  }
 	else
 	{	assert ( this->dim() == 3);
-		CellIterator it = this->iterator ( tag::over_cells_of_dim, 3 );
+		Mesh::Iterator it = this->iterator ( tag::over_cells_of_dim, 3 );
 		size_t counter = 0;
 		for ( it.reset() ; it.in_range(); it++)
 		{	++counter;
@@ -3353,11 +3353,11 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 5 0 ";
-				CellIterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
+				Mesh::Iterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
 				itt.reset();  Cell back = *itt; // square face behind the cube
 				// back is 0321 in gmsh's documentation
 				assert ( back.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				CellIterator itv = back.boundary().iterator ( tag::over_vertices, tag::backwards );
+				Mesh::Iterator itv = back.boundary().iterator ( tag::over_vertices, tag::backwards );
 				// backwards because we want the vertices ordered as 0, 1, 2, 3
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_03 = back.boundary().cell_in_front_of(ver_0);
@@ -3372,7 +3372,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				Cell front = elem.boundary().cell_in_front_of(seg_47); // square face in front
 				// front is 4567 in gmsh's documentation
 				assert ( front.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				CellIterator itvv = front.boundary().iterator ( tag::over_vertices, tag::require_order );
+				Mesh::Iterator itvv = front.boundary().iterator ( tag::over_vertices, tag::require_order );
 				itvv.reset ( tag::start_at, ver_4 );
 				for ( ; itvv.in_range(); ++itvv )
 				{	Cell p = *itvv;  file_msh << ver_numbering (p) + 1 << " ";   }                }
@@ -3382,7 +3382,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 6 0 ";
-				CellIterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
+				Mesh::Iterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
 				size_t n_tri = 0, n_rect = 0;
 				Cell base ( tag::non_existent );  // temporary non-existent cell
 				for( itt.reset(); itt.in_range(); ++itt )
@@ -3393,7 +3393,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				assert ( n_tri == 2 );  assert ( n_rect == 3 );
 				// base is 021 in gmsh's documentation
 				assert ( base.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
-				CellIterator itv = base.boundary().iterator ( tag::over_vertices, tag::backwards );
+				Mesh::Iterator itv = base.boundary().iterator ( tag::over_vertices, tag::backwards );
 				// backwards because we want the vertices ordered as 0, 1, 2
 				itv.reset();  Cell ver_0 = *itv;
 				Cell seg_02 = base.boundary().cell_in_front_of(ver_0);
@@ -3408,7 +3408,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 				Cell roof = elem.boundary().cell_in_front_of(seg_35);
 				// roof is 345 in gmsh's documentation
 				assert ( roof.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
-				CellIterator itvv = roof.boundary().iterator ( tag::over_vertices, tag::require_order );
+				Mesh::Iterator itvv = roof.boundary().iterator ( tag::over_vertices, tag::require_order );
 				itvv.reset ( tag::start_at, ver_3 );
 				for ( ; itvv.in_range(); ++itvv )
 				{	Cell p = *itvv;  file_msh << ver_numbering (p) + 1 << " ";  }               }
@@ -3443,7 +3443,7 @@ void Mesh::export_msh ( std::string f )
 	
 {	Cell::Numbering::Map numbering;
 
-	CellIterator it = this->iterator ( tag::over_vertices );
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	size_t counter = 0;
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell p = *it;  numbering (p) = counter;  ++counter;  }

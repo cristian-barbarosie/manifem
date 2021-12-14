@@ -128,13 +128,13 @@ void limit_number_of_neighbours ( Mesh msh )
 {	std::forward_list < Cell > has_few_neighbours, has_many_neighbours;
 
 	{ // just a block of code for hiding 'it'
-	CellIterator it = msh .iterator ( tag::over_vertices );
+	Mesh::Iterator it = msh .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = * it;
 		if ( not P .is_inner_to ( msh ) ) continue;
 		// how many neighbours does P have ?
 		size_t counter = 0;
-		CellIterator it_around_P = msh .iterator ( tag::over_segments, tag::around, P );
+		Mesh::Iterator it_around_P = msh .iterator ( tag::over_segments, tag::around, P );
 		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
 			counter ++;
 		if ( counter < 5 ) has_few_neighbours .push_front ( P );
@@ -149,7 +149,7 @@ void limit_number_of_neighbours ( Mesh msh )
 		// we count again the neighbours, configuration may have changed in the meanwhile
 		size_t counter = 0;
 		std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
-		CellIterator it_around_P =
+		Mesh::Iterator it_around_P =
 			msh .iterator ( tag::over_cells_of_dim, 2, tag::around, P );
 		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
 		{	Cell tri = * it_around_P;
@@ -174,7 +174,7 @@ void limit_number_of_neighbours ( Mesh msh )
 		// we count again the neighbours, configuration may have changed in the meanwhile
 		size_t counter = 0;
 		std::multiset < Cell, compare_lenghts_of_segs > ms ( comp_len );
-		CellIterator it_around_P =
+		Mesh::Iterator it_around_P =
 			msh .iterator ( tag::over_segments, tag::around, P );
 		for ( it_around_P .reset(); it_around_P .in_range(); it_around_P ++ )
 		{	Cell seg = * it_around_P;

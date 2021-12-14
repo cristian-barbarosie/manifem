@@ -35,7 +35,7 @@ int main ( )
 	Mesh torus ( tag::join, tri1, tri2 );
 
 	std::vector < Cell > vec;
-	CellIterator it = torus .iterator ( tag::over_cells, tag::of_dim, 2, tag::around, A );
+	Mesh::Iterator it = torus .iterator ( tag::over_cells, tag::of_dim, 2, tag::around, A );
 	for ( it .reset(); it .in_range(); it++ )  vec .push_back ( *it );
 	std::vector < Cell > ::iterator itv;
 	for ( itv = vec .begin(); itv != vec .end(); itv++ )

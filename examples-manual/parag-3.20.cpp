@@ -28,7 +28,7 @@ void update_info_connected_one_dim ( const Mesh msh, const Cell start, const Cel
 	msh_core->last_ver = stop;
 	// now we can use an iterator
 
-	CellIterator it = msh .iterator ( tag::over_segments, tag::require_order );
+	Mesh::Iterator it = msh .iterator ( tag::over_segments, tag::require_order );
 	size_t n = 0;
 	for ( it .reset(); it .in_range(); it++ ) n++;
 	msh_core->nb_of_segs = n;                                                   }

@@ -38,10 +38,10 @@ int main ( )
 
 	std::list < Cell > list_of_squares;
 
-	CellIterator it = ABCD .iterator ( tag::over_cells_of_dim, 2 );
+	Mesh::Iterator it = ABCD .iterator ( tag::over_cells_of_dim, 2 );
 	for ( it .reset() ; it .in_range(); it++ )
 	{	Cell square = *it;  
-		CellIterator itsq = square .boundary() .iterator ( tag::over_vertices );
+		Mesh::Iterator itsq = square .boundary() .iterator ( tag::over_vertices );
 		itsq .reset();  assert ( itsq .in_range() );
 		Cell P = * itsq;  // first vertex of the square
 		itsq ++;  assert ( itsq .in_range() );
@@ -58,7 +58,7 @@ int main ( )
 	std::list < Cell > ::iterator it_list;
 	for ( it_list = list_of_squares .begin(); it_list != list_of_squares .end(); it_list ++ )
 	{	Cell square = *it_list;
-		CellIterator itsq = square .boundary() .iterator ( tag::over_vertices );
+		Mesh::Iterator itsq = square .boundary() .iterator ( tag::over_vertices );
 		itsq .reset();  assert ( itsq .in_range() );
 		Cell P = * itsq;  // first vertex of the square
 		itsq ++;  assert ( itsq .in_range() );

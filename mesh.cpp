@@ -1,5 +1,5 @@
 
-// mesh.cpp 2021.12.01
+// mesh.cpp 2021.12.13
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -124,7 +124,7 @@ inline void shred_mesh ( Mesh::Core * msh )
 {	std::forward_list < Cell > l;
 	// these Cell wrappers are useful, they prevent premature destruction of cells
 	{ // just a block of code for hiding 'it'
-	CellIterator::Core * it = msh->iterator
+	Mesh::Iterator::Core * it = msh->iterator
 		( tag::over_cells_of_max_dim, tag::as_they_are, tag::this_mesh_is_positive );
 	// iterates over cells of 'msh'
 	for ( it->reset(); it->in_range(); it->advance() ) l .push_front ( it->deref() );
@@ -1846,7 +1846,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	add_link_same_dim ( cll, msh );
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry .iterator
+	Mesh::Iterator it = cll_bdry .iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it .reset(); it .in_range(); it ++ )
@@ -1857,7 +1857,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry .iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry .iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt .reset(); itt .in_range(); itt ++ )
@@ -1893,7 +1893,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	add_link_same_dim ( cll, msh, tag::do_not_bother );
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -1904,7 +1904,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );               }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -1941,7 +1941,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	link_face_to_higher ( cll, pmce, 1, 0 );
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -1954,7 +1954,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	  link_face_to_higher ( face, pmce, cp, cn );                                    }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -1996,7 +1996,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	link_face_to_higher ( cll, pmce, 1, 0, tag::do_not_bother );
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2009,7 +2009,7 @@ inline void make_deep_connections_hd  // hidden in anonymous namespace
 	  link_face_to_higher ( face, pmce, cp, cn, tag::do_not_bother );                }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2045,7 +2045,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	add_link_same_dim_rev ( o_cll, cll, msh );
 	
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2056,7 +2056,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	  link_face_to_msh ( face, cll, msh, cp, cn );                                   }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2090,7 +2090,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	add_link_same_dim_rev ( o_cll, cll, msh, tag::do_not_bother );
 	
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2101,7 +2101,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	  link_face_to_msh ( face, cll, msh, cp, cn, tag::do_not_bother );              }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2140,7 +2140,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	link_face_to_higher ( cll, pmce, 0, 1 );  // we switch the two counters
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2154,7 +2154,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	  link_face_to_higher ( face, pmce, cn, cp );                                    }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2198,7 +2198,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	link_face_to_higher ( cll, pmce, 0, 1, tag::do_not_bother );  // we switch the two counters
 
 	Mesh cll_bdry = cll->boundary();
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2212,7 +2212,7 @@ inline void make_deep_connections_hd_rev  // hidden in anonymous namespace
 	  link_face_to_higher ( face, pmce, cn, cp, tag::do_not_bother );               }
 
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2895,7 +2895,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2904,7 +2904,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );   }     }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2942,7 +2942,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2951,7 +2951,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );  }  }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -2987,7 +2987,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -2998,7 +2998,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );
 			unlink_face_from_higher ( fface, pmce, cp, cn );            }  }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -3041,7 +3041,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -3052,7 +3052,7 @@ inline void break_deep_connections_hd  // hidden in anonymous namespace
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );
 			unlink_face_from_higher ( fface, pmce, cp, cn, tag::do_not_bother );  }  }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -3092,7 +3092,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -3101,7 +3101,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn );   }       }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -3139,7 +3139,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -3148,7 +3148,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			compute_cp_cn ( cp, cn, fface, cll_bdry.core );
 			unlink_face_from_msh ( fface, cll, msh, cp, cn, tag::do_not_bother );  }  }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -3186,7 +3186,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -3198,7 +3198,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			// we switch the two counters
 			unlink_face_from_higher ( fface, pmce, cn, cp );    }  }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -3243,7 +3243,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 		< Cell::Core*, Cell::Positive::NotVertex* > ( mce );
 	Mesh cll_bdry = cll->boundary();
 	for ( size_t d = 0; d < cll_dim_m1 ; d++ )
-	{	CellIterator itt = cll_bdry.iterator  // as they are : positive
+	{	Mesh::Iterator itt = cll_bdry.iterator  // as they are : positive
 			( tag::over_cells, tag::of_dim, d, tag::as_they_are );
 		// talvez implementar um iterador especial que devolva cp e cn
 		for ( itt.reset(); itt.in_range(); itt++ )
@@ -3255,7 +3255,7 @@ inline void break_deep_connections_hd_rev  // hidden in anonymous namespace
 			// we switch the two counters
 			unlink_face_from_higher ( fface, pmce, cn, cp, tag::do_not_bother );    }  }
 
-	CellIterator it = cll_bdry.iterator
+	Mesh::Iterator it = cll_bdry.iterator
 		( tag::over_cells, tag::of_max_dim, tag::force_positive );
 	// talvez implementar um iterador especial que devolva cp e cn
 	for ( it.reset(); it.in_range(); it++ )
@@ -3347,7 +3347,7 @@ inline void add_cell_behind_below_pos_hd  // hidden in anonymous namespace
 	
 {	Mesh bdry = cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == that->get_dim_plus_one() );
-	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell::Core * face_p = (*it).core;
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -3374,7 +3374,7 @@ inline void add_cell_behind_below_neg_hd  // hidden in anonymous namespace
 	
 {	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry.core->get_dim_plus_one() + 1 == that->get_dim_plus_one() );
-	CellIterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry.iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell::Core * face_p = (*it).core;
 		Cell::Core * rev_face = face_p->reverse_attr.core;
@@ -4721,7 +4721,7 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		assert ( face_p->cell_behind_within .find (this) !=
@@ -4744,7 +4744,7 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		assert ( face_p->cell_behind_within .find (this) !=
@@ -4767,7 +4767,7 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		assert ( face_p->cell_behind_within .find (this) !=
@@ -4790,7 +4790,7 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		assert ( face_p->cell_behind_within .find (this) !=
@@ -4876,7 +4876,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		Cell::Core * rev_face = face_p->reverse_attr .core;
@@ -4901,7 +4901,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		Cell::Core * rev_face = face_p->reverse_attr .core;
@@ -4926,7 +4926,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		Cell::Core * rev_face = face_p->reverse_attr .core;
@@ -4951,7 +4951,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 
 	Mesh bdry = pos_cll->boundary_attr;
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
-	CellIterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell::Core * face_p = ( *it ) .core;
 		Cell::Core * rev_face = face_p->reverse_attr .core;
@@ -5057,7 +5057,7 @@ void Mesh::baricenter ( const Cell & ver )
 		n = 2;                                                           }
 	else
 	{	assert ( this->dim() >= 2 );
-		CellIterator it = this->iterator ( tag::over_vertices, tag::around, ver );
+		Mesh::Iterator it = this->iterator ( tag::over_vertices, tag::around, ver );
 		for ( it .reset(); it .in_range(); it++ )
 		{	n++;  neighbours .push_back ( *it );  }                                   }
 	assert ( n == neighbours .size() );
@@ -5113,7 +5113,7 @@ void Mesh::baricenter ( const Cell & ver, const tag::Winding & )
 		n = 2;                                                                                 }
 	else
 	{	assert ( this->dim() >= 2 );
-		CellIterator it = this->iterator ( tag::over_segments, tag::around, ver.reverse() );
+		Mesh::Iterator it = this->iterator ( tag::over_segments, tag::around, ver.reverse() );
 		for ( it .reset(); it .in_range(); it++ )
 		{	n++;
 			Cell seg = *it;
@@ -5189,7 +5189,7 @@ void Mesh::baricenter ( const Cell & ver, const tag::Winding &,
 		n = 2;                                                                          }
 	else
 	{	assert ( this->dim() >= 2 );
-		CellIterator it = this->iterator ( tag::over_segments, tag::around, ver .reverse() );
+		Mesh::Iterator it = this->iterator ( tag::over_segments, tag::around, ver .reverse() );
 		for ( it .reset(); it .in_range(); it++ )
 		{	Cell seg = *it;
 			assert ( vec_cll .size() > n );

@@ -64,7 +64,7 @@ int main ()
 	Mesh rect_mesh ( tag::rectangle, AB, BC, CD, DA );
 
 	{ // just a block of code for hiding names
-	CellIterator it=rect_mesh.iterator(tag::over_vertices);
+	Mesh::Iterator it=rect_mesh.iterator(tag::over_vertices);
 	for(it.reset(); it.in_range(); it++)
 	{	Cell V=*it;
 		x_bg(V)=x(V);
@@ -88,7 +88,7 @@ int main ()
 
 	{ // just a block of code for hiding names
 		
-	CellIterator it=cut.iterator(tag::over_vertices);
+	Mesh::Iterator it=cut.iterator(tag::over_vertices);
 	for(it.reset(); it.in_range(); it++)
 	{	Cell V=*it;
 		level.project(V);
@@ -107,7 +107,7 @@ int main ()
 
 	for ( it.reset(); it.in_range(); it++)  // 'it' runs over vertices of cut 
 	{	Cell V = *it;
-		CellIterator itv = rect_mesh.iterator ( tag::over_vertices, tag::around, V ); 
+		Mesh::Iterator itv = rect_mesh.iterator ( tag::over_vertices, tag::around, V ); 
 		for ( itv.reset(); itv.in_range(); itv++ )
 		{	Cell W = *itv;
 			if ( W.belongs_to(cut) ) continue;
@@ -126,7 +126,7 @@ int main ()
 	psi = x*x + (y-0.2)*(y-0.2) - 0.35 + 0.2*x*y - 1.35*x*x*y*y;
 	
 	{ // just a block of code for hiding names
-	CellIterator it=rect_mesh.iterator(tag::over_vertices);
+	Mesh::Iterator it=rect_mesh.iterator(tag::over_vertices);
 	for(it.reset(); it.in_range(); it++)
 	{	Cell V=*it;
 		x(V)=x_bg(V);
@@ -182,7 +182,7 @@ int main ()
 	{ // just a block of code for hiding names
 	
 	std::list <Cell> L;
-	CellIterator it=cut.iterator(tag::over_segments, tag::force_positive);
+	Mesh::Iterator it=cut.iterator(tag::over_segments, tag::force_positive);
 	for(it.reset(); it.in_range(); it++)
 	{	Cell seg=*it;
         if (seg.belongs_to(Bdry, tag::not_oriented))
@@ -202,7 +202,7 @@ int main ()
 	{ // just a block of code for hiding names
 //	size_t contador=0;
 	start_again:	
-	CellIterator it=cut.iterator(tag::over_vertices);
+	Mesh::Iterator it=cut.iterator(tag::over_vertices);
 	for(it.reset(); it.in_range(); it++)
 	{	Cell V=*it;
 		Cell seg1=cut.cell_behind(V, tag::may_not_exist);
@@ -255,7 +255,7 @@ int main ()
 		{ // just a block of code for hiding names
 //	size_t contador=0;
 	start_again_246:	
-	CellIterator it=cut.iterator(tag::over_vertices);
+	Mesh::Iterator it=cut.iterator(tag::over_vertices);
 	for(it.reset(); it.in_range(); it++)
 	{	Cell V=*it;
 		Cell seg1=cut.cell_behind(V, tag::may_not_exist);
@@ -326,7 +326,7 @@ bool on_boundary ( Cell A, Mesh msh )
 {	assert ( A.dim() == 0 );
 	assert ( A.is_positive() );
 
-	CellIterator it = msh.iterator ( tag::over_segments, tag::around, A );
+	Mesh::Iterator it = msh.iterator ( tag::over_segments, tag::around, A );
 	it.reset();
 	assert ( it.in_range() );
 	return not msh.cell_behind ( *it, tag::may_not_exist ) .exists();         }
@@ -338,7 +338,7 @@ void verify_tri ( Cell tri )
 {	assert ( tri.dim() == 2 );
 	assert ( tri.boundary().number_of ( tag::vertices ) == 3 );
 
-	CellIterator it = tri.boundary().iterator ( tag::over_vertices );
+	Mesh::Iterator it = tri.boundary().iterator ( tag::over_vertices );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell V = *it;
 		Cell::Positive * cll = tag::Util::assert_cast
@@ -359,14 +359,14 @@ inline Cell find_segment ( Cell & A, Cell & B, Mesh & ambient )
 	assert ( B.is_positive() );
 	assert ( A.dim() == 0 );
 	assert ( B.dim() == 0 );
-	CellIterator it_seg = ambient.iterator ( tag::over_segments, tag::around, A );
+	Mesh::Iterator it_seg = ambient.iterator ( tag::over_segments, tag::around, A );
 	// how about tag::around, A.reverse() ?
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
 		assert ( seg.tip() == A );
 		if ( seg.base().reverse() == B ) return seg.reverse();      }
 	// seg not found, A and B must be diagonally opposed in some square
-	CellIterator it_sq = ambient.iterator ( tag::over_cells_of_dim, 2, tag::around, A );
+	Mesh::Iterator it_sq = ambient.iterator ( tag::over_cells_of_dim, 2, tag::around, A );
 	for ( it_sq.reset(); it_sq.in_range(); it_sq++ )
 	{	Cell sq = *it_sq;
 		assert ( A.belongs_to ( sq.boundary() ) );
@@ -399,7 +399,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	std::multiset < Cell, compare_values_of > ms ( comp_psi );
 	
 	{  // just a block of code for hiding names
-	CellIterator it_seg = ambient.iterator ( tag::over_segments );
+	Mesh::Iterator it_seg = ambient.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
 		Cell A = seg.base().reverse();
@@ -435,12 +435,12 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		double xA = x(A), yA = y(A);
 		double gx = psi_x(A), gy = psi_y(A);
 
-		CellIterator it_around = ambient.iterator
+		Mesh::Iterator it_around = ambient.iterator
 			( tag::over_cells_of_dim, 2, tag::around, A );
 		std::set < Cell > set_of_neigh_1, set_of_neigh_2;
 		for ( it_around.reset(); it_around.in_range(); it_around++ )
 		{	Cell cll = *it_around;
-			CellIterator it_ver = cll.boundary().iterator ( tag::over_vertices );
+			Mesh::Iterator it_ver = cll.boundary().iterator ( tag::over_vertices );
 			for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 			{	Cell B = *it_ver;
 				if ( set_useful.find(B) == set_useful.end() ) continue;
@@ -529,12 +529,12 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		double xA = x(A), yA = y(A);
 		double gx = psi_x(A), gy = psi_y(A);
 
-		CellIterator it_around = ambient.iterator
+		Mesh::Iterator it_around = ambient.iterator
 			( tag::over_cells_of_dim, 2, tag::around, A );
 		std::set < Cell > set_of_neigh;
 		for ( it_around.reset(); it_around.in_range(); it_around++ )
 		{	Cell cll = *it_around;
-			CellIterator it_ver = cll.boundary().iterator ( tag::over_vertices );
+			Mesh::Iterator it_ver = cll.boundary().iterator ( tag::over_vertices );
 			for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
 			{	Cell B = *it_ver;
 				if ( B == A ) continue;
@@ -572,7 +572,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 
 	{  // just a block of code for hiding names
 	size_t counter = 0;
-	CellIterator it_seg = interf.iterator ( tag::over_segments );
+	Mesh::Iterator it_seg = interf.iterator ( tag::over_segments );
 	for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
 	{	Cell seg = *it_seg;
 		Cell A = seg.base().reverse(), B = seg.tip();
@@ -593,7 +593,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		Cell cll6 = ambient.cell_behind ( back, tag::surely_exists );
 		assert ( cll6.boundary().number_of ( tag::segments ) == 4 );
 		size_t neigh_1 = 0, neigh_2 = 0, neigh_3 = 0, neigh_4 = 0;
-		CellIterator it1 = ambient.iterator ( tag::over_segments, tag::around, A );
+		Mesh::Iterator it1 = ambient.iterator ( tag::over_segments, tag::around, A );
 		it1.reset ( tag::start_at, back );
 		for ( it1.reset ( tag::start_at, back ); it1.in_range(); it1++ )
 		{	if ( *it1 == seg.reverse() ) break;
@@ -605,7 +605,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 		assert ( ( neigh_2 == 2 ) or ( neigh_2 == 3 ) );
 		if ( neigh_1 + neigh_2 == 6 ) continue;
 		assert ( neigh_1 + neigh_2 == 5 );
-		CellIterator it2 = ambient.iterator ( tag::over_segments, tag::around, B );
+		Mesh::Iterator it2 = ambient.iterator ( tag::over_segments, tag::around, B );
 		for ( it2.reset ( tag::start_at, seg ); it2.in_range(); it2++ )
 		{	if ( *it2 == front.reverse() ) break;
 			neigh_3++;                           }
@@ -668,7 +668,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	double xmin, xmax, ymin, ymax, maxside;
 	
 	{ // just a block for hiding variables
-	CellIterator it = square.iterator ( tag::over_vertices );
+	Mesh::Iterator it = square.iterator ( tag::over_vertices );
 	it.reset(); assert ( it.in_range() );
 	Cell Vfirst = *it;
 	xmin = xmax = x(Vfirst);
@@ -705,7 +705,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	
 	{ // just a block of code for hiding 'it'
 	file_ps << "gsave 0.004 setlinewidth 0.5 setgray" << std::endl;
-	CellIterator it = square.iterator ( tag::over_segments );
+	Mesh::Iterator it = square.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++)
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
@@ -716,7 +716,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 	
 #ifndef NDEBUG
 	{ // just a block of code for hiding 'it'
-	CellIterator it = square.iterator ( tag::over_vertices );
+	Mesh::Iterator it = square.iterator ( tag::over_vertices );
 	file_ps << "/Courier findfont 0.2 scalefont setfont" << std::endl;
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell p = *it;
@@ -733,7 +733,7 @@ void special_draw ( Mesh & square, Mesh & cut, std::string f )
 
 	{ // just a block of code for hiding 'it'
 	file_ps << "0.8 0 0 setrgbcolor 0.005 setlinewidth" << std::endl;
-	CellIterator it = cut.iterator ( tag::over_segments );
+	Mesh::Iterator it = cut.iterator ( tag::over_segments );
 	for ( it.reset(); it.in_range(); it++ )
 	{	Cell seg = *it;
 		Cell base = seg.base().reverse();
