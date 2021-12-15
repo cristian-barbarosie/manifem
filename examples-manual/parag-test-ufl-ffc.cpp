@@ -24,7 +24,7 @@ int main ()
 	Function bf1 ( tag::basis_function, tag::within, fe_ufl_ffc ),
 	         bf2 ( tag::basis_function, tag::within, fe_ufl_ffc );
 	integ_ufl_ffc .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
-	        tag::integral_of, { bf1, bf1 * bf2 } );
+	   tag::integral_of, { bf1 * bf2, bf2, bf2 .deriv(x), bf1 .deriv(x) * bf2 .deriv(x) } );
 
 	Cell A ( tag::vertex );  x (A) = -0.13;   y (A) = 0.191;
 	Cell B ( tag::vertex );  x (B) =  1.;     y (B) = 0.;
@@ -37,50 +37,45 @@ int main ()
 
 	{ // just a block of code for hiding names
 	fe_gauss .dock_on ( ABC );
-	Function psi_A = fe_gauss .basis_function (A);
-	Function psi_B = fe_gauss .basis_function (B);
-	Function psi_C = fe_gauss .basis_function (C);
-	std::cout << fe_gauss .integrate ( psi_A ) << " "
-						<< fe_gauss .integrate ( psi_A * psi_A ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_A ) << " "
-						<< fe_gauss .integrate ( psi_A * psi_B ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_A ) << " "
-						<< fe_gauss .integrate ( psi_A * psi_C ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_B ) << " "
-						<< fe_gauss .integrate ( psi_B * psi_A ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_B ) << " "
-						<< fe_gauss .integrate ( psi_B * psi_B ) << std::endl;
+	Function psi_A = fe_gauss .basis_function (A),
+	         psi_B = fe_gauss .basis_function (B),
+	         psi_C = fe_gauss .basis_function (C);
+	std::cout << "     ";
+	std::cout << fe_gauss .integrate ( psi_A * psi_A ) << " "
+						<< fe_gauss .integrate ( psi_A ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(x) * psi_A .deriv(x) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_A * psi_B ) << " "
+						<< fe_gauss .integrate ( psi_B ) << " "
+						<< fe_gauss .integrate ( psi_B .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(x) * psi_B .deriv(x) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_A * psi_C ) << " "
+						<< fe_gauss .integrate ( psi_C ) << " "
+						<< fe_gauss .integrate ( psi_C .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(x) * psi_C .deriv(x) ) << std::endl;
 	} { // just a block of code for hiding names
 	fe_ufl_ffc .dock_on ( ABC );
-	Function psi_A = fe_ufl_ffc .basis_function (A);
-	Function psi_B = fe_ufl_ffc .basis_function (B);
-	Function psi_C = fe_ufl_ffc .basis_function (C);
+	Function psi_A = fe_ufl_ffc .basis_function (A),
+	         psi_B = fe_ufl_ffc .basis_function (B),
+	         psi_C = fe_ufl_ffc .basis_function (C);
 	std::vector < double > result =
 		fe_ufl_ffc .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                                             tag::replace, bf2, tag::by, psi_A );
-	assert ( result .size() == 2 );
-	std::cout << result [0] << " " << result [1] << " || ";
+	assert ( result .size() == 4 );
+	std::cout << result [0] << " " << result [1] << " " << result [2] << " " << result [3] << " || ";
 	result = fe_ufl_ffc .integrate
 		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
-	                       tag::replace, bf2, tag::by, psi_B );
-	assert ( result .size() == 2 );
-	std::cout << result [0] << " " << result [1] << " || ";
+		                     tag::replace, bf2, tag::by, psi_B );
+	assert ( result .size() == 4 );
+	std::cout << result [0] << " " << result [1] << " " << result [2] << " " << result [3] << " || ";
 	result = fe_ufl_ffc .integrate
 		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
-	                       tag::replace, bf2, tag::by, psi_C );
-	assert ( result .size() == 2 );
-	std::cout << result [0] << " " << result [1] << " || ";
-	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_B,
-	                       tag::replace, bf2, tag::by, psi_A );
-	assert ( result .size() == 2 );
-	std::cout << result [0] << " " << result [1] << " || ";
-	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_B,
-	                       tag::replace, bf2, tag::by, psi_B );
-	assert ( result .size() == 2 );
-	std::cout << result [0] << " " << result [1] << std::endl;
+		                     tag::replace, bf2, tag::by, psi_C );
+	assert ( result .size() == 4 );
+	std::cout << result [0] << " " << result [1] << " " << result [2] << " " << result [3] << std::endl;
 	} // just a block of code for hiding names
 
+	std::cout << "A=2=R B=0=P C=1=Q" << std::endl;
+	
 	return 0;
 }

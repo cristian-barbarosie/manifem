@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.13
+// finite-elem.h 2021.12.14
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -97,10 +97,10 @@ class Integrator
 	// UFL_FFC integrators require a 'pre_compute' step
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
-	  const tag::IntegralOf &, const std::vector < Function > &       );
+	  const tag::IntegralOf &, const std::vector < Function > & res   );
 	inline void pre_compute
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
-	  const tag::IntegralOf &, const std::vector < Function > &                      );
+	  const tag::IntegralOf &, const std::vector < Function > & res                  );
 
 	class Gauss;  class UFL_FFC;  class Result;
 	
@@ -130,7 +130,7 @@ class Integrator::Core
 
 	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for UFL_FFC integrators
 	virtual void pre_compute ( const std::vector < Function > & bf,
-                             const std::vector < Function > & v  ) = 0;
+                             const std::vector < Function > & res ) = 0;
 	virtual std::vector < double > retrieve_precomputed
 	( const Function & bf, const Function & psi ) = 0;
 	virtual std::vector < double > retrieve_precomputed
@@ -149,22 +149,22 @@ inline double Integrator::operator()
 
 inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 ( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
-  const tag::IntegralOf &, const std::vector < Function > & v     )
+  const tag::IntegralOf &, const std::vector < Function > & res   )
 
-// bf is an arbitrary basis function (Function::MereSymbol) in the finite element
-// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
+// bf is an dummy basis function (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'res'
 
-{	this->core->pre_compute ( { bf }, v );  }
+{	this->core->pre_compute ( { bf }, res );  }
 	
 
 inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 ( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
-  const tag::IntegralOf &, const std::vector < Function > & v                    )
+  const tag::IntegralOf &, const std::vector < Function > & res                  )
 
 // bf1 and bf2 are arbitrary basis functions (Function::MereSymbol) in the finite element
-// we prepare computations for fast evaluation of integrals of expressions listed in 'v'
+// we prepare computations for fast evaluation of integrals of expressions listed in 'res'
 
-{	this->core->pre_compute ( { bf1, bf2 }, v );  }
+{	this->core->pre_compute ( { bf1, bf2 }, res );  }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -197,7 +197,7 @@ class Integrator::Gauss : public Integrator::Core
 	//  pre_compute  and  retrieve_precomputed  are virtual from Integrator::Core,
 	// here execution forbidden
 	void pre_compute ( const std::vector < Function > & bf,
-                     const std::vector < Function > & v  );
+                     const std::vector < Function > & res );
 	std::vector < double > retrieve_precomputed ( const Function & bf, const Function & psi );
 	std::vector < double > retrieve_precomputed
 	( const Function & bf1, const Function & psi1,
@@ -271,10 +271,10 @@ class FiniteElement
 
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf, 
-	  const tag::IntegralOf &, const std::vector < Function > & v     );
+	  const tag::IntegralOf &, const std::vector < Function > & res   );
 	inline void pre_compute
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2, 
-	  const tag::IntegralOf &, const std::vector < Function > & v                    );
+	  const tag::IntegralOf &, const std::vector < Function > & res                  );
 
 	inline Cell::Numbering & numbering ( const tag::Vertices & );
 	inline Cell::Numbering & numbering ( const tag::Segments & );
@@ -312,7 +312,7 @@ class Integrator::UFL_FFC : public Integrator::Core
 	// the integrals we intend to compute later (after docking on a cell)
 	//  pre_compute  is virtual from Integrator::Core
 	void pre_compute ( const std::vector < Function > & bf,
-                     const std::vector < Function > & v  );
+                     const std::vector < Function > & res );
 
 	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
 	// and replace values of coordinates of vertices of the docked_on cell
@@ -362,7 +362,7 @@ class FiniteElement::Core
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 	
 	virtual void pre_compute ( const std::vector < Function > & bf,
-                             const std::vector < Function > & v  ) = 0;
+                             const std::vector < Function > & res ) = 0;
 
 };  // end of  class FiniteElement::Core
 
