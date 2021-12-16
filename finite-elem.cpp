@@ -920,14 +920,18 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			assert ( det_2 > 0. );  // det = area
 			assert ( det_3 > 0. );  // det = area
 			#endif
-			result [0][0][0] = -0.25 * ( J_c3_01 + J_c3_23 - J_c2_02 - J_c2_13 );     // int psi^P,x
-			result [0][0][1] =  0.25 * ( J_c1_01 + J_c1_23 - J_c0_02 - J_c0_13 );     // int psi^P,y
-			result [0][1][0] = -0.25 * ( J_c3_01 + J_c3_23 + J_c2_02 + J_c2_13 );     // int psi^Q,x
-			result [0][1][1] =  0.25 * ( J_c1_01 + J_c1_23 + J_c0_02 + J_c0_13 );     // int psi^Q,y
-			result [0][2][0] =  0.25 * ( J_c3_01 + J_c3_23 + J_c2_02 + J_c2_13 );     // int psi^R,x
-			result [0][2][1] = -0.25 * ( J_c1_01 + J_c1_23 + J_c0_02 + J_c0_13 );     // int psi^R,y
-			result [0][3][0] =  0.25 * ( J_c3_01 + J_c3_23 - J_c2_02 - J_c2_13 );     // int psi^S,x
-			result [0][3][1] = -0.25 * ( J_c1_01 + J_c1_23 - J_c0_02 - J_c0_13 );  }  // int psi^S,y
+			const double J_c0 = 0.25 * ( J_c0_02 + J_c0_13 ),
+			             J_c1 = 0.25 * ( J_c1_01 + J_c1_23 ),
+			             J_c2 = 0.25 * ( J_c2_02 + J_c2_13 ),
+			             J_c3 = 0.25 * ( J_c3_01 + J_c3_23 );
+			result [0][0][0] = - J_c3 + J_c2;                       // int psi^P,x
+			result [0][0][1] =   J_c1 - J_c0;                       // int psi^P,y
+			result [0][1][0] = - J_c3 - J_c2;                       // int psi^Q,x
+			result [0][1][1] =   J_c1 + J_c0;                       // int psi^Q,y
+			result [0][2][0] =   J_c3 + J_c2;                       // int psi^R,x
+			result [0][2][1] = - J_c1 - J_c0;                       // int psi^R,y
+			result [0][3][0] =   J_c3 - J_c2;                       // int psi^S,x
+			result [0][3][1] = - J_c1 + J_c0;                    }  // int psi^S,y
 			break;  // end of case 3
 	
 		default : assert ( false );
