@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.14
+// finite-elem.h 2021.12.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -223,27 +223,16 @@ class FiniteElement
 	
 	FiniteElement::Core * core;
 
-	std::vector < Cell::Numbering * > numbers;
-
 	// constructor
 
+	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Triangle &,  // no master, stand-alone
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
-	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
-	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
-	                       const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::EnumerateCells &                              );
-	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
-	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::EnumerateCells &                              );
-	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
-	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::EnumerateCells &                              );
 
 	// destructor
 	
@@ -276,10 +265,17 @@ class FiniteElement
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2, 
 	  const tag::IntegralOf &, const std::vector < Function > & res                  );
 
+	// the first version of build_global_numbering (without arguments) delegates the job
+	// to the core which must guess the type of numbering
+	inline Cell::Numbering & build_global_numbering ( );
+	inline Cell::Numbering & build_global_numbering ( const tag::Vertices & );
+	inline Cell::Numbering & build_global_numbering ( const tag::Segments & );
+	inline Cell::Numbering & build_global_numbering ( const tag::CellsOfDim &, const size_t d );
+	
 	inline Cell::Numbering & numbering ( const tag::Vertices & );
 	inline Cell::Numbering & numbering ( const tag::Segments & );
 	inline Cell::Numbering & numbering ( const tag::CellsOfDim &, const size_t d );
-	
+
 };  // end of  class FiniteElement
 	
 //-----------------------------------------------------------------------------------------//
@@ -350,6 +346,11 @@ class FiniteElement::Core
 	// later, we shall dock the finite element on a physical cell
 	Cell docked_on;
 
+	// a numbering system for each dimension of cells
+	// we could think of a more flexible approach, for instance
+	// the user may want to number vertices and segments mixed in the same map
+	std::vector < Cell::Numbering * > numbers;
+
 	// constructor
 
 	inline Core () : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { };
@@ -364,6 +365,8 @@ class FiniteElement::Core
 	virtual void pre_compute ( const std::vector < Function > & bf,
                              const std::vector < Function > & res ) = 0;
 
+	virtual Cell::Numbering & build_global_numbering ( ) = 0;
+	
 };  // end of  class FiniteElement::Core
 
 //-----------------------------------------------------------------------------------------//
@@ -395,19 +398,40 @@ inline void FiniteElement::dock_on ( const Cell & cll, const tag::Winding & )
 {	this->core->dock_on ( cll, tag::winding );  }
 
 
+inline Cell::Numbering & FiniteElement::build_global_numbering ( )
+{	return this->core->build_global_numbering();  }
+
+
+inline Cell::Numbering & FiniteElement::build_global_numbering ( const tag::Vertices & )
+{	assert ( this->core->numbers .size() == 0 );
+	this->core->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
+	return * this->core->numbers [0];                                                }
+
+inline Cell::Numbering & FiniteElement::build_global_numbering ( const tag::Segments & )
+{	assert ( this->core->numbers .size() <= 1 );
+	assert ( false );
+	return * this->core->numbers [1];           }
+
+inline Cell::Numbering & FiniteElement::build_global_numbering
+( const tag::CellsOfDim &, const size_t d )
+{	assert ( this->core->numbers .size() <= d );
+	assert ( false );
+	return * this->core->numbers [d];           }
+
+
 inline Cell::Numbering & FiniteElement::numbering ( const tag::Vertices & )
-{	assert ( this->numbers .size() );
-	return * this->numbers [0];       }
+{	assert ( this->core->numbers .size() > 0 );
+	return * this->core->numbers [0];           }
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::Segments & )
-{	assert ( this->numbers .size() > 1 );
-	return * this->numbers [1];           }
+{	assert ( this->core->numbers .size() > 1 );
+	return * this->core->numbers [1];           }
 
 inline Cell::Numbering & FiniteElement::numbering ( const tag::CellsOfDim &, const size_t d )
-{	assert ( this->numbers .size() > d );
-	return * this->numbers [d];           }
+{	assert ( this->core->numbers .size() > d );
+	return * this->core->numbers [d];           }
 
-//-----------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------//
 
 
 class FiniteElement::WithMaster : public FiniteElement::Core
@@ -440,11 +464,13 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	void pre_compute ( const std::vector < Function > & bf,
                      const std::vector < Function > & result );
 
+	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
+	
 	class Segment;  class Triangle;  class Quadrangle;
 	
 };  // end of  class FiniteElement::withMaster
 
-//-----------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------//
 
 
 inline double FiniteElement::integrate ( const Function & f )
@@ -477,7 +503,7 @@ inline void FiniteElement::pre_compute
   const tag::IntegralOf &, const std::vector < Function > & v                    )
 {	this->core->pre_compute ( { bf1, bf2 }, v );  }
 
-//-----------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------//
 
 
 class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
@@ -507,9 +533,11 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
 
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+	
 };  // end of  class FiniteElement::WithMaster::Segment
 
-//-----------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------//
 
 class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
@@ -538,6 +566,8 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
 
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+	
 };  // end of  class FiniteElement::withMaster::Triangle
 
 //-----------------------------------------------------------------------------------------//
@@ -569,6 +599,8 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
 
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+	
 };  // end of  class FiniteElement::withMaster::Quadrangle
 
 //-----------------------------------------------------------------------------------------//
@@ -595,31 +627,6 @@ inline FiniteElement::FiniteElement
 
 
 inline FiniteElement::FiniteElement
-( const tag::WithMaster &, const tag::Segment &,
-  const tag::lagrange &, const tag::OfDegree &, size_t deg,
-  const tag::EnumerateCells &                               )
-	
-:	core { nullptr }
-
-{	assert ( deg == 1 );
-
-	// we keep the working manifold and restore it at the end
-	Manifold work_manif = Manifold::working;
-	
-	Manifold RR_master ( tag::Euclid, tag::of_dim, 1 );
-	Function t = RR_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	// we should take advantage of the memory space already reserved for x and y
-
-	// std::vector < Cell::Numbering::Field * > numbers;
-	// this->numbers .emplace ( this->numbers .end(), tag::vertices );
-	this->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
-
-	this->core = new FiniteElement::WithMaster::Segment ( RR_master );
-	
-	work_manif .set_as_working_manifold();                                                 }
-
-
-inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Triangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
@@ -641,32 +648,6 @@ inline FiniteElement::FiniteElement
 
 
 inline FiniteElement::FiniteElement
-( const tag::WithMaster &, const tag::Triangle &,
-  const tag::lagrange &, const tag::OfDegree &, size_t deg,
-  const tag::EnumerateCells &                               )
-	
-:	core { nullptr }
-
-{	assert ( deg == 1 );
-
-	// we keep the working manifold and restaure it at the end
-	Manifold work_manif = Manifold::working;
-	
-	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
-	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	// we should take advantage of the memory space already reserved for x and y
-	// Function xi = xi_eta [0], eta = xi_eta [1];
-
-	// std::vector < Cell::Numbering::Field * > numbers;
-	// this->numbers .emplace ( this->numbers .end(), tag::vertices );
-	this->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
-
-	this->core = new FiniteElement::WithMaster::Triangle ( RR2_master );
-	
-	work_manif .set_as_working_manifold();                                                      }
-
-
-inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Quadrangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
@@ -681,32 +662,6 @@ inline FiniteElement::FiniteElement
 	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	// we should take advantage of the memory space already reserved for x and y
 	// Function xi = xi_eta [0], eta = xi_eta [1];
-
-	this->core = new FiniteElement::WithMaster::Quadrangle ( RR2_master );
-	
-	work_manif .set_as_working_manifold();                                                      }
-
-
-inline FiniteElement::FiniteElement
-( const tag::WithMaster &, const tag::Quadrangle &,
-  const tag::lagrange &, const tag::OfDegree &, size_t deg,
-  const tag::EnumerateCells &                               )
-	
-:	core { nullptr }
-
-{	assert ( deg == 1 );
-
-	// we keep the working manifold and restaure it at the end
-	Manifold work_manif = Manifold::working;
-	
-	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
-	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	// we should take advantage of the memory space already reserved for x and y
-	// Function xi = xi_eta [0], eta = xi_eta [1];
-
-	// std::vector < Cell::Numbering::Field * > numbers;
-	// this->numbers .emplace ( this->numbers .end(), tag::vertices );
-	this->numbers .push_back ( new Cell::Numbering::Field ( tag::vertices ) );
 
 	this->core = new FiniteElement::WithMaster::Quadrangle ( RR2_master );
 	
@@ -764,6 +719,8 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 
 	// pre_compute  stays pure virtual from FiniteElement::Core
 
+	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
+	
 	class TypeOne;
 	
 };  // end of  class FiniteElement::StandAlone
@@ -804,6 +761,8 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
 	// 'pre_compute' stays pure virtual from FiniteElement::Core
 
+	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
+	
 	class Segment;  class Triangle;  class Quadrangle;
 	
 };  // end of  class FiniteElement::StandAlone::TypeOne
@@ -849,6 +808,8 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	//  pre_compute  virtual from FiniteElement::Core
 	void pre_compute ( const std::vector < Function > & bf,
                      const std::vector < Function > & result );
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Triangle
 

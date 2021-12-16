@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.14
+// finite-elem.cpp 2021.12.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -636,8 +636,8 @@ void FiniteElement::WithMaster::Triangle::dock_on ( const Cell & cll, const tag:
 	it++;  assert ( it .in_range() );  Cell R = *it;
 	#ifndef NDEBUG
 	Cell RP = cll .boundary() .cell_in_front_of ( R );
-	#endif
 	it++;  assert ( not it .in_range() );
+	#endif
 
 	Function::Action winding_Q = PQ .winding(), winding_R = winding_Q + QR .winding();
 	assert ( winding_R + RP .winding() == 0 );
@@ -861,11 +861,11 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 
 namespace { // anonymous namespace, mimics static linkage
 
-inline void dock_on_common ( const double & xP, const double & yP,
-                             const double & xQ, const double & yQ,
-                             const double & xR, const double & yR,
-														 const size_t & c,  // case
-		  std::vector < std::vector < std::vector < double > > > & result )
+inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
+                                     const double & xQ, const double & yQ,
+                                     const double & xR, const double & yR,
+                                     const size_t & c,  // case
+                   std::vector < std::vector < std::vector < double > > > & result )
 
 // this function is speed-critical
 	
@@ -1296,8 +1296,6 @@ inline void dock_on_common ( const double & xP, const double & yP,
 
 		case  12 :  // 1, 2, 3 and 4
 
-		std::cout << "**** ";
-			
 		{	//  case  1 :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
@@ -1429,6 +1427,347 @@ inline void dock_on_common ( const double & xP, const double & yP,
 
 			break;  // end of case 12
 
+		case  13 :  // 1, 2, 3, 4 and 5
+
+		{	//  case  1 :  { int psi }
+
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
+			assert ( det > 0. );  // det = 2. * area
+
+			result [0][0][0] =                 // int psi^P
+			result [1][0][0] =                 // int psi^P
+			result [2][0][0] =                 // int psi^P
+			result [0][0][1] =                 // int psi^P
+			result [0][1][1] =                 // int psi^P
+			result [0][2][1] =                 // int psi^P
+			result [0][1][0] =                 // int psi^Q
+			result [1][1][0] =                 // int psi^Q
+			result [2][1][0] =                 // int psi^Q
+			result [1][0][1] =                 // int psi^Q
+			result [1][1][1] =                 // int psi^Q
+			result [1][2][1] =                 // int psi^Q
+			result [0][2][0] =                 // int psi^R
+			result [1][2][0] =                 // int psi^R
+			result [2][2][0] =                 // int psi^R
+			result [2][0][1] =                 // int psi^R
+			result [2][1][1] =                 // int psi^R
+			result [2][2][1] = det / 6.;       // int psi^R
+
+			// case  2 :  { int psi1 * psi2 }
+
+			result [0][0][2] =                 // int psi^P * psi^P
+			result [1][1][2] =                 // int psi^Q * psi^Q
+			result [2][2][2] =                 // int psi^R * psi^R
+				0.08333333333333333 * det;
+			result [0][1][2] =                 // int psi^P * psi^Q
+			result [0][2][2] =                 // int psi^P * psi^R
+			result [1][0][2] =                 // int psi^Q * psi^P
+			result [1][2][2] =                 // int psi^Q * psi^R
+			result [2][0][2] =                 // int psi^R * psi^P
+			result [2][1][2] =                 // int psi^R * psi^Q
+				0.04166666666666666 * det;
+
+			// case  4 :  { int psi1 .deriv(x) * psi2 .deriv(y) }
+			
+			det += det;  // we double det to avoid later divisions by two
+			const double p00 = J_c0 * J_c0 / det,
+				           p01 = J_c0 * J_c1 / det,
+				           p02 = J_c0 * J_c2 / det,
+				           p03 = J_c0 * J_c3 / det,
+				           p11 = J_c1 * J_c1 / det,
+				           p12 = J_c1 * J_c2 / det,
+				           p13 = J_c1 * J_c3 / det,
+				           p22 = J_c2 * J_c2 / det,
+				           p23 = J_c2 * J_c3 / det,
+				           p33 = J_c3 * J_c3 / det;
+			result [0][0][3] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
+			result [0][1][3] =                             // int psi^P,x * psi^Q,x
+			result [1][0][3] =   p23 - p33;                // int psi^Q,x * psi^P,x
+			result [1][1][3] =   p33;                      // int psi^Q,x * psi^Q,x
+			result [0][2][3] =                             // int psi^P,x * psi^R,x
+			result [2][0][3] =   p23 - p22;                // int psi^R,x * psi^P,x
+			result [1][2][3] =                             // int psi^Q,x * psi^R,x
+			result [2][1][3] = - p23;                      // int psi^R,x * psi^Q,x
+			result [2][2][3] =   p22;                      // int psi^R,x * psi^R,x
+			result [0][0][4] =                             // int psi^P,x * psi^P,y
+			result [0][0][5] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
+			result [0][1][4] =                             // int psi^P,x * psi^Q,y
+			result [1][0][5] =   p13 - p12;                // int psi^Q,y * psi^P,x
+			result [0][2][4] =                             // int psi^P,x * psi^R,y
+			result [2][0][5] =   p02 - p03;                // int psi^R,y * psi^P,x
+			result [1][0][4] =                             // int psi^Q,x * psi^P,y
+			result [0][1][5] =   p13 - p03;                // int psi^P,y * psi^Q,x
+			result [1][1][4] =                             // int psi^Q,x * psi^Q,y
+			result [1][1][5] = - p13;                      // int psi^Q,y * psi^Q,x
+			result [1][2][4] =                             // int psi^Q,x * psi^R,y
+			result [2][1][5] =   p03;                      // int psi^R,y * psi^Q,x
+			result [2][0][4] =                             // int psi^R,x * psi^P,y
+			result [0][2][5] =   p02 - p12;                // int psi^P,y * psi^R,x
+			result [2][1][4] =                             // int psi^R,x * psi^Q,y
+			result [1][2][5] =   p12;                      // int psi^Q,y * psi^R,x
+			result [2][2][4] =                             // int psi^R,x * psi^R,y
+			result [2][2][5] = - p02;                      // int psi^R,y * psi^R,x
+			result [0][0][6] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
+			result [0][1][6] =                             // int psi^P,y * psi^Q,y
+			result [1][0][6] =   p01 - p11;                // int psi^Q,y * psi^P,y
+			result [1][1][6] =   p11;                      // int psi^Q,y * psi^Q,y
+			result [0][2][6] =                             // int psi^P,y * psi^R,y
+			result [2][0][6] =   p01 - p00;                // int psi^R,y * psi^P,y
+			result [1][2][6] =                             // int psi^Q,y * psi^R,y
+			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
+			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
+	
+			// case  5 :  { int grad psi grad psi }
+
+			const double sp17 =   ( J_c0 * J_c0 + J_c2 * J_c2 ) / det,
+			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
+			             sp19 =   ( J_c1 * J_c1 + J_c3 * J_c3 ) / det;
+		
+			result [0][0][7] =   sp19 + sp18 + sp18 + sp17;      // int grad psi^P grad psi^P
+			result [1][0][7] =                                   // int grad psi^Q grad psi^P
+			result [0][1][7] = - sp19 - sp18;                    // int grad psi^P grad psi^Q
+			result [1][1][7] =   sp19;                           // int grad psi^Q grad psi^Q
+			result [2][0][7] =                                   // int grad psi^R grad psi^P
+			result [0][2][7] = - sp18 - sp17;                    // int grad psi^P grad psi^R
+			result [2][1][7] =                                   // int grad psi^R grad psi^Q
+			result [1][2][7] =   sp18;                           // int grad psi^Q grad psi^R
+			result [2][2][7] =   sp17;                          // int grad psi^R grad psi^R
+		
+			// case  3 :  { int psi .deriv(x), int psi .deriv(y) }
+
+			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
+	
+			result [0][0][8] =                         // int psi^P,x
+			result [0][1][8] =                         // int psi^P,x
+			result [0][2][8] =                         // int psi^P,x
+			result [0][0][9] =                         // int psi^P,x
+			result [1][0][9] =                         // int psi^P,x
+			result [2][0][9] =   J_c2 - J_c3;          // int psi^P,x
+			result [0][0][10] =                         // int psi^P,y
+			result [0][1][10] =                         // int psi^P,y
+			result [0][2][10] =                         // int psi^P,y
+			result [0][0][11] =                         // int psi^P,y
+			result [1][0][11] =                         // int psi^P,y
+			result [2][0][11] =   J_c1 - J_c0;          // int psi^P,y
+			result [1][0][8] =                         // int psi^Q,x
+			result [1][1][8] =                         // int psi^Q,x
+			result [1][2][8] =                         // int psi^Q,x
+			result [0][1][9] =                         // int psi^Q,x
+			result [1][1][9] =                         // int psi^Q,x
+			result [2][1][9] =   J_c3;                 // int psi^Q,x
+			result [1][0][10] =                         // int psi^Q,y
+			result [1][1][10] =                         // int psi^Q,y
+			result [1][2][10] =                         // int psi^Q,y
+			result [0][1][11] =                         // int psi^Q,y
+			result [1][1][11] =                         // int psi^Q,y
+			result [2][1][11] = - J_c1;                 // int psi^Q,y
+			result [2][0][8] =                         // int psi^R,x
+			result [2][1][8] =                         // int psi^R,x
+			result [2][2][8] =                         // int psi^R,x
+			result [0][2][9] =                         // int psi^R,x
+			result [1][2][9] =                         // int psi^R,x
+			result [2][2][9] = - J_c2;                 // int psi^R,x
+			result [2][0][10] =                         // int psi^R,y
+			result [2][1][10] =                         // int psi^R,y
+			result [2][2][10] =                         // int psi^R,y
+			result [0][2][11] =                         // int psi^R,y
+			result [1][2][11] =                         // int psi^R,y
+			result [2][2][11] =   J_c0;              }  // int psi^R,y
+
+			break;  // end of case 13
+
+		case  14 :  // everything
+
+			std::cout << "case 14 ";
+			
+		{	//  case  1 :  { int psi }
+
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
+			assert ( det > 0. );  // det = 2. * area
+
+			result [0][0][0] =                 // int psi^P
+			result [1][0][0] =                 // int psi^P
+			result [2][0][0] =                 // int psi^P
+			result [0][0][1] =                 // int psi^P
+			result [0][1][1] =                 // int psi^P
+			result [0][2][1] =                 // int psi^P
+			result [0][1][0] =                 // int psi^Q
+			result [1][1][0] =                 // int psi^Q
+			result [2][1][0] =                 // int psi^Q
+			result [1][0][1] =                 // int psi^Q
+			result [1][1][1] =                 // int psi^Q
+			result [1][2][1] =                 // int psi^Q
+			result [0][2][0] =                 // int psi^R
+			result [1][2][0] =                 // int psi^R
+			result [2][2][0] =                 // int psi^R
+			result [2][0][1] =                 // int psi^R
+			result [2][1][1] =                 // int psi^R
+			result [2][2][1] = det / 6.;       // int psi^R
+
+			// case  2 :  { int psi1 * psi2 }
+
+			result [0][0][2] =                 // int psi^P * psi^P
+			result [1][1][2] =                 // int psi^Q * psi^Q
+			result [2][2][2] =                 // int psi^R * psi^R
+				0.08333333333333333 * det;
+			result [0][1][2] =                 // int psi^P * psi^Q
+			result [0][2][2] =                 // int psi^P * psi^R
+			result [1][0][2] =                 // int psi^Q * psi^P
+			result [1][2][2] =                 // int psi^Q * psi^R
+			result [2][0][2] =                 // int psi^R * psi^P
+			result [2][1][2] =                 // int psi^R * psi^Q
+				0.04166666666666666 * det;
+
+			// case  4 :  { int psi1 .deriv(x) * psi2 .deriv(y) }
+			
+			det += det;  // we double det to avoid later divisions by two
+			const double p00 = J_c0 * J_c0 / det,
+				           p01 = J_c0 * J_c1 / det,
+				           p02 = J_c0 * J_c2 / det,
+				           p03 = J_c0 * J_c3 / det,
+				           p11 = J_c1 * J_c1 / det,
+				           p12 = J_c1 * J_c2 / det,
+				           p13 = J_c1 * J_c3 / det,
+				           p22 = J_c2 * J_c2 / det,
+				           p23 = J_c2 * J_c3 / det,
+				           p33 = J_c3 * J_c3 / det;
+			result [0][0][3] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
+			result [0][1][3] =                             // int psi^P,x * psi^Q,x
+			result [1][0][3] =   p23 - p33;                // int psi^Q,x * psi^P,x
+			result [1][1][3] =   p33;                      // int psi^Q,x * psi^Q,x
+			result [0][2][3] =                             // int psi^P,x * psi^R,x
+			result [2][0][3] =   p23 - p22;                // int psi^R,x * psi^P,x
+			result [1][2][3] =                             // int psi^Q,x * psi^R,x
+			result [2][1][3] = - p23;                      // int psi^R,x * psi^Q,x
+			result [2][2][3] =   p22;                      // int psi^R,x * psi^R,x
+			result [0][0][4] =                             // int psi^P,x * psi^P,y
+			result [0][0][5] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
+			result [0][1][4] =                             // int psi^P,x * psi^Q,y
+			result [1][0][5] =   p13 - p12;                // int psi^Q,y * psi^P,x
+			result [0][2][4] =                             // int psi^P,x * psi^R,y
+			result [2][0][5] =   p02 - p03;                // int psi^R,y * psi^P,x
+			result [1][0][4] =                             // int psi^Q,x * psi^P,y
+			result [0][1][5] =   p13 - p03;                // int psi^P,y * psi^Q,x
+			result [1][1][4] =                             // int psi^Q,x * psi^Q,y
+			result [1][1][5] = - p13;                      // int psi^Q,y * psi^Q,x
+			result [1][2][4] =                             // int psi^Q,x * psi^R,y
+			result [2][1][5] =   p03;                      // int psi^R,y * psi^Q,x
+			result [2][0][4] =                             // int psi^R,x * psi^P,y
+			result [0][2][5] =   p02 - p12;                // int psi^P,y * psi^R,x
+			result [2][1][4] =                             // int psi^R,x * psi^Q,y
+			result [1][2][5] =   p12;                      // int psi^Q,y * psi^R,x
+			result [2][2][4] =                             // int psi^R,x * psi^R,y
+			result [2][2][5] = - p02;                      // int psi^R,y * psi^R,x
+			result [0][0][6] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
+			result [0][1][6] =                             // int psi^P,y * psi^Q,y
+			result [1][0][6] =   p01 - p11;                // int psi^Q,y * psi^P,y
+			result [1][1][6] =   p11;                      // int psi^Q,y * psi^Q,y
+			result [0][2][6] =                             // int psi^P,y * psi^R,y
+			result [2][0][6] =   p01 - p00;                // int psi^R,y * psi^P,y
+			result [1][2][6] =                             // int psi^Q,y * psi^R,y
+			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
+			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
+	
+			// case  5 :  { int grad psi grad psi }
+
+			const double sp17 =   ( J_c0 * J_c0 + J_c2 * J_c2 ) / det,
+			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
+			             sp19 =   ( J_c1 * J_c1 + J_c3 * J_c3 ) / det;
+		
+			result [0][0][7] =   sp19 + sp18 + sp18 + sp17;      // int grad psi^P grad psi^P
+			result [1][0][7] =                                   // int grad psi^Q grad psi^P
+			result [0][1][7] = - sp19 - sp18;                    // int grad psi^P grad psi^Q
+			result [1][1][7] =   sp19;                           // int grad psi^Q grad psi^Q
+			result [2][0][7] =                                   // int grad psi^R grad psi^P
+			result [0][2][7] = - sp18 - sp17;                    // int grad psi^P grad psi^R
+			result [2][1][7] =                                   // int grad psi^R grad psi^Q
+			result [1][2][7] =   sp18;                           // int grad psi^Q grad psi^R
+			result [2][2][7] =   sp17;                          // int grad psi^R grad psi^R
+		
+			// case  3 :  { int psi .deriv(x), int psi .deriv(y) }
+
+			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
+	
+			result [0][0][8] =                         // int psi^P,x
+			result [0][1][8] =                         // int psi^P,x
+			result [0][2][8] =                         // int psi^P,x
+			result [0][0][9] =                         // int psi^P,x
+			result [1][0][9] =                         // int psi^P,x
+			result [2][0][9] =   J_c2 - J_c3;          // int psi^P,x
+			result [0][0][10] =                         // int psi^P,y
+			result [0][1][10] =                         // int psi^P,y
+			result [0][2][10] =                         // int psi^P,y
+			result [0][0][11] =                         // int psi^P,y
+			result [1][0][11] =                         // int psi^P,y
+			result [2][0][11] =   J_c1 - J_c0;          // int psi^P,y
+			result [1][0][8] =                         // int psi^Q,x
+			result [1][1][8] =                         // int psi^Q,x
+			result [1][2][8] =                         // int psi^Q,x
+			result [0][1][9] =                         // int psi^Q,x
+			result [1][1][9] =                         // int psi^Q,x
+			result [2][1][9] =   J_c3;                 // int psi^Q,x
+			result [1][0][10] =                         // int psi^Q,y
+			result [1][1][10] =                         // int psi^Q,y
+			result [1][2][10] =                         // int psi^Q,y
+			result [0][1][11] =                         // int psi^Q,y
+			result [1][1][11] =                         // int psi^Q,y
+			result [2][1][11] = - J_c1;                 // int psi^Q,y
+			result [2][0][8] =                         // int psi^R,x
+			result [2][1][8] =                         // int psi^R,x
+			result [2][2][8] =                         // int psi^R,x
+			result [0][2][9] =                         // int psi^R,x
+			result [1][2][9] =                         // int psi^R,x
+			result [2][2][9] = - J_c2;                 // int psi^R,x
+			result [2][0][10] =                         // int psi^R,y
+			result [2][1][10] =                         // int psi^R,y
+			result [2][2][10] =                         // int psi^R,y
+			result [0][2][11] =                         // int psi^R,y
+			result [1][2][11] =                         // int psi^R,y
+			result [2][2][11] =   J_c0;              }  // int psi^R,y
+
+			// case  6 :  { int psi2 * psi2 .deriv(x) }
+
+			J_c0 /= 3.;  J_c1 /= 3.;  J_c2 /= 3.;  J_c3 /= 3;
+	
+			result [0][0][12] =                      // int psi^P psi^P,x
+			result [0][0][13] =                      // int psi^P psi^P,x
+			result [1][0][12] =                      // int psi^Q psi^P,x
+			result [0][1][13] =                      // int psi^Q psi^P,x
+			result [2][0][12] =                      // int psi^R psi^P,x
+			result [0][2][13] =   J_c2 - J_c3;       // int psi^R psi^P,x
+			result [0][1][12] =                      // int psi^P psi^Q,x
+			result [1][0][13] =                      // int psi^P psi^Q,x
+			result [1][1][12] =                      // int psi^Q psi^Q,x
+			result [1][1][13] =                      // int psi^Q psi^Q,x
+			result [2][1][12] =                      // int psi^R psi^Q,x
+			result [1][2][13] =   J_c3;              // int psi^R psi^Q,x
+			result [0][2][12] =                      // int psi^P psi^R,x
+			result [2][0][13] =                      // int psi^P psi^R,x
+			result [1][2][12] =                      // int psi^Q psi^R,x
+			result [2][1][13] =                      // int psi^Q psi^R,x
+			result [2][2][12] =                      // int psi^R psi^R,x
+			result [2][2][13] = - J_c2;              // int psi^R psi^R,x
+			result [0][0][14] =                      // int psi^P psi^P,y
+			result [0][0][15] =                      // int psi^P psi^P,y
+			result [1][0][14] =                      // int psi^Q psi^P,y
+			result [0][1][15] =                      // int psi^Q psi^P,y
+			result [2][0][14] =                      // int psi^R psi^P,y
+			result [0][2][15] =   J_c1 - J_c0;       // int psi^R psi^P,y
+			result [0][1][14] =                      // int psi^P psi^Q,y
+			result [1][0][15] =                      // int psi^P psi^Q,y
+			result [1][1][14] =                      // int psi^Q psi^Q,y
+			result [1][1][15] =                      // int psi^Q psi^Q,y
+			result [2][1][14] =                      // int psi^R psi^Q,y
+			result [1][2][15] = - J_c1;              // int psi^R psi^Q,y
+			result [0][2][14] =                      // int psi^P psi^R,y
+			result [2][0][15] =                      // int psi^P psi^R,y
+			result [1][2][14] =                      // int psi^Q psi^R,y
+			result [2][1][15] =                      // int psi^Q psi^R,y
+			result [2][2][14] =                      // int psi^R psi^R,y
+			result [2][2][15] =   J_c0;              // int psi^R psi^R,y
+			
+			break;  // end of case 14
+
 		default : assert ( false );
 	}  // end of  switch  statement
 }  // end of dock_on_common
@@ -1445,8 +1784,10 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	it .reset();  assert ( it .in_range() );  Cell P = *it;
 	it++;  assert ( it .in_range() );  Cell Q = *it;
 	it++;  assert ( it .in_range() );  Cell R = *it;
+	#ifndef NDEBUG
 	it++;  assert ( not it .in_range() );
-	
+	#endif
+
 	Function xyz = Manifold::working .coordinates();
 	size_t geom_dim = xyz .nb_of_components();
 	assert ( geom_dim >= 2 );
@@ -1454,11 +1795,8 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	assert ( geom_dim == 2 );
 	Function x = xyz [0], y = xyz [1];
 
-	// using Cell::Core::short_int_heap for local numbering of vertices
-	// should be slightly faster
-
-	dock_on_common ( x(P), y(P), x(Q), y(Q), x(R), y(R),
-	                 this->cas, this->result_of_integr  );
+ dock_on_ufl_ffc_tri_P1 ( x(P), y(P), x(Q), y(Q), x(R), y(R),
+	                        this->cas, this->result_of_integr  );
 
 	// const double xP = x (P), xQ = x (Q), xR = x (R);
 	// const double yP = y (P), yQ = y (Q), yR = y (R);
@@ -1471,6 +1809,8 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
 	this->base_fun_1 .insert
 		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
@@ -1481,7 +1821,51 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 ( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
 
 
-{	
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	// perhaps implement a special iterator returning points and segments
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	#ifndef NDEBUG
+	Cell RP = cll .boundary() .cell_in_front_of ( R );
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function::Action winding_Q = PQ .winding(), winding_R = winding_Q + QR .winding();
+	assert ( winding_R + RP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+
+	std::vector < double > xyz_P = xyz ( P ),
+	                       xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                       xyz_R = xyz ( R, tag::winding, winding_R );
+	
+	dock_on_ufl_ffc_tri_P1
+	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1],
+	  this->cas, this->result_of_integr                                );
+
+	// const double xP = x (P), xQ = x (Q), xR = x (R);
+	// const double yP = y (P), yQ = y (Q), yR = y (R);
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on  with tag::winding
 
 //-----------------------------------------------------------------------------------------//
@@ -1491,7 +1875,7 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 ( const std::vector < Function > & bf, const std::vector < Function > & result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "pre-compute does not apply to elements with master" << std::endl;
+	std::cout << "pre-compute does not apply to this type of element" << std::endl;
 	exit ( 1 );                                                                     }
 
 
@@ -2048,7 +2432,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 			if ( ms )
 			{	if ( ms == bf [0] .core ) this->selector .push_back ( 0 );
 				else
-					{	assert ( ms == bf [1] .core );  this->selector .push_back ( 1 );  }
+				{	assert ( ms == bf [1] .core );  this->selector .push_back ( 1 );  }
 				continue;                                                               }
 			Function::Product * prod = dynamic_cast < Function::Product* > ( f .core );
 			if ( prod )
@@ -2102,6 +2486,229 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 				{	assert ( dd->variable .core == xy[1] .core );
 					this->selector .push_back ( 10 );              }                     }  }
 		return;                                                                          }
+
+	if ( int_psi and int_psi_psi and int_dpsi and
+	     int_dpsi_dpsi and int_grad_grad and not int_psi_dpsi )
+	{	this->cas = 13;  // case thirteen : everything but int_psi_dpsi
+		assert ( bf .size() == 2 );
+		this->result_of_integr .resize ( 3 );
+		for ( size_t i = 0; i < 3; i++ )
+		{	this->result_of_integr [i] .resize ( 3 );
+			for ( size_t j = 0; j < 3; j++ )
+				this->result_of_integr [i] [j] .resize ( 12 );  }
+		// we analyse again the requested 'result' to see which expressions are wanted
+		assert ( result .size() >= 4 );
+		Function xy = Manifold::working .coordinates();
+		assert ( xy .nb_of_components() == 2 );
+		for ( size_t i = 0; i < result .size(); i++ )
+		{	Function f = result [i];
+			Function::MereSymbol * ms =
+				dynamic_cast < Function::MereSymbol* > ( f .core );
+			if ( ms )
+			{	if ( ms == bf [0] .core ) this->selector .push_back ( 0 );
+				else
+				{	assert ( ms == bf [1] .core );  this->selector .push_back ( 1 );  }
+				continue;                                                               }
+			Function::Product * prod = dynamic_cast < Function::Product* > ( f .core );
+			if ( prod )
+			{	std::forward_list < Function > ::const_iterator
+					itt = prod->factors .begin();
+				assert ( itt != prod->factors .end() );
+				ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+				if ( ms )
+				{	assert ( ms == bf [0] .core );
+					itt++;  assert ( itt != prod->factors .end() );
+					ms = tag::Util::assert_cast
+						< Function::Core*, Function::MereSymbol* > ( itt->core );
+					assert ( ms == bf [1] .core );
+					this->selector .push_back ( 2 );
+					continue;                                                   }
+				Function::DelayedDerivative * d1 = tag::Util::assert_cast
+					< Function::Core*, Function::DelayedDerivative* > ( itt->core );
+				itt++;  assert ( itt != prod->factors .end() );
+				Function::DelayedDerivative * d2 = tag::Util::assert_cast
+					< Function::Core*, Function::DelayedDerivative* > ( itt->core );
+				itt++;  assert ( itt == prod->factors .end() );
+				assert ( d1->base .core == bf [0] .core );
+				assert ( d2->base .core == bf [1] .core );
+				Function::Core * v1 = d1->variable .core;
+				Function::Core * v2 = d2->variable .core;
+				if ( v1 == xy [0] .core )
+					if ( v2 == xy [0] .core )
+						this->selector .push_back ( 3 );
+					else
+						{	assert ( v2 == xy [1] .core );
+							this->selector .push_back ( 4 );     }
+				else
+				{	assert ( v1 == xy [1] .core );
+					if ( v2 == xy [0] .core )
+						this->selector .push_back ( 5 );
+					else
+						{	assert ( v2 == xy [1] .core );
+							this->selector .push_back ( 6 );     }  }
+				continue;                                                             }
+			Function::Sum * s = dynamic_cast < Function::Sum* > ( f .core );
+			if ( s )
+			{	size_t j = 0;
+				for ( std::forward_list < Function > ::const_iterator it_s
+				      = s->terms .begin(); it_s != s->terms .end(); it_s++ )
+				{	Function::Product * fp = tag::Util::assert_cast
+						< Function::Core*, Function::Product* > ( it_s->core );
+					std::forward_list < Function > ::const_iterator it_p =
+						fp->factors .begin();
+					assert ( it_p != fp->factors .end() );
+					Function::DelayedDerivative * dd1 = tag::Util::assert_cast
+						< Function::Core*, Function::DelayedDerivative* > ( it_p->core );
+					assert ( dynamic_cast < Function::MereSymbol* > ( dd1->base .core ) );
+					assert ( dd1->base .core == bf [0] .core );
+					assert ( dd1->variable .core == xy [j] .core );
+					it_p ++;  assert ( it_p != fp->factors .end() );
+					Function::DelayedDerivative * dd2 = tag::Util::assert_cast
+						< Function::Core*, Function::DelayedDerivative* > ( it_p->core );
+					assert ( dynamic_cast < Function::MereSymbol* > ( dd2->base .core ) );
+					assert ( dd2->base .core == bf [1] .core );
+					assert ( dd2->variable .core == xy [j] .core );
+					it_p ++;  assert ( it_p == fp->factors .end() );
+					j++;                                                                   }
+				assert ( j == 2 );
+				this->selector .push_back ( 7 );
+				continue;                                                                  }
+			Function::DelayedDerivative * dd = tag::Util::assert_cast
+				< Function::Core*, Function::DelayedDerivative* > ( f .core );
+			if ( dd->base .core == bf [0] .core )
+				if ( dd->variable .core == xy[0] .core )  selector .push_back ( 8 );
+				else
+				{	assert ( dd->variable .core == xy[1] .core );
+					this->selector .push_back ( 10 );               }
+			else
+			{	assert ( dd->base .core == bf [1] .core );
+				if ( dd->variable .core == xy[0] .core )  selector .push_back ( 9 );
+				else
+				{	assert ( dd->variable .core == xy[1] .core );
+					this->selector .push_back ( 11 );              }                     }  }
+		return;                                                                          }
+	
+	if ( int_psi and int_psi_psi and int_dpsi and
+	     int_dpsi_dpsi and int_grad_grad and int_psi_dpsi )
+	{	this->cas = 14;  // case fourteen : everything
+		assert ( bf .size() == 2 );
+		this->result_of_integr .resize ( 3 );
+		for ( size_t i = 0; i < 3; i++ )
+		{	this->result_of_integr [i] .resize ( 3 );
+			for ( size_t j = 0; j < 3; j++ )
+				this->result_of_integr [i] [j] .resize ( 16 );  }
+		// we analyse again the requested 'result' to see which expressions are wanted
+		assert ( result .size() >= 4 );
+		Function xy = Manifold::working .coordinates();
+		assert ( xy .nb_of_components() == 2 );
+		for ( size_t i = 0; i < result .size(); i++ )
+		{	Function f = result [i];
+			Function::MereSymbol * ms =
+				dynamic_cast < Function::MereSymbol* > ( f .core );
+			if ( ms )
+			{	if ( ms == bf [0] .core ) this->selector .push_back ( 0 );
+				else
+				{	assert ( ms == bf [1] .core );  this->selector .push_back ( 1 );  }
+				continue;                                                               }
+			Function::Product * prod = dynamic_cast < Function::Product* > ( f .core );
+			if ( prod )
+			{	std::forward_list < Function > ::const_iterator
+					itt = prod->factors .begin();
+				assert ( itt != prod->factors .end() );
+				ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+				if ( ms )
+				{	assert ( ms == bf [0] .core );
+					itt++;  assert ( itt != prod->factors .end() );
+					ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+					if ( ms )
+					{	assert ( ms == bf [1] .core );
+						itt++;  assert ( itt == prod->factors .end() );
+						this->selector .push_back ( 2 );
+						continue;                                                 }
+					Function::DelayedDerivative * dd = tag::Util::assert_cast
+						< Function::Core*, Function::DelayedDerivative* > ( itt->core );
+					itt++;  assert ( itt == prod->factors .end() );
+					Function::Core * var = dd->variable .core;
+					if ( var == xy [0] .core )
+						this->selector .push_back ( 12 );
+					else
+					{	assert ( var == xy [1] .core );
+						this->selector .push_back ( 14 );  }
+					continue;                                                         }
+				Function::DelayedDerivative * d1 = tag::Util::assert_cast
+					< Function::Core*, Function::DelayedDerivative* > ( itt->core );
+				assert ( d1->base .core == bf [0] .core );
+				Function::Core * v1 = d1->variable .core;
+				itt++;  assert ( itt != prod->factors .end() );
+				ms = dynamic_cast < Function::MereSymbol* > ( itt->core );
+				if ( ms )
+				{	assert ( ms == bf [1] .core );
+					itt++;  assert ( itt == prod->factors .end() );
+					if ( v1 == xy [0] .core )
+						this->selector .push_back ( 13 );
+					else
+					{	assert ( v1 == xy [1] .core );
+						this->selector .push_back ( 15 );  }
+					continue;                                                         }
+				Function::DelayedDerivative * d2 = tag::Util::assert_cast
+					< Function::Core*, Function::DelayedDerivative* > ( itt->core );
+				itt++;  assert ( itt == prod->factors .end() );
+				assert ( d2->base .core == bf [1] .core );
+				Function::Core * v2 = d2->variable .core;
+				if ( v1 == xy [0] .core )
+					if ( v2 == xy [0] .core )
+						this->selector .push_back ( 3 );
+					else
+						{	assert ( v2 == xy [1] .core );
+							this->selector .push_back ( 4 );     }
+				else
+				{	assert ( v1 == xy [1] .core );
+					if ( v2 == xy [0] .core )
+						this->selector .push_back ( 5 );
+					else
+						{	assert ( v2 == xy [1] .core );
+							this->selector .push_back ( 6 );     }  }
+				continue;                                                             }
+			Function::Sum * s = dynamic_cast < Function::Sum* > ( f .core );
+			if ( s )
+			{	size_t j = 0;
+				for ( std::forward_list < Function > ::const_iterator it_s
+				      = s->terms .begin(); it_s != s->terms .end(); it_s++ )
+				{	Function::Product * fp = tag::Util::assert_cast
+						< Function::Core*, Function::Product* > ( it_s->core );
+					std::forward_list < Function > ::const_iterator it_p =
+						fp->factors .begin();
+					assert ( it_p != fp->factors .end() );
+					Function::DelayedDerivative * dd1 = tag::Util::assert_cast
+						< Function::Core*, Function::DelayedDerivative* > ( it_p->core );
+					assert ( dynamic_cast < Function::MereSymbol* > ( dd1->base .core ) );
+					assert ( dd1->base .core == bf [0] .core );
+					assert ( dd1->variable .core == xy [j] .core );
+					it_p ++;  assert ( it_p != fp->factors .end() );
+					Function::DelayedDerivative * dd2 = tag::Util::assert_cast
+						< Function::Core*, Function::DelayedDerivative* > ( it_p->core );
+					assert ( dynamic_cast < Function::MereSymbol* > ( dd2->base .core ) );
+					assert ( dd2->base .core == bf [1] .core );
+					assert ( dd2->variable .core == xy [j] .core );
+					it_p ++;  assert ( it_p == fp->factors .end() );
+					j++;                                                                   }
+				assert ( j == 2 );
+				this->selector .push_back ( 7 );
+				continue;                                                                  }
+			Function::DelayedDerivative * dd = tag::Util::assert_cast
+				< Function::Core*, Function::DelayedDerivative* > ( f .core );
+			if ( dd->base .core == bf [0] .core )
+				if ( dd->variable .core == xy[0] .core )  selector .push_back ( 8 );
+				else
+				{	assert ( dd->variable .core == xy[1] .core );
+					this->selector .push_back ( 10 );               }
+			else
+			{	assert ( dd->base .core == bf [1] .core );
+				if ( dd->variable .core == xy[0] .core )  selector .push_back ( 9 );
+				else
+				{	assert ( dd->variable .core == xy[1] .core );
+					this->selector .push_back ( 11 );              }                     }  }
+		return;                                                                          }
 	
 	std::cout << "boolean variables at end of pre_compute : ";
 	std::cout << int_psi << int_psi_psi << int_dpsi <<
@@ -2114,4 +2721,26 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 
+//-------------------------------------------------------------------------------------------------//
+
+
+Cell::Numbering & FiniteElement::StandAlone::TypeOne::Triangle::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::WithMaster::Segment::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::WithMaster::Triangle::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::WithMaster::Quadrangle::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
 

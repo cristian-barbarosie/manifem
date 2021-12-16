@@ -8,6 +8,7 @@
 #include "math.h"
 
 #include <fstream>
+#include <ctime>
 #include <Eigen/Sparse>
 
 using namespace maniFEM;
@@ -39,21 +40,25 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
+	clock_t started_at = clock();
+
 	// declare the type of finite element
+	// FiniteElement fe ( tag::with_master, tag::quadrangle,
+	//                    tag::Lagrange, tag::of_degree, 1, tag::enumerate_cells );
 	FiniteElement fe ( tag::with_master, tag::quadrangle,
-	                   tag::Lagrange, tag::of_degree, 1, tag::enumerate_cells );
+	                   tag::Lagrange, tag::of_degree, 1  );
 	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
-	Cell::Numbering & numbering = fe .numbering ( tag::vertices );
+	Cell::Numbering & numbering = fe .build_global_numbering ( tag::vertices );
 
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
 	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
 	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
 	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
-	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
-	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 12 );
-	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
-	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 12 );
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 15 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 15 );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 15 );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 15 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
 	size_t size_matrix = numbering.size();
@@ -178,5 +183,9 @@ int main ()
 
 	std::cout << "produced file square-Dirichlet.msh" << std::endl;
 
+	clock_t finished_at = clock();
+	std::cout << "time taken : " << finished_at - started_at << " ticks (one second has ";
+	std::cout << CLOCKS_PER_SEC << " ticks)" << std::endl;
+	
 	return 0;
 }
