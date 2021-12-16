@@ -861,6 +861,83 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 
 namespace { // anonymous namespace, mimics static linkage
 
+inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
+                                      const double & xQ, const double & yQ,
+                                      const double & xR, const double & yR,
+                                      const double & xS, const double & yS,
+                                      const size_t & c,  // case
+                   std::vector < std::vector < std::vector < double > > > & result )
+
+// this function is speed-critical
+
+{	const double alph = 0.7886751345948129,
+	             beta = 0.2113248654051871;
+
+	const double xRmxQ = xR - xQ, xSmxP = xS - xP, xPmxQ = xP - xQ, xSmxR = xS - xR,
+	             yRmyQ = yR - yQ, ySmyP = yS - yP, yPmyQ = yP - yQ, ySmyR = yS - yR;
+	double J_c0_02 = alph * xRmxQ + beta * xSmxP,
+	       J_c0_13 = beta * xRmxQ + alph * xSmxP,
+	       J_c1_01 = alph * xPmxQ + beta * xSmxR,
+	       J_c1_23 = beta * xPmxQ + alph * xSmxR,
+	       J_c2_02 = alph * yRmyQ + beta * ySmyP,
+	       J_c2_13 = beta * yRmyQ + alph * ySmyP,
+	       J_c3_01 = alph * yPmyQ + beta * ySmyR,
+	       J_c3_23 = beta * yPmyQ + alph * ySmyR;
+
+	// below we use a switch statement
+	// we trust that the compiler implements it by means of a list of addresses
+	// and not as a cascade of ifs (which would be rather slow)
+	// we could use instead a vector of pointers to functions
+			
+	switch ( c )
+		
+	{	case  0 :
+			std::cout << "UFL-FFC integrators require pre_compute" << std::endl;
+			exit ( 1 );
+
+		case 1 :  // { int psi }
+			
+		{
+		}
+			break;  // end of case 1
+
+		case 2 :  // { int psi1 * psi2 }
+			
+		{
+		}
+			break;  // end of case 2
+
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		{
+			std::cout << "case 3 ";
+			#ifndef NDEBUG
+			const double det_0 = J_c0_02 * J_c3_01 - J_c1_01 * J_c2_02,
+			             det_1 = J_c0_13 * J_c3_01 - J_c1_01 * J_c2_13,
+			             det_2 = J_c0_02 * J_c3_23 - J_c1_23 * J_c2_02,
+			             det_3 = J_c0_13 * J_c3_23 - J_c1_23 * J_c2_13;
+			assert ( det_0 > 0. );  // det = area
+			assert ( det_1 > 0. );  // det = area
+			assert ( det_2 > 0. );  // det = area
+			assert ( det_3 > 0. );  // det = area
+			#endif
+			result [0][0][0] = -0.25 * ( J_c3_01 + J_c3_23 - J_c2_02 - J_c2_13 );     // int psi^P,x
+			result [0][0][1] =  0.25 * ( J_c1_01 + J_c1_23 - J_c0_02 - J_c0_13 );     // int psi^P,y
+			result [0][1][0] = -0.25 * ( J_c3_01 + J_c3_23 + J_c2_02 + J_c2_13 );     // int psi^Q,x
+			result [0][1][1] =  0.25 * ( J_c1_01 + J_c1_23 + J_c0_02 + J_c0_13 );     // int psi^Q,y
+			result [0][2][0] =  0.25 * ( J_c3_01 + J_c3_23 + J_c2_02 + J_c2_13 );     // int psi^R,x
+			result [0][2][1] = -0.25 * ( J_c1_01 + J_c1_23 + J_c0_02 + J_c0_13 );     // int psi^R,y
+			result [0][3][0] =  0.25 * ( J_c3_01 + J_c3_23 - J_c2_02 - J_c2_13 );     // int psi^S,x
+			result [0][3][1] = -0.25 * ( J_c1_01 + J_c1_23 - J_c0_02 - J_c0_13 );  }  // int psi^S,y
+			break;  // end of case 3
+	
+		default : assert ( false );
+	}  // end of  switch  statement
+	
+}  // end of  dock_on_ufl_ffc_quad_Q1
+
+//-----------------------------------------------------------------------------------------//
+
+	
 inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
                                      const double & xQ, const double & yQ,
                                      const double & xR, const double & yR,
@@ -883,7 +960,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			std::cout << "UFL-FFC integrators require pre_compute" << std::endl;
 			exit ( 1 );
 
-		case  1 :  // { int psi }
+		case 1 :  // { int psi }
 			
 		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -893,7 +970,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [0][2][0] = det / 6.;   }      // int psi^R
 			break;  // end of case 1
 
-		case  2 :  // { int psi1 * psi2 }
+		case 2 :  // { int psi1 * psi2 }
 			
 		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -911,7 +988,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 				0.04166666666666666 * det;                    }
 			break;  // end of case 2
 
-		case  3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
 		{
 			#ifndef NDEBUG
 			const double det = J_c0 * J_c3 - J_c1 * J_c2;
@@ -928,7 +1005,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [0][2][1] =   J_c0;             }   // int psi^R,y
 			break;  // end of case 3
 
-		case  4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -981,7 +1058,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][2][3] =   p00;                   }  // int psi^R,y * psi^R,y
 			break;  // end of case 4
 
-		case  5 :  // { int grad psi grad psi }
+		case 5 :  // { int grad psi grad psi }
 		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
 
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
@@ -1002,7 +1079,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][2][0] =   sp17;                       }   // int grad psi^R grad psi^R
 			break;  // end of case 5
 
-		case  6 :  // { int psi2 * psi2 .deriv(x) }
+		case 6 :  // { int psi2 * psi2 .deriv(x) }
 		{
 			#ifndef NDEBUG
 			const double det = J_c0 * J_c3 - J_c1 * J_c2;
@@ -1084,7 +1161,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 				0.04166666666666666 * det;                    }
 			break;  // end of case 7
 
-		case  8 :  // { int psi, int psi .deriv(x) }
+		case 8 :  // { int psi, int psi .deriv(x) }
 			
 		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1102,7 +1179,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [0][2][2] =   J_c0;             }   // int psi^R,y
 			break;  // end of case 8
 
-		case  9 :  // { int psi1 .deriv(x), int psi1 .deriv(x) * psi2 .deriv(y) }
+		case 9 :  // { int psi1 .deriv(x), int psi1 .deriv(x) * psi2 .deriv(y) }
 			
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1195,7 +1272,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][2][7] =   p00;                   }  // int psi^R,y * psi^R,y
 			break;  // end of case 9
 
-		case  10 :  // { int psi1 * psi2, int psi1 .deriv(x) * psi2 .deriv(y) }
+		case 10 :  // { int psi1 * psi2, int psi1 .deriv(x) * psi2 .deriv(y) }
 
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1261,7 +1338,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][2][4] =   p00;                   }  // int psi^R,y * psi^R,y
 			break;  // end of case 10
 
-		case  11 :  // { int psi1 * psi2, int grad psi1 * grad psi2 }
+		case 11 :  // { int psi1 * psi2, int grad psi1 * grad psi2 }
 
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1294,9 +1371,9 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][2][1] =   sp17;                       }   // int grad psi^R grad psi^R
 			break;  // end of case 11
 
-		case  12 :  // 1, 2, 3 and 4
+		case 12 :  // 1, 2, 3 and 4
 
-		{	//  case  1 :  { int psi }
+		{	//  case 1 (within 12) :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1320,7 +1397,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][1] =                 // int psi^R
 			result [2][2][1] = det / 6.;       // int psi^R
 
-			// case  2 :  { int psi1 * psi2 }
+			// case 2 (within 12) :  { int psi1 * psi2 }
 
 			result [0][0][2] =                 // int psi^P * psi^P
 			result [1][1][2] =                 // int psi^Q * psi^Q
@@ -1334,7 +1411,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][2] =                 // int psi^R * psi^Q
 				0.04166666666666666 * det;
 
-			// case  4 :  { int psi1 .deriv(x) * psi2 .deriv(y) }
+			// case 4 (within 12) :  { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
 			det += det;  // we double det to avoid later divisions by two
 			const double p00 = J_c0 * J_c0 / det,
@@ -1384,7 +1461,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
 			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
 	
-			// case  3 :  { int psi .deriv(x), int psi .deriv(y) }
+			// case 3 (within 12) :  { int psi .deriv(x), int psi .deriv(y) }
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
@@ -1427,9 +1504,9 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 			break;  // end of case 12
 
-		case  13 :  // 1, 2, 3, 4 and 5
+		case 13 :  // 1, 2, 3, 4 and 5
 
-		{	//  case  1 :  { int psi }
+		{	//  case 1 (within 13) :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1453,7 +1530,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][1] =                 // int psi^R
 			result [2][2][1] = det / 6.;       // int psi^R
 
-			// case  2 :  { int psi1 * psi2 }
+			// case 2 (within 13) :  { int psi1 * psi2 }
 
 			result [0][0][2] =                 // int psi^P * psi^P
 			result [1][1][2] =                 // int psi^Q * psi^Q
@@ -1467,7 +1544,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][2] =                 // int psi^R * psi^Q
 				0.04166666666666666 * det;
 
-			// case  4 :  { int psi1 .deriv(x) * psi2 .deriv(y) }
+			// case 4 (within 13) :  { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
 			det += det;  // we double det to avoid later divisions by two
 			const double p00 = J_c0 * J_c0 / det,
@@ -1517,7 +1594,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
 			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
 	
-			// case  5 :  { int grad psi grad psi }
+			// case 5 (within 13) :  { int grad psi grad psi }
 
 			const double sp17 =   ( J_c0 * J_c0 + J_c2 * J_c2 ) / det,
 			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
@@ -1533,7 +1610,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [1][2][7] =   sp18;                           // int grad psi^Q grad psi^R
 			result [2][2][7] =   sp17;                          // int grad psi^R grad psi^R
 		
-			// case  3 :  { int psi .deriv(x), int psi .deriv(y) }
+			// case 3 (within 13) :  { int psi .deriv(x), int psi .deriv(y) }
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
@@ -1576,11 +1653,9 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 			break;  // end of case 13
 
-		case  14 :  // everything
+		case 14 :  // everything
 
-			std::cout << "case 14 ";
-			
-		{	//  case  1 :  { int psi }
+		{	//  case 1 (within 14) :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1604,7 +1679,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][1] =                 // int psi^R
 			result [2][2][1] = det / 6.;       // int psi^R
 
-			// case  2 :  { int psi1 * psi2 }
+			// case 2 (within 14) :  { int psi1 * psi2 }
 
 			result [0][0][2] =                 // int psi^P * psi^P
 			result [1][1][2] =                 // int psi^Q * psi^Q
@@ -1618,7 +1693,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][2] =                 // int psi^R * psi^Q
 				0.04166666666666666 * det;
 
-			// case  4 :  { int psi1 .deriv(x) * psi2 .deriv(y) }
+			// case 4 (within 14) :  { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
 			det += det;  // we double det to avoid later divisions by two
 			const double p00 = J_c0 * J_c0 / det,
@@ -1668,7 +1743,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
 			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
 	
-			// case  5 :  { int grad psi grad psi }
+			// case 5 (within 14) :  { int grad psi grad psi }
 
 			const double sp17 =   ( J_c0 * J_c0 + J_c2 * J_c2 ) / det,
 			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
@@ -1684,7 +1759,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [1][2][7] =   sp18;                           // int grad psi^Q grad psi^R
 			result [2][2][7] =   sp17;                          // int grad psi^R grad psi^R
 		
-			// case  3 :  { int psi .deriv(x), int psi .deriv(y) }
+			// case 3 (within 14) :  { int psi .deriv(x), int psi .deriv(y) }
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
@@ -1725,7 +1800,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			result [1][2][11] =                         // int psi^R,y
 			result [2][2][11] =   J_c0;              }  // int psi^R,y
 
-			// case  6 :  { int psi2 * psi2 .deriv(x) }
+			// case 6 (within 14) :  { int psi2 * psi2 .deriv(x) }
 
 			J_c0 /= 3.;  J_c1 /= 3.;  J_c2 /= 3.;  J_c3 /= 3;
 	
@@ -1770,7 +1845,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		default : assert ( false );
 	}  // end of  switch  statement
-}  // end of dock_on_common
+}  // end of  dock_on_ufl_ffc_tri_P1
 	
 }  // anonymous namespace
 
@@ -1797,9 +1872,6 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
  dock_on_ufl_ffc_tri_P1 ( x(P), y(P), x(Q), y(Q), x(R), y(R),
 	                        this->cas, this->result_of_integr  );
-
-	// const double xP = x (P), xQ = x (Q), xR = x (R);
-	// const double yP = y (P), yQ = y (Q), yR = y (R);
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
@@ -1844,16 +1916,13 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
 	assert ( geom_dim == 2 );
 
-	std::vector < double > xyz_P = xyz ( P ),
-	                       xyz_Q = xyz ( Q, tag::winding, winding_Q ),
-	                       xyz_R = xyz ( R, tag::winding, winding_R );
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R );
 	
 	dock_on_ufl_ffc_tri_P1
 	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1],
 	  this->cas, this->result_of_integr                                );
-
-	// const double xP = x (P), xQ = x (Q), xR = x (R);
-	// const double yP = y (P), yQ = y (Q), yR = y (R);
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
@@ -1871,6 +1940,106 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 //-----------------------------------------------------------------------------------------//
 
 
+void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll )
+// virtual from FiniteElement::Core
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	dock_on_ufl_ffc_quad_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
+	                          this->cas, this->result_of_integr              );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on  
+( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
+
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	// perhaps implement a special iterator returning points and segments
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	Cell RS = cll .boundary() .cell_in_front_of ( R );
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S );
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function::Action winding_Q = PQ .winding(),
+	                 winding_R = winding_Q + QR .winding(),
+	                 winding_S = winding_R + RS .winding();
+	assert ( winding_S + SP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R ),
+	                             xyz_S = xyz ( S, tag::winding, winding_S );
+	
+	dock_on_ufl_ffc_quad_Q1
+	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+	  this->cas, this->result_of_integr                                                      );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on  with tag::winding
+
+//-----------------------------------------------------------------------------------------//
+
+
 void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 ( const std::vector < Function > & bf, const std::vector < Function > & result )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
@@ -1879,7 +2048,7 @@ void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
 	exit ( 1 );                                                                     }
 
 
-void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
+void FiniteElement::StandAlone::TypeOne::pre_compute
 ( const std::vector < Function > & bf, const std::vector < Function > & result )
 // virtual from FiniteElement::Core
 
@@ -1891,6 +2060,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 {	this->result_of_integr .clear();
 	this->selector .clear();
 
+	const size_t nb_basis_fun = this->basis_numbering .size();
 	this->dummy_bf = bf;
 	
 	// we analyse syntactically expressions listed in 'result'
@@ -1973,21 +2143,21 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 		assert ( bf .size() == 1 );
 		assert ( result .size() == 1 );
 		this->result_of_integr .resize ( 1 );
-		this->result_of_integr [0] .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ ) this->result_of_integr [0] [i] .resize ( 1 );
+		this->result_of_integr [0] .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ ) this->result_of_integr [0] [i] .resize ( 1, 0. );
 		this->selector .push_back ( 0 ); // selector = { 0 }
-		return;                                                                        }
+		return;                                                                           }
 
 	if ( not int_psi and int_psi_psi and not int_dpsi and
 	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 2;  // case two : int_psi_psi
 		assert ( bf .size() == 2 );
 		assert ( result .size() == 1 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 1 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 1, 0. );  }
 		Function::Product * prod = tag::Util::assert_cast
 			< Function::Core*, Function::Product* > ( result [0] .core );
 		std::forward_list < Function > ::const_iterator
@@ -2007,9 +2177,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 		assert ( xy .nb_of_components() == 2 );
 		assert ( bf .size() == 1 );
 		this->result_of_integr .resize ( 1 );
-		this->result_of_integr [0] .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-			this->result_of_integr [0] [i] .resize ( 2 );
+		this->result_of_integr [0] .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+			this->result_of_integr [0] [i] .resize ( 2, 0. );
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() > 0 );
 		assert ( result .size() <= 2 );
@@ -2033,11 +2203,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 4;  // case four : int_dpsi_dpsi
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 4 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 4, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() >= 1 );
 		Function xy = Manifold::working .coordinates();
@@ -2076,11 +2246,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     not int_dpsi_dpsi and int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 5;  // case five : int_grad_grad
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 1 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 1, 0. );  }
 		Function xy = Manifold::working .coordinates();
 		assert ( xy .nb_of_components() == 2 );
 		assert ( result .size() == 1 );
@@ -2118,11 +2288,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 		assert ( result .size() <= 2 );
 		Function xy = Manifold::working .coordinates();
 		assert ( xy .nb_of_components() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 4 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 4, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() > 0 );
 		assert ( result .size() <= 2 );
@@ -2165,11 +2335,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	if ( int_psi and int_psi_psi and not int_dpsi and
 	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 7;  // case seven : int_psi and int_psi_psi
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 3 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 3, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() == 2 );
 		Function f0 = result [0], f1 = result [1];
@@ -2220,9 +2390,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	{	this->cas = 8;  // case eight : int_psi and int_dpsi
 		assert ( bf .size() == 1 );
 		this->result_of_integr .resize ( 1 );
-		this->result_of_integr [0] .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-				this->result_of_integr [0] [i] .resize ( 3 );
+		this->result_of_integr [0] .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+			this->result_of_integr [0] [i] .resize ( 3, 0. );
 		Function xy = Manifold::working .coordinates();
 		assert ( xy .nb_of_components() == 2 );
 		// we analyse again the requested 'result' to see which expressions are wanted
@@ -2248,11 +2418,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 9;  // case nine : int_dpsi and int_dpsi_dpsi
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 8 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 8, 0. );  }
 		Function xy = Manifold::working .coordinates();
 		assert ( xy .nb_of_components() == 2 );
 		// we analyse again the requested 'result' to see which expressions are wanted
@@ -2305,11 +2475,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 10;  // case ten : int_psi_psi and int_dpsi_dpsi
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 5 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 5, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() >= 2 );
 		Function xy = Manifold::working .coordinates();
@@ -2360,11 +2530,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     not int_dpsi_dpsi and int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 11;  // case eleven : int_psi_psi and int_grad_grad
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 2 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 2, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() == 2 );
 		Function xy = Manifold::working .coordinates();
@@ -2416,11 +2586,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 12;  // case twelve : int_psi, int_psi_psi, int_dpsi and int_dpsi_dpsi
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 11 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 11, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() >= 4 );
 		Function xy = Manifold::working .coordinates();
@@ -2491,11 +2661,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     int_dpsi_dpsi and int_grad_grad and not int_psi_dpsi )
 	{	this->cas = 13;  // case thirteen : everything but int_psi_dpsi
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 12 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 12, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() >= 4 );
 		Function xy = Manifold::working .coordinates();
@@ -2592,11 +2762,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 	     int_dpsi_dpsi and int_grad_grad and int_psi_dpsi )
 	{	this->cas = 14;  // case fourteen : everything
 		assert ( bf .size() == 2 );
-		this->result_of_integr .resize ( 3 );
-		for ( size_t i = 0; i < 3; i++ )
-		{	this->result_of_integr [i] .resize ( 3 );
-			for ( size_t j = 0; j < 3; j++ )
-				this->result_of_integr [i] [j] .resize ( 16 );  }
+		this->result_of_integr .resize ( nb_basis_fun );
+		for ( size_t i = 0; i < nb_basis_fun; i++ )
+		{	this->result_of_integr [i] .resize ( nb_basis_fun );
+			for ( size_t j = 0; j < nb_basis_fun; j++ )
+				this->result_of_integr [i] [j] .resize ( 16, 0. );  }
 		// we analyse again the requested 'result' to see which expressions are wanted
 		assert ( result .size() >= 4 );
 		Function xy = Manifold::working .coordinates();
@@ -2725,6 +2895,11 @@ void FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 
 
 Cell::Numbering & FiniteElement::StandAlone::TypeOne::Triangle::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::StandAlone::TypeOne::Quadrangle::build_global_numbering ( )
 // virtual from FiniteElement::Core
 { assert ( false );
 	return * this->numbers [1];  }

@@ -184,8 +184,8 @@ int main ()
 	std::cout << "produced file square-Dirichlet.msh" << std::endl;
 
 	clock_t finished_at = clock();
-	std::cout << "time taken : " << finished_at - started_at << " ticks (one second has ";
-	std::cout << CLOCKS_PER_SEC << " ticks)" << std::endl;
+	std::cout << "time taken : "  << ((float)(finished_at-started_at))/CLOCKS_PER_SEC
+            << " seconds" << std::endl;
 	
 	return 0;
 }

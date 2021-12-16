@@ -151,7 +151,7 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 ( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
   const tag::IntegralOf &, const std::vector < Function > & res   )
 
-// bf is an dummy basis function (Function::MereSymbol) in the finite element
+// bf is a dummy basis function (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'res'
 
 {	this->core->pre_compute ( { bf }, res );  }
@@ -161,7 +161,7 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 ( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
   const tag::IntegralOf &, const std::vector < Function > & res                  )
 
-// bf1 and bf2 are arbitrary basis functions (Function::MereSymbol) in the finite element
+// bf1 and bf2 are dummy basis functions (Function::MereSymbol) in the finite element
 // we prepare computations for fast evaluation of integrals of expressions listed in 'res'
 
 {	this->core->pre_compute ( { bf1, bf2 }, res );  }
@@ -232,6 +232,8 @@ class FiniteElement
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Triangle &,  // no master, stand-alone
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::Quadrangle &,  // no master, stand-alone
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 
 	// destructor
@@ -759,7 +761,9 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	void dock_on ( const Cell & cll ) = 0;
 	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
 
-	// 'pre_compute' stays pure virtual from FiniteElement::Core
+	//  pre_compute  virtual from FiniteElement::Core
+	void pre_compute ( const std::vector < Function > & bf,
+                     const std::vector < Function > & result );
 
 	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
 	
@@ -806,12 +810,57 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	void dock_on ( const Cell & cll, const tag::Winding & );
 
 	//  pre_compute  virtual from FiniteElement::Core
-	void pre_compute ( const std::vector < Function > & bf,
-                     const std::vector < Function > & result );
+	// defined by FiniteElement::StandAlone::TypeOne
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Triangle
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::StandAlone::TypeOne
+
+// quadrangular finite elements, no master element
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	// attributes inherited from FiniteElement::StandAlone :
+	// size_t cas { 0 }
+	// std::vector < size_t > selector
+	// std::map < Cell::Core *, size_t > local_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne :
+	// std::vector < Function > dummy_bf  dummy base functions, arguments of 'pre_compute'
+
+	Function bf1, bf2, bf3, bf4;
+
+	// constructor
+
+	inline Quadrangle ( )
+	: FiniteElement::StandAlone::TypeOne(), bf1 ( tag::mere_symbol ),
+		bf2 ( tag::mere_symbol ), bf3 ( tag::mere_symbol ), bf4 ( tag::mere_symbol )
+	{ this->basis_numbering [ bf1.core ] = 0;
+		this->basis_numbering [ bf2.core ] = 1;
+		this->basis_numbering [ bf3.core ] = 2;
+		this->basis_numbering [ bf4.core ] = 3;  }
+	
+	// dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	//  pre_compute  virtual from FiniteElement::Core
+	// defined by FiniteElement::StandAlone::TypeOne
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+
+};  // end of  class FiniteElement::StandAlone::TypeOne::Quadrangle
 
 //-----------------------------------------------------------------------------------------//
 
@@ -824,6 +873,16 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 {	assert ( deg == 1 );
 
 	this->core = new FiniteElement::StandAlone::TypeOne::Triangle();  }
+
+
+inline FiniteElement::FiniteElement  // no master, stand-alone
+( const tag::Quadrangle &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	this->core = new FiniteElement::StandAlone::TypeOne::Quadrangle();  }
 
 
 inline Integrator FiniteElement::set_integrator ( const tag::UFL_FFC & )
