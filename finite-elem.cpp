@@ -870,19 +870,8 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 
 // this function is speed-critical
 
-{	const double alph = 0.7886751345948129,
-	             beta = 0.2113248654051871;
-
-	const double xRmxQ = xR - xQ, xSmxP = xS - xP, xPmxQ = xP - xQ, xSmxR = xS - xR,
+{	const double xRmxQ = xR - xQ, xSmxP = xS - xP, xPmxQ = xP - xQ, xSmxR = xS - xR,
 	             yRmyQ = yR - yQ, ySmyP = yS - yP, yPmyQ = yP - yQ, ySmyR = yS - yR;
-	double J_c0_02 = alph * xRmxQ + beta * xSmxP,
-	       J_c0_13 = beta * xRmxQ + alph * xSmxP,
-	       J_c1_01 = alph * xPmxQ + beta * xSmxR,
-	       J_c1_23 = beta * xPmxQ + alph * xSmxR,
-	       J_c2_02 = alph * yRmyQ + beta * ySmyP,
-	       J_c2_13 = beta * yRmyQ + alph * ySmyP,
-	       J_c3_01 = alph * yPmyQ + beta * ySmyR,
-	       J_c3_23 = beta * yPmyQ + alph * ySmyR;
 
 	// below we use a switch statement
 	// we trust that the compiler implements it by means of a list of addresses
@@ -908,8 +897,18 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			break;  // end of case 2
 
 		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
-		{
+		
 			std::cout << "case 3 ";
+		{	const double alph = 0.7886751345948129,
+			             beta = 0.2113248654051871;
+			double J_c0_02 = alph * xRmxQ + beta * xSmxP,
+			       J_c0_13 = beta * xRmxQ + alph * xSmxP,
+			       J_c1_01 = alph * xPmxQ + beta * xSmxR,
+			       J_c1_23 = beta * xPmxQ + alph * xSmxR,
+			       J_c2_02 = alph * yRmyQ + beta * ySmyP,
+			       J_c2_13 = beta * yRmyQ + alph * ySmyP,
+			       J_c3_01 = alph * yPmyQ + beta * ySmyR,
+			       J_c3_23 = beta * yPmyQ + alph * ySmyR;
 			#ifndef NDEBUG
 			const double det_0 = J_c0_02 * J_c3_01 - J_c1_01 * J_c2_02,
 			             det_1 = J_c0_13 * J_c3_01 - J_c1_01 * J_c2_13,
@@ -934,6 +933,48 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [0][3][1] = - J_c1 + J_c0;                    }  // int psi^S,y
 			break;  // end of case 3
 	
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
+		
+		{	const double w_077 = 0.07716049382716043,  // 25/81/4
+			             w_123 = 0.1234567901234567,   // 10/81
+			             w_197 = 0.1975308641975309;   // 16/81
+			const double alph = 0.8872983346207417,
+			             beta = 0.1127016653792583;
+			double J_c0_036 = alph * xRmxQ + beta * xSmxP,
+			       J_c0_147 = 0.5 * ( xRmxQ +  xSmxP ),
+			       J_c0_258 = beta * xRmxQ + alph * xSmxP,
+			       J_c1_012 = alph * xPmxQ + beta * xSmxR,
+			       J_c1_345 = 0.5 * ( xPmxQ + xSmxR ),
+			       J_c1_678 = beta * xPmxQ + alph * xSmxR,
+			       J_c2_036 = alph * yRmyQ + beta * ySmyP,
+			       J_c2_147 = 0.5 * ( yRmyQ + ySmyP ),
+			       J_c2_258 = beta * yRmyQ + alph * ySmyP,
+			       J_c3_012 = alph * yPmyQ + beta * ySmyR,
+			       J_c3_345 = 0.5 * ( yPmyQ + ySmyR ),
+			       J_c3_678 = beta * yPmyQ + alph * ySmyR;
+			#ifndef NDEBUG
+			const double det_0 = J_c0_036 * J_c3_012 - J_c1_012 * J_c2_036,
+			             det_1 = J_c0_147 * J_c3_012 - J_c1_012 * J_c2_147,
+			             det_2 = J_c0_258 * J_c3_012 - J_c1_012 * J_c2_258,
+			             det_3 = J_c0_036 * J_c3_345 - J_c1_345 * J_c2_036,
+			             det_4 = J_c0_147 * J_c3_345 - J_c1_345 * J_c2_147,
+			             det_5 = J_c0_258 * J_c3_345 - J_c1_345 * J_c2_258,
+			             det_6 = J_c0_036 * J_c3_678 - J_c1_678 * J_c2_036,
+			             det_7 = J_c0_147 * J_c3_678 - J_c1_678 * J_c2_147,
+			             det_8 = J_c0_258 * J_c3_678 - J_c1_678 * J_c2_258;
+			assert ( det_0 > 0. );  // det = area
+			assert ( det_1 > 0. );  // det = area
+			assert ( det_2 > 0. );  // det = area
+			assert ( det_3 > 0. );  // det = area
+			assert ( det_4 > 0. );  // det = area
+			assert ( det_5 > 0. );  // det = area
+			assert ( det_6 > 0. );  // det = area
+			assert ( det_7 > 0. );  // det = area
+			assert ( det_8 > 0. );  // det = area
+			#endif
+		}
+			break;  // end of case 4
+
 		default : assert ( false );
 	}  // end of  switch  statement
 	
