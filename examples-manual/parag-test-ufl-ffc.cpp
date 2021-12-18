@@ -24,7 +24,7 @@ int main ()
 	Function bf1 ( tag::basis_function, tag::within, fe_ufl_ffc ),
 	         bf2 ( tag::basis_function, tag::within, fe_ufl_ffc );
 	integ_ufl_ffc .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
-															 tag::integral_of, { bf1 .deriv(x) * bf2 .deriv(x) } );
+															 tag::integral_of, { bf1 .deriv(y) * bf2 .deriv(y) } );
 
 	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
 	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
@@ -48,10 +48,10 @@ int main ()
 	         psi_C = fe_gauss .basis_function (C),
 	         psi_D = fe_gauss .basis_function (D);
 	std::cout << "       ";
-	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_A .deriv(x) ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_B .deriv(x) ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_C .deriv(x) ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_D .deriv(x) ) << std::endl;
+	std::cout << fe_gauss .integrate ( psi_D .deriv(y) * psi_A .deriv(y) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_D .deriv(y) * psi_B .deriv(y) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_D .deriv(y) * psi_C .deriv(y) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_D .deriv(y) * psi_D .deriv(y) ) << std::endl;
 	} { // just a block of code for hiding names
 	fe_ufl_ffc .dock_on ( ABCD );
 	Function psi_A = fe_ufl_ffc .basis_function (A),
@@ -59,22 +59,22 @@ int main ()
 	         psi_C = fe_ufl_ffc .basis_function (C),
 	         psi_D = fe_ufl_ffc .basis_function (D);
 	std::vector < double > result =
-		fe_ufl_ffc .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
+		fe_ufl_ffc .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
 	                                             tag::replace, bf2, tag::by, psi_A );
 	assert ( result .size() == 1 );
 	std::cout << result [0] << " || ";
 	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
+		( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
 	                       tag::replace, bf2, tag::by, psi_B );
 	assert ( result .size() == 1 );
 	std::cout << result [0] << " || ";
 	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
+		( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
 	                       tag::replace, bf2, tag::by, psi_C );
 	assert ( result .size() == 1 );
 	std::cout << result [0] << " || ";
 	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
+		( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
 	                       tag::replace, bf2, tag::by, psi_D );
 	assert ( result .size() == 1 );
 	std::cout << result [0] << std::endl;
