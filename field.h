@@ -155,7 +155,7 @@ class Cell::Numbering::Field : public Cell::Numbering
 	size_t size ( )  // virtual from Cell::Numbering
 	{	return this->counter;  }
 	
-	size_t & operator() ( const Cell );  // virtual from Cell::Numbering
+	size_t & operator[] ( const Cell );  // virtual from Cell::Numbering
 		
 };	
 

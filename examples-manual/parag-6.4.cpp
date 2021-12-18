@@ -79,7 +79,7 @@ int main ()
 	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering ( P );
+		size_t i = numbering [ P ];
 		matrix_A .coeffRef ( i, i ) = 0.;  }
 	} // just a block of code 
 
@@ -98,8 +98,8 @@ int main ()
 		for ( it1 .reset(); it1 .in_range(); it1++ )
 		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
-			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering(V) << ", W=("
-			// 					<< x(W) << "," << y(W) << ") " << numbering(W) << std::endl;
+			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
+			// 					<< x(W) << "," << y(W) << ") " << numbering[W] << std::endl;
 			Function psiV = fe .basis_function (V),
 			         psiW = fe .basis_function (W),
 			         d_psiV_dx = psiV .deriv (x),
@@ -107,7 +107,7 @@ int main ()
 			         d_psiW_dx = psiW .deriv (x),
 			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
-			matrix_A .coeffRef ( numbering (V), numbering (W) ) +=
+			matrix_A .coeffRef ( numbering [V], numbering [W] ) +=
 				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
 	} // just a block of code 
 
@@ -116,25 +116,25 @@ int main ()
 	Mesh::Iterator it = AB .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering (P);
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} { // just a block of code for hiding 'it' 
 	Mesh::Iterator it = BC .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering (P);
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, y(P) );  }
 	} { // just a block of code for hiding 'it'
 	Mesh::Iterator it = CD .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering (P);
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, x(P) );  }
 	} { // just a block of code for hiding 'it'
 	Mesh::Iterator it = DA .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering (P);
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} // just a block of code 
 	
@@ -177,7 +177,7 @@ int main ()
 	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering (P);
+		size_t i = numbering [P];
 		solution_file << i + 1 << " " << vector_sol[i] << std::endl;   }
 	} // just a block of code
 

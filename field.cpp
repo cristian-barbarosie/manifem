@@ -54,7 +54,7 @@ Field::Double::Scalar * Field::Double::Block::component ( size_t i )  // virtual
 //---------------------------------------------------------------------------------------
 
 
-size_t & Cell::Numbering::Field::operator() ( const Cell p )  // virtual from Cell::Numbering
+size_t & Cell::Numbering::Field::operator[] ( const Cell p )  // virtual from Cell::Numbering
 {	return this->field.on_cell ( p.core );  }
 
 void Cell::Numbering::Field::set_and_increment ( Cell::Core * cll, void * num )  // static
