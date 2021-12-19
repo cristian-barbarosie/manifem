@@ -974,41 +974,54 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			assert ( det_7 > 0. );  // det = area
 			assert ( det_8 > 0. );  // det = area
 
-			double tmp =         J_c3_012 * J_c3_012 * alph * alph * w_077 / det_0
-			                   + J_c3_012 * J_c3_012 * 0.25        * w_123 / det_1
-			                   + J_c3_012 * J_c3_012 * beta * beta * w_077 / det_2
-			                   + J_c3_345 * J_c3_345 * alph * alph * w_123 / det_3
-			                   + J_c3_345 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c3_345 * J_c3_345 * beta * beta * w_123 / det_5
-			                   + J_c3_678 * J_c3_678 * alph * alph * w_077 / det_6
-			                   + J_c3_678 * J_c3_678 * 0.25        * w_123 / det_7
-			                   + J_c3_678 * J_c3_678 * beta * beta * w_077 / det_8;
+			const double wd_0 = w_077 / det_0, wd_1 = w_123 / det_1, wd_2 = w_077 / det_2,
+			             wd_3 = w_123 / det_3, wd_4 = w_197 / det_4, wd_5 = w_123 / det_5,
+			             wd_6 = w_077 / det_6, wd_7 = w_123 / det_7, wd_8 = w_077 / det_8;
+
+			const double alph_alph = alph * alph, beta_beta = beta * beta,
+			             alph_beta = alph * beta, beta_alph = alph_beta,
+			             half_alph = 0.5 * alph,  alph_half = half_alph,
+			             half_beta = 0.5 * beta,  beta_half = half_beta;
+
+			const double J_c3_012_c3_012 = J_c3_012 * J_c3_012,
+			             J_c3_345_c3_345 = J_c3_345 * J_c3_345,
+			             J_c3_678_c3_678 = J_c3_678 * J_c3_678;
+			
+			double tmp =         J_c3_012_c3_012 * (   alph_alph * wd_0
+			                                         + 0.25      * wd_1
+			                                         + beta_beta * wd_2 )
+			                   + J_c3_345_c3_345 * (   alph_alph * wd_3
+			                                         + 0.25      * wd_4
+			                                         + beta_beta * wd_5 )
+			                   + J_c3_678_c3_678 * (   alph_alph * wd_6
+			                                         + 0.25      * wd_7
+			                                         + beta_beta * wd_8 );
 			result [0][0][0] =                             // int psi^P,x * psi^P,x
 			result [2][2][0] = tmp;                        // int psi^R,x * psi^R,x
 			result [0][2][0] =                             // int psi^P,x * psi^R,x
 			result [2][0][0] = - tmp;                      // int psi^R,x * psi^P,x
-			tmp =                J_c3_012 * J_c3_012 * beta * beta * w_077 / det_0
-			                   + J_c3_012 * J_c3_012 * 0.25        * w_123 / det_1
-			                   + J_c3_012 * J_c3_012 * alph * alph * w_077 / det_2
-			                   + J_c3_345 * J_c3_345 * beta * beta * w_123 / det_3
-			                   + J_c3_345 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c3_345 * J_c3_345 * alph * alph * w_123 / det_5
-			                   + J_c3_678 * J_c3_678 * beta * beta * w_077 / det_6
-			                   + J_c3_678 * J_c3_678 * 0.25        * w_123 / det_7
-			                   + J_c3_678 * J_c3_678 * alph * alph * w_077 / det_8;
+			tmp =                J_c3_012_c3_012 * (   beta_beta * wd_0
+			                                         + 0.25      * wd_1
+			                                         + alph_alph * wd_2 )
+			                   + J_c3_345_c3_345 * (   beta_beta * wd_3
+			                                         + 0.25      * wd_4
+			                                         + alph_alph * wd_5 )
+			                   + J_c3_678_c3_678 * (   beta_beta * wd_6
+			                                         + 0.25      * wd_7
+			                                         + alph_alph * wd_8 );
 			result [1][1][0] =                             // int psi^Q,x * psi^Q,x
 			result [3][3][0] = tmp;                        // int psi^S,x * psi^S,x
 			result [1][3][0] =                             // int psi^Q,x * psi^S,x
 			result [3][1][0] = - tmp;                      // int psi^S,x * psi^Q,x
-			tmp =                J_c3_012 * J_c3_012 * alph * beta * w_077 / det_0
-			                   + J_c3_012 * J_c3_012 * 0.25        * w_123 / det_1
-			                   + J_c3_012 * J_c3_012 * beta * alph * w_077 / det_2
-			                   + J_c3_345 * J_c3_345 * alph * beta * w_123 / det_3
-			                   + J_c3_345 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c3_345 * J_c3_345 * beta * alph * w_123 / det_5
-			                   + J_c3_678 * J_c3_678 * alph * beta * w_077 / det_6
-			                   + J_c3_678 * J_c3_678 * 0.25        * w_123 / det_7
-			                   + J_c3_678 * J_c3_678 * beta * alph * w_077 / det_8;
+			tmp =                J_c3_012_c3_012 * (   alph_beta * wd_0
+			                                         + 0.25      * wd_1
+			                                         + beta_alph * wd_2 )
+			                   + J_c3_345_c3_345 * (   alph_beta * wd_3
+			                                         + 0.25      * wd_4
+			                                         + beta_alph * wd_5 )
+			                   + J_c3_678_c3_678 * (   alph_beta * wd_6
+			                                         + 0.25      * wd_7
+			                                         + beta_alph * wd_8 );
 			result [0][1][0] =                             // int psi^P,x * psi^Q,x
 			result [1][0][0] =                             // int psi^Q,x * psi^P,x
 			result [2][3][0] =                             // int psi^R,x * psi^S,x
@@ -1017,16 +1030,26 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][0][0] =                             // int psi^S,x * psi^P,x
 			result [1][2][0] =                             // int psi^Q,x * psi^R,x
 			result [2][1][0] = - tmp;                      // int psi^R,x * psi^Q,x
-			
-			tmp =                J_c2_036 * J_c3_012 * alph * alph * w_077 / det_0
-			                   + J_c2_147 * J_c3_012 * alph * 0.5  * w_123 / det_1
-			                   + J_c2_258 * J_c3_012 * alph * beta * w_077 / det_2
-			                   + J_c2_036 * J_c3_345 * 0.5  * alph * w_123 / det_3
-			                   + J_c2_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c3_345 * 0.5  * beta * w_123 / det_5
-			                   + J_c2_036 * J_c3_678 * beta * alph * w_077 / det_6
-			                   + J_c2_147 * J_c3_678 * beta * 0.5  * w_123 / det_7
-			                   + J_c2_258 * J_c3_678 * beta * beta * w_077 / det_8;
+
+			const double J_c2_036_c3_012 = J_c2_036 * J_c3_012,
+			             J_c2_147_c3_012 = J_c2_147 * J_c3_012,
+			             J_c2_258_c3_012 = J_c2_258 * J_c3_012,
+			             J_c2_036_c3_345 = J_c2_036 * J_c3_345,
+			             J_c2_147_c3_345 = J_c2_147 * J_c3_345,
+			             J_c2_258_c3_345 = J_c2_258 * J_c3_345,
+			             J_c2_036_c3_678 = J_c2_036 * J_c3_678,
+			             J_c2_147_c3_678 = J_c2_147 * J_c3_678,
+			             J_c2_258_c3_678 = J_c2_258 * J_c3_678;
+				
+			tmp =                J_c2_036_c3_012 * alph_alph * wd_0
+			                   + J_c2_147_c3_012 * alph_half * wd_1
+			                   + J_c2_258_c3_012 * alph_beta * wd_2
+			                   + J_c2_036_c3_345 * half_alph * wd_3
+			                   + J_c2_147_c3_345 * 0.25      * wd_4
+			                   + J_c2_258_c3_345 * half_beta * wd_5
+			                   + J_c2_036_c3_678 * beta_alph * wd_6
+			                   + J_c2_147_c3_678 * beta_half * wd_7
+			                   + J_c2_258_c3_678 * beta_beta * wd_8;
 			result [0][0][0] -= tmp + tmp;                 // int psi^P,x * psi^P,x
 			result [0][1][0] += tmp;                       // int psi^P,x * psi^Q,x
 			result [1][0][0] += tmp;                       // int psi^Q,x * psi^P,x
@@ -1034,15 +1057,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][0][0] += tmp;                       // int psi^R,x * psi^P,x
 			result [1][2][0] -= tmp;                       // int psi^Q,x * psi^R,x
 			result [2][1][0] -= tmp;                       // int psi^R,x * psi^Q,x
-			tmp =                J_c2_036 * J_c3_012 * alph * beta * w_077 / det_0
-			                   + J_c2_147 * J_c3_012 * alph * 0.5  * w_123 / det_1
-			                   + J_c2_258 * J_c3_012 * alph * alph * w_077 / det_2
-			                   + J_c2_036 * J_c3_345 * 0.5  * beta * w_123 / det_3
-			                   + J_c2_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c3_345 * 0.5  * alph * w_123 / det_5
-			                   + J_c2_036 * J_c3_678 * beta * beta * w_077 / det_6
-			                   + J_c2_147 * J_c3_678 * beta * 0.5  * w_123 / det_7
-			                   + J_c2_258 * J_c3_678 * beta * alph * w_077 / det_8;
+			tmp =                J_c2_036_c3_012 * alph_beta * wd_0
+			                   + J_c2_147_c3_012 * alph_half * wd_1
+			                   + J_c2_258_c3_012 * alph_alph * wd_2
+			                   + J_c2_036_c3_345 * half_beta * wd_3
+			                   + J_c2_147_c3_345 * 0.25      * wd_4
+			                   + J_c2_258_c3_345 * half_alph * wd_5
+			                   + J_c2_036_c3_678 * beta_beta * wd_6
+			                   + J_c2_147_c3_678 * beta_half * wd_7
+			                   + J_c2_258_c3_678 * beta_alph * wd_8;
 			result [1][1][0] += tmp + tmp;                 // int psi^Q,x * psi^Q,x
 			result [0][1][0] -= tmp;                       // int psi^P,x * psi^Q,x
 			result [1][0][0] -= tmp;                       // int psi^Q,x * psi^P,x
@@ -1050,15 +1073,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][1][0] -= tmp;                       // int psi^S,x * psi^Q,x
 			result [0][3][0] += tmp;                       // int psi^P,x * psi^S,x
 			result [3][0][0] += tmp;                       // int psi^S,x * psi^P,x
-			tmp =                J_c2_036 * J_c3_012 * beta * alph * w_077 / det_0
-			                   + J_c2_147 * J_c3_012 * beta * 0.5  * w_123 / det_1
-			                   + J_c2_258 * J_c3_012 * beta * beta * w_077 / det_2
-			                   + J_c2_036 * J_c3_345 * 0.5  * alph * w_123 / det_3
-			                   + J_c2_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c3_345 * 0.5  * beta * w_123 / det_5
-			                   + J_c2_036 * J_c3_678 * alph * alph * w_077 / det_6
-			                   + J_c2_147 * J_c3_678 * alph * 0.5  * w_123 / det_7
-			                   + J_c2_258 * J_c3_678 * alph * beta * w_077 / det_8;
+			tmp =                J_c2_036_c3_012 * beta_alph * wd_0
+			                   + J_c2_147_c3_012 * beta_half * wd_1
+			                   + J_c2_258_c3_012 * beta_beta * wd_2
+			                   + J_c2_036_c3_345 * half_alph * wd_3
+			                   + J_c2_147_c3_345 * 0.25      * wd_4
+			                   + J_c2_258_c3_345 * half_beta * wd_5
+			                   + J_c2_036_c3_678 * alph_alph * wd_6
+			                   + J_c2_147_c3_678 * alph_half * wd_7
+			                   + J_c2_258_c3_678 * alph_beta * wd_8;
 			result [2][2][0] += tmp + tmp;                 // int psi^R,x * psi^R,x
 			result [0][2][0] -= tmp;                       // int psi^P,x * psi^R,x
 			result [2][0][0] -= tmp;                       // int psi^R,x * psi^P,x
@@ -1066,15 +1089,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][2][0] -= tmp;                       // int psi^S,x * psi^R,x
 			result [0][3][0] += tmp;                       // int psi^P,x * psi^S,x
 			result [3][0][0] += tmp;                       // int psi^S,x * psi^P,x
-			tmp =                J_c2_036 * J_c3_012 * beta * beta * w_077 / det_0
-			                   + J_c2_147 * J_c3_012 * beta * 0.5  * w_123 / det_1
-			                   + J_c2_258 * J_c3_012 * beta * alph * w_077 / det_2
-			                   + J_c2_036 * J_c3_345 * 0.5  * beta * w_123 / det_3
-			                   + J_c2_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c3_345 * 0.5  * alph * w_123 / det_5
-			                   + J_c2_036 * J_c3_678 * alph * beta * w_077 / det_6
-			                   + J_c2_147 * J_c3_678 * alph * 0.5  * w_123 / det_7
-			                   + J_c2_258 * J_c3_678 * alph * alph * w_077 / det_8;
+			tmp =                J_c2_036_c3_012 * beta_beta * wd_0
+			                   + J_c2_147_c3_012 * beta_half * wd_1
+			                   + J_c2_258_c3_012 * beta_alph * wd_2
+			                   + J_c2_036_c3_345 * half_beta * wd_3
+			                   + J_c2_147_c3_345 * 0.25      * wd_4
+			                   + J_c2_258_c3_345 * half_alph * wd_5
+			                   + J_c2_036_c3_678 * alph_beta * wd_6
+			                   + J_c2_147_c3_678 * alph_half * wd_7
+			                   + J_c2_258_c3_678 * alph_alph * wd_8;
 			result [3][3][0] -= tmp + tmp;                 // int psi^S,x * psi^S,x
 			result [1][3][0] += tmp;                       // int psi^Q,x * psi^S,x
 			result [3][1][0] += tmp;                       // int psi^S,x * psi^Q,x
@@ -1082,42 +1105,46 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][2][0] += tmp;                       // int psi^S,x * psi^R,x
 			result [1][2][0] -= tmp;                       // int psi^Q,x * psi^R,x
 			result [2][1][0] -= tmp;                       // int psi^R,x * psi^Q,x
-			
-			tmp =                J_c2_036 * J_c2_036 * alph * alph * w_077 / det_0
-			                   + J_c2_147 * J_c2_147 * alph * alph * w_123 / det_1
-			                   + J_c2_258 * J_c2_258 * alph * alph * w_077 / det_2
-			                   + J_c2_036 * J_c2_036 * 0.25        * w_123 / det_3
-			                   + J_c2_147 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c2_258 * 0.25        * w_123 / det_5
-			                   + J_c2_036 * J_c2_036 * beta * beta * w_077 / det_6
-			                   + J_c2_147 * J_c2_147 * beta * beta * w_123 / det_7
-			                   + J_c2_258 * J_c2_258 * beta * beta * w_077 / det_8;
+
+			const double J_c2_036_c2_036 = J_c2_036 * J_c2_036,
+			             J_c2_147_c2_147 = J_c2_147 * J_c2_147,
+			             J_c2_258_c2_258 = J_c2_258 * J_c2_258;
+				
+			tmp =                J_c2_036_c2_036 * alph_alph * wd_0
+			                   + J_c2_036_c2_036 * 0.25      * wd_3
+			                   + J_c2_036_c2_036 * beta_beta * wd_6
+			                   + J_c2_147_c2_147 * alph_alph * wd_1
+			                   + J_c2_147_c2_147 * 0.25      * wd_4
+			                   + J_c2_147_c2_147 * beta_beta * wd_7
+			                   + J_c2_258_c2_258 * alph_alph * wd_2
+			                   + J_c2_258_c2_258 * 0.25      * wd_5
+			                   + J_c2_258_c2_258 * beta_beta * wd_8;
 			result [0][0][0] += tmp;                       // int psi^P,x * psi^P,x
 			result [1][1][0] += tmp;                       // int psi^Q,x * psi^Q,x
 			result [0][1][0] -= tmp;                       // int psi^P,x * psi^Q,x
 			result [1][0][0] -= tmp;                       // int psi^Q,x * psi^P,x
-			tmp =                J_c2_036 * J_c2_036 * beta * beta * w_077 / det_0
-			                   + J_c2_147 * J_c2_147 * beta * beta * w_123 / det_1
-			                   + J_c2_258 * J_c2_258 * beta * beta * w_077 / det_2
-			                   + J_c2_036 * J_c2_036 * 0.25        * w_123 / det_3
-			                   + J_c2_147 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c2_258 * 0.25        * w_123 / det_5
-			                   + J_c2_036 * J_c2_036 * alph * alph * w_077 / det_6
-			                   + J_c2_147 * J_c2_147 * alph * alph * w_123 / det_7
-			                   + J_c2_258 * J_c2_258 * alph * alph * w_077 / det_8;
+			tmp =                J_c2_036_c2_036 * (   beta_beta * wd_0
+			                                         + 0.25      * wd_3
+			                                         + alph_alph * wd_6 )
+			                   + J_c2_147_c2_147 * (   beta_beta * wd_1
+			                                         + 0.25      * wd_4
+			                                         + alph_alph * wd_7 )
+			                   + J_c2_258_c2_258 * (   beta_beta * wd_2
+			                                         + 0.25      * wd_5
+			                                         + alph_alph * wd_8 );
 			result [2][2][0] += tmp;                       // int psi^R,x * psi^R,x
 			result [3][3][0] += tmp;                       // int psi^S,x * psi^S,x
 			result [2][3][0] -= tmp;                       // int psi^R,x * psi^S,x
 			result [3][2][0] -= tmp;                       // int psi^S,x * psi^R,x
-			tmp =                J_c2_036 * J_c2_036 * alph * beta * w_077 / det_0
-			                   + J_c2_147 * J_c2_147 * alph * beta * w_123 / det_1
-			                   + J_c2_258 * J_c2_258 * alph * beta * w_077 / det_2
-			                   + J_c2_036 * J_c2_036 * 0.25        * w_123 / det_3
-			                   + J_c2_147 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c2_258 * J_c2_258 * 0.25        * w_123 / det_5
-			                   + J_c2_036 * J_c2_036 * beta * alph * w_077 / det_6
-			                   + J_c2_147 * J_c2_147 * beta * alph * w_123 / det_7
-			                   + J_c2_258 * J_c2_258 * beta * alph * w_077 / det_8;
+			tmp =                J_c2_036_c2_036 * (   alph_beta * wd_0
+			                                         + 0.25      * wd_3
+			                                         + beta_alph * wd_6 )
+			                   + J_c2_147_c2_147 * (   alph_beta * wd_1
+			                                         + 0.25      * wd_4
+			                                         + beta_alph * wd_7 )
+			                   + J_c2_258_c2_258 * (   alph_beta * wd_2
+			                                         + 0.25      * wd_5
+			                                         + beta_alph * wd_8 );
 			result [0][2][0] += tmp;                       // int psi^P,x * psi^R,x
 			result [2][0][0] += tmp;                       // int psi^R,x * psi^P,x
 			result [0][3][0] -= tmp;                       // int psi^P,x * psi^S,x
@@ -1127,15 +1154,19 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [1][3][0] += tmp;                       // int psi^Q,x * psi^S,x
 			result [3][1][0] += tmp;                       // int psi^S,x * psi^Q,x
 
-			tmp =                J_c1_012 * J_c3_012 * alph * alph * w_077 / det_0
-			                   + J_c1_012 * J_c3_012 * 0.25        * w_123 / det_1
-			                   + J_c1_012 * J_c3_012 * beta * beta * w_077 / det_2
-			                   + J_c1_345 * J_c3_345 * alph * alph * w_123 / det_3
-			                   + J_c1_345 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c3_345 * beta * beta * w_123 / det_5
-			                   + J_c1_678 * J_c3_678 * alph * alph * w_077 / det_6
-			                   + J_c1_678 * J_c3_678 * 0.25        * w_123 / det_7
-			                   + J_c1_678 * J_c3_678 * beta * beta * w_077 / det_8;
+			const double J_c1_012_c3_012 = J_c1_012 * J_c3_012,
+			             J_c1_345_c3_345 = J_c1_345 * J_c3_345,
+			             J_c1_678_c3_678 = J_c1_678 * J_c3_678;
+			
+			tmp =                J_c1_012_c3_012 * (   alph_alph * wd_0
+			                                         + 0.25      * wd_1
+			                                         + beta_beta * wd_2 )
+			                   + J_c1_345_c3_345 * (   alph_alph * wd_3
+			                                         + 0.25      * wd_4
+			                                         + beta_beta * wd_5 )
+			                   + J_c1_678_c3_678 * (   alph_alph * wd_6
+			                                         + 0.25      * wd_7
+			                                         + beta_beta * wd_8 );
 			result [0][0][1] =                             // int psi^P,x * psi^P,y
 			result [2][2][1] =                             // int psi^R,x * psi^R,y
 			result [0][0][2] =                             // int psi^P,y * psi^P,x
@@ -1144,15 +1175,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][0][1] =                             // int psi^R,x * psi^P,y
 			result [0][2][2] =                             // int psi^P,y * psi^R,x
 			result [2][0][2] = tmp;                        // int psi^R,y * psi^P,x
-			tmp =                J_c1_012 * J_c3_012 * beta * beta * w_077 / det_0
-			                   + J_c1_012 * J_c3_012 * 0.25        * w_123 / det_1
-			                   + J_c1_012 * J_c3_012 * alph * alph * w_077 / det_2
-			                   + J_c1_345 * J_c3_345 * beta * beta * w_123 / det_3
-			                   + J_c1_345 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c3_345 * alph * alph * w_123 / det_5
-			                   + J_c1_678 * J_c3_678 * beta * beta * w_077 / det_6
-			                   + J_c1_678 * J_c3_678 * 0.25        * w_123 / det_7
-			                   + J_c1_678 * J_c3_678 * alph * alph * w_077 / det_8;
+			tmp =                J_c1_012_c3_012 * (   beta_beta * wd_0
+			                                         + 0.25      * wd_1
+			                                         + alph_alph * wd_2 )
+			                   + J_c1_345_c3_345 * (   beta_beta * wd_3
+			                                         + 0.25      * wd_4
+			                                         + alph_alph * wd_5 )
+			                   + J_c1_678_c3_678 * (   beta_beta * wd_6
+			                                         + 0.25      * wd_7
+			                                         + alph_alph * wd_8 );
 			result [1][1][1] =                             // int psi^Q,x * psi^Q,y
 			result [3][3][1] =                             // int psi^S,x * psi^S,y
 			result [1][1][2] =                             // int psi^Q,y * psi^Q,x
@@ -1161,15 +1192,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][1][1] =                             // int psi^S,x * psi^Q,y
 			result [1][3][2] =                             // int psi^Q,y * psi^S,x
 			result [3][1][2] = tmp;                        // int psi^S,y * psi^Q,x
-			tmp =                J_c1_012 * J_c3_012 * alph * beta * w_077 / det_0
-			                   + J_c1_012 * J_c3_012 * 0.25        * w_123 / det_1
-			                   + J_c1_012 * J_c3_012 * beta * alph * w_077 / det_2
-			                   + J_c1_345 * J_c3_345 * alph * beta * w_123 / det_3
-			                   + J_c1_345 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c3_345 * beta * alph * w_123 / det_5
-			                   + J_c1_678 * J_c3_678 * alph * beta * w_077 / det_6
-			                   + J_c1_678 * J_c3_678 * 0.25        * w_123 / det_7
-			                   + J_c1_678 * J_c3_678 * beta * alph * w_077 / det_8;
+			tmp =                J_c1_012_c3_012 * (   alph_beta * wd_0
+			                                         + 0.25      * wd_1
+			                                         + beta_alph * wd_2 )
+			                   + J_c1_345_c3_345 * (   alph_beta * wd_3
+			                                         + 0.25      * wd_4
+			                                         + beta_alph * wd_5 )
+			                   + J_c1_678_c3_678 * (   alph_beta * wd_6
+			                                         + 0.25      * wd_7
+			                                         + beta_alph * wd_8 );
 			result [0][1][2] =                             // int psi^P,x * psi^Q,y
 			result [1][0][2] =                             // int psi^Q,x * psi^P,y
 			result [2][3][2] =                             // int psi^R,x * psi^S,y
@@ -1186,16 +1217,26 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][0][1] =                             // int psi^S,y * psi^P,x
 			result [1][2][1] =                             // int psi^Q,y * psi^R,x
 			result [2][1][1] = tmp;                        // int psi^R,y * psi^Q,x
-			
-			tmp =                J_c1_012 * J_c2_036 * alph * alph * w_077 / det_0
-			                   + J_c1_012 * J_c2_147 * alph * 0.5  * w_123 / det_1
-			                   + J_c1_012 * J_c2_258 * alph * beta * w_077 / det_2
-			                   + J_c1_345 * J_c2_036 * 0.5  * alph * w_123 / det_3
-			                   + J_c1_345 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c2_258 * 0.5  * beta * w_123 / det_5
-			                   + J_c1_678 * J_c2_036 * beta * alph * w_077 / det_6
-			                   + J_c1_678 * J_c2_147 * beta * 0.5  * w_123 / det_7
-			                   + J_c1_678 * J_c2_258 * beta * beta * w_077 / det_8;
+
+			const double J_c1_012_c2_036 = J_c1_012 * J_c2_036,
+			             J_c1_012_c2_147 = J_c1_012 * J_c2_147,
+			             J_c1_012_c2_258 = J_c1_012 * J_c2_258,
+			             J_c1_345_c2_036 = J_c1_345 * J_c2_036,
+			             J_c1_345_c2_147 = J_c1_345 * J_c2_147,
+			             J_c1_345_c2_258 = J_c1_345 * J_c2_258,
+			             J_c1_678_c2_036 = J_c1_678 * J_c2_036,
+			             J_c1_678_c2_147 = J_c1_678 * J_c2_147,
+			             J_c1_678_c2_258 = J_c1_678 * J_c2_258;
+				
+			tmp =                J_c1_012_c2_036 * alph_alph * wd_0
+			                   + J_c1_012_c2_147 * alph_half * wd_1
+			                   + J_c1_012_c2_258 * alph_beta * wd_2
+			                   + J_c1_345_c2_036 * half_alph * wd_3
+			                   + J_c1_345_c2_147 * 0.25      * wd_4
+			                   + J_c1_345_c2_258 * half_beta * wd_5
+			                   + J_c1_678_c2_036 * beta_alph * wd_6
+			                   + J_c1_678_c2_147 * beta_half * wd_7
+			                   + J_c1_678_c2_258 * beta_beta * wd_8;
 			result [0][0][2] += tmp;                       // int psi^P,x * psi^P,y
 			result [0][1][2] -= tmp;                       // int psi^P,x * psi^Q,y
 			result [2][0][2] -= tmp;                       // int psi^R,x * psi^P,y
@@ -1204,15 +1245,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [1][0][1] -= tmp;                       // int psi^Q,y * psi^P,x
 			result [0][2][1] -= tmp;                       // int psi^P,y * psi^R,x
 			result [1][2][1] += tmp;                       // int psi^Q,y * psi^R,x
-			tmp =                J_c1_012 * J_c2_036 * alph * beta * w_077 / det_0
-			                   + J_c1_012 * J_c2_147 * alph * 0.5  * w_123 / det_1
-			                   + J_c1_012 * J_c2_258 * alph * alph * w_077 / det_2
-			                   + J_c1_345 * J_c2_036 * 0.5  * beta * w_123 / det_3
-			                   + J_c1_345 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c2_258 * 0.5  * alph * w_123 / det_5
-			                   + J_c1_678 * J_c2_036 * beta * beta * w_077 / det_6
-			                   + J_c1_678 * J_c2_147 * beta * 0.5  * w_123 / det_7
-			                   + J_c1_678 * J_c2_258 * beta * alph * w_077 / det_8;
+			tmp =                J_c1_012_c2_036 * alph_beta * wd_0
+			                   + J_c1_012_c2_147 * alph_half * wd_1
+			                   + J_c1_012_c2_258 * alph_alph * wd_2
+			                   + J_c1_345_c2_036 * half_beta * wd_3
+			                   + J_c1_345_c2_147 * 0.25      * wd_4
+			                   + J_c1_345_c2_258 * half_alph * wd_5
+			                   + J_c1_678_c2_036 * beta_beta * wd_6
+			                   + J_c1_678_c2_147 * beta_half * wd_7
+			                   + J_c1_678_c2_258 * beta_alph * wd_8;
 			result [1][0][2] += tmp;                       // int psi^Q,x * psi^P,y
 			result [1][1][2] -= tmp;                       // int psi^Q,x * psi^Q,y
 			result [3][0][2] -= tmp;                       // int psi^S,x * psi^P,y
@@ -1221,15 +1262,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [1][1][1] -= tmp;                       // int psi^Q,y * psi^Q,x
 			result [0][3][1] -= tmp;                       // int psi^P,y * psi^S,x
 			result [1][3][1] += tmp;                       // int psi^Q,y * psi^S,x
-			tmp =                J_c1_012 * J_c2_036 * beta * alph * w_077 / det_0
-			                   + J_c1_012 * J_c2_147 * beta * 0.5  * w_123 / det_1
-			                   + J_c1_012 * J_c2_258 * beta * beta * w_077 / det_2
-			                   + J_c1_345 * J_c2_036 * 0.5  * alph * w_123 / det_3
-			                   + J_c1_345 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c2_258 * 0.5  * beta * w_123 / det_5
-			                   + J_c1_678 * J_c2_036 * alph * alph * w_077 / det_6
-			                   + J_c1_678 * J_c2_147 * alph * 0.5  * w_123 / det_7
-			                   + J_c1_678 * J_c2_258 * alph * beta * w_077 / det_8;
+			tmp =                J_c1_012_c2_036 * beta_alph * wd_0
+			                   + J_c1_012_c2_147 * beta_half * wd_1
+			                   + J_c1_012_c2_258 * beta_beta * wd_2
+			                   + J_c1_345_c2_036 * half_alph * wd_3
+			                   + J_c1_345_c2_147 * 0.25      * wd_4
+			                   + J_c1_345_c2_258 * half_beta * wd_5
+			                   + J_c1_678_c2_036 * alph_alph * wd_6
+			                   + J_c1_678_c2_147 * alph_half * wd_7
+			                   + J_c1_678_c2_258 * alph_beta * wd_8;
 			result [0][2][2] += tmp;                       // int psi^P,x * psi^R,y
 			result [0][3][2] -= tmp;                       // int psi^P,x * psi^S,y
 			result [2][2][2] -= tmp;                       // int psi^R,x * psi^R,y
@@ -1238,15 +1279,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][0][1] -= tmp;                       // int psi^S,y * psi^P,x
 			result [2][2][1] -= tmp;                       // int psi^R,y * psi^R,x
 			result [3][2][1] += tmp;                       // int psi^S,y * psi^R,x
-			tmp =                J_c1_012 * J_c2_036 * beta * beta * w_077 / det_0
-			                   + J_c1_012 * J_c2_147 * beta * 0.5  * w_123 / det_1
-			                   + J_c1_012 * J_c2_258 * beta * alph * w_077 / det_2
-			                   + J_c1_345 * J_c2_036 * 0.5  * beta * w_123 / det_3
-			                   + J_c1_345 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c2_258 * 0.5  * alph * w_123 / det_5
-			                   + J_c1_678 * J_c2_036 * alph * beta * w_077 / det_6
-			                   + J_c1_678 * J_c2_147 * alph * 0.5  * w_123 / det_7
-			                   + J_c1_678 * J_c2_258 * alph * alph * w_077 / det_8;
+			tmp =                J_c1_012_c2_036 * beta_beta * wd_0
+			                   + J_c1_012_c2_147 * beta_half * wd_1
+			                   + J_c1_012_c2_258 * beta_alph * wd_2
+			                   + J_c1_345_c2_036 * half_beta * wd_3
+			                   + J_c1_345_c2_147 * 0.25      * wd_4
+			                   + J_c1_345_c2_258 * half_alph * wd_5
+			                   + J_c1_678_c2_036 * alph_beta * wd_6
+			                   + J_c1_678_c2_147 * alph_half * wd_7
+			                   + J_c1_678_c2_258 * alph_alph * wd_8;
 			result [1][2][2] += tmp;                       // int psi^Q,x * psi^R,y
 			result [1][3][2] -= tmp;                       // int psi^Q,x * psi^S,y
 			result [3][2][2] -= tmp;                       // int psi^S,x * psi^R,y
@@ -1255,16 +1296,26 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][1][1] -= tmp;                       // int psi^S,y * psi^Q,x
 			result [2][3][1] -= tmp;                       // int psi^R,y * psi^S,x
 			result [3][3][1] += tmp;                       // int psi^S,y * psi^S,x
-						
-			tmp =                J_c0_036 * J_c3_012 * alph * alph * w_077 / det_0
-			                   + J_c0_147 * J_c3_012 * alph * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c3_012 * alph * beta * w_077 / det_2
-			                   + J_c0_036 * J_c3_345 * 0.5  * alph * w_123 / det_3
-			                   + J_c0_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c3_345 * 0.5  * beta * w_123 / det_5
-			                   + J_c0_036 * J_c3_678 * beta * alph * w_077 / det_6
-			                   + J_c0_147 * J_c3_678 * beta * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c3_678 * beta * beta * w_077 / det_8;
+
+			const double J_c0_036_c3_012 = J_c0_036 * J_c3_012,
+			             J_c0_147_c3_012 = J_c0_147 * J_c3_012,
+			             J_c0_258_c3_012 = J_c0_258 * J_c3_012,
+			             J_c0_036_c3_345 = J_c0_036 * J_c3_345,
+			             J_c0_147_c3_345 = J_c0_147 * J_c3_345,
+			             J_c0_258_c3_345 = J_c0_258 * J_c3_345,
+			             J_c0_036_c3_678 = J_c0_036 * J_c3_678,
+			             J_c0_147_c3_678 = J_c0_147 * J_c3_678,
+			             J_c0_258_c3_678 = J_c0_258 * J_c3_678;
+				
+			tmp =                J_c0_036_c3_012 * alph_alph * wd_0
+			                   + J_c0_147_c3_012 * alph_half * wd_1
+			                   + J_c0_258_c3_012 * alph_beta * wd_2
+			                   + J_c0_036_c3_345 * half_alph * wd_3
+			                   + J_c0_147_c3_345 * 0.25      * wd_4
+			                   + J_c0_258_c3_345 * half_beta * wd_5
+			                   + J_c0_036_c3_678 * beta_alph * wd_6
+			                   + J_c0_147_c3_678 * beta_half * wd_7
+			                   + J_c0_258_c3_678 * beta_beta * wd_8;
 			result [0][0][2] += tmp;                       // int psi^P,x * psi^P,y
 			result [1][0][2] -= tmp;                       // int psi^Q,x * psi^P,y
 			result [0][2][2] -= tmp;                       // int psi^P,x * psi^R,y
@@ -1273,15 +1324,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [0][1][1] -= tmp;                       // int psi^P,y * psi^Q,x
 			result [2][0][1] -= tmp;                       // int psi^R,y * psi^P,x
 			result [2][1][1] += tmp;                       // int psi^R,y * psi^Q,x
-			tmp =                J_c0_036 * J_c3_012 * alph * beta * w_077 / det_0
-			                   + J_c0_147 * J_c3_012 * alph * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c3_012 * alph * alph * w_077 / det_2
-			                   + J_c0_036 * J_c3_345 * 0.5  * beta * w_123 / det_3
-			                   + J_c0_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c3_345 * 0.5  * alph * w_123 / det_5
-			                   + J_c0_036 * J_c3_678 * beta * beta * w_077 / det_6
-			                   + J_c0_147 * J_c3_678 * beta * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c3_678 * beta * alph * w_077 / det_8;
+			tmp =                J_c0_036_c3_012 * alph_beta * wd_0
+			                   + J_c0_147_c3_012 * alph_half * wd_1
+			                   + J_c0_258_c3_012 * alph_alph * wd_2
+			                   + J_c0_036_c3_345 * half_beta * wd_3
+			                   + J_c0_147_c3_345 * 0.25      * wd_4
+			                   + J_c0_258_c3_345 * half_alph * wd_5
+			                   + J_c0_036_c3_678 * beta_beta * wd_6
+			                   + J_c0_147_c3_678 * beta_half * wd_7
+			                   + J_c0_258_c3_678 * beta_alph * wd_8;
 			result [0][1][2] += tmp;                       // int psi^P,x * psi^Q,y
 			result [0][3][2] -= tmp;                       // int psi^P,x * psi^S,y
 			result [1][1][2] -= tmp;                       // int psi^Q,x * psi^Q,y
@@ -1290,15 +1341,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][0][1] -= tmp;                       // int psi^S,y * psi^P,x
 			result [1][1][1] -= tmp;                       // int psi^Q,y * psi^Q,x
 			result [3][1][1] += tmp;                       // int psi^S,y * psi^Q,x
-			tmp =                J_c0_036 * J_c3_012 * beta * alph * w_077 / det_0
-			                   + J_c0_147 * J_c3_012 * beta * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c3_012 * beta * beta * w_077 / det_2
-			                   + J_c0_036 * J_c3_345 * 0.5  * alph * w_123 / det_3
-			                   + J_c0_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c3_345 * 0.5  * beta * w_123 / det_5
-			                   + J_c0_036 * J_c3_678 * alph * alph * w_077 / det_6
-			                   + J_c0_147 * J_c3_678 * alph * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c3_678 * alph * beta * w_077 / det_8;
+			tmp =                J_c0_036_c3_012 * beta_alph * wd_0
+			                   + J_c0_147_c3_012 * beta_half * wd_1
+			                   + J_c0_258_c3_012 * beta_beta * wd_2
+			                   + J_c0_036_c3_345 * half_alph * wd_3
+			                   + J_c0_147_c3_345 * 0.25      * wd_4
+			                   + J_c0_258_c3_345 * half_beta * wd_5
+			                   + J_c0_036_c3_678 * alph_alph * wd_6
+			                   + J_c0_147_c3_678 * alph_half * wd_7
+			                   + J_c0_258_c3_678 * alph_beta * wd_8;
 			result [2][0][2] += tmp;                       // int psi^R,x * psi^P,y
 			result [2][2][2] -= tmp;                       // int psi^R,x * psi^R,y
 			result [3][0][2] -= tmp;                       // int psi^S,x * psi^P,y
@@ -1307,15 +1358,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][2][1] -= tmp;                       // int psi^R,y * psi^R,x
 			result [0][3][1] -= tmp;                       // int psi^P,y * psi^S,x
 			result [2][3][1] += tmp;                       // int psi^R,y * psi^S,x
-			tmp =                J_c0_036 * J_c3_012 * beta * beta * w_077 / det_0
-			                   + J_c0_147 * J_c3_012 * beta * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c3_012 * beta * alph * w_077 / det_2
-			                   + J_c0_036 * J_c3_345 * 0.5  * beta * w_123 / det_3
-			                   + J_c0_147 * J_c3_345 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c3_345 * 0.5  * alph * w_123 / det_5
-			                   + J_c0_036 * J_c3_678 * alph * beta * w_077 / det_6
-			                   + J_c0_147 * J_c3_678 * alph * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c3_678 * alph * alph * w_077 / det_8;
+			tmp =                J_c0_036_c3_012 * beta_beta * wd_0
+			                   + J_c0_147_c3_012 * beta_half * wd_1
+			                   + J_c0_258_c3_012 * beta_alph * wd_2
+			                   + J_c0_036_c3_345 * half_beta * wd_3
+			                   + J_c0_147_c3_345 * 0.25      * wd_4
+			                   + J_c0_258_c3_345 * half_alph * wd_5
+			                   + J_c0_036_c3_678 * alph_beta * wd_6
+			                   + J_c0_147_c3_678 * alph_half * wd_7
+			                   + J_c0_258_c3_678 * alph_alph * wd_8;
 			result [2][1][2] += tmp;                       // int psi^R,x * psi^Q,y
 			result [2][3][2] -= tmp;                       // int psi^R,x * psi^Q,y
 			result [3][1][2] -= tmp;                       // int psi^S,x * psi^Q,y
@@ -1325,15 +1376,19 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [1][3][1] -= tmp;                       // int psi^Q,y * psi^S,x
 			result [3][3][1] += tmp;                       // int psi^S,y * psi^S,x
 
-			tmp =                J_c0_036 * J_c2_036 * alph * alph * w_077 / det_0
-			                   + J_c0_147 * J_c2_147 * alph * alph * w_123 / det_1
-			                   + J_c0_258 * J_c2_258 * alph * alph * w_077 / det_2
-			                   + J_c0_036 * J_c2_036 * 0.25        * w_123 / det_3
-			                   + J_c0_147 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c2_258 * 0.25        * w_123 / det_5
-			                   + J_c0_036 * J_c2_036 * beta * beta * w_077 / det_6
-			                   + J_c0_147 * J_c2_147 * beta * beta * w_123 / det_7
-			                   + J_c0_258 * J_c2_258 * beta * beta * w_077 / det_8;
+			const double J_c0_036_c2_036 = J_c0_036 * J_c2_036,
+			             J_c0_147_c2_147 = J_c0_147 * J_c2_147,
+			             J_c0_258_c2_258 = J_c0_258 * J_c2_258;
+				
+			tmp =                J_c0_036_c2_036 * (   alph_alph * wd_0
+			                                         + 0.25      * wd_3
+			                                         + beta_beta * wd_6 )
+			                   + J_c0_147_c2_147 * (   alph_alph * wd_1
+			                                         + 0.25      * wd_4
+			                                         + beta_beta * wd_7 )
+			                   + J_c0_258_c2_258 * (   alph_alph * wd_2
+			                                         + 0.25      * wd_5
+			                                         + beta_beta * wd_8 );
 			result [0][0][1] -= tmp;                       // int psi^P,x * psi^P,y
 			result [1][1][1] -= tmp;                       // int psi^Q,x * psi^Q,y
 			result [0][0][2] -= tmp;                       // int psi^P,y * psi^P,x
@@ -1342,15 +1397,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [1][0][1] += tmp;                       // int psi^Q,x * psi^P,y
 			result [0][1][2] += tmp;                       // int psi^P,y * psi^Q,x
 			result [1][0][2] += tmp;                       // int psi^Q,y * psi^P,x
-			tmp =                J_c0_036 * J_c2_036 * alph * beta * w_077 / det_0
-			                   + J_c0_147 * J_c2_147 * alph * beta * w_123 / det_1
-			                   + J_c0_258 * J_c2_258 * alph * beta * w_077 / det_2
-			                   + J_c0_036 * J_c2_036 * 0.25        * w_123 / det_3
-			                   + J_c0_147 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c2_258 * 0.25        * w_123 / det_5
-			                   + J_c0_036 * J_c2_036 * beta * alph * w_077 / det_6
-			                   + J_c0_147 * J_c2_147 * beta * alph * w_123 / det_7
-			                   + J_c0_258 * J_c2_258 * beta * alph * w_077 / det_8;
+			tmp =                J_c0_036_c2_036 * (   alph_beta * wd_0
+			                                         + 0.25      * wd_3
+			                                         + beta_alph * wd_6 )
+			                   + J_c0_147_c2_147 * (   alph_beta * wd_1
+			                                         + 0.25      * wd_4
+			                                         + beta_alph * wd_7 )
+			                   + J_c0_258_c2_258 * (   alph_beta * wd_2
+			                                         + 0.25      * wd_5
+			                                         + beta_alph * wd_8 );
 			result [0][2][1] -= tmp;                       // int psi^P,x * psi^R,y
 			result [2][0][1] -= tmp;                       // int psi^R,x * psi^P,y
 			result [0][3][1] += tmp;                       // int psi^P,x * psi^S,y
@@ -1367,15 +1422,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][1][2] += tmp;                       // int psi^R,y * psi^Q,x
 			result [1][3][2] -= tmp;                       // int psi^Q,y * psi^S,x
 			result [3][1][2] -= tmp;                       // int psi^S,y * psi^Q,x
-			tmp =                J_c0_036 * J_c2_036 * beta * beta * w_077 / det_0
-			                   + J_c0_147 * J_c2_147 * beta * beta * w_123 / det_1
-			                   + J_c0_258 * J_c2_258 * beta * beta * w_077 / det_2
-			                   + J_c0_036 * J_c2_036 * 0.25        * w_123 / det_3
-			                   + J_c0_147 * J_c2_147 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c2_258 * 0.25        * w_123 / det_5
-			                   + J_c0_036 * J_c2_036 * alph * alph * w_077 / det_6
-			                   + J_c0_147 * J_c2_147 * alph * alph * w_123 / det_7
-			                   + J_c0_258 * J_c2_258 * alph * alph * w_077 / det_8;
+			tmp =                J_c0_036_c2_036 * (   beta_beta * wd_0
+			                                         + 0.25      * wd_3
+			                                         + alph_alph * wd_6 )
+			                   + J_c0_147_c2_147 * (   beta_beta * wd_1
+			                                         + 0.25      * wd_4
+			                                         + alph_alph * wd_7 )
+			                   + J_c0_258_c2_258 * (   0.25      * wd_5
+			                                         + beta_beta * wd_2
+			                                         + alph_alph * wd_8 );
 			result [2][2][1] -= tmp;                       // int psi^R,x * psi^R,y
 			result [3][3][1] -= tmp;                       // int psi^S,x * psi^S,y
 			result [2][2][2] -= tmp;                       // int psi^R,y * psi^R,x
@@ -1384,29 +1439,33 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][2][1] += tmp;                       // int psi^S,x * psi^R,y
 			result [2][3][2] += tmp;                       // int psi^R,y * psi^S,x
 			result [3][2][2] += tmp;                       // int psi^S,y * psi^R,x
-			
-			tmp =                J_c1_012 * J_c1_012 * alph * alph * w_077 / det_0
-			                   + J_c1_012 * J_c1_012 * 0.25        * w_123 / det_1
-			                   + J_c1_012 * J_c1_012 * beta * beta * w_077 / det_2
-			                   + J_c1_345 * J_c1_345 * alph * alph * w_123 / det_3
-			                   + J_c1_345 * J_c1_345 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c1_345 * beta * beta * w_123 / det_5
-			                   + J_c1_678 * J_c1_678 * alph * alph * w_077 / det_6
-			                   + J_c1_678 * J_c1_678 * 0.25        * w_123 / det_7
-			                   + J_c1_678 * J_c1_678 * beta * beta * w_077 / det_8;
+
+			const double J_c1_012_c1_012 = J_c1_012 * J_c1_012,
+			             J_c1_345_c1_345 = J_c1_345 * J_c1_345,
+			             J_c1_678_c1_678 = J_c1_678 * J_c1_678;
+				
+			tmp =                J_c1_012_c1_012 * (   alph_alph * wd_0
+			                                         + 0.25      * wd_1
+			                                         + beta_beta * wd_2 )
+			                   + J_c1_345_c1_345 * (   alph_alph * wd_3
+			                                         + 0.25      * wd_4
+			                                         + beta_beta * wd_5 )
+			                   + J_c1_678_c1_678 * (   alph_alph * wd_6
+			                                         + 0.25      * wd_7
+			                                         + beta_beta * wd_8 );
 			result [0][0][3] += tmp;                       // int psi^P,y * psi^P,y
 			result [0][2][3] -= tmp;                       // int psi^P,y * psi^R,y
 			result [2][0][3] -= tmp;                       // int psi^R,y * psi^P,y
 			result [2][2][3] += tmp;                       // int psi^R,y * psi^R,y
-			tmp =                J_c1_012 * J_c1_012 * alph * beta * w_077 / det_0
-			                   + J_c1_012 * J_c1_012 * 0.25        * w_123 / det_1
-			                   + J_c1_012 * J_c1_012 * beta * alph * w_077 / det_2
-			                   + J_c1_345 * J_c1_345 * alph * beta * w_123 / det_3
-			                   + J_c1_345 * J_c1_345 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c1_345 * beta * alph * w_123 / det_5
-			                   + J_c1_678 * J_c1_678 * alph * beta * w_077 / det_6
-			                   + J_c1_678 * J_c1_678 * 0.25        * w_123 / det_7
-			                   + J_c1_678 * J_c1_678 * beta * alph * w_077 / det_8;
+			tmp =                J_c1_012_c1_012 * (  alph_beta * wd_0
+			                                         + 0.25      * wd_1
+			                                         + beta_alph * wd_2 )
+			                   + J_c1_345_c1_345 * (   alph_beta * wd_3
+			                                         + 0.25      * wd_4
+			                                         + beta_alph * wd_5 )
+			                   + J_c1_678_c1_678 * (   alph_beta * wd_6
+			                                         + 0.25      * wd_7
+			                                         + beta_alph * wd_8 );
 			result [0][1][3] += tmp;                       // int psi^P,y * psi^Q,y
 			result [1][0][3] += tmp;                       // int psi^Q,y * psi^P,y
 			result [0][3][3] -= tmp;                       // int psi^P,y * psi^S,y
@@ -1415,29 +1474,39 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
 			result [2][3][3] += tmp;                       // int psi^R,y * psi^S,y
 			result [3][2][3] += tmp;                       // int psi^S,y * psi^R,y
-			tmp =                J_c1_012 * J_c1_012 * beta * beta * w_077 / det_0
-			                   + J_c1_012 * J_c1_012 * 0.25        * w_123 / det_1
-			                   + J_c1_012 * J_c1_012 * alph * alph * w_077 / det_2
-			                   + J_c1_345 * J_c1_345 * beta * beta * w_123 / det_3
-			                   + J_c1_345 * J_c1_345 * 0.25        * w_197 / det_4
-			                   + J_c1_345 * J_c1_345 * alph * alph * w_123 / det_5
-			                   + J_c1_678 * J_c1_678 * beta * beta * w_077 / det_6
-			                   + J_c1_678 * J_c1_678 * 0.25        * w_123 / det_7
-			                   + J_c1_678 * J_c1_678 * alph * alph * w_077 / det_8;
+			tmp =                J_c1_012_c1_012 * (   beta_beta * wd_0
+			                                         + 0.25      * wd_1
+			                                         + alph_alph * wd_2 )
+			                   + J_c1_345_c1_345 * (   beta_beta * wd_3
+			                                         + 0.25      * wd_4
+			                                         + alph_alph * wd_5 )
+			                   + J_c1_678_c1_678 * (   beta_beta * wd_6
+			                                         + 0.25      * wd_7
+			                                         + alph_alph * wd_8 );
 			result [1][1][3] += tmp;                       // int psi^Q,y * psi^Q,y
 			result [3][3][3] += tmp;                       // int psi^S,y * psi^S,y
 			result [1][3][3] -= tmp;                       // int psi^Q,y * psi^S,y
 			result [3][1][3] -= tmp;                       // int psi^S,y * psi^Q,y
 
-			tmp =                J_c0_036 * J_c1_012 * alph * alph * w_077 / det_0
-			                   + J_c0_147 * J_c1_012 * alph * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c1_012 * alph * beta * w_077 / det_2
-			                   + J_c0_036 * J_c1_345 * 0.5  * alph * w_123 / det_3
-			                   + J_c0_147 * J_c1_345 * 0.5  * 0.5  * w_197 / det_4
-			                   + J_c0_258 * J_c1_345 * 0.5  * beta * w_123 / det_5
-			                   + J_c0_036 * J_c1_678 * beta * alph * w_077 / det_6
-			                   + J_c0_147 * J_c1_678 * beta * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c1_678 * beta * beta * w_077 / det_8;
+			const double J_c0_036_c1_012 = J_c0_036 * J_c1_012,
+			             J_c0_147_c1_012 = J_c0_147 * J_c1_012,
+			             J_c0_258_c1_012 = J_c0_258 * J_c1_012,
+			             J_c0_036_c1_345 = J_c0_036 * J_c1_345,
+			             J_c0_147_c1_345 = J_c0_147 * J_c1_345,
+			             J_c0_258_c1_345 = J_c0_258 * J_c1_345,
+			             J_c0_036_c1_678 = J_c0_036 * J_c1_678,
+			             J_c0_147_c1_678 = J_c0_147 * J_c1_678,
+			             J_c0_258_c1_678 = J_c0_258 * J_c1_678;
+			
+			tmp =                J_c0_036_c1_012 * alph_alph * wd_0
+			                   + J_c0_147_c1_012 * alph_half * wd_1
+			                   + J_c0_258_c1_012 * alph_beta * wd_2
+			                   + J_c0_036_c1_345 * half_alph * wd_3
+			                   + J_c0_147_c1_345 * 0.5  * 0.5  * wd_4
+			                   + J_c0_258_c1_345 * half_beta * wd_5
+			                   + J_c0_036_c1_678 * beta_alph * wd_6
+			                   + J_c0_147_c1_678 * beta_half * wd_7
+			                   + J_c0_258_c1_678 * beta_beta * wd_8;
 			result [0][0][3] -= tmp + tmp;                 // int psi^P,y * psi^P,y
 			result [0][1][3] += tmp;                       // int psi^P,y * psi^Q,y
 			result [1][0][3] += tmp;                       // int psi^Q,y * psi^P,y
@@ -1445,15 +1514,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][0][3] += tmp;                       // int psi^R,y * psi^P,y
 			result [1][2][3] -= tmp;                       // int psi^Q,y * psi^R,y
 			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
-			tmp =                J_c0_036 * J_c1_012 * alph * beta * w_077 / det_0
-			                   + J_c0_147 * J_c1_012 * alph * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c1_012 * alph * alph * w_077 / det_2
-			                   + J_c0_036 * J_c1_345 * 0.5  * beta * w_123 / det_3
-			                   + J_c0_147 * J_c1_345 * 0.5  * 0.5  * w_197 / det_4
-			                   + J_c0_258 * J_c1_345 * 0.5  * alph * w_123 / det_5
-			                   + J_c0_036 * J_c1_678 * beta * beta * w_077 / det_6
-			                   + J_c0_147 * J_c1_678 * beta * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c1_678 * beta * alph * w_077 / det_8;
+			tmp =                J_c0_036_c1_012 * alph_beta * wd_0
+			                   + J_c0_147_c1_012 * alph_half * wd_1
+			                   + J_c0_258_c1_012 * alph_alph * wd_2
+			                   + J_c0_036_c1_345 * half_beta * wd_3
+			                   + J_c0_147_c1_345 * 0.5  * 0.5  * wd_4
+			                   + J_c0_258_c1_345 * half_alph * wd_5
+			                   + J_c0_036_c1_678 * beta_beta * wd_6
+			                   + J_c0_147_c1_678 * beta_half * wd_7
+			                   + J_c0_258_c1_678 * beta_alph * wd_8;
 			result [0][1][3] -= tmp;                       // int psi^P,y * psi^Q,y
 			result [1][0][3] -= tmp;                       // int psi^Q,y * psi^P,y
 			result [0][3][3] += tmp;                       // int psi^P,y * psi^S,y
@@ -1461,15 +1530,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [1][1][3] += tmp + tmp;                 // int psi^Q,y * psi^Q,y
 			result [1][3][3] -= tmp;                       // int psi^Q,y * psi^S,y
 			result [3][1][3] -= tmp;                       // int psi^S,y * psi^Q,y
-			tmp =                J_c0_036 * J_c1_012 * beta * alph * w_077 / det_0
-			                   + J_c0_147 * J_c1_012 * beta * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c1_012 * beta * beta * w_077 / det_2
-			                   + J_c0_036 * J_c1_345 * 0.5  * alph * w_123 / det_3
-			                   + J_c0_147 * J_c1_345 * 0.5  * 0.5  * w_197 / det_4
-			                   + J_c0_258 * J_c1_345 * 0.5  * beta * w_123 / det_5
-			                   + J_c0_036 * J_c1_678 * alph * alph * w_077 / det_6
-			                   + J_c0_147 * J_c1_678 * alph * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c1_678 * alph * beta * w_077 / det_8;
+			tmp =                J_c0_036_c1_012 * beta_alph * wd_0
+			                   + J_c0_147_c1_012 * beta_half * wd_1
+			                   + J_c0_258_c1_012 * beta_beta * wd_2
+			                   + J_c0_036_c1_345 * half_alph * wd_3
+			                   + J_c0_147_c1_345 * 0.5  * 0.5  * wd_4
+			                   + J_c0_258_c1_345 * half_beta * wd_5
+			                   + J_c0_036_c1_678 * alph_alph * wd_6
+			                   + J_c0_147_c1_678 * alph_half * wd_7
+			                   + J_c0_258_c1_678 * alph_beta * wd_8;
 			result [2][0][3] += tmp;                       // int psi^R,y * psi^P,y
 			result [0][2][3] += tmp;                       // int psi^P,y * psi^R,y
 			result [2][2][3] += tmp + tmp;                 // int psi^R,y * psi^R,y
@@ -1477,15 +1546,15 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [0][3][3] += tmp;                       // int psi^P,y * psi^S,y
 			result [3][2][3] -= tmp;                       // int psi^S,y * psi^R,y
 			result [2][3][3] -= tmp;                       // int psi^R,y * psi^S,y
-			tmp =                J_c0_036 * J_c1_012 * beta * beta * w_077 / det_0
-			                   + J_c0_147 * J_c1_012 * beta * 0.5  * w_123 / det_1
-			                   + J_c0_258 * J_c1_012 * beta * alph * w_077 / det_2
-			                   + J_c0_036 * J_c1_345 * 0.5  * beta * w_123 / det_3
-			                   + J_c0_147 * J_c1_345 * 0.5  * 0.5  * w_197 / det_4
-			                   + J_c0_258 * J_c1_345 * 0.5  * alph * w_123 / det_5
-			                   + J_c0_036 * J_c1_678 * alph * beta * w_077 / det_6
-			                   + J_c0_147 * J_c1_678 * alph * 0.5  * w_123 / det_7
-			                   + J_c0_258 * J_c1_678 * alph * alph * w_077 / det_8;
+			tmp =                J_c0_036_c1_012 * beta_beta * wd_0
+			                   + J_c0_147_c1_012 * beta_half * wd_1
+			                   + J_c0_258_c1_012 * beta_alph * wd_2
+			                   + J_c0_036_c1_345 * half_beta * wd_3
+			                   + J_c0_147_c1_345 * 0.5  * 0.5  * wd_4
+			                   + J_c0_258_c1_345 * half_alph * wd_5
+			                   + J_c0_036_c1_678 * alph_beta * wd_6
+			                   + J_c0_147_c1_678 * alph_half * wd_7
+			                   + J_c0_258_c1_678 * alph_alph * wd_8;
 			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
 			result [1][2][3] -= tmp;                       // int psi^Q,y * psi^R,y
 			result [2][3][3] += tmp;                       // int psi^R,y * psi^S,y
@@ -1493,29 +1562,33 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][1][3] += tmp;                       // int psi^S,y * psi^Q,y
 			result [1][3][3] += tmp;                       // int psi^P,y * psi^S,y
 			result [3][3][3] -= tmp + tmp;                 // int psi^S,y * psi^S,y
+
+			const double J_c0_036_c0_036 = J_c0_036 * J_c0_036,
+			             J_c0_147_c0_147 = J_c0_147 * J_c0_147,
+			             J_c0_258_c0_258 = J_c0_258 * J_c0_258;
 			
-			tmp =                J_c0_036 * J_c0_036 * alph * alph * w_077 / det_0
-			                   + J_c0_147 * J_c0_147 * alph * alph * w_123 / det_1
-			                   + J_c0_258 * J_c0_258 * alph * alph * w_077 / det_2
-			                   + J_c0_036 * J_c0_036 * 0.25        * w_123 / det_3
-			                   + J_c0_147 * J_c0_147 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c0_258 * 0.25        * w_123 / det_5
-			                   + J_c0_036 * J_c0_036 * beta * beta * w_077 / det_6
-			                   + J_c0_147 * J_c0_147 * beta * beta * w_123 / det_7
-			                   + J_c0_258 * J_c0_258 * beta * beta * w_077 / det_8;
+			tmp =                J_c0_036_c0_036 * (   alph_alph * wd_0
+			                                         + 0.25      * wd_3
+			                                         + beta_beta * wd_6 )
+			                   + J_c0_147_c0_147 * (   alph_alph * wd_1
+			                                         + 0.25      * wd_4
+			                                         + beta_beta * wd_7 )
+			                   + J_c0_258_c0_258 * (   alph_alph * wd_2
+			                                         + 0.25      * wd_5
+			                                         + beta_beta * wd_8 );
 			result [0][0][3] += tmp;                       // int psi^P,y * psi^P,y
 			result [0][1][3] -= tmp;                       // int psi^P,y * psi^P,y
 			result [1][0][3] -= tmp;                       // int psi^P,y * psi^P,y
 			result [1][1][3] += tmp;                       // int psi^P,y * psi^P,y
-			tmp =                J_c0_036 * J_c0_036 * alph * beta * w_077 / det_0
-			                   + J_c0_147 * J_c0_147 * alph * beta * w_123 / det_1
-			                   + J_c0_258 * J_c0_258 * alph * beta * w_077 / det_2
-			                   + J_c0_036 * J_c0_036 * 0.25        * w_123 / det_3
-			                   + J_c0_147 * J_c0_147 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c0_258 * 0.25        * w_123 / det_5
-			                   + J_c0_036 * J_c0_036 * beta * alph * w_077 / det_6
-			                   + J_c0_147 * J_c0_147 * beta * alph * w_123 / det_7
-			                   + J_c0_258 * J_c0_258 * beta * alph * w_077 / det_8;
+			tmp =                J_c0_036_c0_036 * (   alph_beta * wd_0
+			                                         + 0.25      * wd_3
+			                                         + beta_alph * wd_6 )
+			                   + J_c0_147_c0_147 * (   alph_beta * wd_1
+			                                         + 0.25      * wd_4
+			                                         + beta_alph * wd_7 )
+			                   + J_c0_258_c0_258 * (   alph_beta * wd_2
+			                                         + 0.25      * wd_5
+			                                         + beta_alph * wd_8 );
 			result [0][2][3] += tmp;                       // int psi^P,y * psi^R,y
 			result [2][0][3] += tmp;                       // int psi^R,y * psi^P,y
 			result [0][3][3] -= tmp;                       // int psi^P,y * psi^S,y
@@ -1524,21 +1597,21 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
 			result [1][3][3] += tmp;                       // int psi^Q,y * psi^S,y
 			result [3][1][3] += tmp;                       // int psi^S,y * psi^Q,y
-			tmp =                J_c0_036 * J_c0_036 * beta * beta * w_077 / det_0
-			                   + J_c0_147 * J_c0_147 * beta * beta * w_123 / det_1
-			                   + J_c0_258 * J_c0_258 * beta * beta * w_077 / det_2
-			                   + J_c0_036 * J_c0_036 * 0.25        * w_123 / det_3
-			                   + J_c0_147 * J_c0_147 * 0.25        * w_197 / det_4
-			                   + J_c0_258 * J_c0_258 * 0.25        * w_123 / det_5
-			                   + J_c0_036 * J_c0_036 * alph * alph * w_077 / det_6
-			                   + J_c0_147 * J_c0_147 * alph * alph * w_123 / det_7
-			                   + J_c0_258 * J_c0_258 * alph * alph * w_077 / det_8;
+			tmp =                J_c0_036_c0_036 * (   beta_beta * wd_0
+			                                         + 0.25      * wd_3
+			                                         + alph_alph * wd_6 )
+			                   + J_c0_147_c0_147 * (   beta_beta * wd_1
+			                                         + 0.25      * wd_4
+			                                         + alph_alph * wd_7 )
+			                   + J_c0_258_c0_258 * (   beta_beta * wd_2
+			                                         + 0.25      * wd_5
+			                                         + alph_alph * wd_8 );
 			result [2][2][3] += tmp;                       // int psi^R,y * psi^R,y
 			result [2][3][3] -= tmp;                       // int psi^R,y * psi^S,y
 			result [3][2][3] -= tmp;                       // int psi^S,y * psi^R,y
 			result [3][3][3] += tmp;            }          // int psi^S,y * psi^S,y
 			
-			break;  // end of case 4
+			break;  // end of case 4 -- dock_on_ufl_ffc_quad_Q1
 
 		default : assert ( false );
 	}  // end of  switch  statement
