@@ -49,18 +49,18 @@ int main ()
 	         psi_C = fe_gauss .basis_function (C),
 	         psi_D = fe_gauss .basis_function (D);
 	std::cout << "       ";
-	std::cout << fe_gauss .integrate ( psi_D .deriv(x) * psi_A .deriv(x) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_A .deriv(y) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_A .deriv(x) ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_D .deriv(x) * psi_B .deriv(x) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_B .deriv(y) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_B .deriv(x) ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_D .deriv(x) * psi_C .deriv(x) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_C .deriv(y) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_C .deriv(x) ) << " || ";
-	std::cout << fe_gauss .integrate ( psi_D .deriv(x) * psi_D .deriv(x) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_D .deriv(y) ) << " "
-						<< fe_gauss .integrate ( psi_D .deriv(y) * psi_D .deriv(x) ) << std::endl;
+	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_A .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_A .deriv(y) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_A .deriv(x) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_B .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_B .deriv(y) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_B .deriv(x) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_C .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_C .deriv(y) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_C .deriv(x) ) << " || ";
+	std::cout << fe_gauss .integrate ( psi_A .deriv(x) * psi_D .deriv(x) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_D .deriv(y) ) << " "
+						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_D .deriv(x) ) << std::endl;
 	} { // just a block of code for hiding names
 	fe_ufl_ffc .dock_on ( ABCD );
 	Function psi_A = fe_ufl_ffc .basis_function (A),
@@ -68,21 +68,21 @@ int main ()
 	         psi_C = fe_ufl_ffc .basis_function (C),
 	         psi_D = fe_ufl_ffc .basis_function (D);
 	std::vector < double > result =
-		fe_ufl_ffc .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
+		fe_ufl_ffc .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                                             tag::replace, bf2, tag::by, psi_A );
 	assert ( result .size() == 3 );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << " || ";
 	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
+		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                       tag::replace, bf2, tag::by, psi_B );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << " || ";
 	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
+		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                       tag::replace, bf2, tag::by, psi_C );
 	assert ( result .size() == 3 );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << " || ";
 	result = fe_ufl_ffc .integrate
-		( tag::pre_computed, tag::replace, bf1, tag::by, psi_D,
+		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                       tag::replace, bf2, tag::by, psi_D );
 	assert ( result .size() == 3 );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << std::endl;

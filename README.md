@@ -17,16 +17,13 @@ However, maniFEM can be used at a basic level by people with no deep knowledge o
 Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
 [FEniCS/Dolphin](https://fenicsproject.org/), [deal.II](https://dealii.org/),
 [PETSc-FEM](https://cimec.org.ar/foswiki/Main/Cimec/PETScFEM)
-Strong and weak points of maniFEM are presented in the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
-right after the introduction.
 
 In its current version, release 21.11, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
 three-dimensional meshes are object of current work.
-It is possible to build meshes with large variations in the element size;
+The user can control variations in the element size;
 anisotropic Riemann metrics are object of current work.
 Lagrange finite elements of degree one are implemented for triangular and quadrangular cells;
 many other types of finite elements are still to be implemented.
