@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.19
+// finite-elem.cpp 2021.12.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -371,7 +371,7 @@ std::vector < double > Integrator::Gauss::retrieve_precomputed
 	exit ( 1 );                                                                                 }
 
 
-void Integrator::UFL_FFC::pre_compute ( const std::vector < Function > & bf,
+void Integrator::HandCoded::pre_compute ( const std::vector < Function > & bf,
                                         const std::vector < Function > & v  )
 // virtual from Integrator::Core
 
@@ -383,7 +383,7 @@ void Integrator::UFL_FFC::pre_compute ( const std::vector < Function > & bf,
 {	this->fe .core->pre_compute ( bf, v );  }
 
 
-std::vector < double > Integrator::UFL_FFC::retrieve_precomputed
+std::vector < double > Integrator::HandCoded::retrieve_precomputed
 ( const Function & bf, const Function & psi )  // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone::TypeOne * fesa = tag::Util::assert_cast
@@ -402,7 +402,7 @@ std::vector < double > Integrator::UFL_FFC::retrieve_precomputed
 	//  	    fesa->result_of_integr [ 0 ] [ fesa->basis_numbering [ psi .core ] ]  )
 
 
-std::vector < double > Integrator::UFL_FFC::retrieve_precomputed
+std::vector < double > Integrator::HandCoded::retrieve_precomputed
 ( const Function & bf1, const Function & bf2,
   const Function & psi1, const Function & psi2 )  // virtual from Integrator::Core
 
@@ -467,7 +467,7 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 
 //-----------------------------------------------------------------------------------------//
 
-double Integrator::UFL_FFC::action ( Function f, const FiniteElement & )
+double Integrator::HandCoded::action ( Function f, const FiniteElement & )
 // virtual from Integrator::Core
 
 // assumes the finite element is already docked on a cell

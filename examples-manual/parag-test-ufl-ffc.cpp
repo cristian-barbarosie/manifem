@@ -16,7 +16,7 @@ int main ()
 	FiniteElement fe_ufl_ffc ( tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	FiniteElement fe_gauss ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 
-	Integrator integ_ufl_ffc = fe_ufl_ffc .set_integrator ( tag::ufl_ffc );
+	Integrator integ_ufl_ffc = fe_ufl_ffc .set_integrator ( tag::hand_coded );
 	fe_gauss .set_integrator ( tag::Gauss, tag::quad_9 );
 
 	// UFL-FFC integrators require an early declaration of

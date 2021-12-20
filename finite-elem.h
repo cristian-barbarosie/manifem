@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.16
+// finite-elem.h 2021.12.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -53,7 +53,7 @@ namespace tag {
 	struct ForAGiven { };  static const ForAGiven for_a_given;
 	struct BasisFunctions { };  static const BasisFunctions basis_functions;
 	struct IntegralOf { };  static const IntegralOf integral_of;
-	struct UFL_FFC { };  static const UFL_FFC ufl_ffc;
+	struct HandCoded { };  static const HandCoded hand_coded;
 }
 
 class FiniteElement;
@@ -94,7 +94,7 @@ class Integrator
 	inline double operator()
 	( const Function & f, const tag::ThroughDockedFiniteElement &, const FiniteElement & fe );
 
-	// UFL_FFC integrators require a 'pre_compute' step
+	// hand-coded integrators require a 'pre_compute' step
 	inline void pre_compute
 	( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
 	  const tag::IntegralOf &, const std::vector < Function > & res   );
@@ -102,7 +102,7 @@ class Integrator
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
 	  const tag::IntegralOf &, const std::vector < Function > & res                  );
 
-	class Gauss;  class UFL_FFC;  class Result;
+	class Gauss;  class HandCoded;  class Result;
 	
 };  // end of  class Integrator
 
@@ -128,7 +128,7 @@ class Integrator::Core
 	
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
 
-	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for UFL_FFC integrators
+	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for HandCoded integrators
 	virtual void pre_compute ( const std::vector < Function > & bf,
                              const std::vector < Function > & res ) = 0;
 	virtual std::vector < double > retrieve_precomputed
@@ -147,7 +147,7 @@ inline double Integrator::operator()
 {	return this->core->action ( f, fe );  }
 
 
-inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
+inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
 ( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
   const tag::IntegralOf &, const std::vector < Function > & res   )
 
@@ -157,7 +157,7 @@ inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
 {	this->core->pre_compute ( { bf }, res );  }
 	
 
-inline void Integrator::pre_compute  // only meaningful for UFL_FFC integrators
+inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
 ( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
   const tag::IntegralOf &, const std::vector < Function > & res                  )
 
@@ -245,7 +245,7 @@ class FiniteElement
 	inline Function basis_function ( const Cell c1, const Cell c2 );
 
 	inline Integrator set_integrator ( const tag::gauss &, const tag::gauss_quadrature & );
-	inline Integrator set_integrator ( const tag::UFL_FFC & );
+	inline Integrator set_integrator ( const tag::HandCoded & );
 
 	inline void dock_on ( const Cell & cll );
 	inline void dock_on ( const Cell & cll, const tag::Winding & );
@@ -283,11 +283,22 @@ class FiniteElement
 //-----------------------------------------------------------------------------------------//
 
 
-class Integrator::UFL_FFC : public Integrator::Core
+inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
+                                const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
+:	core { new Integrator::Gauss ( q, tag::from_finite_element_with_master, fe ) }  { }
 
-// sort of symbolic integrator, inspired in UFL and FFC
+//-----------------------------------------------------------------------------------------//
+
+
+class Integrator::HandCoded : public Integrator::Core
+
+// arithmetic expressions computed by hand -- long and tedious computations
+
+// some of these computations are inspired in UFL and FFC
 // https://fenics.readthedocs.io/projects/ufl/en/latest/
 // https://fenics.readthedocs.io/projects/ffc/en/latest/
+
+// in other cases, computations were done bluntly by hand, from scratch
 
 {	public :
 
@@ -297,7 +308,7 @@ class Integrator::UFL_FFC : public Integrator::Core
 
 	//constructor
 	
-	inline UFL_FFC ( const tag::FromFiniteElement &, FiniteElement & f )
+	inline HandCoded ( const tag::FromFiniteElement &, FiniteElement & f )
 	:	fe { f }
 	{	};
 
@@ -312,7 +323,7 @@ class Integrator::UFL_FFC : public Integrator::Core
 	void pre_compute ( const std::vector < Function > & bf,
                      const std::vector < Function > & res );
 
-	// UFL_FFC integrators merely retrieve previously computed arithmetic expressions
+	// HandCoded integrators merely retrieve previously computed arithmetic expressions
 	// and replace values of coordinates of vertices of the docked_on cell
 	//  retrieve_precomputed  is virtual from Integrator::Core
 	std::vector < double > retrieve_precomputed ( const Function & bf, const Function & psi );
@@ -320,13 +331,7 @@ class Integrator::UFL_FFC : public Integrator::Core
 	( const Function & bf1, const Function & psi1,
 	  const Function & bf2, const Function & psi2 );
 
-};  // end of  class Integrator::UFL_FFC
-
-//-----------------------------------------------------------------------------------------//
-
-inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
-                                const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
-:	core { new Integrator::Gauss ( q, tag::from_finite_element_with_master, fe ) }  { }
+};  // end of  class Integrator::HandCoded
 
 //-----------------------------------------------------------------------------------------//
 
@@ -693,11 +698,11 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 
-	// for UFL FFC integrators, we study previously several cases
-	// and hard-code the necessary expressions
+	// for HandCoded integrators, we study previously several cases
+	// and hard-code the necessary expressions (hand-computed)
 	size_t cas { 0 };
 
-	// for UFL FFC integrators, we re-arrange the pre-computed results
+	// for HandCoded integrators, we re-arrange the pre-computed results
 	// according to the specification of the user, we use a 'selector'
 	std::vector < size_t > selector;
 	
@@ -731,6 +736,8 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 
 
 class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
+
+// this class will be probably eliminated
 
 // finite elements with no master
 // searches for the basis function provided by 'integrate'
@@ -768,6 +775,7 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
 	
 	class Segment;  class Triangle;  class Quadrangle;
+	class Parallelogram;  class Rectangle;  class Square;
 	
 };  // end of  class FiniteElement::StandAlone::TypeOne
 
@@ -854,6 +862,7 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+	// overridden by Parallelogram, Rectangle and Square
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
@@ -861,6 +870,140 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Quadrangle
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone::TypeOne::Parallelogram
+: public FiniteElement::StandAlone::TypeOne::Quadrangle
+
+// quadrangular finite elements, no master element
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	// attributes inherited from FiniteElement::StandAlone :
+	// size_t cas { 0 }
+	// std::vector < size_t > selector
+	// std::map < Cell::Core *, size_t > local_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne :
+	// std::vector < Function > dummy_bf  dummy base functions, arguments of 'pre_compute'
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne::Quadrangle :
+	// Function bf1, bf2, bf3, bf4
+
+	// constructor
+
+	inline Parallelogram ( )
+	: FiniteElement::StandAlone::TypeOne::Quadrangle()
+	{ }
+	
+	// dock_on  virtual from FiniteElement::Core,
+	// defined by FiniteElement::StandAlone::TypeOne::Quadrangle, here overridden
+	void dock_on ( const Cell & cll ) override;
+	void dock_on ( const Cell & cll, const tag::Winding & ) override;
+	// overridden again by rectangle and square
+
+	//  pre_compute  virtual from FiniteElement::Core
+	// defined by FiniteElement::StandAlone::TypeOne
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+
+};  // end of  class FiniteElement::StandAlone::TypeOne::Parallelogram
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone::TypeOne::Rectangle
+: public FiniteElement::StandAlone::TypeOne::Parallelogram
+
+// quadrangular finite elements, no master element
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	// attributes inherited from FiniteElement::StandAlone :
+	// size_t cas { 0 }
+	// std::vector < size_t > selector
+	// std::map < Cell::Core *, size_t > local_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne :
+	// std::vector < Function > dummy_bf  dummy base functions, arguments of 'pre_compute'
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne::Quadrangle :
+	// Function bf1, bf2, bf3, bf4
+
+	// constructor
+
+	inline Rectangle ( )
+	: FiniteElement::StandAlone::TypeOne::Parallelogram()
+	{ }
+	
+	// dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll ) override;
+	void dock_on ( const Cell & cll, const tag::Winding & ) override;
+
+	//  pre_compute  virtual from FiniteElement::Core
+	// defined by FiniteElement::StandAlone::TypeOne
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+
+};  // end of  class FiniteElement::StandAlone::TypeOne::Rectangle
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::StandAlone::TypeOne::Square
+: public FiniteElement::StandAlone::TypeOne::Rectangle
+
+// quadrangular finite elements, no master element
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+
+	// attributes inherited from FiniteElement::StandAlone :
+	// size_t cas { 0 }
+	// std::vector < size_t > selector
+	// std::map < Cell::Core *, size_t > local_numbering_1
+	// std::map < Function::Core *, size_t > basis_numbering
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne :
+	// std::vector < Function > dummy_bf  dummy base functions, arguments of 'pre_compute'
+
+	// attributes inherited from FiniteElement::StandAlone::TypeOne::Quadrangle :
+	// Function bf1, bf2, bf3, bf4
+
+	// constructor
+
+	inline Square ( )
+	: FiniteElement::StandAlone::TypeOne::Rectangle()
+	{ }
+	
+	// dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	//  pre_compute  virtual from FiniteElement::Core
+	// defined by FiniteElement::StandAlone::TypeOne
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+
+};  // end of  class FiniteElement::StandAlone::TypeOne::Square
 
 //-----------------------------------------------------------------------------------------//
 
@@ -885,12 +1028,12 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 	this->core = new FiniteElement::StandAlone::TypeOne::Quadrangle();  }
 
 
-inline Integrator FiniteElement::set_integrator ( const tag::UFL_FFC & )
+inline Integrator FiniteElement::set_integrator ( const tag::HandCoded & )
 	
 { FiniteElement::StandAlone::TypeOne * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->core );
 	this_core->integr .core =
-		new Integrator::UFL_FFC ( tag::from_finite_element, *this );
+		new Integrator::HandCoded ( tag::from_finite_element, *this );
 	return this_core->integr;                                                         }
 
 
