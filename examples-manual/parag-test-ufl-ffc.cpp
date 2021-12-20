@@ -12,18 +12,19 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
-	// declare the type of finite element
-	FiniteElement fe_ufl_ffc ( tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	// declare two finite elements, one with Gauss quadrature on master
 	FiniteElement fe_gauss ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-
-	Integrator integ_ufl_ffc = fe_ufl_ffc .set_integrator ( tag::hand_coded );
 	fe_gauss .set_integrator ( tag::Gauss, tag::quad_9 );
 
-	// UFL-FFC integrators require an early declaration of
+	// a second finite element with no master and hand-computed integrator
+	FiniteElement fe_hand_coded ( tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ_hand_coded = fe_hand_coded .set_integrator ( tag::hand_coded );
+
+	// hand-coded integrators require an early declaration of
 	// the integrals we intend to compute later (after docking 'fe' on a cell)
-	Function bf1 ( tag::basis_function, tag::within, fe_ufl_ffc ),
-	         bf2 ( tag::basis_function, tag::within, fe_ufl_ffc );
-	integ_ufl_ffc .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
+	Function bf1 ( tag::basis_function, tag::within, fe_hand_coded ),
+	         bf2 ( tag::basis_function, tag::within, fe_hand_coded );
+	integ_hand_coded .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
        tag::integral_of, { bf1 .deriv(x) * bf2 .deriv(x),
                   bf1 .deriv(y) * bf2 .deriv(y), bf1 .deriv(y) * bf2 .deriv(x) } );
 
@@ -62,26 +63,26 @@ int main ()
 						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_D .deriv(y) ) << " "
 						<< fe_gauss .integrate ( psi_A .deriv(y) * psi_D .deriv(x) ) << std::endl;
 	} { // just a block of code for hiding names
-	fe_ufl_ffc .dock_on ( ABCD );
-	Function psi_A = fe_ufl_ffc .basis_function (A),
-	         psi_B = fe_ufl_ffc .basis_function (B),
-	         psi_C = fe_ufl_ffc .basis_function (C),
-	         psi_D = fe_ufl_ffc .basis_function (D);
+	fe_hand_coded .dock_on ( ABCD );
+	Function psi_A = fe_hand_coded .basis_function (A),
+	         psi_B = fe_hand_coded .basis_function (B),
+	         psi_C = fe_hand_coded .basis_function (C),
+	         psi_D = fe_hand_coded .basis_function (D);
 	std::vector < double > result =
-		fe_ufl_ffc .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
-	                                             tag::replace, bf2, tag::by, psi_A );
+		fe_hand_coded .integrate ( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
+	                                                tag::replace, bf2, tag::by, psi_A );
 	assert ( result .size() == 3 );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << " || ";
-	result = fe_ufl_ffc .integrate
+	result = fe_hand_coded .integrate
 		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                       tag::replace, bf2, tag::by, psi_B );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << " || ";
-	result = fe_ufl_ffc .integrate
+	result = fe_hand_coded .integrate
 		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                       tag::replace, bf2, tag::by, psi_C );
 	assert ( result .size() == 3 );
 	std::cout << result [0] << " " << result [1] << " " << result [2] << " || ";
-	result = fe_ufl_ffc .integrate
+	result = fe_hand_coded .integrate
 		( tag::pre_computed, tag::replace, bf1, tag::by, psi_A,
 	                       tag::replace, bf2, tag::by, psi_D );
 	assert ( result .size() == 3 );

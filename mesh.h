@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.12.13
+//   mesh.h  2021.12.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -107,9 +107,10 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct DividedIn { };  static const DividedIn divided_in;
 	struct Triangle { };  static const Triangle triangle;
 	struct Quadrangle { };  static const Quadrangle quadrangle;
-	                        static const Quadrangle rectangle;
-	                        static const Quadrangle square;
 	                        static const Quadrangle quadrilateral;
+	struct Parallelogram { };  static const Parallelogram parallelogram;
+	struct Rectangle { };  static const Rectangle rectangle;
+	struct Square { };  static const Square square;
 	struct Pentagon { };  static const Pentagon pentagon;
 	struct Hexagon { };  static const Hexagon hexagon;
 	struct Tetrahedron { };  static const Tetrahedron tetrahedron;
@@ -494,6 +495,12 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline Cell ( const tag::Triangle &, const Cell & AB, const Cell & BC, const Cell & CA );
 	inline Cell ( const tag::Quadrangle &, const Cell & AB, const Cell & BC,
                                          const Cell & CD, const Cell & DA );
+	inline Cell ( const tag::Parallelogram &, const Cell & AB, const Cell & BC,
+                                            const Cell & CD, const Cell & DA );
+	inline Cell ( const tag::Rectangle &, const Cell & AB, const Cell & BC,
+                                        const Cell & CD, const Cell & DA );
+	inline Cell ( const tag::Square &, const Cell & AB, const Cell & BC,
+                                     const Cell & CD, const Cell & DA );
 	inline Cell ( const tag::Pentagon &, const Cell & AB, const Cell & BC,
                                        const Cell & CD, const Cell & DE, const Cell & EA );
 	inline Cell ( const tag::Hexagon &, const Cell & AB, const Cell & BC,
@@ -759,37 +766,72 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// we are still in class Mesh
 	
+	// constructors below build a chain of n segment cells
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n               );
 	inline Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 	              const tag::DividedIn &, const size_t n,
 	              const tag::Winding &, const tag::Util::Action & );
-	// builds a chain of n segment cells
 	
+	// constructors below build a triangular mesh from three sides
+	// the number of divisions defined by the divisions of the sides (must be the same)
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA );
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
 	              const tag::Winding &                                                     );
 	inline Mesh ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA,
 	              const tag::Winding &, const tag::Singular &, const Cell & S              );
-	// builds a triangular mesh from three sides
-	// the number of divisions defined by the divisions of the sides (must be the same)
 	
-	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
-	                                       const Mesh & north, const Mesh & west,
-	              const tag::WithTriangles & wt = tag::not_with_triangles         );
-	// builds a rectangular mesh from four sides
+	// constructors below build a rectangular mesh from four sides
 	// the number of divisions are already in the sides (must be the same for opposite sides)
 	// if last argument is 'with_triangles', each rectangular cell will be cut in two triangles
-
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
-	              const tag::Winding &,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         );
+	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
+	                                          const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles & wt = tag::not_with_triangles         )
+	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
+	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
+	                                      const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles & wt = tag::not_with_triangles         )
+	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
+	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
+	                                   const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles & wt = tag::not_with_triangles         )
+	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
+
+	// same as above, but take into account winding segments
+	// specific information about widing numbers is included in the four segments
+	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	                                       const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles );
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles &, const tag::Winding &                  );
-	// same as above, but take into account winding segments
-	// specific information about widing numbers is included in the four segments
+	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
+	                                          const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, wt )  { }
+	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
+	                                          const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &                  )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
+	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
+	                                      const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, wt )  { }
+	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
+	                                      const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &                  )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
+	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
+	                                   const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, wt )  { }
+	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
+	                                   const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &                  )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
 
 	inline Mesh
 	( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
@@ -5468,7 +5510,7 @@ inline Mesh & Mesh::operator= ( Mesh && c )
 	c .core = nullptr;
 	return *this;                            }
 	
-//-----------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------//
 
 
 inline void Mesh::copy_all_cells_to ( Mesh & msh ) const
@@ -5480,7 +5522,7 @@ inline void Mesh::copy_all_cells_to ( Mesh & msh ) const
 
 
 inline Mesh::Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::PreviouslyExisting &,
-                    const tag::IsNegative &, const tag::CellsSurelyExist &                     )
+                    const tag::IsNegative &, const tag::CellsSurelyExist &                    )
 // builds a negative mesh from a positive one, assuming that reverse cells exist
 // used in Cell::boundary and in Mesh::Mesh below
 
@@ -5500,7 +5542,7 @@ inline Mesh::Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::Previou
 
 
 inline Mesh::Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::PreviouslyExisting &,
-                    const tag::IsNegative &, const tag::BuildCellsIfNec & b                    )
+                    const tag::IsNegative &, const tag::BuildCellsIfNec & b                   )
 // builds a negative mesh from a positive one, creating reverse cells if necessary
 // used in Mesh::Positive::reverse
 	
@@ -5546,6 +5588,8 @@ inline Mesh::Mesh ( const tag::DeepCopyOf &, const Mesh & msh, const tag::Fuzzy 
          tag::minus_one, tag::is_positive                       )
 {	msh .copy_all_cells_to ( *this );  }
 
+//------------------------------------------------------------------------------------------------//
+
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n                )
@@ -5575,6 +5619,8 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->core );
 	this_core->first_ver = A;
 	this_core->last_ver = B;                                              }
+
+//------------------------------------------------------------------------------------------------//
 
 
 inline Mesh::Mesh
@@ -5617,6 +5663,8 @@ inline Mesh::Mesh
          tag::freshly_created, tag::is_positive                                           )
 
 {	this->build ( tag::triangle, AB, BC, CA, tag::winding, tag::singular, O );  }
+
+//------------------------------------------------------------------------------------------------//
 
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
@@ -5817,6 +5865,30 @@ inline Cell::Cell ( const tag::Triangle &, const Cell & AB, const Cell & BC, con
 
 inline Cell::Cell ( const tag::Quadrangle &, const Cell & AB, const Cell & BC,
                                              const Cell & CD, const Cell & DA )
+:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
+	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
+	       tag::freshly_created                                           )
+{	}
+
+
+inline Cell::Cell ( const tag::Parallelogram &, const Cell & AB, const Cell & BC,
+                                                const Cell & CD, const Cell & DA )
+:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
+	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
+	       tag::freshly_created                                           )
+{	}
+
+
+inline Cell::Cell ( const tag::Rectangle &, const Cell & AB, const Cell & BC,
+                                            const Cell & CD, const Cell & DA )
+:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
+	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
+	       tag::freshly_created                                           )
+{	}
+
+
+inline Cell::Cell ( const tag::Square &, const Cell & AB, const Cell & BC,
+                                         const Cell & CD, const Cell & DA )
 :	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
 	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
 	       tag::freshly_created                                           )

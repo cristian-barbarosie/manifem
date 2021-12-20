@@ -898,6 +898,10 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 
 		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
 		
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 			std::cout << "case 3 ";
 		{	const double alph = 0.7886751345948129,
 			             beta = 0.2113248654051871;
@@ -936,6 +940,10 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 	
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 		
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 			std::cout << "case 4 ";
 		{	const double w_077 = 0.07716049382716043,  // 25/81/4
 			             w_123 = 0.1234567901234567,   // 10/81
@@ -1570,6 +1578,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			break;  // end of case 2
 
 		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+			
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 		{
 			#ifndef NDEBUG
 			const double det = J_c0 * J_c3 - J_c1 * J_c2;
@@ -1642,6 +1654,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 		case 5 :  // { int grad psi grad psi }
 		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
 
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			det += det;  // we double det to avoid later divisions by two
@@ -1661,6 +1677,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			break;  // end of case 5
 
 		case 6 :  // { int psi2 * psi2 .deriv(x) }
+			
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 		{
 			#ifndef NDEBUG
 			const double det = J_c0 * J_c3 - J_c1 * J_c2;
@@ -1709,6 +1729,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		case  7 :  // { int psi, int psi1 * psi2 }
 
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			result [0][0][0] =                 // int psi^P
@@ -1744,6 +1768,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		case 8 :  // { int psi, int psi .deriv(x) }
 			
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			
@@ -1762,6 +1790,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		case 9 :  // { int psi1 .deriv(x), int psi1 .deriv(x) * psi2 .deriv(y) }
 			
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			det += det;  // we double det to avoid later divisions by two
@@ -1855,6 +1887,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		case 10 :  // { int psi1 * psi2, int psi1 .deriv(x) * psi2 .deriv(y) }
 
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			
@@ -1921,6 +1957,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		case 11 :  // { int psi1 * psi2, int grad psi1 * grad psi2 }
 
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+
 		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			
@@ -1953,6 +1993,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			break;  // end of case 11
 
 		case 12 :  // 1, 2, 3 and 4
+
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
 		{	//  case 1 (within 12) :  { int psi }
 
@@ -2086,6 +2130,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			break;  // end of case 12
 
 		case 13 :  // 1, 2, 3, 4 and 5
+
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
 		{	//  case 1 (within 13) :  { int psi }
 
@@ -2235,6 +2283,10 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 			break;  // end of case 13
 
 		case 14 :  // everything
+
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
 		{	//  case 1 (within 14) :  { int psi }
 
