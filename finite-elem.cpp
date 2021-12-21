@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.20
+// finite-elem.cpp 2021.12.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -923,7 +923,6 @@ void dock_on_hand_quadrangle_Q1
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-			std::cout << "case 3 ";
 		{	const double alph = 0.7886751345948129,
 			             beta = 0.2113248654051871;
 			double J_c0_02 = alph * xRmxQ + beta * xSmxP,
@@ -965,12 +964,11 @@ void dock_on_hand_quadrangle_Q1
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-			std::cout << "case 4 ";
 		{	const double w_077 = 0.07716049382716043,  // 25/81/4
 			             w_123 = 0.1234567901234567,   // 10/81
 			             w_197 = 0.1975308641975309;   // 16/81
-			const double alph = 0.8872983346207417,
-			             beta = 0.1127016653792583;
+			const double alph = 0.8872983346207417,    // 0.5 + sqrt(0.15)
+			             beta = 0.1127016653792583;    // 0.5 - sqrt(0.15)
 			double J_c0_036 = alph * xRmxQ + beta * xSmxP,
 			       J_c0_147 = 0.5 * ( xRmxQ +  xSmxP ),
 			       J_c0_258 = beta * xRmxQ + alph * xSmxP,
@@ -1585,7 +1583,6 @@ void dock_on_hand_rectangle_Q1
 
 		case 1 :  // { int psi }
 
-			std::cout << "case 1 ";
 			result [0][0][0] =                    // int psi^P
 			result [0][1][0] =                    // int psi^Q
 			result [0][2][0] =                    // int psi^R
@@ -1738,7 +1735,6 @@ void dock_on_hand_square_Q1
 
 		case 1 :  // { int psi }
 
-			std::cout << "case 1 ";
 			result [0][0][0] =                    // int psi^P
 			result [0][1][0] =                    // int psi^Q
 			result [0][2][0] =                    // int psi^R
@@ -1753,7 +1749,6 @@ void dock_on_hand_square_Q1
 			
 		// expressions computed by hand
 
-			std::cout << "case 3 ";
 		{	const double half_ell = ell / 2.;
 			
 			result [0][2][1] =                        // int psi^R,y
