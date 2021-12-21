@@ -392,6 +392,8 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
 	assert ( fesa->dummy_bf [0] .core == bf .core );
 	assert ( fesa->result_of_integr .size() == 1 );
 	assert ( fesa->basis_numbering [ psi .core ] < fesa->result_of_integr [0] .size() );
+	// std::cout << "case " << fesa->cas << ", bf " << fesa->basis_numbering [ psi .core ]
+	//           << ", sel " << fesa->selector [0] << std::endl;
 	std::vector < double > res ( fesa->selector .size() );
 	std::vector < double > & r = fesa->result_of_integr
 		[0] [ fesa->basis_numbering [ psi .core ] ];
@@ -415,8 +417,7 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
 	assert ( fesa->basis_numbering [ psi2 .core ] <
 					 fesa->result_of_integr [ fesa->basis_numbering [ psi1 .core ] ] .size() );
 	// std::cout << "case " << fesa->cas << ", bf " << fesa->basis_numbering [ psi1 .core ] << " "
-	//           << fesa->basis_numbering [ psi2 .core ] << ", sel " << fesa->selector [0]
-	//           << std::endl;
+	//     << fesa->basis_numbering [ psi2 .core ] << ", sel " << fesa->selector [0] << std::endl;
 	std::vector < double > res ( fesa->selector .size() );
 	std::vector < double > & r = fesa->result_of_integr
 		[ fesa->basis_numbering [ psi1 .core ] ] [ fesa->basis_numbering [ psi2 .core ] ];
@@ -859,16 +860,36 @@ void FiniteElement::WithMaster::Quadrangle::dock_on ( const Cell & cll, const ta
 //-----------------------------------------------------------------------------------------//
 
 
+void FiniteElement::Core::dock_on
+( const Cell & cll, const tag::FirstVertex &, const Cell & P )
+// virtual, here execution forbidden
+// later overridden by FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "you don't have to provide first vertex for this kind of finite element"
+            << std::endl;
+	exit ( 1 );                                                                                 }
+
+void FiniteElement::Core::dock_on
+( const Cell & cll, const tag::FirstVertex &, const Cell & P, const tag::Winding & )
+// virtual, here execution forbidden
+// later overridden by FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "you don't have to provide first vertex for this kind of finite element"
+            << std::endl;
+	exit ( 1 );                                                                                 }
+
+	
+//-----------------------------------------------------------------------------------------//
+	
 namespace { // anonymous namespace, mimics static linkage
 
-inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
-                                      const double & xQ, const double & yQ,
-                                      const double & xR, const double & yR,
-                                      const double & xS, const double & yS,
-                                      const size_t & c,  // case
-                   std::vector < std::vector < std::vector < double > > > & result )
+void dock_on_hand_quadrangle_Q1
+( const double & xP, const double & yP, const double & xQ, const double & yQ,
+  const double & xR, const double & yR, const double & xS, const double & yS,
+  const size_t & c,  // case
+  std::vector < std::vector < std::vector < double > > > & result            )
 
-// this function is speed-critical
+// hidden in anonymous namespace, this function is speed-critical
 
 {	const double xRmxQ = xR - xQ, xSmxP = xS - xP, xPmxQ = xP - xQ, xSmxR = xS - xR,
 	             yRmyQ = yR - yQ, ySmyP = yS - yP, yPmyQ = yP - yQ, ySmyR = yS - yR;
@@ -881,7 +902,7 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 	switch ( c )
 		
 	{	case  0 :
-			std::cout << "UFL-FFC integrators require pre_compute" << std::endl;
+			std::cout << "hand-coded integrators require pre_compute" << std::endl;
 			exit ( 1 );
 
 		case 1 :  // { int psi }
@@ -936,7 +957,7 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [0][3][0] =   J_c3 - J_c2;                       // int psi^S,x
 			result [0][3][1] = - J_c1 + J_c0;                    }  // int psi^S,y
 		
-			break;  // end of case 3 -- dock_on_ufl_ffc_quad_Q1
+			break;  // end of case 3 -- dock_on_hand_quadrangle_Q1
 	
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 		
@@ -1517,23 +1538,249 @@ inline void dock_on_ufl_ffc_quad_Q1 ( const double & xP, const double & yP,
 			result [3][2][3] -= tmp;                       // int psi^S,y * psi^R,y
 			result [3][3][3] += tmp;            }          // int psi^S,y * psi^S,y
 			
-			break;  // end of case 4 -- dock_on_ufl_ffc_quad_Q1
+			break;  // end of case 4 -- dock_on_hand_quadrangle_Q1
 
 		default : assert ( false );
 	}  // end of  switch  statement
 	
-}  // end of  dock_on_ufl_ffc_quad_Q1
+}  // end of  dock_on_hand_quadrangle_Q1
 
 //-----------------------------------------------------------------------------------------//
 
 	
-inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
-                                     const double & xQ, const double & yQ,
-                                     const double & xR, const double & yR,
-                                     const size_t & c,  // case
-                   std::vector < std::vector < std::vector < double > > > & result )
+void dock_on_hand_rectangle_Q1
+( const double & xP, const double & yP, const double & xQ, const double & yQ,
+  const double & xR, const double & yR, const double & xS, const double & yS,
+  const size_t & c,  // case
+  std::vector < std::vector < std::vector < double > > > & result            )
 
+// hidden in anonymous namespace	
 // this function is speed-critical
+	
+{	const double delta_x = xQ - xP, delta_y = yS - yP, area = delta_x * delta_y;
+	// delta_x > 0., delta_y > 0.
+	
+	#ifndef NDEBUG
+	const double tol = 1.e-6 * ( delta_x + delta_y );
+	assert ( std::abs ( xP - xS ) < tol );
+	assert ( std::abs ( xR - xQ ) < tol );
+	assert ( std::abs ( yP - yQ ) < tol );
+	assert ( std::abs ( yR - yS ) < tol );
+	assert ( xQ > xP );
+	assert ( xR > xS );
+	assert ( yS > yP );
+	assert ( yR > yQ );
+	#endif
+	
+	// below we use a switch statement
+	// we trust that the compiler implements it by means of a list of addresses
+	// and not as a cascade of ifs (which would be rather slow)
+	// we could use instead a vector of pointers to functions
+			
+	switch ( c )
+		
+	{	case  0 :
+			std::cout << "hand-coded integrators require pre_compute" << std::endl;
+			exit ( 1 );
+
+		case 1 :  // { int psi }
+
+			std::cout << "case 1 ";
+			result [0][0][0] =                    // int psi^P
+			result [0][1][0] =                    // int psi^Q
+			result [0][2][0] =                    // int psi^R
+			result [0][3][0] = area / 4.;         // int psi^S
+			break;  // end of case 1
+			
+		case 2 :  // { int psi1 * psi2 }
+			
+			break;  // end of case 2
+
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+			
+		// expressions computed by hand
+
+		{	const double half_dx = delta_x / 2., half_dy = delta_y / 2.;
+			
+			result [0][0][0] =                        // int psi^P,x
+			result [0][3][0] = - half_dy;             // int psi^S,x
+			result [0][2][1] =                        // int psi^R,y
+			result [0][3][1] =   half_dx;             // int psi^S,y
+			result [0][1][0] =                        // int psi^Q,x
+			result [0][2][0] =   half_dy;             // int psi^R,x
+			result [0][0][1] =                        // int psi^P,y
+			result [0][1][1] = - half_dx;     }       // int psi^Q,y
+			break;  // end of case 3
+
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
+			
+		{	const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
+			             dy_dx_3 = dy_over_dx / 3., dx_dy_3 = dx_over_dy / 3.,
+			             dy_dx_6 = dy_over_dx / 6., dx_dy_6 = dx_over_dy / 6.;
+
+			result [0][0][0] =                            // int psi^P,x * psi^P,x
+			result [1][1][0] =                            // int psi^Q,x * psi^Q,x
+			result [2][2][0] =                            // int psi^R,x * psi^R,x
+			result [3][3][0] =   dy_dx_3;                 // int psi^S,x * psi^S,x
+
+			result [0][1][0] =                            // int psi^P,x * psi^Q,x
+			result [1][0][0] =                            // int psi^P,x * psi^Q,x
+			result [2][3][0] =                            // int psi^R,x * psi^S,x
+			result [3][2][0] = - dy_dx_3;                 // int psi^R,x * psi^S,x
+				
+			result [0][2][0] =                            // int psi^P,x * psi^R,x
+			result [2][0][0] =                            // int psi^P,x * psi^R,x
+			result [1][3][0] =                            // int psi^Q,x * psi^S,x
+			result [3][1][0] = - dy_dx_6;                 // int psi^Q,x * psi^S,x
+			
+			result [2][1][0] =                            // int psi^R,x * psi^Q,x
+			result [1][2][0] =                            // int psi^R,x * psi^Q,x
+			result [0][3][0] =                            // int psi^P,x * psi^S,x
+			result [3][0][0] =   dy_dx_6;                 // int psi^P,x * psi^S,x
+			
+			result [0][0][1] =                            // int psi^P,x * psi^P,y
+			result [0][0][2] =                            // int psi^P,x * psi^P,y
+			result [0][1][1] =                            // int psi^P,x * psi^Q,y
+			result [1][0][2] =                            // int psi^P,x * psi^Q,y
+			result [2][2][1] =                            // int psi^R,x * psi^R,y
+			result [2][2][2] =                            // int psi^R,x * psi^R,y
+			result [2][3][1] =                            // int psi^R,x * psi^S,y
+			result [3][2][2] =                            // int psi^R,x * psi^S,y
+			result [3][0][1] =                            // int psi^S,x * psi^P,y
+			result [0][3][2] =                            // int psi^S,x * psi^P,y
+			result [3][1][1] =                            // int psi^S,x * psi^Q,y
+			result [1][3][2] =                            // int psi^S,x * psi^Q,y
+			result [1][2][1] =                            // int psi^Q,x * psi^R,y
+			result [2][1][2] =                            // int psi^Q,x * psi^R,y
+			result [1][3][1] =                            // int psi^Q,x * psi^S,y
+			result [3][1][2] =   0.25;                    // int psi^Q,x * psi^S,y
+			result [1][1][1] =                            // int psi^Q,x * psi^Q,y
+			result [1][1][2] =                            // int psi^Q,x * psi^Q,y
+			result [1][0][1] =                            // int psi^Q,x * psi^P,y
+			result [0][1][2] =                            // int psi^Q,x * psi^P,y
+			result [0][2][1] =                            // int psi^P,x * psi^R,y
+			result [2][0][2] =                            // int psi^P,x * psi^R,y
+			result [0][3][1] =                            // int psi^P,x * psi^S,y
+			result [3][0][2] =                            // int psi^P,x * psi^S,y
+			result [2][0][1] =                            // int psi^R,x * psi^P,y
+			result [0][2][2] =                            // int psi^R,x * psi^P,y
+			result [2][1][1] =                            // int psi^R,x * psi^Q,y
+			result [1][2][2] =                            // int psi^R,x * psi^Q,y
+			result [3][2][1] =                            // int psi^S,x * psi^R,y
+			result [2][3][2] =                            // int psi^S,x * psi^R,y
+			result [3][3][1] =                            // int psi^S,x * psi^S,y
+			result [3][3][2] = - 0.25;                    // int psi^S,x * psi^S,y
+
+			result [0][0][3] =                            // int psi^P,y * psi^P,y
+			result [1][1][3] =                            // int psi^Q,y * psi^Q,y
+			result [2][2][3] =                            // int psi^R,y * psi^R,y
+			result [3][3][3] =   dx_dy_3;                 // int psi^S,y * psi^S,y
+
+			result [0][1][3] =                            // int psi^P,y * psi^Q,y
+			result [1][0][3] =                            // int psi^P,y * psi^Q,y
+			result [2][3][3] =                            // int psi^R,y * psi^S,y
+			result [3][2][3] =   dx_dy_6;                 // int psi^R,y * psi^S,y
+				
+			result [0][2][3] =                            // int psi^P,y * psi^R,y
+			result [2][0][3] =                            // int psi^P,y * psi^R,y
+			result [1][3][3] =                            // int psi^Q,y * psi^S,y
+			result [3][1][3] = - dx_dy_6;                 // int psi^Q,y * psi^S,y
+			
+			result [2][1][3] =                            // int psi^R,y * psi^Q,y
+			result [1][2][3] =                            // int psi^R,y * psi^Q,y
+			result [0][3][3] =                            // int psi^P,y * psi^S,y
+			result [3][0][3] = - dx_dy_3;             }   // int psi^P,y * psi^S,y
+			
+			break;  // end of case 4, dock_on_hand_rectangle_Q1
+
+		default : assert ( false );
+	}  // end of  switch  statement
+	
+}  // end of  dock_on_hand_rectangle_Q1
+
+//-----------------------------------------------------------------------------------------//
+
+	
+void dock_on_hand_square_Q1
+( const double & xP, const double & yP, const double & xQ, const double & yQ,
+  const double & xR, const double & yR, const double & xS, const double & yS,
+  const size_t & c,  // case
+  std::vector < std::vector < std::vector < double > > > & result            )
+
+// hidden in anonymous namespace, this function is speed-critical
+	
+{	const double ell = xQ - xP, area = ell * ell;
+	// ell > 0.
+	
+	#ifndef NDEBUG
+	const double tol = 1.e-6 * ell;
+	assert ( std::abs ( xP - xS ) < tol );
+	assert ( std::abs ( xR - xQ ) < tol );
+	assert ( std::abs ( yP - yQ ) < tol );
+	assert ( std::abs ( yR - yS ) < tol );
+	assert ( xQ > xP );
+	assert ( xR > xS );
+	assert ( yS > yP );
+	assert ( yR > yQ );
+	assert ( std::abs ( ell - yS + yP ) < tol );  // we are on a square
+	#endif
+	
+	// below we use a switch statement
+	// we trust that the compiler implements it by means of a list of addresses
+	// and not as a cascade of ifs (which would be rather slow)
+	// we could use instead a vector of pointers to functions
+			
+	switch ( c )
+		
+	{	case  0 :
+			std::cout << "hand-coded integrators require pre_compute" << std::endl;
+			exit ( 1 );
+
+		case 1 :  // { int psi }
+
+			std::cout << "case 1 ";
+			result [0][0][0] =                    // int psi^P
+			result [0][1][0] =                    // int psi^Q
+			result [0][2][0] =                    // int psi^R
+			result [0][3][0] = area / 4.;         // int psi^S
+			break;  // end of case 1
+			
+		case 2 :  // { int psi1 * psi2 }
+			
+			break;  // end of case 2
+
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+			
+		// expressions computed by hand
+
+			std::cout << "case 3 ";
+		{	const double half_ell = ell / 2.;
+			
+			result [0][2][1] =                        // int psi^R,y
+			result [0][3][1] =                        // int psi^S,y
+			result [0][1][0] =                        // int psi^Q,x
+			result [0][2][0] =   half_ell;            // int psi^R,x
+			result [0][0][0] =                        // int psi^P,x
+			result [0][3][0] =                        // int psi^S,x
+			result [0][0][1] =                        // int psi^P,y
+			result [0][1][1] = - half_ell;     }      // int psi^Q,y
+			break;  // end of case 3
+
+		default : assert ( false );
+	}  // end of  switch  statement
+	
+}  // end of  dock_on_hand_square_Q1
+
+//-----------------------------------------------------------------------------------------//
+
+	
+void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
+                                  const double & xQ, const double & yQ,
+                                  const double & xR, const double & yR,
+                                  const size_t & c,  // case
+                std::vector < std::vector < std::vector < double > > > & result )
+
+// hidden in anonymous namespace, this function is speed-critical
 	
 {	double J_c0 = xQ - xP, J_c1 = xR - xP,
 	       J_c2 = yQ - yP, J_c3 = yR - yP;
@@ -1546,7 +1793,7 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 	switch ( c )
 		
 	{	case  0 :
-			std::cout << "UFL-FFC integrators require pre_compute" << std::endl;
+			std::cout << "hand-coded integrators require pre_compute" << std::endl;
 			exit ( 1 );
 
 		case 1 :  // { int psi }
@@ -2478,13 +2725,13 @@ inline void dock_on_ufl_ffc_tri_P1 ( const double & xP, const double & yP,
 
 		default : assert ( false );
 	}  // end of  switch  statement
-}  // end of  dock_on_ufl_ffc_tri_P1
+}  // end of  dock_on_hand_tri_P1
 	
 }  // anonymous namespace
 
 
 void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
-// virtual from FiniteElement::Core
+// virtual from FiniteElement::Core, this function is speed-critical
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
@@ -2503,8 +2750,8 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 	assert ( geom_dim == 2 );
 	Function x = xyz [0], y = xyz [1];
 
- dock_on_ufl_ffc_tri_P1 ( x(P), y(P), x(Q), y(Q), x(R), y(R),
-	                        this->cas, this->result_of_integr  );
+	dock_on_hand_tri_P1 ( x(P), y(P), x(Q), y(Q), x(R), y(R),
+	                      this->cas, this->result_of_integr  );
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
@@ -2524,7 +2771,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
 void FiniteElement::StandAlone::TypeOne::Triangle::dock_on  
 ( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
-
+// this function is speed-critical
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
@@ -2553,7 +2800,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
 	                             xyz_R = xyz ( R, tag::winding, winding_R );
 	
-	dock_on_ufl_ffc_tri_P1
+	dock_on_hand_tri_P1
 	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1],
 	  this->cas, this->result_of_integr                                );
 
@@ -2575,6 +2822,8 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
 void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll )
 // virtual from FiniteElement::Core
+// overridden by FiniteElement::StandAlone::TypeOne::Rectangle
+// this function is speed-critical
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
@@ -2594,15 +2843,15 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll 
 	assert ( geom_dim == 2 );
 	Function x = xyz [0], y = xyz [1];
 
-	dock_on_ufl_ffc_quad_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
-	                          this->cas, this->result_of_integr              );
+	dock_on_hand_quadrangle_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
+	                             this->cas, this->result_of_integr              );
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
 	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
 	this->base_fun_1 .insert
 		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
 	this->base_fun_1 .insert
@@ -2617,7 +2866,8 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll 
 
 void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on  
 ( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
-
+// overridden by FiniteElement::StandAlone::TypeOne::Rectangle
+// this function is speed-critical
 
 {	assert ( cll .dim() == 2 );
 	this->docked_on = cll;
@@ -2651,7 +2901,7 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
 	                             xyz_R = xyz ( R, tag::winding, winding_R ),
 	                             xyz_S = xyz ( S, tag::winding, winding_S );
 	
-	dock_on_ufl_ffc_quad_Q1
+	dock_on_hand_quadrangle_Q1
 	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
 	  this->cas, this->result_of_integr                                                      );
 
@@ -2669,6 +2919,615 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
 	// should be slightly faster
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on  with tag::winding
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on ( const Cell & cll )
+// virtual from FiniteElement::Core, this function is speed-critical
+// defined by FiniteElement::StandAlone::TypeOne::Rectangle, here overridden
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( false );
+
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	dock_on_hand_quadrangle_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
+	                             this->cas, this->result_of_integr              );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on  
+( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
+
+// virtual from FiniteElement::Core
+// defined by FiniteElement::StandAlone::TypeOne::Quadrangle, here overridden
+// overridden again by FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	// perhaps implement a special iterator returning points and segments
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	Cell RS = cll .boundary() .cell_in_front_of ( R );
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S );
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function::Action winding_Q = PQ .winding(),
+	                 winding_R = winding_Q + QR .winding(),
+	                 winding_S = winding_R + RS .winding();
+	assert ( winding_S + SP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( false );
+	
+	assert ( geom_dim == 2 );
+
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R ),
+	                             xyz_S = xyz ( S, tag::winding, winding_S );
+	
+	dock_on_hand_quadrangle_Q1
+	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+	  this->cas, this->result_of_integr                                                      );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on  with tag::winding
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on ( const Cell & cll )
+
+// virtual from FiniteElement::Core
+// defined by FiniteElement::StandAlone::TypeOne::Parallelogram, here overridden
+// overridden again by FiniteElement::StandAlone::TypeOne::Square
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	const double xP = x(P), yP = y(P), xQ = x(Q), yQ = y(Q),
+	             xPmxQ = xP - xQ, yPmyQ = yP - yQ;
+	this->base_fun_1 .clear();
+	if ( std::abs ( xPmxQ  ) < std::abs ( yPmyQ ) )
+		// P and Q are on the same vertical -- xP == xQ
+		if ( yPmyQ > 0 )  // PQ is the left side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( xQ, yQ, x(R), y(R), x(S), y(S), xP, yP,
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+		else  // PQ is the right side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( x(S), y(S), xP, yP, xQ, yQ, x(R), y(R),
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+	else  // P and Q are on the same horizontal -- yP == yQ
+		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( x(R), y(R), x(S), y(S), xP, yP, xQ, yQ,
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+		else  // PQ is the lower side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( xP, yP, xQ, yQ, x(R), y(R), x(S), y(S),
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+	
+}  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  
+( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
+
+// this function is speed-critical
+// defined by FiniteElement::StandAlone::TypeOne::Quadrangle, here overridden
+// overridden again by FiniteElement::StandAlone::TypeOne::Square
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	// perhaps implement a special iterator returning points and segments
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	Cell RS = cll .boundary() .cell_in_front_of ( R );
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S );
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function::Action winding_Q = PQ .winding(),
+	                 winding_R = winding_Q + QR .winding(),
+	                 winding_S = winding_R + RS .winding();
+	assert ( winding_S + SP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R ),
+	                             xyz_S = xyz ( S, tag::winding, winding_S );
+
+	// this works on quotient manifolds defined by translations
+	// does not make sense on quotient with rotations
+	
+	const double xP = xyz_P [0], yP = xyz_P [1], xQ = xyz_Q [0], yQ = xyz_Q [1],
+	             xPmxQ = xP - xQ, yPmyQ = yP - yQ;
+	this->base_fun_1 .clear();
+	if ( std::abs ( xPmxQ  ) < std::abs ( yPmyQ ) )
+		// P and Q are on the same vertical -- xP == xQ
+		if ( yPmyQ > 0 )  // PQ is the left side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP,
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+		else  // PQ is the right side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xyz_S [0], xyz_S [1], xP, yP, xQ, yQ, xyz_R [0], xyz_R [1],
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+	else  // P and Q are on the same horizontal -- yP == yQ
+		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP, xQ, yQ,
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+		else  // PQ is the lower side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xP, yP, xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  with tag::winding
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
+( const Cell & cll, const tag::FirstVertex &, const Cell & P )
+// virtual from FiniteElement::Core, defined there (execution forbidden), here overridden
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+
+	Cell PQ = cll. boundary() .cell_in_front_of ( P, tag::surely_exists );
+	Cell Q = PQ .tip();
+	Cell QR = cll. boundary() .cell_in_front_of ( Q, tag::surely_exists );
+	Cell R = QR .tip();
+	Cell RS = cll. boundary() .cell_in_front_of ( R, tag::surely_exists );
+	Cell S = RS .tip();
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S, tag::surely_exists );
+	assert ( SP .tip() == P );
+	#endif
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	dock_on_hand_rectangle_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
+	                            this->cas, this->result_of_integr              );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on with tag::first_vertex
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  
+( const Cell & cll, const tag::FirstVertex &, const Cell & P, const tag::Winding & )
+// virtual from FiniteElement::Core, defined there (execution forbidden), here overridden
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+
+	Cell PQ = cll. boundary() .cell_in_front_of ( P, tag::surely_exists );
+	Cell Q = PQ .tip();
+	Cell QR = cll. boundary() .cell_in_front_of ( Q, tag::surely_exists );
+	Cell R = QR .tip();
+	Cell RS = cll. boundary() .cell_in_front_of ( R, tag::surely_exists );
+	Cell S = RS .tip();
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S, tag::surely_exists );
+	assert ( SP .tip() == P );
+	#endif
+	
+	Function::Action winding_Q = PQ .winding(),
+	                 winding_R = winding_Q + QR .winding(),
+	                 winding_S = winding_R + RS .winding();
+	assert ( winding_S + SP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+	
+	assert ( geom_dim == 2 );
+
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R ),
+	                             xyz_S = xyz ( S, tag::winding, winding_S );
+	
+	dock_on_hand_rectangle_Q1
+	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+	  this->cas, this->result_of_integr                                                      );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
+   //         with tag::winding and tag::first_vertex
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
+// virtual from FiniteElement::Core, this function is speed-critical
+// defined by FiniteElement::StandAlone::TypeOne::Rectangle, here overridden
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	dock_on_hand_square_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
+	                         this->cas, this->result_of_integr              );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Square::dock_on  
+( const Cell & cll, const tag::Winding & )  // virtual from FiniteElement::Core
+
+// defined by FiniteElement::StandAlone::TypeOne::Rectangle, here overridden
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+	// perhaps implement a special iterator returning points and segments
+	Mesh::Iterator it = cll .boundary() .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );  Cell P = *it;
+	Cell PQ = cll .boundary() .cell_in_front_of ( P );
+	it++;  assert ( it .in_range() );  Cell Q = *it;
+	Cell QR = cll .boundary() .cell_in_front_of ( Q );
+	it++;  assert ( it .in_range() );  Cell R = *it;
+	Cell RS = cll .boundary() .cell_in_front_of ( R );
+	it++;  assert ( it .in_range() );  Cell S = *it;
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S );
+	it++;  assert ( not it .in_range() );
+	#endif
+
+	Function::Action winding_Q = PQ .winding(),
+	                 winding_R = winding_Q + QR .winding(),
+	                 winding_S = winding_R + RS .winding();
+	assert ( winding_S + SP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( geom_dim == 2 );
+
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R ),
+	                             xyz_S = xyz ( S, tag::winding, winding_S );
+	
+	dock_on_hand_square_Q1
+	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+	  this->cas, this->result_of_integr                                                      );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on  with tag::winding
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Square::dock_on
+( const Cell & cll, const tag::FirstVertex &, const Cell & P )
+// virtual from FiniteElement::Core, defined there (execution forbidden), here overridden
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+
+	Cell PQ = cll. boundary() .cell_in_front_of ( P, tag::surely_exists );
+	Cell Q = PQ .tip();
+	Cell QR = cll. boundary() .cell_in_front_of ( Q, tag::surely_exists );
+	Cell R = QR .tip();
+	Cell RS = cll. boundary() .cell_in_front_of ( R, tag::surely_exists );
+	Cell S = RS .tip();
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S, tag::surely_exists );
+	assert ( SP .tip() == P );
+	#endif
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( false );
+	
+	assert ( geom_dim == 2 );
+	Function x = xyz [0], y = xyz [1];
+
+	dock_on_hand_square_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
+	                         this->cas, this->result_of_integr              );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on with tag::first_vertex
+
+//-----------------------------------------------------------------------------------------//
+
+
+void FiniteElement::StandAlone::TypeOne::Square::dock_on  
+( const Cell & cll, const tag::FirstVertex &, const Cell & P, const tag::Winding & )
+// virtual from FiniteElement::Core, defined there (execution forbidden), here overridden
+// this function is speed-critical
+
+{	assert ( cll .dim() == 2 );
+	this->docked_on = cll;
+
+	Cell PQ = cll. boundary() .cell_in_front_of ( P, tag::surely_exists );
+	Cell Q = PQ .tip();
+	Cell QR = cll. boundary() .cell_in_front_of ( Q, tag::surely_exists );
+	Cell R = QR .tip();
+	Cell RS = cll. boundary() .cell_in_front_of ( R, tag::surely_exists );
+	Cell S = RS .tip();
+	#ifndef NDEBUG
+	Cell SP = cll .boundary() .cell_in_front_of ( S, tag::surely_exists );
+	assert ( SP .tip() == P );
+	#endif
+	
+	Function::Action winding_Q = PQ .winding(),
+	                 winding_R = winding_Q + QR .winding(),
+	                 winding_S = winding_R + RS .winding();
+	assert ( winding_S + SP .winding() == 0 );
+
+	Function xyz = Manifold::working .coordinates();
+	size_t geom_dim = xyz .nb_of_components();
+	assert ( geom_dim >= 2 );
+
+	assert ( false );
+	
+	assert ( geom_dim == 2 );
+
+	const std::vector < double > xyz_P = xyz ( P ),
+	                             xyz_Q = xyz ( Q, tag::winding, winding_Q ),
+	                             xyz_R = xyz ( R, tag::winding, winding_R ),
+	                             xyz_S = xyz ( S, tag::winding, winding_S );
+	
+	dock_on_hand_square_Q1
+	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+	  this->cas, this->result_of_integr                                                      );
+
+	// code below can be viewed as a local numbering of vertices P, Q, R
+	this->base_fun_1 .clear();
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert
+		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	// using Cell::Core::short_int_heap for local numbering of vertices
+	// should be slightly faster
+
+}  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on
+   //         with tag::winding and tag::first_vertex
 
 //-----------------------------------------------------------------------------------------//
 
@@ -3533,6 +4392,21 @@ Cell::Numbering & FiniteElement::StandAlone::TypeOne::Triangle::build_global_num
 	return * this->numbers [1];  }
 
 Cell::Numbering & FiniteElement::StandAlone::TypeOne::Quadrangle::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::StandAlone::TypeOne::Parallelogram::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::StandAlone::TypeOne::Rectangle::build_global_numbering ( )
+// virtual from FiniteElement::Core
+{ assert ( false );
+	return * this->numbers [1];  }
+
+Cell::Numbering & FiniteElement::StandAlone::TypeOne::Square::build_global_numbering ( )
 // virtual from FiniteElement::Core
 { assert ( false );
 	return * this->numbers [1];  }

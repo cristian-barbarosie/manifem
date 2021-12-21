@@ -54,6 +54,7 @@ namespace tag {
 	struct BasisFunctions { };  static const BasisFunctions basis_functions;
 	struct IntegralOf { };  static const IntegralOf integral_of;
 	struct HandCoded { };  static const HandCoded hand_coded;
+	struct FirstVertex { };  static const FirstVertex first_vertex;
 }
 
 class FiniteElement;
@@ -235,6 +236,10 @@ class FiniteElement
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Quadrangle &,  // no master, stand-alone
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::Rectangle &,  // no master, stand-alone
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::Square &,  // no master, stand-alone
+                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
 
 	// destructor
 	
@@ -249,6 +254,12 @@ class FiniteElement
 
 	inline void dock_on ( const Cell & cll );
 	inline void dock_on ( const Cell & cll, const tag::Winding & );
+	
+	// two methods below only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	inline void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & );
+	inline void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+                        const tag::Winding &                                     );
 
 	inline double integrate ( const Function & );
 	inline std::vector < double > integrate
@@ -368,6 +379,13 @@ class FiniteElement::Core
 	
 	virtual void dock_on ( const Cell & cll ) = 0;
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+
+	// two methods below only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// we forbid execution here and later override
+	virtual void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & );
+	virtual void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+                         const tag::Winding &                                     );
 	
 	virtual void pre_compute ( const std::vector < Function > & bf,
                              const std::vector < Function > & res ) = 0;
@@ -403,6 +421,13 @@ inline void FiniteElement::dock_on ( const Cell & cll )
 
 inline void FiniteElement::dock_on ( const Cell & cll, const tag::Winding & )
 {	this->core->dock_on ( cll, tag::winding );  }
+
+inline void FiniteElement::dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & v )
+{	this->core->dock_on ( cll, tag::first_vertex, v );  }
+
+inline void FiniteElement::dock_on
+( const Cell & cll, const tag::FirstVertex &, const Cell & v, const tag::Winding & )
+{	this->core->dock_on ( cll, tag::first_vertex, v, tag::winding );  }
 
 
 inline Cell::Numbering & FiniteElement::build_global_numbering ( )
@@ -463,9 +488,16 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	: FiniteElement::Core (), master_manif (m), transf ( 0. )
 	{ }
 
-	// dock_on  virtual from FiniteElement::Core
-	void dock_on ( const Cell & cll ) = 0;
-	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+	// two methods  dock_on  stay pure virtual from FiniteElement::Core
+	// void dock_on ( const Cell & cll )
+	// void dock_on ( const Cell & cll, const tag::Winding & )
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core, here execution forbidden
 	void pre_compute ( const std::vector < Function > & bf,
@@ -533,9 +565,16 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
 	inline Segment ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
 	
-	// dock_on  virtual from FiniteElement::Core
+	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -566,9 +605,16 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
 	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
 	
-	// dock_on  virtual from FiniteElement::Core
+	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -599,9 +645,16 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 
 	inline Quadrangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
 	
-	// dock_on  virtual from FiniteElement::Core
+	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -720,9 +773,16 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 
 	inline StandAlone ( ) : FiniteElement::Core ()  { }
 
-	//  dock_on  virtual from FiniteElement::Core
-	void dock_on ( const Cell & cll ) = 0;
-	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+	// two methods  dock_on  stay pure virtual from FiniteElement::Core
+	// void dock_on ( const Cell & cll )
+	// void dock_on ( const Cell & cll, const tag::Winding & )
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden, later overridden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	// pre_compute  stays pure virtual from FiniteElement::Core
 
@@ -737,7 +797,7 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 
 class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
-// this class will be probably eliminated
+// this class will probably be eliminated
 
 // finite elements with no master
 // searches for the basis function provided by 'integrate'
@@ -764,9 +824,16 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
 	inline TypeOne ( ) : FiniteElement::StandAlone ()  { }
 
-	// dock_on  virtual from FiniteElement::Core
-	void dock_on ( const Cell & cll ) = 0;
-	void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
+	// two methods  dock_on  stay pure virtual from FiniteElement::Core
+	// void dock_on ( const Cell & cll )
+	// void dock_on ( const Cell & cll, const tag::Winding & )
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden, later overridden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	void pre_compute ( const std::vector < Function > & bf,
@@ -813,9 +880,16 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 		this->basis_numbering [ bf2.core ] = 1;
 		this->basis_numbering [ bf3.core ] = 2;  }
 	
-	// dock_on  virtual from FiniteElement::Core
+	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
@@ -859,10 +933,16 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 		this->basis_numbering [ bf3.core ] = 2;
 		this->basis_numbering [ bf4.core ] = 3;  }
 	
-	// dock_on  virtual from FiniteElement::Core
+	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
-	// overridden by Parallelogram, Rectangle and Square
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden, later overridden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
@@ -877,7 +957,7 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 class FiniteElement::StandAlone::TypeOne::Parallelogram
 : public FiniteElement::StandAlone::TypeOne::Quadrangle
 
-// quadrangular finite elements, no master element
+// parallelogram finite elements (a particular case of quadrangle), no master element
 
 {	public :
 
@@ -904,11 +984,16 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 	: FiniteElement::StandAlone::TypeOne::Quadrangle()
 	{ }
 	
-	// dock_on  virtual from FiniteElement::Core,
-	// defined by FiniteElement::StandAlone::TypeOne::Quadrangle, here overridden
-	void dock_on ( const Cell & cll ) override;
-	void dock_on ( const Cell & cll, const tag::Winding & ) override;
-	// overridden again by rectangle and square
+	// two methods  dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
@@ -923,7 +1008,7 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 class FiniteElement::StandAlone::TypeOne::Rectangle
 : public FiniteElement::StandAlone::TypeOne::Parallelogram
 
-// quadrangular finite elements, no master element
+// rectangular finite elements (a particular case of quadrangle), no master element
 
 {	public :
 
@@ -954,6 +1039,11 @@ class FiniteElement::StandAlone::TypeOne::Rectangle
 	void dock_on ( const Cell & cll ) override;
 	void dock_on ( const Cell & cll, const tag::Winding & ) override;
 
+	// two methods  dock_on  virtual from FiniteElement::Core, here overridden
+	void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & );
+	void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+                 const tag::Winding &                                     );
+
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
 
@@ -967,7 +1057,7 @@ class FiniteElement::StandAlone::TypeOne::Rectangle
 class FiniteElement::StandAlone::TypeOne::Square
 : public FiniteElement::StandAlone::TypeOne::Rectangle
 
-// quadrangular finite elements, no master element
+// square finite elements (a particular case of quadrangle), no master element
 
 {	public :
 
@@ -998,6 +1088,11 @@ class FiniteElement::StandAlone::TypeOne::Square
 	void dock_on ( const Cell & cll );
 	void dock_on ( const Cell & cll, const tag::Winding & );
 
+	// two methods  dock_on  virtual from FiniteElement::Core, here overridden
+	void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & );
+	void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+                 const tag::Winding &                                     );
+
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
 
@@ -1026,6 +1121,26 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 {	assert ( deg == 1 );
 
 	this->core = new FiniteElement::StandAlone::TypeOne::Quadrangle();  }
+
+
+inline FiniteElement::FiniteElement  // no master, stand-alone
+( const tag::Rectangle &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	this->core = new FiniteElement::StandAlone::TypeOne::Rectangle();  }
+
+
+inline FiniteElement::FiniteElement  // no master, stand-alone
+( const tag::Square &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
+	
+:	core { nullptr }
+
+{	assert ( deg == 1 );
+
+	this->core = new FiniteElement::StandAlone::TypeOne::Square();  }
 
 
 inline Integrator FiniteElement::set_integrator ( const tag::HandCoded & )
