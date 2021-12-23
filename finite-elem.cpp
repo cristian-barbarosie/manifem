@@ -894,6 +894,8 @@ void dock_on_hand_quadrangle_Q1
 {	const double xRmxQ = xR - xQ, xSmxP = xS - xP, xPmxQ = xP - xQ, xSmxR = xS - xR,
 	             yRmyQ = yR - yQ, ySmyP = yS - yP, yPmyQ = yP - yQ, ySmyR = yS - yR;
 
+	const size_t psi_P = 0, psi_Q = 1, psi_R = 2, psi_S = 3;
+
 	// below we use a switch statement
 	// we trust that the compiler implements it by means of a list of addresses
 	// and not as a cascade of ifs (which would be rather slow)
@@ -919,13 +921,15 @@ void dock_on_hand_quadrangle_Q1
 		}
 			break;  // end of case 2
 
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
 		
 			// computations inspired in UFL and FFC
 			// https://fenics.readthedocs.io/projects/ufl/en/latest/
 			// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	const double alph = 0.7886751345948129,
+		{	const size_t int_psi_x = 0, int_psi_y = 1;
+
+			const double alph = 0.7886751345948129,
 			             beta = 0.2113248654051871;
 			double J_c0_02 = alph * xRmxQ + beta * xSmxP,
 			       J_c0_13 = beta * xRmxQ + alph * xSmxP,
@@ -935,6 +939,7 @@ void dock_on_hand_quadrangle_Q1
 			       J_c2_13 = beta * yRmyQ + alph * ySmyP,
 			       J_c3_01 = alph * yPmyQ + beta * ySmyR,
 			       J_c3_23 = beta * yPmyQ + alph * ySmyR;
+			
 			#ifndef NDEBUG
 			const double det_0 = J_c0_02 * J_c3_01 - J_c1_01 * J_c2_02,
 			             det_1 = J_c0_13 * J_c3_01 - J_c1_01 * J_c2_13,
@@ -945,18 +950,19 @@ void dock_on_hand_quadrangle_Q1
 			assert ( det_2 > 0. );  // det = area
 			assert ( det_3 > 0. );  // det = area
 			#endif
+
 			const double J_c0 = 0.25 * ( J_c0_02 + J_c0_13 ),
 			             J_c1 = 0.25 * ( J_c1_01 + J_c1_23 ),
 			             J_c2 = 0.25 * ( J_c2_02 + J_c2_13 ),
 			             J_c3 = 0.25 * ( J_c3_01 + J_c3_23 );
-			result [0][0][0] = - J_c3 + J_c2;                       // int psi^P,x
-			result [0][0][1] =   J_c1 - J_c0;                       // int psi^P,y
-			result [0][1][0] = - J_c3 - J_c2;                       // int psi^Q,x
-			result [0][1][1] =   J_c1 + J_c0;                       // int psi^Q,y
-			result [0][2][0] =   J_c3 + J_c2;                       // int psi^R,x
-			result [0][2][1] = - J_c1 - J_c0;                       // int psi^R,y
-			result [0][3][0] =   J_c3 - J_c2;                       // int psi^S,x
-			result [0][3][1] = - J_c1 + J_c0;                    }  // int psi^S,y
+			result [0] [ psi_P ] [ int_psi_x ] = - J_c3 + J_c2;
+			result [0] [ psi_P ] [ int_psi_y ] =   J_c1 - J_c0;
+			result [0] [ psi_Q ] [ int_psi_x ] = - J_c3 - J_c2;
+			result [0] [ psi_Q ] [ int_psi_y ] =   J_c1 + J_c0;
+			result [0] [ psi_R ] [ int_psi_x ] =   J_c3 + J_c2;
+			result [0] [ psi_R ] [ int_psi_y ] = - J_c1 - J_c0;
+			result [0] [ psi_S ] [ int_psi_x ] =   J_c3 - J_c2;
+			result [0] [ psi_S ] [ int_psi_y ] = - J_c1 + J_c0;                }
 		
 			break;  // end of case 3 -- dock_on_hand_quadrangle_Q1
 	
@@ -965,8 +971,12 @@ void dock_on_hand_quadrangle_Q1
 		// computations inspired in UFL and FFC
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+		// std::cout << "case 4 ";
 
-		{	const double w_077 = 0.07716049382716043,  // 25/81/4
+		{	const size_t int_psi_x_psi_x = 0, int_psi_x_psi_y = 1,
+			             int_psi_y_psi_x = 2, int_psi_y_psi_y = 3;
+
+			const double w_077 = 0.07716049382716043,  // 25/81/4
 			             w_123 = 0.1234567901234567,   // 10/81
 			             w_197 = 0.1975308641975309;   // 16/81
 			const double alph = 0.8872983346207417,    // 0.5 + sqrt(0.15)
@@ -1019,28 +1029,28 @@ void dock_on_hand_quadrangle_Q1
 			double tmp = J_c3_012_c3_012 * ( alph_alph * wd_0 + 0.25 * wd_1 + beta_beta * wd_2 )
 			           + J_c3_345_c3_345 * ( alph_alph * wd_3 + 0.25 * wd_4 + beta_beta * wd_5 )
 			           + J_c3_678_c3_678 * ( alph_alph * wd_6 + 0.25 * wd_7 + beta_beta * wd_8 );
-			result [0][0][0] =                             // int psi^P,x * psi^P,x
-			result [2][2][0] = tmp;                        // int psi^R,x * psi^R,x
-			result [0][2][0] =                             // int psi^P,x * psi^R,x
-			result [2][0][0] = - tmp;                      // int psi^R,x * psi^P,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] = tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - tmp;
 			tmp = J_c3_012_c3_012 * ( beta_beta * wd_0 + 0.25 * wd_1 + alph_alph * wd_2 )
 			    + J_c3_345_c3_345 * ( beta_beta * wd_3 + 0.25 * wd_4 + alph_alph * wd_5 )
 			    + J_c3_678_c3_678 * ( beta_beta * wd_6 + 0.25 * wd_7 + alph_alph * wd_8 );
-			result [1][1][0] =                             // int psi^Q,x * psi^Q,x
-			result [3][3][0] = tmp;                        // int psi^S,x * psi^S,x
-			result [1][3][0] =                             // int psi^Q,x * psi^S,x
-			result [3][1][0] = - tmp;                      // int psi^S,x * psi^Q,x
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_x ] = tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_x ] = - tmp;
 			tmp = J_c3_012_c3_012 * ( alph_beta * wd_0 + 0.25 * wd_1 + beta_alph * wd_2 )
 			    + J_c3_345_c3_345 * ( alph_beta * wd_3 + 0.25 * wd_4 + beta_alph * wd_5 )
 			    + J_c3_678_c3_678 * ( alph_beta * wd_6 + 0.25 * wd_7 + beta_alph * wd_8 );
-			result [0][1][0] =                             // int psi^P,x * psi^Q,x
-			result [1][0][0] =                             // int psi^Q,x * psi^P,x
-			result [2][3][0] =                             // int psi^R,x * psi^S,x
-			result [3][2][0] = tmp;                        // int psi^S,x * psi^R,x
-			result [0][3][0] =                             // int psi^P,x * psi^S,x
-			result [3][0][0] =                             // int psi^S,x * psi^P,x
-			result [1][2][0] =                             // int psi^Q,x * psi^R,x
-			result [2][1][0] = - tmp;                      // int psi^R,x * psi^Q,x
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_x ] = tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] = - tmp;
 
 			const double J_c2_036_c3_012 = J_c2_036 * J_c3_012,
 			             J_c2_147_c3_012 = J_c2_147 * J_c3_012,
@@ -1061,13 +1071,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c2_036_c3_678 * beta_alph * wd_6
 			                   + J_c2_147_c3_678 * beta_half * wd_7
 			                   + J_c2_258_c3_678 * beta_beta * wd_8;
-			result [0][0][0] -= tmp + tmp;                 // int psi^P,x * psi^P,x
-			result [0][1][0] += tmp;                       // int psi^P,x * psi^Q,x
-			result [1][0][0] += tmp;                       // int psi^Q,x * psi^P,x
-			result [0][2][0] += tmp;                       // int psi^P,x * psi^R,x
-			result [2][0][0] += tmp;                       // int psi^R,x * psi^P,x
-			result [1][2][0] -= tmp;                       // int psi^Q,x * psi^R,x
-			result [2][1][0] -= tmp;                       // int psi^R,x * psi^Q,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] -= tmp + tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] -= tmp;
 			tmp =                J_c2_036_c3_012 * alph_beta * wd_0
 			                   + J_c2_147_c3_012 * alph_half * wd_1
 			                   + J_c2_258_c3_012 * alph_alph * wd_2
@@ -1077,13 +1087,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c2_036_c3_678 * beta_beta * wd_6
 			                   + J_c2_147_c3_678 * beta_half * wd_7
 			                   + J_c2_258_c3_678 * beta_alph * wd_8;
-			result [1][1][0] += tmp + tmp;                 // int psi^Q,x * psi^Q,x
-			result [0][1][0] -= tmp;                       // int psi^P,x * psi^Q,x
-			result [1][0][0] -= tmp;                       // int psi^Q,x * psi^P,x
-			result [1][3][0] -= tmp;                       // int psi^Q,x * psi^S,x
-			result [3][1][0] -= tmp;                       // int psi^S,x * psi^Q,x
-			result [0][3][0] += tmp;                       // int psi^P,x * psi^S,x
-			result [3][0][0] += tmp;                       // int psi^S,x * psi^P,x
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] += tmp + tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_x ] += tmp;
 			tmp =                J_c2_036_c3_012 * beta_alph * wd_0
 			                   + J_c2_147_c3_012 * beta_half * wd_1
 			                   + J_c2_258_c3_012 * beta_beta * wd_2
@@ -1093,13 +1103,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c2_036_c3_678 * alph_alph * wd_6
 			                   + J_c2_147_c3_678 * alph_half * wd_7
 			                   + J_c2_258_c3_678 * alph_beta * wd_8;
-			result [2][2][0] += tmp + tmp;                 // int psi^R,x * psi^R,x
-			result [0][2][0] -= tmp;                       // int psi^P,x * psi^R,x
-			result [2][0][0] -= tmp;                       // int psi^R,x * psi^P,x
-			result [2][3][0] -= tmp;                       // int psi^R,x * psi^S,x
-			result [3][2][0] -= tmp;                       // int psi^S,x * psi^R,x
-			result [0][3][0] += tmp;                       // int psi^P,x * psi^S,x
-			result [3][0][0] += tmp;                       // int psi^S,x * psi^P,x
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] += tmp + tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_x ] += tmp;
 			tmp =                J_c2_036_c3_012 * beta_beta * wd_0
 			                   + J_c2_147_c3_012 * beta_half * wd_1
 			                   + J_c2_258_c3_012 * beta_alph * wd_2
@@ -1109,13 +1119,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c2_036_c3_678 * alph_beta * wd_6
 			                   + J_c2_147_c3_678 * alph_half * wd_7
 			                   + J_c2_258_c3_678 * alph_alph * wd_8;
-			result [3][3][0] -= tmp + tmp;                 // int psi^S,x * psi^S,x
-			result [1][3][0] += tmp;                       // int psi^Q,x * psi^S,x
-			result [3][1][0] += tmp;                       // int psi^S,x * psi^Q,x
-			result [2][3][0] += tmp;                       // int psi^R,x * psi^S,x
-			result [3][2][0] += tmp;                       // int psi^S,x * psi^R,x
-			result [1][2][0] -= tmp;                       // int psi^Q,x * psi^R,x
-			result [2][1][0] -= tmp;                       // int psi^R,x * psi^Q,x
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_x ] -= tmp + tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] -= tmp;
 
 			const double J_c2_036_c2_036 = J_c2_036 * J_c2_036,
 			             J_c2_147_c2_147 = J_c2_147 * J_c2_147,
@@ -1130,28 +1140,28 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c2_258_c2_258 * alph_alph * wd_2
 			                   + J_c2_258_c2_258 * 0.25      * wd_5
 			                   + J_c2_258_c2_258 * beta_beta * wd_8;
-			result [0][0][0] += tmp;                       // int psi^P,x * psi^P,x
-			result [1][1][0] += tmp;                       // int psi^Q,x * psi^Q,x
-			result [0][1][0] -= tmp;                       // int psi^P,x * psi^Q,x
-			result [1][0][0] -= tmp;                       // int psi^Q,x * psi^P,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] -= tmp;
 			tmp = J_c2_036_c2_036 * ( beta_beta * wd_0 + 0.25 * wd_3 + alph_alph * wd_6 )
 			    + J_c2_147_c2_147 * ( beta_beta * wd_1 + 0.25 * wd_4 + alph_alph * wd_7 )
 			    + J_c2_258_c2_258 * ( beta_beta * wd_2 + 0.25 * wd_5 + alph_alph * wd_8 );
-			result [2][2][0] += tmp;                       // int psi^R,x * psi^R,x
-			result [3][3][0] += tmp;                       // int psi^S,x * psi^S,x
-			result [2][3][0] -= tmp;                       // int psi^R,x * psi^S,x
-			result [3][2][0] -= tmp;                       // int psi^S,x * psi^R,x
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_x ] -= tmp;
 			tmp = J_c2_036_c2_036 * ( alph_beta * wd_0 + 0.25 * wd_3 + beta_alph * wd_6 )
 			    + J_c2_147_c2_147 * ( alph_beta * wd_1 + 0.25 * wd_4 + beta_alph * wd_7 )
 			    + J_c2_258_c2_258 * ( alph_beta * wd_2 + 0.25 * wd_5 + beta_alph * wd_8 );
-			result [0][2][0] += tmp;                       // int psi^P,x * psi^R,x
-			result [2][0][0] += tmp;                       // int psi^R,x * psi^P,x
-			result [0][3][0] -= tmp;                       // int psi^P,x * psi^S,x
-			result [3][0][0] -= tmp;                       // int psi^S,x * psi^P,x
-			result [1][2][0] -= tmp;                       // int psi^Q,x * psi^R,x
-			result [2][1][0] -= tmp;                       // int psi^R,x * psi^Q,x
-			result [1][3][0] += tmp;                       // int psi^Q,x * psi^S,x
-			result [3][1][0] += tmp;                       // int psi^S,x * psi^Q,x
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_x ] += tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_x ] += tmp;
 
 			const double J_c1_012_c3_012 = J_c1_012 * J_c3_012,
 			             J_c1_345_c3_345 = J_c1_345 * J_c3_345,
@@ -1160,44 +1170,44 @@ void dock_on_hand_quadrangle_Q1
 			tmp = J_c1_012_c3_012 * ( alph_alph * wd_0 + 0.25 * wd_1 + beta_beta * wd_2 )
 			    + J_c1_345_c3_345 * ( alph_alph * wd_3 + 0.25 * wd_4 + beta_beta * wd_5 )
 			    + J_c1_678_c3_678 * ( alph_alph * wd_6 + 0.25 * wd_7 + beta_beta * wd_8 );
-			result [0][0][1] =                             // int psi^P,x * psi^P,y
-			result [2][2][1] =                             // int psi^R,x * psi^R,y
-			result [0][0][2] =                             // int psi^P,y * psi^P,x
-			result [2][2][2] = - tmp;                      // int psi^R,y * psi^R,x
-			result [0][2][1] =                             // int psi^P,x * psi^R,y
-			result [2][0][1] =                             // int psi^R,x * psi^P,y
-			result [0][2][2] =                             // int psi^P,y * psi^R,x
-			result [2][0][2] = tmp;                        // int psi^R,y * psi^P,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] = tmp;
 			tmp = J_c1_012_c3_012 * ( beta_beta * wd_0 + 0.25 * wd_1 + alph_alph * wd_2 )
 			    + J_c1_345_c3_345 * ( beta_beta * wd_3 + 0.25 * wd_4 + alph_alph * wd_5 )
 			    + J_c1_678_c3_678 * ( beta_beta * wd_6 + 0.25 * wd_7 + alph_alph * wd_8 );
-			result [1][1][1] =                             // int psi^Q,x * psi^Q,y
-			result [3][3][1] =                             // int psi^S,x * psi^S,y
-			result [1][1][2] =                             // int psi^Q,y * psi^Q,x
-			result [3][3][2] = - tmp;                      // int psi^S,y * psi^S,x
-			result [1][3][1] =                             // int psi^Q,x * psi^S,y
-			result [3][1][1] =                             // int psi^S,x * psi^Q,y
-			result [1][3][2] =                             // int psi^Q,y * psi^S,x
-			result [3][1][2] = tmp;                        // int psi^S,y * psi^Q,x
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_x ] = - tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_x ] = tmp;
 			tmp = J_c1_012_c3_012 * ( alph_beta * wd_0 + 0.25 * wd_1 + beta_alph * wd_2 )
 			    + J_c1_345_c3_345 * ( alph_beta * wd_3 + 0.25 * wd_4 + beta_alph * wd_5 )
 			    + J_c1_678_c3_678 * ( alph_beta * wd_6 + 0.25 * wd_7 + beta_alph * wd_8 );
-			result [0][1][2] =                             // int psi^P,x * psi^Q,y
-			result [1][0][2] =                             // int psi^Q,x * psi^P,y
-			result [2][3][2] =                             // int psi^R,x * psi^S,y
-			result [3][2][2] =                             // int psi^S,x * psi^R,y
-			result [0][1][1] =                             // int psi^P,y * psi^Q,x
-			result [1][0][1] =                             // int psi^Q,y * psi^P,x
-			result [2][3][1] =                             // int psi^R,y * psi^S,x
-			result [3][2][1] = - tmp;                      // int psi^S,y * psi^R,x
-			result [0][3][2] =                             // int psi^P,x * psi^S,y
-			result [3][0][2] =                             // int psi^S,x * psi^P,y
-			result [1][2][2] =                             // int psi^Q,x * psi^R,y
-			result [2][1][2] =                             // int psi^R,x * psi^Q,y
-			result [0][3][1] =                             // int psi^P,y * psi^S,x
-			result [3][0][1] =                             // int psi^S,y * psi^P,x
-			result [1][2][1] =                             // int psi^Q,y * psi^R,x
-			result [2][1][1] = tmp;                        // int psi^R,y * psi^Q,x
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_y ] = - tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] = tmp;
 
 			const double J_c1_012_c2_036 = J_c1_012 * J_c2_036,
 			             J_c1_012_c2_147 = J_c1_012 * J_c2_147,
@@ -1218,14 +1228,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c1_678_c2_036 * beta_alph * wd_6
 			                   + J_c1_678_c2_147 * beta_half * wd_7
 			                   + J_c1_678_c2_258 * beta_beta * wd_8;
-			result [0][0][2] += tmp;                       // int psi^P,x * psi^P,y
-			result [0][1][2] -= tmp;                       // int psi^P,x * psi^Q,y
-			result [2][0][2] -= tmp;                       // int psi^R,x * psi^P,y
-			result [2][1][2] += tmp;                       // int psi^R,x * psi^Q,y
-			result [0][0][1] += tmp;                       // int psi^P,y * psi^P,x
-			result [1][0][1] -= tmp;                       // int psi^Q,y * psi^P,x
-			result [0][2][1] -= tmp;                       // int psi^P,y * psi^R,x
-			result [1][2][1] += tmp;                       // int psi^Q,y * psi^R,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] += tmp;
 			tmp =                J_c1_012_c2_036 * alph_beta * wd_0
 			                   + J_c1_012_c2_147 * alph_half * wd_1
 			                   + J_c1_012_c2_258 * alph_alph * wd_2
@@ -1235,14 +1245,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c1_678_c2_036 * beta_beta * wd_6
 			                   + J_c1_678_c2_147 * beta_half * wd_7
 			                   + J_c1_678_c2_258 * beta_alph * wd_8;
-			result [1][0][2] += tmp;                       // int psi^Q,x * psi^P,y
-			result [1][1][2] -= tmp;                       // int psi^Q,x * psi^Q,y
-			result [3][0][2] -= tmp;                       // int psi^S,x * psi^P,y
-			result [3][1][2] += tmp;                       // int psi^S,x * psi^Q,y
-			result [0][1][1] += tmp;                       // int psi^P,y * psi^Q,x
-			result [1][1][1] -= tmp;                       // int psi^Q,y * psi^Q,x
-			result [0][3][1] -= tmp;                       // int psi^P,y * psi^S,x
-			result [1][3][1] += tmp;                       // int psi^Q,y * psi^S,x
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_y ] += tmp;
 			tmp =                J_c1_012_c2_036 * beta_alph * wd_0
 			                   + J_c1_012_c2_147 * beta_half * wd_1
 			                   + J_c1_012_c2_258 * beta_beta * wd_2
@@ -1252,14 +1262,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c1_678_c2_036 * alph_alph * wd_6
 			                   + J_c1_678_c2_147 * alph_half * wd_7
 			                   + J_c1_678_c2_258 * alph_beta * wd_8;
-			result [0][2][2] += tmp;                       // int psi^P,x * psi^R,y
-			result [0][3][2] -= tmp;                       // int psi^P,x * psi^S,y
-			result [2][2][2] -= tmp;                       // int psi^R,x * psi^R,y
-			result [2][3][2] += tmp;                       // int psi^R,x * psi^S,y
-			result [2][0][1] += tmp;                       // int psi^R,y * psi^P,x
-			result [3][0][1] -= tmp;                       // int psi^S,y * psi^P,x
-			result [2][2][1] -= tmp;                       // int psi^R,y * psi^R,x
-			result [3][2][1] += tmp;                       // int psi^S,y * psi^R,x
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_y ] += tmp;
 			tmp =                J_c1_012_c2_036 * beta_beta * wd_0
 			                   + J_c1_012_c2_147 * beta_half * wd_1
 			                   + J_c1_012_c2_258 * beta_alph * wd_2
@@ -1269,14 +1279,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c1_678_c2_036 * alph_beta * wd_6
 			                   + J_c1_678_c2_147 * alph_half * wd_7
 			                   + J_c1_678_c2_258 * alph_alph * wd_8;
-			result [1][2][2] += tmp;                       // int psi^Q,x * psi^R,y
-			result [1][3][2] -= tmp;                       // int psi^Q,x * psi^S,y
-			result [3][2][2] -= tmp;                       // int psi^S,x * psi^R,y
-			result [3][3][2] += tmp;                       // int psi^S,x * psi^S,y
-			result [2][1][1] += tmp;                       // int psi^R,y * psi^Q,x
-			result [3][1][1] -= tmp;                       // int psi^S,y * psi^Q,x
-			result [2][3][1] -= tmp;                       // int psi^R,y * psi^S,x
-			result [3][3][1] += tmp;                       // int psi^S,y * psi^S,x
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_y ] += tmp;
 
 			const double J_c0_036_c3_012 = J_c0_036 * J_c3_012,
 			             J_c0_147_c3_012 = J_c0_147 * J_c3_012,
@@ -1297,14 +1307,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c3_678 * beta_alph * wd_6
 			                   + J_c0_147_c3_678 * beta_half * wd_7
 			                   + J_c0_258_c3_678 * beta_beta * wd_8;
-			result [0][0][2] += tmp;                       // int psi^P,x * psi^P,y
-			result [1][0][2] -= tmp;                       // int psi^Q,x * psi^P,y
-			result [0][2][2] -= tmp;                       // int psi^P,x * psi^R,y
-			result [1][2][2] += tmp;                       // int psi^Q,x * psi^R,y
-			result [0][0][1] += tmp;                       // int psi^P,y * psi^P,x
-			result [0][1][1] -= tmp;                       // int psi^P,y * psi^Q,x
-			result [2][0][1] -= tmp;                       // int psi^R,y * psi^P,x
-			result [2][1][1] += tmp;                       // int psi^R,y * psi^Q,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] += tmp;
 			tmp =                J_c0_036_c3_012 * alph_beta * wd_0
 			                   + J_c0_147_c3_012 * alph_half * wd_1
 			                   + J_c0_258_c3_012 * alph_alph * wd_2
@@ -1314,14 +1324,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c3_678 * beta_beta * wd_6
 			                   + J_c0_147_c3_678 * beta_half * wd_7
 			                   + J_c0_258_c3_678 * beta_alph * wd_8;
-			result [0][1][2] += tmp;                       // int psi^P,x * psi^Q,y
-			result [0][3][2] -= tmp;                       // int psi^P,x * psi^S,y
-			result [1][1][2] -= tmp;                       // int psi^Q,x * psi^Q,y
-			result [1][3][2] += tmp;                       // int psi^Q,x * psi^S,y
-			result [1][0][1] += tmp;                       // int psi^Q,y * psi^P,x
-			result [3][0][1] -= tmp;                       // int psi^S,y * psi^P,x
-			result [1][1][1] -= tmp;                       // int psi^Q,y * psi^Q,x
-			result [3][1][1] += tmp;                       // int psi^S,y * psi^Q,x
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_y ] += tmp;
 			tmp =                J_c0_036_c3_012 * beta_alph * wd_0
 			                   + J_c0_147_c3_012 * beta_half * wd_1
 			                   + J_c0_258_c3_012 * beta_beta * wd_2
@@ -1331,14 +1341,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c3_678 * alph_alph * wd_6
 			                   + J_c0_147_c3_678 * alph_half * wd_7
 			                   + J_c0_258_c3_678 * alph_beta * wd_8;
-			result [2][0][2] += tmp;                       // int psi^R,x * psi^P,y
-			result [2][2][2] -= tmp;                       // int psi^R,x * psi^R,y
-			result [3][0][2] -= tmp;                       // int psi^S,x * psi^P,y
-			result [3][2][2] += tmp;                       // int psi^S,x * psi^R,y
-			result [0][2][1] += tmp;                       // int psi^P,y * psi^R,x
-			result [2][2][1] -= tmp;                       // int psi^R,y * psi^R,x
-			result [0][3][1] -= tmp;                       // int psi^P,y * psi^S,x
-			result [2][3][1] += tmp;                       // int psi^R,y * psi^S,x
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_y ] += tmp;
 			tmp =                J_c0_036_c3_012 * beta_beta * wd_0
 			                   + J_c0_147_c3_012 * beta_half * wd_1
 			                   + J_c0_258_c3_012 * beta_alph * wd_2
@@ -1348,14 +1358,14 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c3_678 * alph_beta * wd_6
 			                   + J_c0_147_c3_678 * alph_half * wd_7
 			                   + J_c0_258_c3_678 * alph_alph * wd_8;
-			result [2][1][2] += tmp;                       // int psi^R,x * psi^Q,y
-			result [2][3][2] -= tmp;                       // int psi^R,x * psi^Q,y
-			result [3][1][2] -= tmp;                       // int psi^S,x * psi^Q,y
-			result [3][3][2] += tmp;                       // int psi^S,x * psi^S,y
-			result [1][2][1] += tmp;                       // int psi^Q,y * psi^R,x
-			result [3][2][1] -= tmp;                       // int psi^S,y * psi^R,x
-			result [1][3][1] -= tmp;                       // int psi^Q,y * psi^S,x
-			result [3][3][1] += tmp;                       // int psi^S,y * psi^S,x
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_y ] += tmp;
 
 			const double J_c0_036_c2_036 = J_c0_036 * J_c2_036,
 			             J_c0_147_c2_147 = J_c0_147 * J_c2_147,
@@ -1364,44 +1374,44 @@ void dock_on_hand_quadrangle_Q1
 			tmp = J_c0_036_c2_036 * ( alph_alph * wd_0 + 0.25 * wd_3 + beta_beta * wd_6 )
 			    + J_c0_147_c2_147 * ( alph_alph * wd_1 + 0.25 * wd_4 + beta_beta * wd_7 )
 			    + J_c0_258_c2_258 * ( alph_alph * wd_2 + 0.25 * wd_5 + beta_beta * wd_8 );
-			result [0][0][1] -= tmp;                       // int psi^P,x * psi^P,y
-			result [1][1][1] -= tmp;                       // int psi^Q,x * psi^Q,y
-			result [0][0][2] -= tmp;                       // int psi^P,y * psi^P,x
-			result [1][1][2] -= tmp;                       // int psi^Q,y * psi^Q,x
-			result [0][1][1] += tmp;                       // int psi^P,x * psi^Q,y
-			result [1][0][1] += tmp;                       // int psi^Q,x * psi^P,y
-			result [0][1][2] += tmp;                       // int psi^P,y * psi^Q,x
-			result [1][0][2] += tmp;                       // int psi^Q,y * psi^P,x
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] += tmp;
 			tmp = J_c0_036_c2_036 * ( alph_beta * wd_0 + 0.25 * wd_3 + beta_alph * wd_6 )
 			    + J_c0_147_c2_147 * ( alph_beta * wd_1 + 0.25 * wd_4 + beta_alph * wd_7 )
 			    + J_c0_258_c2_258 * ( alph_beta * wd_2 + 0.25 * wd_5 + beta_alph * wd_8 );
-			result [0][2][1] -= tmp;                       // int psi^P,x * psi^R,y
-			result [2][0][1] -= tmp;                       // int psi^R,x * psi^P,y
-			result [0][3][1] += tmp;                       // int psi^P,x * psi^S,y
-			result [3][0][1] += tmp;                       // int psi^S,x * psi^P,y
-			result [1][2][1] += tmp;                       // int psi^Q,x * psi^R,y
-			result [2][1][1] += tmp;                       // int psi^R,x * psi^Q,y
-			result [1][3][1] -= tmp;                       // int psi^Q,x * psi^S,y
-			result [3][1][1] -= tmp;                       // int psi^S,x * psi^Q,y
-			result [0][2][2] -= tmp;                       // int psi^P,y * psi^R,x
-			result [2][0][2] -= tmp;                       // int psi^R,y * psi^P,x
-			result [0][3][2] += tmp;                       // int psi^P,y * psi^S,x
-			result [3][0][2] += tmp;                       // int psi^S,y * psi^P,x
-			result [1][2][2] += tmp;                       // int psi^Q,y * psi^R,x
-			result [2][1][2] += tmp;                       // int psi^R,y * psi^Q,x
-			result [1][3][2] -= tmp;                       // int psi^Q,y * psi^S,x
-			result [3][1][2] -= tmp;                       // int psi^S,y * psi^Q,x
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_x ] -= tmp;
 			tmp = J_c0_036_c2_036 * ( beta_beta * wd_0 + 0.25 * wd_3 + alph_alph * wd_6 )
 			    + J_c0_147_c2_147 * ( beta_beta * wd_1 + 0.25 * wd_4 + alph_alph * wd_7 )
 			    + J_c0_258_c2_258 * ( beta_beta * wd_2 + 0.25 * wd_5 + alph_alph * wd_8 );
-			result [2][2][1] -= tmp;                       // int psi^R,x * psi^R,y
-			result [3][3][1] -= tmp;                       // int psi^S,x * psi^S,y
-			result [2][2][2] -= tmp;                       // int psi^R,y * psi^R,x
-			result [3][3][2] -= tmp;                       // int psi^S,y * psi^S,x
-			result [2][3][1] += tmp;                       // int psi^R,x * psi^S,y
-			result [3][2][1] += tmp;                       // int psi^S,x * psi^R,y
-			result [2][3][2] += tmp;                       // int psi^R,y * psi^S,x
-			result [3][2][2] += tmp;                       // int psi^S,y * psi^R,x
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_x ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_y ] += tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_x ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_x ] += tmp;
 
 			const double J_c1_012_c1_012 = J_c1_012 * J_c1_012,
 			             J_c1_345_c1_345 = J_c1_345 * J_c1_345,
@@ -1410,28 +1420,28 @@ void dock_on_hand_quadrangle_Q1
 			tmp = J_c1_012_c1_012 * ( alph_alph * wd_0 + 0.25 * wd_1 + beta_beta * wd_2 )
 			    + J_c1_345_c1_345 * ( alph_alph * wd_3 + 0.25 * wd_4 + beta_beta * wd_5 )
 			    + J_c1_678_c1_678 * ( alph_alph * wd_6 + 0.25 * wd_7 + beta_beta * wd_8 );
-			result [0][0][3] += tmp;                       // int psi^P,y * psi^P,y
-			result [0][2][3] -= tmp;                       // int psi^P,y * psi^R,y
-			result [2][0][3] -= tmp;                       // int psi^R,y * psi^P,y
-			result [2][2][3] += tmp;                       // int psi^R,y * psi^R,y
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] += tmp;
 			tmp = J_c1_012_c1_012 * ( alph_beta * wd_0 + 0.25 * wd_1 + beta_alph * wd_2 )
 			    + J_c1_345_c1_345 * ( alph_beta * wd_3 + 0.25 * wd_4 + beta_alph * wd_5 )
 			    + J_c1_678_c1_678 * ( alph_beta * wd_6 + 0.25 * wd_7 + beta_alph * wd_8 );
-			result [0][1][3] += tmp;                       // int psi^P,y * psi^Q,y
-			result [1][0][3] += tmp;                       // int psi^Q,y * psi^P,y
-			result [0][3][3] -= tmp;                       // int psi^P,y * psi^S,y
-			result [3][0][3] -= tmp;                       // int psi^S,y * psi^P,y
-			result [1][2][3] -= tmp;                       // int psi^Q,y * psi^R,y
-			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
-			result [2][3][3] += tmp;                       // int psi^R,y * psi^S,y
-			result [3][2][3] += tmp;                       // int psi^S,y * psi^R,y
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_y ] += tmp;
 			tmp = J_c1_012_c1_012 * ( beta_beta * wd_0 + 0.25 * wd_1 + alph_alph * wd_2 )
 			    + J_c1_345_c1_345 * ( beta_beta * wd_3 + 0.25 * wd_4 + alph_alph * wd_5 )
 			    + J_c1_678_c1_678 * ( beta_beta * wd_6 + 0.25 * wd_7 + alph_alph * wd_8 );
-			result [1][1][3] += tmp;                       // int psi^Q,y * psi^Q,y
-			result [3][3][3] += tmp;                       // int psi^S,y * psi^S,y
-			result [1][3][3] -= tmp;                       // int psi^Q,y * psi^S,y
-			result [3][1][3] -= tmp;                       // int psi^S,y * psi^Q,y
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
 
 			const double J_c0_036_c1_012 = J_c0_036 * J_c1_012,
 			             J_c0_147_c1_012 = J_c0_147 * J_c1_012,
@@ -1452,13 +1462,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c1_678 * beta_alph * wd_6
 			                   + J_c0_147_c1_678 * beta_half * wd_7
 			                   + J_c0_258_c1_678 * beta_beta * wd_8;
-			result [0][0][3] -= tmp + tmp;                 // int psi^P,y * psi^P,y
-			result [0][1][3] += tmp;                       // int psi^P,y * psi^Q,y
-			result [1][0][3] += tmp;                       // int psi^Q,y * psi^P,y
-			result [0][2][3] += tmp;                       // int psi^P,y * psi^R,y
-			result [2][0][3] += tmp;                       // int psi^R,y * psi^P,y
-			result [1][2][3] -= tmp;                       // int psi^Q,y * psi^R,y
-			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp + tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
 			tmp =                J_c0_036_c1_012 * alph_beta * wd_0
 			                   + J_c0_147_c1_012 * alph_half * wd_1
 			                   + J_c0_258_c1_012 * alph_alph * wd_2
@@ -1468,13 +1478,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c1_678 * beta_beta * wd_6
 			                   + J_c0_147_c1_678 * beta_half * wd_7
 			                   + J_c0_258_c1_678 * beta_alph * wd_8;
-			result [0][1][3] -= tmp;                       // int psi^P,y * psi^Q,y
-			result [1][0][3] -= tmp;                       // int psi^Q,y * psi^P,y
-			result [0][3][3] += tmp;                       // int psi^P,y * psi^S,y
-			result [3][0][3] += tmp;                       // int psi^S,y * psi^P,y
-			result [1][1][3] += tmp + tmp;                 // int psi^Q,y * psi^Q,y
-			result [1][3][3] -= tmp;                       // int psi^Q,y * psi^S,y
-			result [3][1][3] -= tmp;                       // int psi^S,y * psi^Q,y
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] += tmp + tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
 			tmp =                J_c0_036_c1_012 * beta_alph * wd_0
 			                   + J_c0_147_c1_012 * beta_half * wd_1
 			                   + J_c0_258_c1_012 * beta_beta * wd_2
@@ -1484,13 +1494,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c1_678 * alph_alph * wd_6
 			                   + J_c0_147_c1_678 * alph_half * wd_7
 			                   + J_c0_258_c1_678 * alph_beta * wd_8;
-			result [2][0][3] -= tmp;                       // int psi^R,y * psi^P,y
-			result [0][2][3] -= tmp;                       // int psi^P,y * psi^R,y
-			result [2][2][3] += tmp + tmp;                 // int psi^R,y * psi^R,y
-			result [3][0][3] += tmp;                       // int psi^S,y * psi^P,y
-			result [0][3][3] += tmp;                       // int psi^P,y * psi^S,y
-			result [3][2][3] -= tmp;                       // int psi^S,y * psi^R,y
-			result [2][3][3] -= tmp;                       // int psi^R,y * psi^S,y
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] += tmp + tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp;
 			tmp =                J_c0_036_c1_012 * beta_beta * wd_0
 			                   + J_c0_147_c1_012 * beta_half * wd_1
 			                   + J_c0_258_c1_012 * beta_alph * wd_2
@@ -1500,13 +1510,13 @@ void dock_on_hand_quadrangle_Q1
 			                   + J_c0_036_c1_678 * alph_beta * wd_6
 			                   + J_c0_147_c1_678 * alph_half * wd_7
 			                   + J_c0_258_c1_678 * alph_alph * wd_8;
-			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
-			result [1][2][3] -= tmp;                       // int psi^Q,y * psi^R,y
-			result [2][3][3] += tmp;                       // int psi^R,y * psi^S,y
-			result [3][2][3] += tmp;                       // int psi^S,y * psi^R,y
-			result [3][1][3] += tmp;                       // int psi^S,y * psi^Q,y
-			result [1][3][3] += tmp;                       // int psi^P,y * psi^S,y
-			result [3][3][3] -= tmp + tmp;                 // int psi^S,y * psi^S,y
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp + tmp;
 
 			const double J_c0_036_c0_036 = J_c0_036 * J_c0_036,
 			             J_c0_147_c0_147 = J_c0_147 * J_c0_147,
@@ -1515,28 +1525,28 @@ void dock_on_hand_quadrangle_Q1
 			tmp = J_c0_036_c0_036 * ( alph_alph * wd_0 + 0.25 * wd_3 + beta_beta * wd_6 )
 			    + J_c0_147_c0_147 * ( alph_alph * wd_1 + 0.25 * wd_4 + beta_beta * wd_7 )
 			    + J_c0_258_c0_258 * ( alph_alph * wd_2 + 0.25 * wd_5 + beta_beta * wd_8 );
-			result [0][0][3] += tmp;                       // int psi^P,y * psi^P,y
-			result [0][1][3] -= tmp;                       // int psi^P,y * psi^P,y
-			result [1][0][3] -= tmp;                       // int psi^P,y * psi^P,y
-			result [1][1][3] += tmp;                       // int psi^P,y * psi^P,y
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] += tmp;
 			tmp = J_c0_036_c0_036 * ( alph_beta * wd_0 + 0.25 * wd_3 + beta_alph * wd_6 )
 			    + J_c0_147_c0_147 * ( alph_beta * wd_1 + 0.25 * wd_4 + beta_alph * wd_7 )
 			    + J_c0_258_c0_258 * ( alph_beta * wd_2 + 0.25 * wd_5 + beta_alph * wd_8 );
-			result [0][2][3] += tmp;                       // int psi^P,y * psi^R,y
-			result [2][0][3] += tmp;                       // int psi^R,y * psi^P,y
-			result [0][3][3] -= tmp;                       // int psi^P,y * psi^S,y
-			result [3][0][3] -= tmp;                       // int psi^S,y * psi^P,y
-			result [1][2][3] -= tmp;                       // int psi^Q,y * psi^R,y
-			result [2][1][3] -= tmp;                       // int psi^R,y * psi^Q,y
-			result [1][3][3] += tmp;                       // int psi^Q,y * psi^S,y
-			result [3][1][3] += tmp;                       // int psi^S,y * psi^Q,y
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_y ] += tmp;
 			tmp = J_c0_036_c0_036 * ( beta_beta * wd_0 + 0.25 * wd_3 + alph_alph * wd_6 )
 			    + J_c0_147_c0_147 * ( beta_beta * wd_1 + 0.25 * wd_4 + alph_alph * wd_7 )
 			    + J_c0_258_c0_258 * ( beta_beta * wd_2 + 0.25 * wd_5 + alph_alph * wd_8 );
-			result [2][2][3] += tmp;                       // int psi^R,y * psi^R,y
-			result [2][3][3] -= tmp;                       // int psi^R,y * psi^S,y
-			result [3][2][3] -= tmp;                       // int psi^S,y * psi^R,y
-			result [3][3][3] += tmp;            }          // int psi^S,y * psi^S,y
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] += tmp;
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_y ] -= tmp;
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_y ] += tmp;            }
 			
 			break;  // end of case 4 -- dock_on_hand_quadrangle_Q1
 
@@ -1560,6 +1570,8 @@ void dock_on_hand_rectangle_Q1
 {	const double delta_x = xQ - xP, delta_y = yS - yP, area = delta_x * delta_y;
 	// delta_x > 0., delta_y > 0.
 	
+	const size_t psi_P = 0, psi_Q = 1, psi_R = 2, psi_S = 3;
+
 	#ifndef NDEBUG
 	const double tol = 1.e-6 * ( delta_x + delta_y );
 	assert ( std::abs ( xP - xS ) < tol );
@@ -1585,10 +1597,13 @@ void dock_on_hand_rectangle_Q1
 
 		case 1 :  // { int psi }
 
-			result [0][0][0] =                    // int psi^P
-			result [0][1][0] =                    // int psi^Q
-			result [0][2][0] =                    // int psi^R
-			result [0][3][0] = area / 4.;         // int psi^S
+		{	const size_t int_psi = 0;
+
+			result [0] [ psi_P ] [ int_psi ] =
+			result [0] [ psi_Q ] [ int_psi ] =
+			result [0] [ psi_R ] [ int_psi ] =
+			result [0] [ psi_S ] [ int_psi ] = area / 4.;     }
+		
 			break;  // end of case 1
 			
 		case 2 :  // { int psi1 * psi2 }
@@ -1596,20 +1611,22 @@ void dock_on_hand_rectangle_Q1
 			assert ( false );
 			break;  // end of case 2
 
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
 			
 		// expressions computed by hand
 
-		{	const double half_dx = delta_x / 2., half_dy = delta_y / 2.;
+		{	const size_t int_psi_x = 0, int_psi_y = 1;
+
+			const double half_dx = delta_x / 2., half_dy = delta_y / 2.;
 			
-			result [0][0][0] =                        // int psi^P,x
-			result [0][3][0] = - half_dy;             // int psi^S,x
-			result [0][2][1] =                        // int psi^R,y
-			result [0][3][1] =   half_dx;             // int psi^S,y
-			result [0][1][0] =                        // int psi^Q,x
-			result [0][2][0] =   half_dy;             // int psi^R,x
-			result [0][0][1] =                        // int psi^P,y
-			result [0][1][1] = - half_dx;     }       // int psi^Q,y
+			result [0] [ psi_P ] [ int_psi_x ] =
+			result [0] [ psi_S ] [ int_psi_x ] = - half_dy;
+			result [0] [ psi_R ] [ int_psi_y ] =
+			result [0] [ psi_S ] [ int_psi_y ] =   half_dx;
+			result [0] [ psi_Q ] [ int_psi_x ] =
+			result [0] [ psi_R ] [ int_psi_x ] =   half_dy;
+			result [0] [ psi_P ] [ int_psi_y ] =
+			result [0] [ psi_Q ] [ int_psi_y ] = - half_dx;     }
 		
 			break;  // end of case 3
 
@@ -1617,82 +1634,85 @@ void dock_on_hand_rectangle_Q1
 			
 		// expressions computed by hand
 
-		{	const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
+		{	const size_t int_psi_x_psi_x = 0, int_psi_x_psi_y = 1,
+			             int_psi_y_psi_x = 2, int_psi_y_psi_y = 3;
+
+			const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
 			             dy_dx_3 = dy_over_dx / 3., dx_dy_3 = dx_over_dy / 3.,
 			             dy_dx_6 = dy_over_dx / 6., dx_dy_6 = dx_over_dy / 6.;
 
-			result [0][0][0] =                            // int psi^P,x * psi^P,x
-			result [1][1][0] =                            // int psi^Q,x * psi^Q,x
-			result [2][2][0] =                            // int psi^R,x * psi^R,x
-			result [3][3][0] =   dy_dx_3;                 // int psi^S,x * psi^S,x
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_x ] =   dy_dx_3;
 
-			result [0][1][0] =                            // int psi^P,x * psi^Q,x
-			result [1][0][0] =                            // int psi^P,x * psi^Q,x
-			result [2][3][0] =                            // int psi^R,x * psi^S,x
-			result [3][2][0] = - dy_dx_3;                 // int psi^R,x * psi^S,x
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_x ] = - dy_dx_3;
 				
-			result [0][2][0] =                            // int psi^P,x * psi^R,x
-			result [2][0][0] =                            // int psi^P,x * psi^R,x
-			result [1][3][0] =                            // int psi^Q,x * psi^S,x
-			result [3][1][0] = - dy_dx_6;                 // int psi^Q,x * psi^S,x
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_x ] = - dy_dx_6;
 			
-			result [2][1][0] =                            // int psi^R,x * psi^Q,x
-			result [1][2][0] =                            // int psi^R,x * psi^Q,x
-			result [0][3][0] =                            // int psi^P,x * psi^S,x
-			result [3][0][0] =   dy_dx_6;                 // int psi^P,x * psi^S,x
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_x ] =   dy_dx_6;
 			
-			result [0][0][1] =                            // int psi^P,x * psi^P,y
-			result [0][0][2] =                            // int psi^P,x * psi^P,y
-			result [0][1][1] =                            // int psi^P,x * psi^Q,y
-			result [1][0][2] =                            // int psi^P,x * psi^Q,y
-			result [2][2][1] =                            // int psi^R,x * psi^R,y
-			result [2][2][2] =                            // int psi^R,x * psi^R,y
-			result [2][3][1] =                            // int psi^R,x * psi^S,y
-			result [3][2][2] =                            // int psi^R,x * psi^S,y
-			result [3][0][1] =                            // int psi^S,x * psi^P,y
-			result [0][3][2] =                            // int psi^S,x * psi^P,y
-			result [3][1][1] =                            // int psi^S,x * psi^Q,y
-			result [1][3][2] =                            // int psi^S,x * psi^Q,y
-			result [1][2][1] =                            // int psi^Q,x * psi^R,y
-			result [2][1][2] =                            // int psi^Q,x * psi^R,y
-			result [1][3][1] =                            // int psi^Q,x * psi^S,y
-			result [3][1][2] =   0.25;                    // int psi^Q,x * psi^S,y
-			result [1][1][1] =                            // int psi^Q,x * psi^Q,y
-			result [1][1][2] =                            // int psi^Q,x * psi^Q,y
-			result [1][0][1] =                            // int psi^Q,x * psi^P,y
-			result [0][1][2] =                            // int psi^Q,x * psi^P,y
-			result [0][2][1] =                            // int psi^P,x * psi^R,y
-			result [2][0][2] =                            // int psi^P,x * psi^R,y
-			result [0][3][1] =                            // int psi^P,x * psi^S,y
-			result [3][0][2] =                            // int psi^P,x * psi^S,y
-			result [2][0][1] =                            // int psi^R,x * psi^P,y
-			result [0][2][2] =                            // int psi^R,x * psi^P,y
-			result [2][1][1] =                            // int psi^R,x * psi^Q,y
-			result [1][2][2] =                            // int psi^R,x * psi^Q,y
-			result [3][2][1] =                            // int psi^S,x * psi^R,y
-			result [2][3][2] =                            // int psi^S,x * psi^R,y
-			result [3][3][1] =                            // int psi^S,x * psi^S,y
-			result [3][3][2] = - 0.25;                    // int psi^S,x * psi^S,y
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_x ] =   0.25;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_x ] = - 0.25;
 
-			result [0][0][3] =                            // int psi^P,y * psi^P,y
-			result [1][1][3] =                            // int psi^Q,y * psi^Q,y
-			result [2][2][3] =                            // int psi^R,y * psi^R,y
-			result [3][3][3] =   dx_dy_3;                 // int psi^S,y * psi^S,y
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_y ] =   dx_dy_3;
 
-			result [0][1][3] =                            // int psi^P,y * psi^Q,y
-			result [1][0][3] =                            // int psi^P,y * psi^Q,y
-			result [2][3][3] =                            // int psi^R,y * psi^S,y
-			result [3][2][3] =   dx_dy_6;                 // int psi^R,y * psi^S,y
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_y ] =   dx_dy_6;
 				
-			result [0][2][3] =                            // int psi^P,y * psi^R,y
-			result [2][0][3] =                            // int psi^P,y * psi^R,y
-			result [1][3][3] =                            // int psi^Q,y * psi^S,y
-			result [3][1][3] = - dx_dy_6;                 // int psi^Q,y * psi^S,y
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_y ] = - dx_dy_6;
 			
-			result [2][1][3] =                            // int psi^R,y * psi^Q,y
-			result [1][2][3] =                            // int psi^R,y * psi^Q,y
-			result [0][3][3] =                            // int psi^P,y * psi^S,y
-			result [3][0][3] = - dx_dy_3;             }   // int psi^P,y * psi^S,y
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_y ] = - dx_dy_3;             }
 			
 			break;  // end of case 4, dock_on_hand_rectangle_Q1
 
@@ -1700,31 +1720,34 @@ void dock_on_hand_rectangle_Q1
 		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
 
 		// expressions computed by hand
-
 		// std::cout << "case 5 ";
-		{	const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
+			
+		{	const size_t int_grad_psi_grad_psi = 0;
+				
+			const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
 			             dy_dx_3 = dy_over_dx / 3., dx_dy_3 = dx_over_dy / 3.,
 			             dy_dx_6 = dy_over_dx / 6., dx_dy_6 = dx_over_dy / 6.;
 
-			result [0][0][0] =                             // int grad psi^P grad psi^P
-			result [1][1][0] =                             // int grad psi^Q grad psi^Q
-			result [2][2][0] =                             // int grad psi^R grad psi^R
-			result [3][3][0] =   dx_dy_3 + dy_dx_3;        // int grad psi^S grad psi^S
+			result [ psi_P ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_S ] [ int_grad_psi_grad_psi ] =   dx_dy_3 + dy_dx_3;
 
-			result [0][1][0] =                             // int grad psi^P grad psi^Q
-			result [1][0][0] =                             // int grad psi^P grad psi^Q
-			result [2][3][0] =                             // int grad psi^R grad psi^S
-			result [3][2][0] =   dx_dy_6 - dy_dx_3;        // int grad psi^R grad psi^S
+			result [ psi_P ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_R ] [ psi_S ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_R ] [ int_grad_psi_grad_psi ] =   dx_dy_6 - dy_dx_3;
 				
-			result [0][2][0] =                             // int grad psi^P grad psi^R
-			result [2][0][0] =                             // int grad psi^P grad psi^R
-			result [1][3][0] =                             // int grad psi^Q grad psi^S
-			result [3][1][0] = - dx_dy_6 - dy_dx_6;        // int grad psi^Q grad psi^S
+			result [ psi_P ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_S ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_Q ] [ int_grad_psi_grad_psi ] = - dx_dy_6 - dy_dx_6;
 			
-			result [2][1][0] =                             // int grad psi^Q grad psi^R
-			result [1][2][0] =                             // int grad psi^Q grad psi^R
-			result [0][3][0] =                             // int grad psi^P grad psi^S
-			result [3][0][0] =   dy_dx_6 - dx_dy_3;    }   // int grad psi^P grad psi^S
+			result [ psi_R ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_S ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_P ] [ int_grad_psi_grad_psi ] =   dy_dx_6 - dx_dy_3;    }
+		
 			break;  // end of case 5, dock_on_hand_rectangle_Q1
 
 		default : assert ( false );
@@ -1746,6 +1769,8 @@ void dock_on_hand_square_Q1
 {	const double ell = xQ - xP, area = ell * ell;
 	// ell > 0.
 	
+	const size_t psi_P = 0, psi_Q = 1, psi_R = 2, psi_S = 3;
+
 	#ifndef NDEBUG
 	const double tol = 1.e-6 * ell;
 	assert ( std::abs ( xP - xS ) < tol );
@@ -1772,10 +1797,13 @@ void dock_on_hand_square_Q1
 
 		case 1 :  // { int psi }
 
-			result [0][0][0] =                    // int psi^P
-			result [0][1][0] =                    // int psi^Q
-			result [0][2][0] =                    // int psi^R
-			result [0][3][0] = area / 4.;         // int psi^S
+		{	const size_t int_psi = 0;
+
+			result [0] [ psi_P ] [ int_psi ] =
+			result [0] [ psi_Q ] [ int_psi ] =
+			result [0] [ psi_R ] [ int_psi ] =
+			result [0] [ psi_S ] [ int_psi ] = area / 4.;       }
+		
 			break;  // end of case 1, dock_on_hand_square_Q1
 			
 		case 2 :  // { int psi1 * psi2 }
@@ -1783,49 +1811,131 @@ void dock_on_hand_square_Q1
 			assert ( false );
 			break;  // end of case 2, dock_on_hand_square_Q1
 
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
 			
 		// expressions computed by hand
 
-		{	const double half_ell = ell / 2.;
+		{	const size_t int_psi_x = 0, int_psi_y = 1;
+
+			const double half_ell = ell / 2.;
 			
-			result [0][2][1] =                        // int psi^R,y
-			result [0][3][1] =                        // int psi^S,y
-			result [0][1][0] =                        // int psi^Q,x
-			result [0][2][0] =   half_ell;            // int psi^R,x
+			result [0] [ psi_R ] [ int_psi_y ] =
+			result [0] [ psi_S ] [ int_psi_y ] =
+			result [0] [ psi_Q ] [ int_psi_x ] =
+			result [0] [ psi_R ] [ int_psi_x ] =   half_ell;
 			
-			result [0][0][0] =                        // int psi^P,x
-			result [0][3][0] =                        // int psi^S,x
-			result [0][0][1] =                        // int psi^P,y
-			result [0][1][1] = - half_ell;     }      // int psi^Q,y
+			result [0] [ psi_P ] [ int_psi_x ] =
+			result [0] [ psi_S ] [ int_psi_x ] =
+			result [0] [ psi_P ] [ int_psi_y ] =
+			result [0] [ psi_Q ] [ int_psi_y ] = - half_ell;     }
 
 		break;  // end of case 3, dock_on_hand_square_Q1
+
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
+			
+		// expressions computed by hand
+
+		{	const size_t int_psi_x_psi_x = 0, int_psi_x_psi_y = 1,
+			             int_psi_y_psi_x = 2, int_psi_y_psi_y = 3;
+
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_y ] =   tag::Util::one_third;
+
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_y ] = - tag::Util::one_third;
+				
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_y ] = - tag::Util::one_sixth;
+			
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_x ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_y ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_y ] =   tag::Util::one_sixth;
+			
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_Q ] [ int_psi_y_psi_x ] =   0.25;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_P ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_P ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_S ] [ int_psi_y_psi_x ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_x_psi_y ] =
+			result [ psi_S ] [ psi_S ] [ int_psi_y_psi_x ] = - 0.25;              }
+			
+			break;  // end of case 4, dock_on_hand_square_Q1
 
 		case 5 :  // { int grad psi grad psi }
 		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
 
 		// expressions computed by hand
-		std::cout << "case 5 ";
+		// std::cout << "case 5 ";
 		
-		{	result [0][0][0] =                             // int grad psi^P grad psi^P
-			result [1][1][0] =                             // int grad psi^Q grad psi^Q
-			result [2][2][0] =                             // int grad psi^R grad psi^R
-			result [3][3][0] = tag::Util::two_thirds;      // int grad psi^S grad psi^S
-
-			result [0][2][0] =                             // int grad psi^P grad psi^R
-			result [2][0][0] =                             // int grad psi^P grad psi^R
-			result [1][3][0] =                             // int grad psi^Q grad psi^S
-			result [3][1][0] = tag::Util::minus_one_third; // int grad psi^Q grad psi^S
-			
-			result [0][1][0] =                             // int grad psi^P grad psi^Q
-			result [1][0][0] =                             // int grad psi^P grad psi^Q
-			result [2][3][0] =                             // int grad psi^R grad psi^S
-			result [3][2][0] =                             // int grad psi^R grad psi^S
+		{	const size_t int_grad_psi_grad_psi = 0;
 				
-			result [2][1][0] =                             // int grad psi^Q grad psi^R
-			result [1][2][0] =                             // int grad psi^Q grad psi^R
-			result [0][3][0] =                             // int grad psi^P grad psi^S
-			result [3][0][0] = tag::Util::minus_one_sixth;   } // grad psi^P grad psi^S
+			result [ psi_P ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_S ] [ int_grad_psi_grad_psi ] = tag::Util::two_thirds;
+
+			result [ psi_P ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_S ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_Q ] [ int_grad_psi_grad_psi ] = tag::Util::minus_one_third;
+			
+			result [ psi_P ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_R ] [ psi_S ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+				
+			result [ psi_R ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_S ] [ int_grad_psi_grad_psi ] =
+			result [ psi_S ] [ psi_P ] [ int_grad_psi_grad_psi ] = tag::Util::minus_one_sixth;   }
 
 		break;  // end of case 5, dock_on_hand_square_Q1
 
@@ -1848,6 +1958,8 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 {	double J_c0 = xQ - xP, J_c1 = xR - xP,
 	       J_c2 = yQ - yP, J_c3 = yR - yP;
 
+	const size_t psi_P = 0, psi_Q = 1, psi_R = 2;
+
 	// below we use a switch statement
 	// we trust that the compiler implements it by means of a list of addresses
 	// and not as a cascade of ifs (which would be rather slow)
@@ -1861,38 +1973,46 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 
 		case 1 :  // { int psi }
 			
-		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_psi = 0;
+
+			const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 
-			result [0][0][0] =                    // int psi^P
-			result [0][1][0] =                    // int psi^Q
-			result [0][2][0] = det / 6.;   }      // int psi^R
-			break;  // end of case 1
+			result [0] [ psi_P ] [ int_psi ] =
+			result [0] [ psi_Q ] [ int_psi ] =
+			result [0] [ psi_R ] [ int_psi ] = det / 6.;   }
+		
+			break;  // end of case 1 -- dock_on_hand_tri_P1
 
 		case 2 :  // { int psi1 * psi2 }
 			
-		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
+		// expressions computed by hand
+			
+		{	const size_t int_psi_psi = 0;
+
+			const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 
-			result [0][0][0] =                 // int psi^P * psi^P
-			result [1][1][0] =                 // int psi^Q * psi^Q
-			result [2][2][0] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][0] =                 // int psi^P * psi^Q
-			result [0][2][0] =                 // int psi^P * psi^R
-			result [1][0][0] =                 // int psi^Q * psi^P
-			result [1][2][0] =                 // int psi^Q * psi^R
-			result [2][0][0] =                 // int psi^R * psi^P
-			result [2][1][0] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;                    }
-			break;  // end of case 2
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] = 0.04166666666666666 * det;  }
+		
+			break;  // end of case 2 -- dock_on_hand_tri_P1
 
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
 			
 		// computations inspired in UFL and FFC
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
-		{
+			
+		{	const size_t int_psi_x = 0, int_psi_y = 1;
+
 			#ifndef NDEBUG
 			const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1900,17 +2020,25 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
-			result [0][0][0] =   J_c2 - J_c3;          // int psi^P,x
-			result [0][0][1] =   J_c1 - J_c0;          // int psi^P,y
-			result [0][1][0] =   J_c3;                 // int psi^Q,x
-			result [0][1][1] = - J_c1;                 // int psi^Q,y
-			result [0][2][0] = - J_c2;                 // int psi^R,x
-			result [0][2][1] =   J_c0;             }   // int psi^R,y
-			break;  // end of case 3
+			result [0] [ psi_P ] [ int_psi_x ] =   J_c2 - J_c3;
+			result [0] [ psi_P ] [ int_psi_y ] =   J_c1 - J_c0;
+			result [0] [ psi_Q ] [ int_psi_x ] =   J_c3;
+			result [0] [ psi_Q ] [ int_psi_y ] = - J_c1;
+			result [0] [ psi_R ] [ int_psi_x ] = - J_c2;
+			result [0] [ psi_R ] [ int_psi_y ] =   J_c0;             }
+		
+			break;  // end of case 3 -- dock_on_hand_tri_P1
 
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		// computations inspired in UFL and FFC
+		// https://fenics.readthedocs.io/projects/ufl/en/latest/
+		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+			
+		{	const size_t int_psi_x_psi_x = 0, int_psi_x_psi_y = 1,
+			             int_psi_y_psi_x = 2, int_psi_y_psi_y = 3;
+
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			det += det;  // we double det to avoid later divisions by two
 			const double p00 = J_c0 * J_c0 / det,
@@ -1923,43 +2051,44 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 				           p22 = J_c2 * J_c2 / det,
 				           p23 = J_c2 * J_c3 / det,
 				           p33 = J_c3 * J_c3 / det;
-			result [0][0][0] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
-			result [0][1][0] =                             // int psi^P,x * psi^Q,x
-			result [1][0][0] =   p23 - p33;                // int psi^Q,x * psi^P,x
-			result [1][1][0] =   p33;                      // int psi^Q,x * psi^Q,x
-			result [0][2][0] =                             // int psi^P,x * psi^R,x
-			result [2][0][0] =   p23 - p22;                // int psi^R,x * psi^P,x
-			result [1][2][0] =                             // int psi^Q,x * psi^R,x
-			result [2][1][0] = - p23;                      // int psi^R,x * psi^Q,x
-			result [2][2][0] =   p22;                      // int psi^R,x * psi^R,x
-			result [0][0][1] =                             // int psi^P,x * psi^P,y
-			result [0][0][2] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
-			result [0][1][1] =                             // int psi^P,x * psi^Q,y
-			result [1][0][2] =   p13 - p12;                // int psi^Q,y * psi^P,x
-			result [0][2][1] =                             // int psi^P,x * psi^R,y
-			result [2][0][2] =   p02 - p03;                // int psi^R,y * psi^P,x
-			result [1][0][1] =                             // int psi^Q,x * psi^P,y
-			result [0][1][2] =   p13 - p03;                // int psi^P,y * psi^Q,x
-			result [1][1][1] =                             // int psi^Q,x * psi^Q,y
-			result [1][1][2] = - p13;                      // int psi^Q,y * psi^Q,x
-			result [1][2][1] =                             // int psi^Q,x * psi^R,y
-			result [2][1][2] =   p03;                      // int psi^R,y * psi^Q,x
-			result [2][0][1] =                             // int psi^R,x * psi^P,y
-			result [0][2][2] =   p02 - p12;                // int psi^P,y * psi^R,x
-			result [2][1][1] =                             // int psi^R,x * psi^Q,y
-			result [1][2][2] =   p12;                      // int psi^Q,y * psi^R,x
-			result [2][2][1] =                             // int psi^R,x * psi^R,y
-			result [2][2][2] = - p02;                      // int psi^R,y * psi^R,x
-			result [0][0][3] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
-			result [0][1][3] =                             // int psi^P,y * psi^Q,y
-			result [1][0][3] =   p01 - p11;                // int psi^Q,y * psi^P,y
-			result [1][1][3] =   p11;                      // int psi^Q,y * psi^Q,y
-			result [0][2][3] =                             // int psi^P,y * psi^R,y
-			result [2][0][3] =   p01 - p00;                // int psi^R,y * psi^P,y
-			result [1][2][3] =                             // int psi^Q,y * psi^R,y
-			result [2][1][3] = - p01;                      // int psi^R,y * psi^Q,y
-			result [2][2][3] =   p00;                   }  // int psi^R,y * psi^R,y
-			break;  // end of case 4
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =   p33 - p23 - p23 + p22;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p33;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =   p33;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p22;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - p23;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =   p22;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =   p12 + p03 - p13 - p02;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =   p13 - p12;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =   p02 - p03;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =   p13 - p03;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] = - p13;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =   p03;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =   p02 - p12;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =   p12;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - p02;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =   p11 - p01 - p01 + p00;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p11;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =   p11;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p00;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] = - p01;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =   p00;                       }
+		
+			break;  // end of case 4 -- dock_on_hand_tri_P1
 
 		case 5 :  // { int grad psi grad psi }
 		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
@@ -1968,30 +2097,35 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_grad_psi_grad_psi = 0;
+				
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			det += det;  // we double det to avoid later divisions by two
 			const double sp17 =   ( J_c0 * J_c0 + J_c2 * J_c2 ) / det,
 			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
 			             sp19 =   ( J_c1 * J_c1 + J_c3 * J_c3 ) / det;
 		
-			result [0][0][0] =   sp19 + sp18 + sp18 + sp17;      // int grad psi^P grad psi^P
-			result [1][0][0] =                                   // int grad psi^Q grad psi^P
-			result [0][1][0] = - sp19 - sp18;                    // int grad psi^P grad psi^Q
-			result [1][1][0] =   sp19;                           // int grad psi^Q grad psi^Q
-			result [2][0][0] =                                   // int grad psi^R grad psi^P
-			result [0][2][0] = - sp18 - sp17;                    // int grad psi^P grad psi^R
-			result [2][1][0] =                                   // int grad psi^R grad psi^Q
-			result [1][2][0] =   sp18;                           // int grad psi^Q grad psi^R
-			result [2][2][0] =   sp17;                       }   // int grad psi^R grad psi^R
-			break;  // end of case 5
+			result [ psi_P ] [ psi_P ] [ int_grad_psi_grad_psi ] =   sp19 + sp18 + sp18 + sp17;
+			result [ psi_Q ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_Q ] [ int_grad_psi_grad_psi ] = - sp19 - sp18;
+			result [ psi_Q ] [ psi_Q ] [ int_grad_psi_grad_psi ] =   sp19;
+			result [ psi_R ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_grad_psi_grad_psi ] = - sp18 - sp17;
+			result [ psi_R ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp18;
+			result [ psi_R ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp17;                       }
+		
+			break;  // end of case 5 -- dock_on_hand_tri_P1
 
-		case 6 :  // { int psi2 * psi2 .deriv(x) }
+		case 6 :  // { int psi * psi .deriv(x) }
 			
 		// computations inspired in UFL and FFC
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
-		{
+			
+		{	const size_t int_psi_psi_x = 0, int_psi_x_psi = 1, int_psi_psi_y = 2, int_psi_y_psi = 3;
+			
 			#ifndef NDEBUG
 			const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
@@ -1999,43 +2133,44 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 
 			J_c0 /= 6.;  J_c1 /= 6.;  J_c2 /= 6.;  J_c3 /= 6;
 	
-			result [0][0][0] =                      // int psi^P psi^P,x
-			result [0][0][1] =                      // int psi^P psi^P,x
-			result [1][0][0] =                      // int psi^Q psi^P,x
-			result [0][1][1] =                      // int psi^Q psi^P,x
-			result [2][0][0] =                      // int psi^R psi^P,x
-			result [0][2][1] =   J_c2 - J_c3;       // int psi^R psi^P,x
-			result [0][1][0] =                      // int psi^P psi^Q,x
-			result [1][0][1] =                      // int psi^P psi^Q,x
-			result [1][1][0] =                      // int psi^Q psi^Q,x
-			result [1][1][1] =                      // int psi^Q psi^Q,x
-			result [2][1][0] =                      // int psi^R psi^Q,x
-			result [1][2][1] =   J_c3;              // int psi^R psi^Q,x
-			result [0][2][0] =                      // int psi^P psi^R,x
-			result [2][0][1] =                      // int psi^P psi^R,x
-			result [1][2][0] =                      // int psi^Q psi^R,x
-			result [2][1][1] =                      // int psi^Q psi^R,x
-			result [2][2][0] =                      // int psi^R psi^R,x
-			result [2][2][1] = - J_c2;              // int psi^R psi^R,x
-			result [0][0][2] =                      // int psi^P psi^P,y
-			result [0][0][3] =                      // int psi^P psi^P,y
-			result [1][0][2] =                      // int psi^Q psi^P,y
-			result [0][1][3] =                      // int psi^Q psi^P,y
-			result [2][0][2] =                      // int psi^R psi^P,y
-			result [0][2][3] =   J_c1 - J_c0;       // int psi^R psi^P,y
-			result [0][1][2] =                      // int psi^P psi^Q,y
-			result [1][0][3] =                      // int psi^P psi^Q,y
-			result [1][1][2] =                      // int psi^Q psi^Q,y
-			result [1][1][3] =                      // int psi^Q psi^Q,y
-			result [2][1][2] =                      // int psi^R psi^Q,y
-			result [1][2][3] = - J_c1;              // int psi^R psi^Q,y
-			result [0][2][2] =                      // int psi^P psi^R,y
-			result [2][0][3] =                      // int psi^P psi^R,y
-			result [1][2][2] =                      // int psi^Q psi^R,y
-			result [2][1][3] =                      // int psi^Q psi^R,y
-			result [2][2][2] =                      // int psi^R psi^R,y
-			result [2][2][3] =   J_c0;          }   // int psi^R psi^R,y
-			break;  // end of case 6
+			result [ psi_P ] [ psi_P ] [ int_psi_psi_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi ] =   J_c2 - J_c3;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi ] =   J_c3;
+			result [ psi_P ] [ psi_R ] [ int_psi_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi ] = - J_c2;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi ] =   J_c1 - J_c0;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi ] = - J_c1;
+			result [ psi_P ] [ psi_R ] [ int_psi_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi ] =   J_c0;          }
+		
+			break;  // end of case 6 -- dock_on_hand_tri_P1
 
 		case  7 :  // { int psi, int psi1 * psi2 }
 
@@ -2043,38 +2178,41 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_psi1 = 0, int_psi2 = 1, int_psi_psi = 2;
+
+			// selector is never 1 ? if so, eliminate int_psi2 (leave vector with zeros)
+				
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
-			result [0][0][0] =                 // int psi^P
-			result [1][0][0] =                 // int psi^P
-			result [2][0][0] =                 // int psi^P
-			result [0][0][1] =                 // int psi^P
-			result [0][1][1] =                 // int psi^P
-			result [0][2][1] =                 // int psi^P
-			result [0][1][0] =                 // int psi^Q
-			result [1][1][0] =                 // int psi^Q
-			result [2][1][0] =                 // int psi^Q
-			result [1][0][1] =                 // int psi^Q
-			result [1][1][1] =                 // int psi^Q
-			result [1][2][1] =                 // int psi^Q
-			result [0][2][0] =                 // int psi^R
-			result [1][2][0] =                 // int psi^R
-			result [2][2][0] =                 // int psi^R
-			result [2][0][1] =                 // int psi^R
-			result [2][1][1] =                 // int psi^R
-			result [2][2][1] = det / 6.;       // int psi^R
-			result [0][0][2] =                 // int psi^P * psi^P
-			result [1][1][2] =                 // int psi^Q * psi^Q
-			result [2][2][2] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][2] =                 // int psi^P * psi^Q
-			result [0][2][2] =                 // int psi^P * psi^R
-			result [1][0][2] =                 // int psi^Q * psi^P
-			result [1][2][2] =                 // int psi^Q * psi^R
-			result [2][0][2] =                 // int psi^R * psi^P
-			result [2][1][2] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;                    }
-			break;  // end of case 7
+			result [ psi_P ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2 ] = det / 6.;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] =	0.04166666666666666 * det;  }
+		
+			break;  // end of case 7 -- dock_on_hand_tri_P1
 
 		case 8 :  // { int psi, int psi .deriv(x) }
 			
@@ -2082,21 +2220,24 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	const double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_psi = 0, int_psi_x = 1, int_psi_y = 2;
+
+			const double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 
-			result [0][0][0] =                    // int psi^P
-			result [0][1][0] =                    // int psi^Q
-			result [0][2][0] =   det / 6.;        // int psi^R	
-			result [0][0][1] =   J_c2 - J_c3;          // int psi^P,x
-			result [0][0][2] =   J_c1 - J_c0;          // int psi^P,y
-			result [0][1][1] =   J_c3;                 // int psi^Q,x
-			result [0][1][2] = - J_c1;                 // int psi^Q,y
-			result [0][2][1] = - J_c2;                 // int psi^R,x
-			result [0][2][2] =   J_c0;             }   // int psi^R,y
-			break;  // end of case 8
+			result [0] [ psi_P ] [ int_psi ] =
+			result [0] [ psi_Q ] [ int_psi ] =
+			result [0] [ psi_R ] [ int_psi ] =   det / 6.;
+			result [0] [ psi_P ] [ int_psi_x ] =   J_c2 - J_c3;
+			result [0] [ psi_P ] [ int_psi_y ] =   J_c1 - J_c0;
+			result [0] [ psi_Q ] [ int_psi_x ] =   J_c3;
+			result [0] [ psi_Q ] [ int_psi_y ] = - J_c1;
+			result [0] [ psi_R ] [ int_psi_x ] = - J_c2;
+			result [0] [ psi_R ] [ int_psi_y ] =   J_c0;           }
+		
+			break;  // end of case 8 -- dock_on_hand_tri_P1
 
 		case 9 :  // { int psi1 .deriv(x), int psi1 .deriv(x) * psi2 .deriv(y) }
 			
@@ -2104,7 +2245,14 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_psi1_x = 0, int_psi2_x = 1, int_psi1_y = 2, int_psi2_y = 3,
+			             int_psi_x_psi_x = 4, int_psi_x_psi_y = 5,
+		               int_psi_y_psi_x = 6, int_psi_y_psi_y = 7;
+
+			// selector is never 1 nor 3 ?
+			// if so, eliminate int_psi2_x and int_psi2_y (leave vector with zeros)
+				
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			det += det;  // we double det to avoid later divisions by two
 
@@ -2121,79 +2269,80 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 
-			result [0][0][0] =                         // int psi^P,x
-			result [0][1][0] =                         // int psi^P,x
-			result [0][2][0] =                         // int psi^P,x
-			result [0][0][1] =                         // int psi^P,x
-			result [1][0][1] =                         // int psi^P,x
-			result [2][0][1] =   J_c2 - J_c3;          // int psi^P,x
-			result [0][0][2] =                         // int psi^P,y
-			result [0][1][2] =                         // int psi^P,y
-			result [0][2][2] =                         // int psi^P,y
-			result [0][0][3] =                         // int psi^P,y
-			result [1][0][3] =                         // int psi^P,y
-			result [2][0][3] =   J_c1 - J_c0;          // int psi^P,y
-			result [1][0][0] =                         // int psi^Q,x
-			result [1][1][0] =                         // int psi^Q,x
-			result [1][2][0] =                         // int psi^Q,x
-			result [0][1][1] =                         // int psi^Q,x
-			result [1][1][1] =                         // int psi^Q,x
-			result [2][1][1] =   J_c3;                 // int psi^Q,x
-			result [1][0][2] =                         // int psi^Q,y
-			result [1][1][2] =                         // int psi^Q,y
-			result [1][2][2] =                         // int psi^Q,y
-			result [0][1][3] =                         // int psi^Q,y
-			result [1][1][3] =                         // int psi^Q,y
-			result [2][1][3] = - J_c1;                 // int psi^Q,y
-			result [2][0][0] =                         // int psi^R,x
-			result [2][1][0] =                         // int psi^R,x
-			result [2][2][0] =                         // int psi^R,x
-			result [0][2][1] =                         // int psi^R,x
-			result [1][2][1] =                         // int psi^R,x
-			result [2][2][1] = - J_c2;                 // int psi^R,x
-			result [2][0][2] =                         // int psi^R,y
-			result [2][1][2] =                         // int psi^R,y
-			result [2][2][2] =                         // int psi^R,y
-			result [0][2][3] =                         // int psi^R,y
-			result [1][2][3] =                         // int psi^R,y
-			result [2][2][3] =   J_c0;                 // int psi^R,y
-			result [0][0][4] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
-			result [0][1][4] =                             // int psi^P,x * psi^Q,x
-			result [1][0][4] =   p23 - p33;                // int psi^Q,x * psi^P,x
-			result [1][1][4] =   p33;                      // int psi^Q,x * psi^Q,x
-			result [0][2][4] =                             // int psi^P,x * psi^R,x
-			result [2][0][4] =   p23 - p22;                // int psi^R,x * psi^P,x
-			result [1][2][4] =                             // int psi^Q,x * psi^R,x
-			result [2][1][4] = - p23;                      // int psi^R,x * psi^Q,x
-			result [2][2][4] =   p22;                      // int psi^R,x * psi^R,x
-			result [0][0][5] =                             // int psi^P,x * psi^P,y
-			result [0][0][6] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
-			result [0][1][5] =                             // int psi^P,x * psi^Q,y
-			result [1][0][6] =   p13 - p12;                // int psi^Q,y * psi^P,x
-			result [0][2][5] =                             // int psi^P,x * psi^R,y
-			result [2][0][6] =   p02 - p03;                // int psi^R,y * psi^P,x
-			result [1][0][5] =                             // int psi^Q,x * psi^P,y
-			result [0][1][6] =   p13 - p03;                // int psi^P,y * psi^Q,x
-			result [1][1][5] =                             // int psi^Q,x * psi^Q,y
-			result [1][1][6] = - p13;                      // int psi^Q,y * psi^Q,x
-			result [1][2][5] =                             // int psi^Q,x * psi^R,y
-			result [2][1][6] =   p03;                      // int psi^R,y * psi^Q,x
-			result [2][0][5] =                             // int psi^R,x * psi^P,y
-			result [0][2][6] =   p02 - p12;                // int psi^P,y * psi^R,x
-			result [2][1][5] =                             // int psi^R,x * psi^Q,y
-			result [1][2][6] =   p12;                      // int psi^Q,y * psi^R,x
-			result [2][2][5] =                             // int psi^R,x * psi^R,y
-			result [2][2][6] = - p02;                      // int psi^R,y * psi^R,x
-			result [0][0][7] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
-			result [0][1][7] =                             // int psi^P,y * psi^Q,y
-			result [1][0][7] =   p01 - p11;                // int psi^Q,y * psi^P,y
-			result [1][1][7] =   p11;                      // int psi^Q,y * psi^Q,y
-			result [0][2][7] =                             // int psi^P,y * psi^R,y
-			result [2][0][7] =   p01 - p00;                // int psi^R,y * psi^P,y
-			result [1][2][7] =                             // int psi^Q,y * psi^R,y
-			result [2][1][7] = - p01;                      // int psi^R,y * psi^Q,y
-			result [2][2][7] =   p00;                   }  // int psi^R,y * psi^R,y
-			break;  // end of case 9
+			result [ psi_P ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_x ] =   J_c2 - J_c3;
+			result [ psi_P ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_y ] =   J_c1 - J_c0;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_x ] =   J_c3;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_y ] = - J_c1;
+			result [ psi_R ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_x ] = - J_c2;
+			result [ psi_R ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_y ] =   J_c0;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =   p33 - p23 - p23 + p22;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p33;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =   p33;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p22;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - p23;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =   p22;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =   p12 + p03 - p13 - p02;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =   p13 - p12;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =   p02 - p03;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =   p13 - p03;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] = - p13;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =   p03;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =   p02 - p12;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =   p12;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - p02;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =   p11 - p01 - p01 + p00;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p11;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =   p11;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p00;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] = - p01;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =   p00;                   }
+		
+			break;  // end of case 9 -- dock_on_hand_tri_P1
 
 		case 10 :  // { int psi1 * psi2, int psi1 .deriv(x) * psi2 .deriv(y) }
 
@@ -2201,20 +2350,21 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_psi_psi = 0, int_psi_x_psi_x = 1,
+			              int_psi_x_psi_y = 2, int_psi_y_psi_x = 3, int_psi_y_psi_y = 4;
+				
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			
-			result [0][0][0] =                 // int psi^P * psi^P
-			result [1][1][0] =                 // int psi^Q * psi^Q
-			result [2][2][0] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][0] =                 // int psi^P * psi^Q
-			result [0][2][0] =                 // int psi^P * psi^R
-			result [1][0][0] =                 // int psi^Q * psi^P
-			result [1][2][0] =                 // int psi^Q * psi^R
-			result [2][0][0] =                 // int psi^R * psi^P
-			result [2][1][0] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] = 0.04166666666666666 * det;
 			
 			det += det;  // we double det to avoid later divisions by two
 			const double p00 = J_c0 * J_c0 / det,
@@ -2227,43 +2377,44 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 				           p22 = J_c2 * J_c2 / det,
 				           p23 = J_c2 * J_c3 / det,
 				           p33 = J_c3 * J_c3 / det;
-			result [0][0][1] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
-			result [0][1][1] =                             // int psi^P,x * psi^Q,x
-			result [1][0][1] =   p23 - p33;                // int psi^Q,x * psi^P,x
-			result [1][1][1] =   p33;                      // int psi^Q,x * psi^Q,x
-			result [0][2][1] =                             // int psi^P,x * psi^R,x
-			result [2][0][1] =   p23 - p22;                // int psi^R,x * psi^P,x
-			result [1][2][1] =                             // int psi^Q,x * psi^R,x
-			result [2][1][1] = - p23;                      // int psi^R,x * psi^Q,x
-			result [2][2][1] =   p22;                      // int psi^R,x * psi^R,x
-			result [0][0][2] =                             // int psi^P,x * psi^P,y
-			result [0][0][3] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
-			result [0][1][2] =                             // int psi^P,x * psi^Q,y
-			result [1][0][3] =   p13 - p12;                // int psi^Q,y * psi^P,x
-			result [0][2][2] =                             // int psi^P,x * psi^R,y
-			result [2][0][3] =   p02 - p03;                // int psi^R,y * psi^P,x
-			result [1][0][2] =                             // int psi^Q,x * psi^P,y
-			result [0][1][3] =   p13 - p03;                // int psi^P,y * psi^Q,x
-			result [1][1][2] =                             // int psi^Q,x * psi^Q,y
-			result [1][1][3] = - p13;                      // int psi^Q,y * psi^Q,x
-			result [1][2][2] =                             // int psi^Q,x * psi^R,y
-			result [2][1][3] =   p03;                      // int psi^R,y * psi^Q,x
-			result [2][0][2] =                             // int psi^R,x * psi^P,y
-			result [0][2][3] =   p02 - p12;                // int psi^P,y * psi^R,x
-			result [2][1][2] =                             // int psi^R,x * psi^Q,y
-			result [1][2][3] =   p12;                      // int psi^Q,y * psi^R,x
-			result [2][2][2] =                             // int psi^R,x * psi^R,y
-			result [2][2][3] = - p02;                      // int psi^R,y * psi^R,x
-			result [0][0][4] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
-			result [0][1][4] =                             // int psi^P,y * psi^Q,y
-			result [1][0][4] =   p01 - p11;                // int psi^Q,y * psi^P,y
-			result [1][1][4] =   p11;                      // int psi^Q,y * psi^Q,y
-			result [0][2][4] =                             // int psi^P,y * psi^R,y
-			result [2][0][4] =   p01 - p00;                // int psi^R,y * psi^P,y
-			result [1][2][4] =                             // int psi^Q,y * psi^R,y
-			result [2][1][4] = - p01;                      // int psi^R,y * psi^Q,y
-			result [2][2][4] =   p00;                   }  // int psi^R,y * psi^R,y
-			break;  // end of case 10
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =   p33 - p23 - p23 + p22;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p33;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =   p33;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p22;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - p23;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =   p22;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =   p12 + p03 - p13 - p02;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =   p13 - p12;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =   p02 - p03;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =   p13 - p03;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] = - p13;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =   p03;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =   p02 - p12;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =   p12;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - p02;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =   p11 - p01 - p01 + p00;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p11;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =   p11;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p00;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] = - p01;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =   p00;                    }
+		
+			break;  // end of case 10 -- dock_on_hand_tri_P1
 
 		case 11 :  // { int psi1 * psi2, int grad psi1 * grad psi2 }
 
@@ -2271,36 +2422,37 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	double det = J_c0 * J_c3 - J_c1 * J_c2;
+		{	const size_t int_psi_psi = 0, int_grad_psi_grad_psi = 1;
+				
+			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 			
-			result [0][0][0] =                 // int psi^P * psi^P
-			result [1][1][0] =                 // int psi^Q * psi^Q
-			result [2][2][0] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][0] =                 // int psi^P * psi^Q
-			result [0][2][0] =                 // int psi^P * psi^R
-			result [1][0][0] =                 // int psi^Q * psi^P
-			result [1][2][0] =                 // int psi^Q * psi^R
-			result [2][0][0] =                 // int psi^R * psi^P
-			result [2][1][0] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] = 0.04166666666666666 * det;
 			
 			det += det;  // we double det to avoid later divisions by two
 			const double sp17 =   ( J_c0 * J_c0 + J_c2 * J_c2 ) / det,
 			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
 			             sp19 =   ( J_c1 * J_c1 + J_c3 * J_c3 ) / det;
 		
-			result [0][0][1] =   sp19 + sp18 + sp18 + sp17;      // int grad psi^P grad psi^P
-			result [1][0][1] =                                   // int grad psi^Q grad psi^P
-			result [0][1][1] = - sp19 - sp18;                    // int grad psi^P grad psi^Q
-			result [1][1][1] =   sp19;                           // int grad psi^Q grad psi^Q
-			result [2][0][1] =                                   // int grad psi^R grad psi^P
-			result [0][2][1] = - sp18 - sp17;                    // int grad psi^P grad psi^R
-			result [2][1][1] =                                   // int grad psi^R grad psi^Q
-			result [1][2][1] =   sp18;                           // int grad psi^Q grad psi^R
-			result [2][2][1] =   sp17;                       }   // int grad psi^R grad psi^R
-			break;  // end of case 11
+			result [ psi_P ] [ psi_P ] [ int_grad_psi_grad_psi ] =   sp19 + sp18 + sp18 + sp17;
+			result [ psi_Q ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_Q ] [ int_grad_psi_grad_psi ] = - sp19 - sp18;
+			result [ psi_Q ] [ psi_Q ] [ int_grad_psi_grad_psi ] =   sp19;
+			result [ psi_R ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_grad_psi_grad_psi ] = - sp18 - sp17;
+			result [ psi_R ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp18;
+			result [ psi_R ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp17;                       }
+		
+			break;  // end of case 11 -- dock_on_hand_tri_P1
 
 		case 12 :  // 1, 2, 3 and 4
 
@@ -2308,43 +2460,48 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	//  case 1 (within 12) :  { int psi }
+		{	const size_t int_psi1 = 0, int_psi2 = 1, int_psi_psi = 2, int_psi_x_psi_x = 3,
+			             int_psi_x_psi_y = 4, int_psi_y_psi_x = 5, int_psi_y_psi_y = 6,
+			             int_psi1_x = 7, int_psi2_x = 8, int_psi1_y = 9, int_psi2_y = 10;
+				
+			// selector is never 1 nor 8 nor 10 ?
+			// if so, eliminate entries (leave vector with zeros)
+				
+			//  case 1 (within 12) :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 
-			result [0][0][0] =                 // int psi^P
-			result [1][0][0] =                 // int psi^P
-			result [2][0][0] =                 // int psi^P
-			result [0][0][1] =                 // int psi^P
-			result [0][1][1] =                 // int psi^P
-			result [0][2][1] =                 // int psi^P
-			result [0][1][0] =                 // int psi^Q
-			result [1][1][0] =                 // int psi^Q
-			result [2][1][0] =                 // int psi^Q
-			result [1][0][1] =                 // int psi^Q
-			result [1][1][1] =                 // int psi^Q
-			result [1][2][1] =                 // int psi^Q
-			result [0][2][0] =                 // int psi^R
-			result [1][2][0] =                 // int psi^R
-			result [2][2][0] =                 // int psi^R
-			result [2][0][1] =                 // int psi^R
-			result [2][1][1] =                 // int psi^R
-			result [2][2][1] = det / 6.;       // int psi^R
+			result [ psi_P ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2 ] = det / 6.;
 
 			// case 2 (within 12) :  { int psi1 * psi2 }
 
-			result [0][0][2] =                 // int psi^P * psi^P
-			result [1][1][2] =                 // int psi^Q * psi^Q
-			result [2][2][2] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][2] =                 // int psi^P * psi^Q
-			result [0][2][2] =                 // int psi^P * psi^R
-			result [1][0][2] =                 // int psi^Q * psi^P
-			result [1][2][2] =                 // int psi^Q * psi^R
-			result [2][0][2] =                 // int psi^R * psi^P
-			result [2][1][2] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] = 0.04166666666666666 * det;
 
 			// case 4 (within 12) :  { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
@@ -2359,85 +2516,85 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 				           p22 = J_c2 * J_c2 / det,
 				           p23 = J_c2 * J_c3 / det,
 				           p33 = J_c3 * J_c3 / det;
-			result [0][0][3] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
-			result [0][1][3] =                             // int psi^P,x * psi^Q,x
-			result [1][0][3] =   p23 - p33;                // int psi^Q,x * psi^P,x
-			result [1][1][3] =   p33;                      // int psi^Q,x * psi^Q,x
-			result [0][2][3] =                             // int psi^P,x * psi^R,x
-			result [2][0][3] =   p23 - p22;                // int psi^R,x * psi^P,x
-			result [1][2][3] =                             // int psi^Q,x * psi^R,x
-			result [2][1][3] = - p23;                      // int psi^R,x * psi^Q,x
-			result [2][2][3] =   p22;                      // int psi^R,x * psi^R,x
-			result [0][0][4] =                             // int psi^P,x * psi^P,y
-			result [0][0][5] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
-			result [0][1][4] =                             // int psi^P,x * psi^Q,y
-			result [1][0][5] =   p13 - p12;                // int psi^Q,y * psi^P,x
-			result [0][2][4] =                             // int psi^P,x * psi^R,y
-			result [2][0][5] =   p02 - p03;                // int psi^R,y * psi^P,x
-			result [1][0][4] =                             // int psi^Q,x * psi^P,y
-			result [0][1][5] =   p13 - p03;                // int psi^P,y * psi^Q,x
-			result [1][1][4] =                             // int psi^Q,x * psi^Q,y
-			result [1][1][5] = - p13;                      // int psi^Q,y * psi^Q,x
-			result [1][2][4] =                             // int psi^Q,x * psi^R,y
-			result [2][1][5] =   p03;                      // int psi^R,y * psi^Q,x
-			result [2][0][4] =                             // int psi^R,x * psi^P,y
-			result [0][2][5] =   p02 - p12;                // int psi^P,y * psi^R,x
-			result [2][1][4] =                             // int psi^R,x * psi^Q,y
-			result [1][2][5] =   p12;                      // int psi^Q,y * psi^R,x
-			result [2][2][4] =                             // int psi^R,x * psi^R,y
-			result [2][2][5] = - p02;                      // int psi^R,y * psi^R,x
-			result [0][0][6] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
-			result [0][1][6] =                             // int psi^P,y * psi^Q,y
-			result [1][0][6] =   p01 - p11;                // int psi^Q,y * psi^P,y
-			result [1][1][6] =   p11;                      // int psi^Q,y * psi^Q,y
-			result [0][2][6] =                             // int psi^P,y * psi^R,y
-			result [2][0][6] =   p01 - p00;                // int psi^R,y * psi^P,y
-			result [1][2][6] =                             // int psi^Q,y * psi^R,y
-			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
-			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =   p33 - p23 - p23 + p22;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p33;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =   p33;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p22;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - p23;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =   p22;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =   p12 + p03 - p13 - p02;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =   p13 - p12;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =   p02 - p03;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =   p13 - p03;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] = - p13;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =   p03;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =   p02 - p12;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =   p12;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - p02;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =   p11 - p01 - p01 + p00;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p11;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =   p11;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p00;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] = - p01;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =   p00;
 	
-			// case 3 (within 12) :  { int psi .deriv(x), int psi .deriv(y) }
+			// case 3 (within 12) :  { int psi .deriv(x) }
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
-			result [0][0][7] =                         // int psi^P,x
-			result [0][1][7] =                         // int psi^P,x
-			result [0][2][7] =                         // int psi^P,x
-			result [0][0][8] =                         // int psi^P,x
-			result [1][0][8] =                         // int psi^P,x
-			result [2][0][8] =   J_c2 - J_c3;          // int psi^P,x
-			result [0][0][9] =                         // int psi^P,y
-			result [0][1][9] =                         // int psi^P,y
-			result [0][2][9] =                         // int psi^P,y
-			result [0][0][10] =                         // int psi^P,y
-			result [1][0][10] =                         // int psi^P,y
-			result [2][0][10] =   J_c1 - J_c0;          // int psi^P,y
-			result [1][0][7] =                         // int psi^Q,x
-			result [1][1][7] =                         // int psi^Q,x
-			result [1][2][7] =                         // int psi^Q,x
-			result [0][1][8] =                         // int psi^Q,x
-			result [1][1][8] =                         // int psi^Q,x
-			result [2][1][8] =   J_c3;                 // int psi^Q,x
-			result [1][0][9] =                         // int psi^Q,y
-			result [1][1][9] =                         // int psi^Q,y
-			result [1][2][9] =                         // int psi^Q,y
-			result [0][1][10] =                         // int psi^Q,y
-			result [1][1][10] =                         // int psi^Q,y
-			result [2][1][10] = - J_c1;                 // int psi^Q,y
-			result [2][0][7] =                         // int psi^R,x
-			result [2][1][7] =                         // int psi^R,x
-			result [2][2][7] =                         // int psi^R,x
-			result [0][2][8] =                         // int psi^R,x
-			result [1][2][8] =                         // int psi^R,x
-			result [2][2][8] = - J_c2;                 // int psi^R,x
-			result [2][0][9] =                         // int psi^R,y
-			result [2][1][9] =                         // int psi^R,y
-			result [2][2][9] =                         // int psi^R,y
-			result [0][2][10] =                         // int psi^R,y
-			result [1][2][10] =                         // int psi^R,y
-			result [2][2][10] =   J_c0;              }  // int psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_x ] =   J_c2 - J_c3;
+			result [ psi_P ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_y ] =   J_c1 - J_c0;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_x ] =   J_c3;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_y ] = - J_c1;
+			result [ psi_R ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_x ] = - J_c2;
+			result [ psi_R ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_y ] =   J_c0;                    }
 
-			break;  // end of case 12
+			break;  // end of case 12 -- dock_on_hand_tri_P1
 
 		case 13 :  // 1, 2, 3, 4 and 5
 
@@ -2445,43 +2602,49 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	//  case 1 (within 13) :  { int psi }
+		{	const size_t int_psi1 = 0, int_psi2 = 1, int_psi_psi = 2, int_psi_x_psi_x = 3,
+			             int_psi_x_psi_y = 4, int_psi_y_psi_x = 5, int_psi_y_psi_y = 6,
+			             int_grad_psi_grad_psi = 7,
+			             int_psi1_x = 8, int_psi2_x = 9, int_psi1_y = 10, int_psi2_y = 11;
+				
+			// selector is never 1 nor 9 nor 11 ?
+			// if so, eliminate entries (leave vector with zeros)
+				
+			//  case 1 (within 13) :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 
-			result [0][0][0] =                 // int psi^P
-			result [1][0][0] =                 // int psi^P
-			result [2][0][0] =                 // int psi^P
-			result [0][0][1] =                 // int psi^P
-			result [0][1][1] =                 // int psi^P
-			result [0][2][1] =                 // int psi^P
-			result [0][1][0] =                 // int psi^Q
-			result [1][1][0] =                 // int psi^Q
-			result [2][1][0] =                 // int psi^Q
-			result [1][0][1] =                 // int psi^Q
-			result [1][1][1] =                 // int psi^Q
-			result [1][2][1] =                 // int psi^Q
-			result [0][2][0] =                 // int psi^R
-			result [1][2][0] =                 // int psi^R
-			result [2][2][0] =                 // int psi^R
-			result [2][0][1] =                 // int psi^R
-			result [2][1][1] =                 // int psi^R
-			result [2][2][1] = det / 6.;       // int psi^R
+			result [ psi_P ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2 ] = det / 6.;
 
 			// case 2 (within 13) :  { int psi1 * psi2 }
 
-			result [0][0][2] =                 // int psi^P * psi^P
-			result [1][1][2] =                 // int psi^Q * psi^Q
-			result [2][2][2] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][2] =                 // int psi^P * psi^Q
-			result [0][2][2] =                 // int psi^P * psi^R
-			result [1][0][2] =                 // int psi^Q * psi^P
-			result [1][2][2] =                 // int psi^Q * psi^R
-			result [2][0][2] =                 // int psi^R * psi^P
-			result [2][1][2] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] = 0.04166666666666666 * det;
 
 			// case 4 (within 13) :  { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
@@ -2496,42 +2659,42 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 				           p22 = J_c2 * J_c2 / det,
 				           p23 = J_c2 * J_c3 / det,
 				           p33 = J_c3 * J_c3 / det;
-			result [0][0][3] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
-			result [0][1][3] =                             // int psi^P,x * psi^Q,x
-			result [1][0][3] =   p23 - p33;                // int psi^Q,x * psi^P,x
-			result [1][1][3] =   p33;                      // int psi^Q,x * psi^Q,x
-			result [0][2][3] =                             // int psi^P,x * psi^R,x
-			result [2][0][3] =   p23 - p22;                // int psi^R,x * psi^P,x
-			result [1][2][3] =                             // int psi^Q,x * psi^R,x
-			result [2][1][3] = - p23;                      // int psi^R,x * psi^Q,x
-			result [2][2][3] =   p22;                      // int psi^R,x * psi^R,x
-			result [0][0][4] =                             // int psi^P,x * psi^P,y
-			result [0][0][5] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
-			result [0][1][4] =                             // int psi^P,x * psi^Q,y
-			result [1][0][5] =   p13 - p12;                // int psi^Q,y * psi^P,x
-			result [0][2][4] =                             // int psi^P,x * psi^R,y
-			result [2][0][5] =   p02 - p03;                // int psi^R,y * psi^P,x
-			result [1][0][4] =                             // int psi^Q,x * psi^P,y
-			result [0][1][5] =   p13 - p03;                // int psi^P,y * psi^Q,x
-			result [1][1][4] =                             // int psi^Q,x * psi^Q,y
-			result [1][1][5] = - p13;                      // int psi^Q,y * psi^Q,x
-			result [1][2][4] =                             // int psi^Q,x * psi^R,y
-			result [2][1][5] =   p03;                      // int psi^R,y * psi^Q,x
-			result [2][0][4] =                             // int psi^R,x * psi^P,y
-			result [0][2][5] =   p02 - p12;                // int psi^P,y * psi^R,x
-			result [2][1][4] =                             // int psi^R,x * psi^Q,y
-			result [1][2][5] =   p12;                      // int psi^Q,y * psi^R,x
-			result [2][2][4] =                             // int psi^R,x * psi^R,y
-			result [2][2][5] = - p02;                      // int psi^R,y * psi^R,x
-			result [0][0][6] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
-			result [0][1][6] =                             // int psi^P,y * psi^Q,y
-			result [1][0][6] =   p01 - p11;                // int psi^Q,y * psi^P,y
-			result [1][1][6] =   p11;                      // int psi^Q,y * psi^Q,y
-			result [0][2][6] =                             // int psi^P,y * psi^R,y
-			result [2][0][6] =   p01 - p00;                // int psi^R,y * psi^P,y
-			result [1][2][6] =                             // int psi^Q,y * psi^R,y
-			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
-			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =   p33 - p23 - p23 + p22;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p33;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =   p33;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p22;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - p23;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =   p22;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =   p12 + p03 - p13 - p02;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =   p13 - p12;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =   p02 - p03;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =   p13 - p03;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] = - p13;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =   p03;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =   p02 - p12;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =   p12;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - p02;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =   p11 - p01 - p01 + p00;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p11;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =   p11;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p00;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] = - p01;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =   p00;
 	
 			// case 5 (within 13) :  { int grad psi grad psi }
 
@@ -2539,58 +2702,58 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
 			             sp19 =   ( J_c1 * J_c1 + J_c3 * J_c3 ) / det;
 		
-			result [0][0][7] =   sp19 + sp18 + sp18 + sp17;      // int grad psi^P grad psi^P
-			result [1][0][7] =                                   // int grad psi^Q grad psi^P
-			result [0][1][7] = - sp19 - sp18;                    // int grad psi^P grad psi^Q
-			result [1][1][7] =   sp19;                           // int grad psi^Q grad psi^Q
-			result [2][0][7] =                                   // int grad psi^R grad psi^P
-			result [0][2][7] = - sp18 - sp17;                    // int grad psi^P grad psi^R
-			result [2][1][7] =                                   // int grad psi^R grad psi^Q
-			result [1][2][7] =   sp18;                           // int grad psi^Q grad psi^R
-			result [2][2][7] =   sp17;                          // int grad psi^R grad psi^R
+			result [ psi_P ] [ psi_P ] [ int_grad_psi_grad_psi ] =   sp19 + sp18 + sp18 + sp17;
+			result [ psi_Q ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_Q ] [ int_grad_psi_grad_psi ] = - sp19 - sp18;
+			result [ psi_Q ] [ psi_Q ] [ int_grad_psi_grad_psi ] =   sp19;
+			result [ psi_R ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_grad_psi_grad_psi ] = - sp18 - sp17;
+			result [ psi_R ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp18;
+			result [ psi_R ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp17;
 		
-			// case 3 (within 13) :  { int psi .deriv(x), int psi .deriv(y) }
+			// case 3 (within 13) :  { int psi .deriv(x) }
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
-			result [0][0][8] =                         // int psi^P,x
-			result [0][1][8] =                         // int psi^P,x
-			result [0][2][8] =                         // int psi^P,x
-			result [0][0][9] =                         // int psi^P,x
-			result [1][0][9] =                         // int psi^P,x
-			result [2][0][9] =   J_c2 - J_c3;          // int psi^P,x
-			result [0][0][10] =                         // int psi^P,y
-			result [0][1][10] =                         // int psi^P,y
-			result [0][2][10] =                         // int psi^P,y
-			result [0][0][11] =                         // int psi^P,y
-			result [1][0][11] =                         // int psi^P,y
-			result [2][0][11] =   J_c1 - J_c0;          // int psi^P,y
-			result [1][0][8] =                         // int psi^Q,x
-			result [1][1][8] =                         // int psi^Q,x
-			result [1][2][8] =                         // int psi^Q,x
-			result [0][1][9] =                         // int psi^Q,x
-			result [1][1][9] =                         // int psi^Q,x
-			result [2][1][9] =   J_c3;                 // int psi^Q,x
-			result [1][0][10] =                         // int psi^Q,y
-			result [1][1][10] =                         // int psi^Q,y
-			result [1][2][10] =                         // int psi^Q,y
-			result [0][1][11] =                         // int psi^Q,y
-			result [1][1][11] =                         // int psi^Q,y
-			result [2][1][11] = - J_c1;                 // int psi^Q,y
-			result [2][0][8] =                         // int psi^R,x
-			result [2][1][8] =                         // int psi^R,x
-			result [2][2][8] =                         // int psi^R,x
-			result [0][2][9] =                         // int psi^R,x
-			result [1][2][9] =                         // int psi^R,x
-			result [2][2][9] = - J_c2;                 // int psi^R,x
-			result [2][0][10] =                         // int psi^R,y
-			result [2][1][10] =                         // int psi^R,y
-			result [2][2][10] =                         // int psi^R,y
-			result [0][2][11] =                         // int psi^R,y
-			result [1][2][11] =                         // int psi^R,y
-			result [2][2][11] =   J_c0;              }  // int psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_x ] =   J_c2 - J_c3;
+			result [ psi_P ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_y ] =   J_c1 - J_c0;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_x ] =   J_c3;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_y ] = - J_c1;
+			result [ psi_R ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_x ] = - J_c2;
+			result [ psi_R ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_y ] =   J_c0;                    }
 
-			break;  // end of case 13
+			break;  // end of case 13 -- dock_on_hand_tri_P1
 
 		case 14 :  // everything
 
@@ -2598,43 +2761,50 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
-		{	//  case 1 (within 14) :  { int psi }
+		{	const size_t int_psi1 = 0, int_psi2 = 1, int_psi_psi = 2, int_psi_x_psi_x = 3,
+			             int_psi_x_psi_y = 4, int_psi_y_psi_x = 5, int_psi_y_psi_y = 6,
+			             int_grad_psi_grad_psi = 7,
+			             int_psi1_x = 8, int_psi2_x = 9, int_psi1_y = 10, int_psi2_y = 11,
+			             int_psi_psi_x = 12, int_psi_x_psi = 13, int_psi_psi_y = 14, int_psi_y_psi = 15;
+				
+			// selector is never 1 nor 9 nor 11 ?
+			// if so, eliminate entries (leave vector with zeros)
+				
+			//  case 1 (within 14) :  { int psi }
 
 			double det = J_c0 * J_c3 - J_c1 * J_c2;
 			assert ( det > 0. );  // det = 2. * area
 
-			result [0][0][0] =                 // int psi^P
-			result [1][0][0] =                 // int psi^P
-			result [2][0][0] =                 // int psi^P
-			result [0][0][1] =                 // int psi^P
-			result [0][1][1] =                 // int psi^P
-			result [0][2][1] =                 // int psi^P
-			result [0][1][0] =                 // int psi^Q
-			result [1][1][0] =                 // int psi^Q
-			result [2][1][0] =                 // int psi^Q
-			result [1][0][1] =                 // int psi^Q
-			result [1][1][1] =                 // int psi^Q
-			result [1][2][1] =                 // int psi^Q
-			result [0][2][0] =                 // int psi^R
-			result [1][2][0] =                 // int psi^R
-			result [2][2][0] =                 // int psi^R
-			result [2][0][1] =                 // int psi^R
-			result [2][1][1] =                 // int psi^R
-			result [2][2][1] = det / 6.;       // int psi^R
+			result [ psi_P ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi1 ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2 ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1 ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2 ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2 ] = det / 6.;
 
 			// case 2 (within 14) :  { int psi1 * psi2 }
 
-			result [0][0][2] =                 // int psi^P * psi^P
-			result [1][1][2] =                 // int psi^Q * psi^Q
-			result [2][2][2] =                 // int psi^R * psi^R
-				0.08333333333333333 * det;
-			result [0][1][2] =                 // int psi^P * psi^Q
-			result [0][2][2] =                 // int psi^P * psi^R
-			result [1][0][2] =                 // int psi^Q * psi^P
-			result [1][2][2] =                 // int psi^Q * psi^R
-			result [2][0][2] =                 // int psi^R * psi^P
-			result [2][1][2] =                 // int psi^R * psi^Q
-				0.04166666666666666 * det;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi ] = 0.08333333333333333 * det;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi ] = 0.04166666666666666 * det;
 
 			// case 4 (within 14) :  { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
@@ -2649,42 +2819,42 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 				           p22 = J_c2 * J_c2 / det,
 				           p23 = J_c2 * J_c3 / det,
 				           p33 = J_c3 * J_c3 / det;
-			result [0][0][3] =   p33 - p23 - p23 + p22;    // int psi^P,x * psi^P,x
-			result [0][1][3] =                             // int psi^P,x * psi^Q,x
-			result [1][0][3] =   p23 - p33;                // int psi^Q,x * psi^P,x
-			result [1][1][3] =   p33;                      // int psi^Q,x * psi^Q,x
-			result [0][2][3] =                             // int psi^P,x * psi^R,x
-			result [2][0][3] =   p23 - p22;                // int psi^R,x * psi^P,x
-			result [1][2][3] =                             // int psi^Q,x * psi^R,x
-			result [2][1][3] = - p23;                      // int psi^R,x * psi^Q,x
-			result [2][2][3] =   p22;                      // int psi^R,x * psi^R,x
-			result [0][0][4] =                             // int psi^P,x * psi^P,y
-			result [0][0][5] =   p12 + p03 - p13 - p02;    // int psi^P,y * psi^P,x
-			result [0][1][4] =                             // int psi^P,x * psi^Q,y
-			result [1][0][5] =   p13 - p12;                // int psi^Q,y * psi^P,x
-			result [0][2][4] =                             // int psi^P,x * psi^R,y
-			result [2][0][5] =   p02 - p03;                // int psi^R,y * psi^P,x
-			result [1][0][4] =                             // int psi^Q,x * psi^P,y
-			result [0][1][5] =   p13 - p03;                // int psi^P,y * psi^Q,x
-			result [1][1][4] =                             // int psi^Q,x * psi^Q,y
-			result [1][1][5] = - p13;                      // int psi^Q,y * psi^Q,x
-			result [1][2][4] =                             // int psi^Q,x * psi^R,y
-			result [2][1][5] =   p03;                      // int psi^R,y * psi^Q,x
-			result [2][0][4] =                             // int psi^R,x * psi^P,y
-			result [0][2][5] =   p02 - p12;                // int psi^P,y * psi^R,x
-			result [2][1][4] =                             // int psi^R,x * psi^Q,y
-			result [1][2][5] =   p12;                      // int psi^Q,y * psi^R,x
-			result [2][2][4] =                             // int psi^R,x * psi^R,y
-			result [2][2][5] = - p02;                      // int psi^R,y * psi^R,x
-			result [0][0][6] =   p11 - p01 - p01 + p00;    // int psi^P,y * psi^P,y
-			result [0][1][6] =                             // int psi^P,y * psi^Q,y
-			result [1][0][6] =   p01 - p11;                // int psi^Q,y * psi^P,y
-			result [1][1][6] =   p11;                      // int psi^Q,y * psi^Q,y
-			result [0][2][6] =                             // int psi^P,y * psi^R,y
-			result [2][0][6] =   p01 - p00;                // int psi^R,y * psi^P,y
-			result [1][2][6] =                             // int psi^Q,y * psi^R,y
-			result [2][1][6] = - p01;                      // int psi^R,y * psi^Q,y
-			result [2][2][6] =   p00;                      // int psi^R,y * psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_x ] =   p33 - p23 - p23 + p22;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p33;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_x ] =   p33;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_x ] =   p23 - p22;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_x ] = - p23;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_x ] =   p22;
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_x ] =   p12 + p03 - p13 - p02;
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_x ] =   p13 - p12;
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_x ] =   p02 - p03;
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_x ] =   p13 - p03;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_x ] = - p13;
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_x ] =   p03;
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_x ] =   p02 - p12;
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_x ] =   p12;
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_x ] = - p02;
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi_y ] =   p11 - p01 - p01 + p00;
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p11;
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi_y ] =   p11;
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi_y ] =   p01 - p00;
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi_y ] = - p01;
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi_y ] =   p00;
 	
 			// case 5 (within 14) :  { int grad psi grad psi }
 
@@ -2692,104 +2862,104 @@ void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
 			             sp18 = - ( J_c0 * J_c1 + J_c3 * J_c2 ) / det,
 			             sp19 =   ( J_c1 * J_c1 + J_c3 * J_c3 ) / det;
 		
-			result [0][0][7] =   sp19 + sp18 + sp18 + sp17;      // int grad psi^P grad psi^P
-			result [1][0][7] =                                   // int grad psi^Q grad psi^P
-			result [0][1][7] = - sp19 - sp18;                    // int grad psi^P grad psi^Q
-			result [1][1][7] =   sp19;                           // int grad psi^Q grad psi^Q
-			result [2][0][7] =                                   // int grad psi^R grad psi^P
-			result [0][2][7] = - sp18 - sp17;                    // int grad psi^P grad psi^R
-			result [2][1][7] =                                   // int grad psi^R grad psi^Q
-			result [1][2][7] =   sp18;                           // int grad psi^Q grad psi^R
-			result [2][2][7] =   sp17;                          // int grad psi^R grad psi^R
+			result [ psi_P ] [ psi_P ] [ int_grad_psi_grad_psi ] =   sp19 + sp18 + sp18 + sp17;
+			result [ psi_Q ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_Q ] [ int_grad_psi_grad_psi ] = - sp19 - sp18;
+			result [ psi_Q ] [ psi_Q ] [ int_grad_psi_grad_psi ] =   sp19;
+			result [ psi_R ] [ psi_P ] [ int_grad_psi_grad_psi ] =
+			result [ psi_P ] [ psi_R ] [ int_grad_psi_grad_psi ] = - sp18 - sp17;
+			result [ psi_R ] [ psi_Q ] [ int_grad_psi_grad_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp18;
+			result [ psi_R ] [ psi_R ] [ int_grad_psi_grad_psi ] =   sp17;
 		
-			// case 3 (within 14) :  { int psi .deriv(x), int psi .deriv(y) }
+			// case 3 (within 14) :  { int psi .deriv(x) }
 
 			J_c0 *= 0.5;  J_c1 *= 0.5;  J_c2 *= 0.5;  J_c3 *= 0.5;
 	
-			result [0][0][8] =                         // int psi^P,x
-			result [0][1][8] =                         // int psi^P,x
-			result [0][2][8] =                         // int psi^P,x
-			result [0][0][9] =                         // int psi^P,x
-			result [1][0][9] =                         // int psi^P,x
-			result [2][0][9] =   J_c2 - J_c3;          // int psi^P,x
-			result [0][0][10] =                         // int psi^P,y
-			result [0][1][10] =                         // int psi^P,y
-			result [0][2][10] =                         // int psi^P,y
-			result [0][0][11] =                         // int psi^P,y
-			result [1][0][11] =                         // int psi^P,y
-			result [2][0][11] =   J_c1 - J_c0;          // int psi^P,y
-			result [1][0][8] =                         // int psi^Q,x
-			result [1][1][8] =                         // int psi^Q,x
-			result [1][2][8] =                         // int psi^Q,x
-			result [0][1][9] =                         // int psi^Q,x
-			result [1][1][9] =                         // int psi^Q,x
-			result [2][1][9] =   J_c3;                 // int psi^Q,x
-			result [1][0][10] =                         // int psi^Q,y
-			result [1][1][10] =                         // int psi^Q,y
-			result [1][2][10] =                         // int psi^Q,y
-			result [0][1][11] =                         // int psi^Q,y
-			result [1][1][11] =                         // int psi^Q,y
-			result [2][1][11] = - J_c1;                 // int psi^Q,y
-			result [2][0][8] =                         // int psi^R,x
-			result [2][1][8] =                         // int psi^R,x
-			result [2][2][8] =                         // int psi^R,x
-			result [0][2][9] =                         // int psi^R,x
-			result [1][2][9] =                         // int psi^R,x
-			result [2][2][9] = - J_c2;                 // int psi^R,x
-			result [2][0][10] =                         // int psi^R,y
-			result [2][1][10] =                         // int psi^R,y
-			result [2][2][10] =                         // int psi^R,y
-			result [0][2][11] =                         // int psi^R,y
-			result [1][2][11] =                         // int psi^R,y
-			result [2][2][11] =   J_c0;              }  // int psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_x ] =   J_c2 - J_c3;
+			result [ psi_P ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi2_y ] =   J_c1 - J_c0;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_x ] =   J_c3;
+			result [ psi_Q ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi2_y ] = - J_c1;
+			result [ psi_R ] [ psi_P ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_x ] = - J_c2;
+			result [ psi_R ] [ psi_P ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi1_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi1_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi2_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi2_y ] =   J_c0;
 
-			// case 6 (within 14) :  { int psi2 * psi2 .deriv(x) }
+			// case 6 (within 14) :  { int psi * psi .deriv(x) }
 
 			J_c0 /= 3.;  J_c1 /= 3.;  J_c2 /= 3.;  J_c3 /= 3;
 	
-			result [0][0][12] =                      // int psi^P psi^P,x
-			result [0][0][13] =                      // int psi^P psi^P,x
-			result [1][0][12] =                      // int psi^Q psi^P,x
-			result [0][1][13] =                      // int psi^Q psi^P,x
-			result [2][0][12] =                      // int psi^R psi^P,x
-			result [0][2][13] =   J_c2 - J_c3;       // int psi^R psi^P,x
-			result [0][1][12] =                      // int psi^P psi^Q,x
-			result [1][0][13] =                      // int psi^P psi^Q,x
-			result [1][1][12] =                      // int psi^Q psi^Q,x
-			result [1][1][13] =                      // int psi^Q psi^Q,x
-			result [2][1][12] =                      // int psi^R psi^Q,x
-			result [1][2][13] =   J_c3;              // int psi^R psi^Q,x
-			result [0][2][12] =                      // int psi^P psi^R,x
-			result [2][0][13] =                      // int psi^P psi^R,x
-			result [1][2][12] =                      // int psi^Q psi^R,x
-			result [2][1][13] =                      // int psi^Q psi^R,x
-			result [2][2][12] =                      // int psi^R psi^R,x
-			result [2][2][13] = - J_c2;              // int psi^R psi^R,x
-			result [0][0][14] =                      // int psi^P psi^P,y
-			result [0][0][15] =                      // int psi^P psi^P,y
-			result [1][0][14] =                      // int psi^Q psi^P,y
-			result [0][1][15] =                      // int psi^Q psi^P,y
-			result [2][0][14] =                      // int psi^R psi^P,y
-			result [0][2][15] =   J_c1 - J_c0;       // int psi^R psi^P,y
-			result [0][1][14] =                      // int psi^P psi^Q,y
-			result [1][0][15] =                      // int psi^P psi^Q,y
-			result [1][1][14] =                      // int psi^Q psi^Q,y
-			result [1][1][15] =                      // int psi^Q psi^Q,y
-			result [2][1][14] =                      // int psi^R psi^Q,y
-			result [1][2][15] = - J_c1;              // int psi^R psi^Q,y
-			result [0][2][14] =                      // int psi^P psi^R,y
-			result [2][0][15] =                      // int psi^P psi^R,y
-			result [1][2][14] =                      // int psi^Q psi^R,y
-			result [2][1][15] =                      // int psi^Q psi^R,y
-			result [2][2][14] =                      // int psi^R psi^R,y
-			result [2][2][15] =   J_c0;              // int psi^R psi^R,y
+			result [ psi_P ] [ psi_P ] [ int_psi_psi_x ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_x_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi_x ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_x_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi_x ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_x_psi ] =   J_c2 - J_c3;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi_x ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_x_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi_x ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_x_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi_x ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_x_psi ] =   J_c3;
+			result [ psi_P ] [ psi_R ] [ int_psi_psi_x ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_x_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi_x ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_x_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi_x ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_x_psi ] = - J_c2;
+			result [ psi_P ] [ psi_P ] [ int_psi_psi_y ] =
+			result [ psi_P ] [ psi_P ] [ int_psi_y_psi ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_psi_y ] =
+			result [ psi_P ] [ psi_Q ] [ int_psi_y_psi ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_psi_y ] =
+			result [ psi_P ] [ psi_R ] [ int_psi_y_psi ] =   J_c1 - J_c0;
+			result [ psi_P ] [ psi_Q ] [ int_psi_psi_y ] =
+			result [ psi_Q ] [ psi_P ] [ int_psi_y_psi ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_psi_y ] =
+			result [ psi_Q ] [ psi_Q ] [ int_psi_y_psi ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_psi_y ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_y_psi ] = - J_c1;
+			result [ psi_P ] [ psi_R ] [ int_psi_psi_y ] =
+			result [ psi_R ] [ psi_P ] [ int_psi_y_psi ] =
+			result [ psi_Q ] [ psi_R ] [ int_psi_psi_y ] =
+			result [ psi_R ] [ psi_Q ] [ int_psi_y_psi ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_psi_y ] =
+			result [ psi_R ] [ psi_R ] [ int_psi_y_psi ] =   J_c0;                   }
 			
-			break;  // end of case 14
+			break;  // end of case 14 -- dock_on_hand_tri_P1
 
 		default : assert ( false );
 	}  // end of  switch  statement
 }  // end of  dock_on_hand_tri_P1
-	
+
 }  // anonymous namespace
 
 
@@ -2909,7 +3079,7 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll 
 	dock_on_hand_quadrangle_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
 	                             this->cas, this->result_of_integr              );
 
-	// code below can be viewed as a local numbering of vertices P, Q, R
+	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert
 		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
@@ -2968,7 +3138,7 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
 	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
 	  this->cas, this->result_of_integr                                                      );
 
-	// code below can be viewed as a local numbering of vertices P, Q, R
+	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert
 		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
@@ -3013,7 +3183,7 @@ void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on ( const Cell & c
 	dock_on_hand_quadrangle_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
 	                             this->cas, this->result_of_integr              );
 
-	// code below can be viewed as a local numbering of vertices P, Q, R
+	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert
 		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
@@ -3077,7 +3247,7 @@ void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on
 	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
 	  this->cas, this->result_of_integr                                                      );
 
-	// code below can be viewed as a local numbering of vertices P, Q, R
+	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert
 		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
@@ -3410,8 +3580,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 	this->base_fun_1 .clear();
 	if ( std::abs ( xPmxQ  ) < std::abs ( yPmyQ ) )
 		// P and Q are on the same vertical -- xP == xQ
-		if ( yPmyQ > 0 )  // PQ is the left side of the rectangle
-		{	dock_on_hand_rectangle_Q1 ( xQ, yQ, x(R), y(R), x(S), y(S), xP, yP,
+		if ( yPmyQ > 0 )  // PQ is the left side of the square
+		{	dock_on_hand_square_Q1 ( xQ, yQ, x(R), y(R), x(S), y(S), xP, yP,
 		                              this->cas, this->result_of_integr      );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
@@ -3421,8 +3591,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
-		else  // PQ is the right side of the rectangle
-		{	dock_on_hand_rectangle_Q1 ( x(S), y(S), xP, yP, xQ, yQ, x(R), y(R),
+		else  // PQ is the right side of the square
+		{	dock_on_hand_square_Q1 ( x(S), y(S), xP, yP, xQ, yQ, x(R), y(R),
 		                              this->cas, this->result_of_integr      );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
@@ -3433,8 +3603,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
 	else  // P and Q are on the same horizontal -- yP == yQ
-		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
-		{	dock_on_hand_rectangle_Q1 ( x(R), y(R), x(S), y(S), xP, yP, xQ, yQ,
+		if ( xPmxQ > 0 )  // PQ is the upper side of the square
+		{	dock_on_hand_square_Q1 ( x(R), y(R), x(S), y(S), xP, yP, xQ, yQ,
 		                              this->cas, this->result_of_integr      );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
@@ -3444,8 +3614,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
-		else  // PQ is the lower side of the rectangle
-		{	dock_on_hand_rectangle_Q1 ( xP, yP, xQ, yQ, x(R), y(R), x(S), y(S),
+		else  // PQ is the lower side of the square
+		{	dock_on_hand_square_Q1 ( xP, yP, xQ, yQ, x(R), y(R), x(S), y(S),
 		                              this->cas, this->result_of_integr      );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
@@ -3507,8 +3677,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 	this->base_fun_1 .clear();
 	if ( std::abs ( xPmxQ  ) < std::abs ( yPmyQ ) )
 		// P and Q are on the same vertical -- xP == xQ
-		if ( yPmyQ > 0 )  // PQ is the left side of the rectangle
-		{	dock_on_hand_rectangle_Q1
+		if ( yPmyQ > 0 )  // PQ is the left side of the square
+		{	dock_on_hand_square_Q1
 			( xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP,
 			  this->cas, this->result_of_integr                          );
 			this->base_fun_1 .insert
@@ -3519,8 +3689,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
-		else  // PQ is the right side of the rectangle
-		{	dock_on_hand_rectangle_Q1
+		else  // PQ is the right side of the square
+		{	dock_on_hand_square_Q1
 			( xyz_S [0], xyz_S [1], xP, yP, xQ, yQ, xyz_R [0], xyz_R [1],
 			  this->cas, this->result_of_integr                          );
 			this->base_fun_1 .insert
@@ -3532,8 +3702,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
 	else  // P and Q are on the same horizontal -- yP == yQ
-		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
-		{	dock_on_hand_rectangle_Q1
+		if ( xPmxQ > 0 )  // PQ is the upper side of the square
+		{	dock_on_hand_square_Q1
 			( xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP, xQ, yQ,
 			  this->cas, this->result_of_integr                          );
 			this->base_fun_1 .insert
@@ -3544,8 +3714,8 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
-		else  // PQ is the lower side of the rectangle
-		{	dock_on_hand_rectangle_Q1
+		else  // PQ is the lower side of the square
+		{	dock_on_hand_square_Q1
 			( xP, yP, xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
 			  this->cas, this->result_of_integr                          );
 			this->base_fun_1 .insert
@@ -4584,7 +4754,7 @@ std::string FiniteElement::StandAlone::TypeOne::Quadrangle::info ( )
 		
 	{	case  0 :  return this->info_string;
 
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 			return this->info_string + "arithmetic expressions based on output of FFC\n";
 
@@ -4610,7 +4780,7 @@ std::string FiniteElement::StandAlone::TypeOne::Rectangle::info ( )
 	{	case  0 :  return this->info_string;
 
 		case 1 :  // { int psi }
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 		case 5 :  // { int grad psi grad psi }
 			return this->info_string + "simple hand-computed arithmetic expressions\n";
@@ -4625,7 +4795,8 @@ std::string FiniteElement::StandAlone::TypeOne::Square::info ( )
 	{	case  0 :  return this->info_string;
 
 		case 1 :  // { int psi }
-		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 3 :  // { int psi .deriv(x) }
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 		case 5 :  // { int grad psi grad psi }
 			return this->info_string + "simple hand-computed arithmetic expressions\n";
 
