@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.20
+// finite-elem.h 2021.12.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -22,6 +22,7 @@
 #ifndef MANIFEM_FINITE_ELEM_H
 #define MANIFEM_FINITE_ELEM_H
 
+#include <string>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -289,6 +290,10 @@ class FiniteElement
 	inline Cell::Numbering & numbering ( const tag::Segments & );
 	inline Cell::Numbering & numbering ( const tag::CellsOfDim &, const size_t d );
 
+	#ifndef NDEBUG
+	inline std::string info ( );
+	#endif
+
 };  // end of  class FiniteElement
 	
 //-----------------------------------------------------------------------------------------//
@@ -368,7 +373,11 @@ class FiniteElement::Core
 	// we could think of a more flexible approach, for instance
 	// the user may want to number vertices and segments mixed in the same map
 	std::vector < Cell::Numbering * > numbers;
-
+	
+	#ifndef NDEBUG
+	std::string info_string;
+	#endif
+	
 	// constructor
 
 	inline Core () : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { };
@@ -392,6 +401,10 @@ class FiniteElement::Core
 
 	virtual Cell::Numbering & build_global_numbering ( ) = 0;
 	
+	#ifndef NDEBUG
+	virtual std::string info ( ) = 0;
+	#endif
+
 };  // end of  class FiniteElement::Core
 
 //-----------------------------------------------------------------------------------------//
@@ -463,6 +476,12 @@ inline Cell::Numbering & FiniteElement::numbering ( const tag::CellsOfDim &, con
 {	assert ( this->core->numbers .size() > d );
 	return * this->core->numbers [d];           }
 
+
+#ifndef NDEBUG
+inline std::string FiniteElement::info ( )
+{	return this->core->info();  }
+#endif
+
 //-------------------------------------------------------------------------------------------------//
 
 
@@ -478,6 +497,7 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	Manifold master_manif;
 	Function transf;
@@ -505,6 +525,10 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 
 	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
 	
+	#ifndef NDEBUG
+	std::string info ( );  // virtual from FiniteElement::Core
+	#endif
+
 	class Segment;  class Triangle;  class Quadrangle;
 	
 };  // end of  class FiniteElement::withMaster
@@ -556,6 +580,7 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::WithMaster :
 	// Manifold master_manif
@@ -563,7 +588,9 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
 	// constructor
 
-	inline Segment ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
+	inline Segment ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Segment\n";
+		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -581,6 +608,9 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
 };  // end of  class FiniteElement::WithMaster::Segment
 
 //-------------------------------------------------------------------------------------------------//
@@ -596,6 +626,7 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::WithMaster :
 	// Manifold master_manif
@@ -603,7 +634,9 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
 	// constructor
 
-	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
+	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Triangle\n";
+		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -621,6 +654,9 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
 };  // end of  class FiniteElement::withMaster::Triangle
 
 //-----------------------------------------------------------------------------------------//
@@ -636,6 +672,7 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
 	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::WithMaster :
 	// Manifold master_manif
@@ -643,7 +680,9 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 
 	// constructor
 
-	inline Quadrangle ( Manifold m ) : FiniteElement::WithMaster ( m )  { }
+	inline Quadrangle ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Quadrangle\n";
+		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -661,6 +700,9 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
 };  // end of  class FiniteElement::withMaster::Quadrangle
 
 //-----------------------------------------------------------------------------------------//
@@ -748,8 +790,11 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 {	public :
 
 	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// for HandCoded integrators, we study previously several cases
 	// and hard-code the necessary expressions (hand-computed)
@@ -788,6 +833,8 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 
 	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
 	
+	// std::string info ( )  stays pure virtual from FiniteElement::Core (ifndef NDEBUG)
+
 	class TypeOne;
 	
 };  // end of  class FiniteElement::StandAlone
@@ -808,8 +855,11 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 {	public :
 
 	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::StandAlone :
 	// size_t cas { 0 }
@@ -841,6 +891,8 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 
 	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
 	
+	// std::string info ( )  stays pure virtual from FiniteElement::Core (ifndef NDEBUG)
+
 	class Segment;  class Triangle;  class Quadrangle;
 	class Parallelogram;  class Rectangle;  class Square;
 	
@@ -859,6 +911,8 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::StandAlone :
 	// size_t cas { 0 }
@@ -878,7 +932,8 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 		bf2 ( tag::mere_symbol ), bf3 ( tag::mere_symbol )
 	{ this->basis_numbering [ bf1.core ] = 0;
 		this->basis_numbering [ bf2.core ] = 1;
-		this->basis_numbering [ bf3.core ] = 2;  }
+		this->basis_numbering [ bf3.core ] = 2;
+		this->info_string = "FiniteElement::StandAlone::TypeOne::Triangle\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -896,6 +951,10 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 
+	#ifndef NDEBUG
+	std::string info ( );  // virtual from FiniteElement::Core
+	#endif
+
 };  // end of  class FiniteElement::StandAlone::TypeOne::Triangle
 
 //-----------------------------------------------------------------------------------------//
@@ -911,6 +970,8 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::StandAlone :
 	// size_t cas { 0 }
@@ -931,7 +992,8 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 	{ this->basis_numbering [ bf1.core ] = 0;
 		this->basis_numbering [ bf2.core ] = 1;
 		this->basis_numbering [ bf3.core ] = 2;
-		this->basis_numbering [ bf4.core ] = 3;  }
+		this->basis_numbering [ bf4.core ] = 3;
+		this->info_string = "FiniteElement::StandAlone::TypeOne::Quadrangle\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -949,6 +1011,10 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 
+	#ifndef NDEBUG
+	std::string info ( );  // virtual from FiniteElement::Core
+	#endif
+
 };  // end of  class FiniteElement::StandAlone::TypeOne::Quadrangle
 
 //-----------------------------------------------------------------------------------------//
@@ -965,6 +1031,8 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::StandAlone :
 	// size_t cas { 0 }
@@ -982,7 +1050,7 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 
 	inline Parallelogram ( )
 	: FiniteElement::StandAlone::TypeOne::Quadrangle()
-	{ }
+	{ this->info_string = "FiniteElement::StandAlone::TypeOne::Parallelogram\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -1000,6 +1068,10 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
 
+	#ifndef NDEBUG
+	std::string info ( );  // virtual from FiniteElement::Core
+	#endif
+
 };  // end of  class FiniteElement::StandAlone::TypeOne::Parallelogram
 
 //-----------------------------------------------------------------------------------------//
@@ -1016,6 +1088,8 @@ class FiniteElement::StandAlone::TypeOne::Rectangle
 	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::StandAlone :
 	// size_t cas { 0 }
@@ -1033,7 +1107,7 @@ class FiniteElement::StandAlone::TypeOne::Rectangle
 
 	inline Rectangle ( )
 	: FiniteElement::StandAlone::TypeOne::Parallelogram()
-	{ }
+	{	this->info_string = "FiniteElement::StandAlone::TypeOne::Rectangle\n";  }
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) override;
@@ -1048,6 +1122,10 @@ class FiniteElement::StandAlone::TypeOne::Rectangle
 	// defined by FiniteElement::StandAlone::TypeOne
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+
+	#ifndef NDEBUG
+	std::string info ( );  // virtual from FiniteElement::Core
+	#endif
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Rectangle
 
@@ -1065,6 +1143,8 @@ class FiniteElement::StandAlone::TypeOne::Square
 	// Integrator integr
 	// std::map < Cell::Core *, Function > base_fun_1
 	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
 
 	// attributes inherited from FiniteElement::StandAlone :
 	// size_t cas { 0 }
@@ -1082,7 +1162,7 @@ class FiniteElement::StandAlone::TypeOne::Square
 
 	inline Square ( )
 	: FiniteElement::StandAlone::TypeOne::Rectangle()
-	{ }
+	{	this->info_string = "FiniteElement::StandAlone::TypeOne::Square\n";  }
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -1097,6 +1177,10 @@ class FiniteElement::StandAlone::TypeOne::Square
 	// defined by FiniteElement::StandAlone::TypeOne
 
 	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+
+	#ifndef NDEBUG
+	std::string info ( );  // virtual from FiniteElement::Core
+	#endif
 
 };  // end of  class FiniteElement::StandAlone::TypeOne::Square
 

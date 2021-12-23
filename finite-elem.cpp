@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.21
+// finite-elem.cpp 2021.12.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -908,20 +908,22 @@ void dock_on_hand_quadrangle_Q1
 		case 1 :  // { int psi }
 			
 		{
+			assert ( false );
 		}
 			break;  // end of case 1
 
 		case 2 :  // { int psi1 * psi2 }
 			
 		{
+			assert ( false );
 		}
 			break;  // end of case 2
 
 		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
 		
-		// computations inspired in UFL and FFC
-		// https://fenics.readthedocs.io/projects/ufl/en/latest/
-		// https://fenics.readthedocs.io/projects/ffc/en/latest/
+			// computations inspired in UFL and FFC
+			// https://fenics.readthedocs.io/projects/ufl/en/latest/
+			// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
 		{	const double alph = 0.7886751345948129,
 			             beta = 0.2113248654051871;
@@ -1590,7 +1592,8 @@ void dock_on_hand_rectangle_Q1
 			break;  // end of case 1
 			
 		case 2 :  // { int psi1 * psi2 }
-			
+
+			assert ( false );
 			break;  // end of case 2
 
 		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
@@ -1607,10 +1610,13 @@ void dock_on_hand_rectangle_Q1
 			result [0][2][0] =   half_dy;             // int psi^R,x
 			result [0][0][1] =                        // int psi^P,y
 			result [0][1][1] = - half_dx;     }       // int psi^Q,y
+		
 			break;  // end of case 3
 
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 			
+		// expressions computed by hand
+
 		{	const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
 			             dy_dx_3 = dy_over_dx / 3., dx_dy_3 = dx_over_dy / 3.,
 			             dy_dx_6 = dy_over_dx / 6., dx_dy_6 = dx_over_dy / 6.;
@@ -1690,6 +1696,37 @@ void dock_on_hand_rectangle_Q1
 			
 			break;  // end of case 4, dock_on_hand_rectangle_Q1
 
+		case 5 :  // { int grad psi grad psi }
+		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
+
+		// expressions computed by hand
+
+		// std::cout << "case 5 ";
+		{	const double dx_over_dy = delta_x / delta_y, dy_over_dx = delta_y / delta_x,
+			             dy_dx_3 = dy_over_dx / 3., dx_dy_3 = dx_over_dy / 3.,
+			             dy_dx_6 = dy_over_dx / 6., dx_dy_6 = dx_over_dy / 6.;
+
+			result [0][0][0] =                             // int grad psi^P grad psi^P
+			result [1][1][0] =                             // int grad psi^Q grad psi^Q
+			result [2][2][0] =                             // int grad psi^R grad psi^R
+			result [3][3][0] =   dx_dy_3 + dy_dx_3;        // int grad psi^S grad psi^S
+
+			result [0][1][0] =                             // int grad psi^P grad psi^Q
+			result [1][0][0] =                             // int grad psi^P grad psi^Q
+			result [2][3][0] =                             // int grad psi^R grad psi^S
+			result [3][2][0] =   dx_dy_6 - dy_dx_3;        // int grad psi^R grad psi^S
+				
+			result [0][2][0] =                             // int grad psi^P grad psi^R
+			result [2][0][0] =                             // int grad psi^P grad psi^R
+			result [1][3][0] =                             // int grad psi^Q grad psi^S
+			result [3][1][0] = - dx_dy_6 - dy_dx_6;        // int grad psi^Q grad psi^S
+			
+			result [2][1][0] =                             // int grad psi^Q grad psi^R
+			result [1][2][0] =                             // int grad psi^Q grad psi^R
+			result [0][3][0] =                             // int grad psi^P grad psi^S
+			result [3][0][0] =   dy_dx_6 - dx_dy_3;    }   // int grad psi^P grad psi^S
+			break;  // end of case 5, dock_on_hand_rectangle_Q1
+
 		default : assert ( false );
 	}  // end of  switch  statement
 	
@@ -1739,11 +1776,12 @@ void dock_on_hand_square_Q1
 			result [0][1][0] =                    // int psi^Q
 			result [0][2][0] =                    // int psi^R
 			result [0][3][0] = area / 4.;         // int psi^S
-			break;  // end of case 1
+			break;  // end of case 1, dock_on_hand_square_Q1
 			
 		case 2 :  // { int psi1 * psi2 }
 			
-			break;  // end of case 2
+			assert ( false );
+			break;  // end of case 2, dock_on_hand_square_Q1
 
 		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
 			
@@ -1755,11 +1793,41 @@ void dock_on_hand_square_Q1
 			result [0][3][1] =                        // int psi^S,y
 			result [0][1][0] =                        // int psi^Q,x
 			result [0][2][0] =   half_ell;            // int psi^R,x
+			
 			result [0][0][0] =                        // int psi^P,x
 			result [0][3][0] =                        // int psi^S,x
 			result [0][0][1] =                        // int psi^P,y
 			result [0][1][1] = - half_ell;     }      // int psi^Q,y
-			break;  // end of case 3
+
+		break;  // end of case 3, dock_on_hand_square_Q1
+
+		case 5 :  // { int grad psi grad psi }
+		// { int psi1 .deriv(x) * psi2 .dervi(x) + psi1 .deriv(y) * psi2 .deriv(y) }
+
+		// expressions computed by hand
+		std::cout << "case 5 ";
+		
+		{	result [0][0][0] =                             // int grad psi^P grad psi^P
+			result [1][1][0] =                             // int grad psi^Q grad psi^Q
+			result [2][2][0] =                             // int grad psi^R grad psi^R
+			result [3][3][0] = tag::Util::two_thirds;      // int grad psi^S grad psi^S
+
+			result [0][2][0] =                             // int grad psi^P grad psi^R
+			result [2][0][0] =                             // int grad psi^P grad psi^R
+			result [1][3][0] =                             // int grad psi^Q grad psi^S
+			result [3][1][0] = tag::Util::minus_one_third; // int grad psi^Q grad psi^S
+			
+			result [0][1][0] =                             // int grad psi^P grad psi^Q
+			result [1][0][0] =                             // int grad psi^P grad psi^Q
+			result [2][3][0] =                             // int grad psi^R grad psi^S
+			result [3][2][0] =                             // int grad psi^R grad psi^S
+				
+			result [2][1][0] =                             // int grad psi^Q grad psi^R
+			result [1][2][0] =                             // int grad psi^Q grad psi^R
+			result [0][3][0] =                             // int grad psi^P grad psi^S
+			result [3][0][0] = tag::Util::minus_one_sixth;   } // grad psi^P grad psi^S
+
+		break;  // end of case 5, dock_on_hand_square_Q1
 
 		default : assert ( false );
 	}  // end of  switch  statement
@@ -3337,22 +3405,57 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 	assert ( geom_dim == 2 );
 	Function x = xyz [0], y = xyz [1];
 
-	dock_on_hand_square_Q1 ( x(P), y(P), x(Q), y(Q), x(R), y(R), x(S), y(S),
-	                         this->cas, this->result_of_integr              );
-
-	// code below can be viewed as a local numbering of vertices P, Q, R
+	const double xP = x(P), yP = y(P), xQ = x(Q), yQ = y(Q),
+	             xPmxQ = xP - xQ, yPmyQ = yP - yQ;
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
-	// using Cell::Core::short_int_heap for local numbering of vertices
-	// should be slightly faster
-
+	if ( std::abs ( xPmxQ  ) < std::abs ( yPmyQ ) )
+		// P and Q are on the same vertical -- xP == xQ
+		if ( yPmyQ > 0 )  // PQ is the left side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( xQ, yQ, x(R), y(R), x(S), y(S), xP, yP,
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+		else  // PQ is the right side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( x(S), y(S), xP, yP, xQ, yQ, x(R), y(R),
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+	else  // P and Q are on the same horizontal -- yP == yQ
+		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( x(R), y(R), x(S), y(S), xP, yP, xQ, yQ,
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+		else  // PQ is the lower side of the rectangle
+		{	dock_on_hand_rectangle_Q1 ( xP, yP, xQ, yQ, x(R), y(R), x(S), y(S),
+		                              this->cas, this->result_of_integr      );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+	
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on
 
 //-----------------------------------------------------------------------------------------//
@@ -3396,22 +3499,63 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 	                             xyz_R = xyz ( R, tag::winding, winding_R ),
 	                             xyz_S = xyz ( S, tag::winding, winding_S );
 	
-	dock_on_hand_square_Q1
-	( xyz_P [0], xyz_P [1], xyz_Q [0], xyz_Q [1], xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
-	  this->cas, this->result_of_integr                                                      );
-
-	// code below can be viewed as a local numbering of vertices P, Q, R
+	// this works on quotient manifolds defined by translations
+	// does not make sense on quotient with rotations
+	
+	const double xP = xyz_P [0], yP = xyz_P [1], xQ = xyz_Q [0], yQ = xyz_Q [1],
+	             xPmxQ = xP - xQ, yPmyQ = yP - yQ;
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
-	// using Cell::Core::short_int_heap for local numbering of vertices
-	// should be slightly faster
+	if ( std::abs ( xPmxQ  ) < std::abs ( yPmyQ ) )
+		// P and Q are on the same vertical -- xP == xQ
+		if ( yPmyQ > 0 )  // PQ is the left side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP,
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+		else  // PQ is the right side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xyz_S [0], xyz_S [1], xP, yP, xQ, yQ, xyz_R [0], xyz_R [1],
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+	else  // P and Q are on the same horizontal -- yP == yQ
+		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP, xQ, yQ,
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+		else  // PQ is the lower side of the rectangle
+		{	dock_on_hand_rectangle_Q1
+			( xP, yP, xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
+			  this->cas, this->result_of_integr                          );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert
+				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on  with tag::winding
 
@@ -3647,15 +3791,14 @@ void FiniteElement::StandAlone::TypeOne::pre_compute
 				this->result_of_integr [i] [j] .resize ( 1, 0. );  }
 		Function::Product * prod = tag::Util::assert_cast
 			< Function::Core*, Function::Product* > ( result [0] .core );
-		std::forward_list < Function > ::const_iterator
-			itt = prod->factors .begin();
+		std::forward_list < Function > ::const_iterator itt = prod->factors .begin();
 		assert ( itt != prod->factors .end() );
 		assert ( itt->core == bf [0] .core );
 		itt++;  assert ( itt != prod->factors .end() );
 		assert ( itt->core == bf [1] .core );
 		itt++;  assert ( itt == prod->factors .end() );
 		this->selector .push_back ( 0 ); // selector = { 0 }
-		return;                                                             }
+		return;                                                                       }
 	
 	if ( not int_psi and not int_psi_psi and int_dpsi and
 	     not int_dpsi_dpsi and not int_grad_grad and not int_psi_dpsi )
@@ -4421,3 +4564,71 @@ Cell::Numbering & FiniteElement::WithMaster::Quadrangle::build_global_numbering 
 { assert ( false );
 	return * this->numbers [1];  }
 
+//-------------------------------------------------------------------------------------------------//
+
+
+#ifndef NDEBUG
+
+std::string FiniteElement::WithMaster::info ( )
+{	return this->info_string;  }
+
+
+std::string FiniteElement::StandAlone::TypeOne::Triangle::info ( )
+{	if ( this->cas == 0 ) return this->info_string;
+	return this->info_string + "arithmetic expressions based on output of FFC\n";  }
+
+
+std::string FiniteElement::StandAlone::TypeOne::Quadrangle::info ( )
+
+{	switch ( this->cas )
+		
+	{	case  0 :  return this->info_string;
+
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
+			return this->info_string + "arithmetic expressions based on output of FFC\n";
+
+		default : return this->info_string + "this case is not implemented yet\n";  }  }
+
+
+std::string FiniteElement::StandAlone::TypeOne::Parallelogram::info ( )
+
+{	switch ( this->cas )
+		
+	{	case  0 :  return this->info_string;
+
+		case 41 :
+			return this->info_string + "simple hand-computed arithmetic expressions\n";
+
+		default : return this->info_string + "this case is not implemented yet\n";  }  }
+
+
+std::string FiniteElement::StandAlone::TypeOne::Rectangle::info ( )
+
+{	switch ( this->cas )
+		
+	{	case  0 :  return this->info_string;
+
+		case 1 :  // { int psi }
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
+		case 5 :  // { int grad psi grad psi }
+			return this->info_string + "simple hand-computed arithmetic expressions\n";
+
+		default : return this->info_string + "this case is not implemented yet\n";  }  }
+
+
+std::string FiniteElement::StandAlone::TypeOne::Square::info ( )
+
+{	switch ( this->cas )
+		
+	{	case  0 :  return this->info_string;
+
+		case 1 :  // { int psi }
+		case 3 :  // { int psi .deriv(x), int psi .deriv(y) }
+		case 5 :  // { int grad psi grad psi }
+			return this->info_string + "simple hand-computed arithmetic expressions\n";
+
+		default : return this->info_string + "this case is not implemented yet\n";  }  }
+
+#endif

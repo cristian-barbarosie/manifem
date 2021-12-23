@@ -176,6 +176,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 		#endif
 		static bool return_true ( );
 		static bool return_false ( );
+		static const double one_third, minus_one_third, one_sixth, minus_one_sixth,
+		                    two_thirds, minus_two_thirds;
 	};
 	struct MayBeNull { };  static const MayBeNull may_be_null;
 	struct SurelyNotNull { };  static const SurelyNotNull surely_not_null;

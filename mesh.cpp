@@ -54,6 +54,13 @@ std::vector < std::vector < void(*)(Cell::Core*,void*) > >
 std::vector < std::vector < void* > > Cell::data_for_init_pos ( Mesh::maximum_dimension_plus_one );
 std::vector < std::vector < void* > > Cell::data_for_init_neg ( Mesh::maximum_dimension_plus_one );
 
+const double tag::Util::one_third = 1. / 3.,
+             tag::Util::minus_one_third = - tag::Util::minus_one_third,
+             tag::Util::one_sixth = 1. / 6.,
+             tag::Util::minus_one_sixth = - tag::Util::one_sixth,
+             tag::Util::two_thirds = 2. / 3.,
+             tag::Util::minus_two_thirds = - tag::Util::two_thirds;
+
 // int Cell::counter { 0 };
 
 //-----------------------------------------------------------------------------//
