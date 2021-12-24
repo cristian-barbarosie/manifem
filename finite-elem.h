@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.23
+// finite-elem.h 2021.12.24
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -56,6 +56,10 @@ namespace tag {
 	struct IntegralOf { };  static const IntegralOf integral_of;
 	struct HandCoded { };  static const HandCoded hand_coded;
 	struct FirstVertex { };  static const FirstVertex first_vertex;
+	struct Straight { };  static const Straight straight;
+	struct Curved { };  static const Curved curved;
+	struct IncrementalBasisFunction { };
+		static const IncrementalBasisFunction incremental_basis_function;
 }
 
 class FiniteElement;
@@ -231,6 +235,13 @@ class FiniteElement
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
+	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg,
+	                       const tag::Straight &, const tag::IncrementalBasisFunction & );
+	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
+	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
                          const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Triangle &,  // no master, stand-alone
@@ -529,7 +540,9 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	std::string info ( );  // virtual from FiniteElement::Core
 	#endif
 
-	class Segment;  class Triangle;  class Quadrangle;
+	class Segment;
+	struct Triangle { class P1;  struct P2 { class Straight; class Curved; }; };
+  class Quadrangle;
 	
 };  // end of  class FiniteElement::withMaster
 
@@ -615,9 +628,11 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
 //-------------------------------------------------------------------------------------------------//
 
-class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
-// triangular finite elements which use a master element
+class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster
+
+// triangular finite elements which use a master element, Lagrange P1
+// three affine basis functions, associated to each of the three vertices
 
 {	public :
 
@@ -634,8 +649,8 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 
 	// constructor
 
-	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )
-	{ this->info_string = "FiniteElement::WithMaster::Triangle\n";
+	inline P1 ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
@@ -657,9 +672,157 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 	//  std::string info()  virtual from FiniteElement::Core
 	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
 
-};  // end of  class FiniteElement::withMaster::Triangle
+};  // end of  class FiniteElement::withMaster::Triangle::P1
 
 //-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::WithMaster
+
+// triangular finite elements which use a master element, Lagrange P2
+// six quadratic basis functions, associated to each vertex and to each side
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
+	// constructor
+
+	inline Straight ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1::Straight\n";
+		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	
+	// two methods  dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
+
+	// pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
+	class Incremental;
+	
+};  // end of  class FiniteElement::withMaster::Triangle::P2::Straight
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::WithMaster::Triangle::P2::Straight::Incremental
+: public FiniteElement::WithMaster
+
+// triangular finite elements which use a master element, Lagrange P2
+// three affine basis functions, associated to each vertex (the same as for P1)
+// plus three quadratic basis functions, associated to each side
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
+	// constructor
+
+	inline Incremental ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Triangle::P2::Straight::Incremental\n";
+		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	
+	// two methods  dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
+
+	// pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
+};  // end of  class FiniteElement::withMaster::Triangle::P2::Straight::Incremental
+
+//-----------------------------------------------------------------------------------------//
+
+
+class FiniteElement::WithMaster::Triangle::P2::Curved : public FiniteElement::WithMaster
+
+// triangular finite elements which use a master element
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
+	// constructor
+
+	inline Curved ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1\n";
+		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	
+	// two methods  dock_on  virtual from FiniteElement::Core
+	void dock_on ( const Cell & cll );
+	void dock_on ( const Cell & cll, const tag::Winding & );
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
+
+	// pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
+
+	Cell::Numbering & build_global_numbering ( );  // virtual from FiniteElement::Core
+	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
+};  // end of  class FiniteElement::withMaster::Triangle::P2::Curved
+
+//-----------------------------------------------------------------------------------------//
+
 
 class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 
@@ -744,7 +907,72 @@ inline FiniteElement::FiniteElement
 	// we should take advantage of the memory space already reserved for x and y
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
-	this->core = new FiniteElement::WithMaster::Triangle ( RR2_master );
+	this->core = new FiniteElement::WithMaster::Triangle::P1 ( RR2_master );
+	
+	work_manif .set_as_working_manifold();                                                      }
+
+
+inline FiniteElement::FiniteElement
+(	const tag::WithMaster &, const tag::Triangle &,
+	const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & )
+	
+:	core { nullptr }
+
+{	assert ( deg == 2 );
+
+	// we keep the working manifold and restaure it at the end
+	Manifold work_manif = Manifold::working;
+	
+	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	// we should take advantage of the memory space already reserved for x and y
+	// Function xi = xi_eta [0], eta = xi_eta [1];
+
+	this->core = new FiniteElement::WithMaster::Triangle::P2::Straight ( RR2_master );
+	
+	work_manif .set_as_working_manifold();                                                      }
+
+
+inline FiniteElement::FiniteElement
+( const tag::WithMaster &, const tag::Triangle &,
+  const tag::lagrange &, const tag::OfDegree &, size_t deg,
+  const tag::Straight &, const tag::IncrementalBasisFunction & )
+	
+:	core { nullptr }
+
+{	assert ( deg == 2 );
+
+	// we keep the working manifold and restaure it at the end
+	Manifold work_manif = Manifold::working;
+	
+	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	// we should take advantage of the memory space already reserved for x and y
+	// Function xi = xi_eta [0], eta = xi_eta [1];
+
+	this->core = new FiniteElement::WithMaster::Triangle::P2::Straight::Incremental ( RR2_master );
+	
+	work_manif .set_as_working_manifold();                                                         }
+
+
+inline FiniteElement::FiniteElement
+(	const tag::WithMaster &, const tag::Triangle &,
+	const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & )
+	
+:	core { nullptr }
+
+{	assert ( deg == 2 );
+	assert ( false );
+
+	// we keep the working manifold and restaure it at the end
+	Manifold work_manif = Manifold::working;
+	
+	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
+	Function xi_eta = RR2_master .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	// we should take advantage of the memory space already reserved for x and y
+	// Function xi = xi_eta [0], eta = xi_eta [1];
+
+	this->core = new FiniteElement::WithMaster::Triangle::P2::Curved ( RR2_master );
 	
 	work_manif .set_as_working_manifold();                                                      }
 

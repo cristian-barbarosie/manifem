@@ -50,6 +50,7 @@ int main ()
 	         psi_B = fe_gauss .basis_function (B),
 	         psi_C = fe_gauss .basis_function (C),
 	         psi_D = fe_gauss .basis_function (D);
+	std::cout << "psi_A (A) " << psi_A (A) << " psi_A (B) " << psi_A (B) << std::endl;
 	// std::cout << "       ";
 	std::cout << fe_gauss .integrate ( psi_B .deriv(x) * psi_A .deriv(x) ) << " "
 						<< fe_gauss .integrate ( psi_B .deriv(y) * psi_A .deriv(y) ) << " || ";
