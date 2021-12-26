@@ -37,10 +37,14 @@ int main ( )
 	Mesh cyl = square .fold
 		( tag::identify, BC, tag::with, DA.reverse(), tag::use_existing_vertices );
 
-	cyl .draw_ps ("cylinder.eps", tag::unfold,
-                 tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+	// cyl .draw_ps ("cylinder.eps", tag::unfold,
+  //                tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
-	std::cout << "produced file cylinder.eps - please edit before viewing" << std::endl;	
+	// std::cout << "produced file cylinder.eps - please edit before viewing" << std::endl;
+
+	Mesh unf = cyl .unfold ( tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+	unf .export_msh ("cylinder.msh");
+	std::cout << "produced file cylinder.msh" << std::endl;
 
 } // end of main
 

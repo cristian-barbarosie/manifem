@@ -1,5 +1,5 @@
 
-// global.cpp 2021.12.13
+// global.cpp 2021.12.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2771,10 +2771,10 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneG
 	std::vector < double > coords_base, coords_tip;
 
 	Mesh::Iterator it = this->iterator ( tag::over_segments );
-	for ( it.reset() ; it.in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell seg = *it;
-		Cell base = seg.base().reverse();
-		Cell tip  = seg.tip();
+		Cell base = seg .base() .reverse();
+		Cell tip  = seg .tip();
 		short int iii = 0;  // is 0 at the first passage, will be 1 at the second passage
 		for ( short int dir = -1; dir < 2; dir += 2 )  // dir will be -1 and 1
 		{	size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
@@ -2890,12 +2890,12 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
 	Function coords_Eu = mani_Eu.coordinates();
 	assert ( coords_Eu.nb_of_components() == 2 );
-	Function x = coords_Eu[0],  y = coords_Eu[1];
+	Function x = coords_Eu [0],  y = coords_Eu [1];
 
 	// here, the action group has two generators
 	assert ( manif_q->actions.size() == 2 );
 	assert ( manif_q->winding_nbs.size() == 2 );
-	Manifold::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
+	Manifold::Action g1 = manif_q->actions [0], g2 = manif_q->actions [1];
 	
 	std::ofstream file_ps ( file_name );
 	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
@@ -2914,10 +2914,10 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 	// and perhaps in other places
 
 	Mesh::Iterator it = this->iterator ( tag::over_segments );
-	for ( it.reset() ; it.in_range(); it++ )
+	for ( it .reset(); it .in_range(); it++ )
 	{	Cell seg = *it;
-		Cell base = seg.base().reverse();
-		Cell tip  = seg.tip();
+		Cell base = seg .base() .reverse();
+		Cell tip  = seg .tip();
 		// we describe a sort of spiral
 		// if the first tries are out of the region, we give up after 50 unsuccsessful rounds
 		// at the end, we stop after 10 unsuccessful rounds
@@ -3451,6 +3451,425 @@ void Mesh::export_msh ( std::string f )
 	this->export_msh ( f, numbering );
 
 } // end of Mesh::export_msh
+
+//----------------------------------------------------------------------------------//
+
+
+namespace {  // anonymous namespace, mimics static linkage
+	
+inline Mesh unfold_common ( const Mesh & that,
+   const std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > & built_ver,
+                     const tag::OverRegion &, const Function::Inequality::Set & constraints  )
+	
+{	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+
+	// build new segments joinig vertices built previously (by the calling code)
+	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_seg;
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = that .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell seg = *it;
+		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::iterator, bool > itbs =
+		built_seg .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+		  ( seg, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+		assert ( itbs .second );
+		Cell base = seg .base() .reverse();
+		Cell tip  = seg .tip();
+		std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::const_iterator it_bvb = built_ver .find ( base );
+		assert ( it_bvb != built_ver .end() );
+		const std::vector < std::pair < Manifold::Action, Cell > > & bvb = it_bvb->second;
+		for ( std::vector < std::pair < Manifold::Action, Cell > > ::const_iterator
+		      itb = bvb .begin(); itb != bvb .end(); itb++                          )
+		{	Manifold::Action act_base = itb->first;
+			std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+				::const_iterator it_bvt = built_ver .find ( tip );
+			assert ( it_bvt != built_ver .end() );
+			const std::vector < std::pair < Manifold::Action, Cell > > & bvt = it_bvt->second;
+			for ( std::vector < std::pair < Manifold::Action, Cell > > ::const_iterator
+			      itt = bvt .begin(); itt != bvt .end(); itt++                          )
+				if ( itt->first == itb->first + seg .winding() )  // same action
+				{	Cell new_seg ( tag::segment, itb->second .reverse(), itt->second );
+					itbs .first->second .push_back 
+						( std::pair < Manifold::Action, Cell > ( itb->first, new_seg ) ) ;
+					break;                                                              }  }  }
+	} // just a block of code for hiding 'it'
+
+	// build new cells using segments we just built
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = that .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell cll = *it;
+		Mesh::Iterator it_seg = cll .boundary() .iterator
+			( tag::over_segments, tag::require_order );
+		it_seg .reset();  assert ( it_seg .in_range() );
+		Cell ini_seg = *it_seg;
+		Cell A = ini_seg .base() .reverse();
+		std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::const_iterator it_bvA = built_ver .find (A);
+		assert ( it_bvA != built_ver .end() );
+		for ( std::vector < std::pair < Manifold::Action, Cell > > ::const_iterator
+		      itA = it_bvA->second .begin(); itA != it_bvA->second .end(); itA++   )
+		{	Manifold::Action act_base = itA->first, act_seg = act_base;
+			bool build_cell = true;
+			for ( it_seg .reset ( tag::start_at, ini_seg ); it_seg .in_range(); it_seg++ )	
+			{	Cell other_seg = *it_seg;
+				bool segment_found = false;
+				if ( other_seg .is_positive() )
+				{	std::vector < std::pair < Manifold::Action, Cell > > &
+						bss = built_seg [ other_seg ];
+					for ( std::vector < std::pair < Manifold::Action, Cell > > ::const_iterator
+				        ito = bss .begin(); ito != bss .end(); ito++                          )
+						if ( ito->first == act_seg )  {  segment_found = true;  break;  }
+					act_seg += other_seg .winding();                                              }
+				else  // 'other_seg' is negative
+				{	act_seg += other_seg .winding();
+					std::vector < std::pair < Manifold::Action, Cell > > &
+						bssr = built_seg [ other_seg .reverse() ];
+					for ( std::vector < std::pair < Manifold::Action, Cell > > ::const_iterator
+				        ito = bssr .begin(); ito != bssr .end(); ito++                        )
+						if ( ito->first == act_seg )  {  segment_found = true;  break;  }           }
+				if ( not segment_found )  {  build_cell = false;  break;  }                       }
+			if ( not build_cell ) continue;
+			Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
+				( tag::whose_boundary_is,
+					Mesh ( tag::whose_core_is,
+				         new Mesh::Connected::OneDim ( tag::with,
+			           cll .boundary() .number_of ( tag::segments ),
+	  	             tag::segments, tag::one_dummy_wrapper       ),
+	    	     tag::freshly_created                                 ),
+					tag::one_dummy_wrapper                                     );
+			Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
+			Cell kept_ver ( tag::non_existent );
+			act_seg = act_base;
+			for ( it_seg .reset ( tag::start_at, ini_seg ); it_seg .in_range(); it_seg++ )	
+			{	Cell seg = *it_seg;
+				bool segment_found = false;
+				std::vector < std::pair < Manifold::Action, Cell > > ::iterator ito;
+				if ( seg .is_positive() )
+				{	std::vector < std::pair < Manifold::Action, Cell > > &
+						bss = built_seg [ seg ];
+					for ( ito = bss .begin(); ito != bss .end(); ito++ )
+						if ( ito->first == act_seg )  {  segment_found = true;  break;  }
+					assert ( segment_found );
+					assert ( ito->second .exists() );
+					kept_ver = ito->second .tip();
+					ito->second .core->add_to_mesh
+						( new_cll .boundary() .core, tag::do_not_bother );
+					act_seg += seg .winding();                                           }
+				else  // 'seg' is negative
+				{	act_seg += seg .winding();
+					std::vector < std::pair < Manifold::Action, Cell > > &
+						bssr = built_seg [ seg .reverse() ];
+					for ( ito = bssr .begin(); ito != bssr .end(); ito++ )
+						if ( ito->first == act_seg )  {  segment_found = true;  break;  }
+					assert ( segment_found );
+					assert ( ito->second .exists() );
+					kept_ver = ito->second .tip();
+					ito->second .reverse() .core->add_to_mesh
+						( new_cll .boundary() .core, tag::do_not_bother );                   }  }
+			assert ( kept_ver .exists() );
+			new_cll .boundary() .closed_loop ( kept_ver );
+			new_cll .add_to_mesh ( result );
+		}	 // end of loop over actions
+	}  // end of loop over cells
+	} // just a block of code for hiding 'it'
+
+	return result;
+	
+} // end of unfold_common
+
+
+inline Mesh unfold_local ( const Mesh & that, const tag::OneGenerator &,
+               const tag::OverRegion &, const Function::Inequality::Set & constraints,
+               const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+               size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
+               bool fill_mapping                                                             )
+
+// if last argument is true,
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'that' mesh together with a winding (action)
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+
+	// here, the action group has two generators
+	assert ( manif_q->actions.size() == 1 );
+	assert ( manif_q->winding_nbs.size() == 1 );
+	Manifold::Action g = manif_q->actions[0];
+
+	// we begin by unfolding the vertices
+	Cell shadow ( tag::vertex );
+	std::vector < double > coords_base, coords_tip;
+
+	// build new vertices within the given region
+	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_ver;
+	assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+	Mesh::Iterator it = that .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell ver = *it;
+		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::iterator, bool > itbv =
+		built_ver .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+		  ( ver, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+		assert ( itbv .second );
+		short int iii = 0;  // is 0 at the first passage, will be 1 at the second passage
+		for ( short int dir = -1; dir < 2; dir += 2 )  // dir will be -1 and 1
+		{	size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
+			short int ii = iii;
+			iii++;  // iii was 0 at the first passage, will be 1 at the second passage
+			while ( true )
+			{	bool successful_round = false;
+				Manifold::Action a = ii*g;
+				std::vector < double > coords_ver = coords_q ( ver, tag::winding, a );
+				coords_Eu ( shadow ) = coords_ver;
+				if ( constraints .on_cell ( shadow ) )
+				{	successful_round = true;
+					Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
+					if ( fill_mapping )
+					mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
+					    ( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+					itbv .first->second .push_back
+						( std::pair < Manifold::Action, Cell > ( a, new_ver ) );         }
+				if ( successful_round )
+				{	first_unsuccessful_tries = 0;
+					last_unsuccessful_tries = 0;   }
+				else  // either we have not started yet, or we are approaching the end
+				{	if ( first_unsuccessful_tries > 0 )  // not started yet
+					{	first_unsuccessful_tries++;
+						if ( first_unsuccessful_tries > 50 ) break;  }
+					else  // approaching end
+					{	last_unsuccessful_tries++;
+						if ( last_unsuccessful_tries > 10 ) break;   }   }
+				ii += dir;                                                          }  }  }
+	
+	// the 'mapping' may contain vertices not actually used
+	// (some segments may have never been used) but we leave it like this
+
+	Mesh result = unfold_common ( that, built_ver, tag::over_region, constraints );
+
+	mani_Eu .set_as_working_manifold();
+
+	return result;
+	
+} // end of  unfold_local  with tag::one_generator
+
+
+inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
+               const tag::OverRegion &, const Function::Inequality::Set & constraints,
+               const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+               size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
+               bool fill_mapping                                                             )
+	
+// if last argument is true,
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'that' mesh together with a winding (action)
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+	Function coords_q = space.coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu.coordinates();
+	assert ( coords_Eu.nb_of_components() == 2 );
+
+	// here, the action group has two generators
+	assert ( manif_q->actions.size() == 2 );
+	assert ( manif_q->winding_nbs.size() == 2 );
+	Manifold::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
+
+	std::vector < std::vector < short int > > directions
+		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
+	// and perhaps in other places
+
+	// we begin by unfolding the vertices
+	Cell shadow ( tag::vertex );
+	std::vector < double > coords_base, coords_tip;
+
+	// build new vertices within the given region
+	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_ver;
+	assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+	Mesh::Iterator it = that .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell ver = *it;
+		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::iterator, bool > itbv =
+		built_ver .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+		  ( ver, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+		assert ( itbv .second );
+		// we describe a sort of spiral
+		// if the first tries are out of the region, we give up after 50 unsuccsessful rounds
+		// at the end, we stop after 10 unsuccessful rounds
+		size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
+		size_t size_of_round = 0;
+		short int ii = 0, jj = 0;
+		while ( true )
+		{	size_of_round++;
+			bool successful_round = false;
+			for ( size_t d = 0; d < 4; d++ )
+			{	if ( d == 2 ) size_of_round++;
+				for ( size_t i = 0; i < size_of_round; i++ )
+				{	Manifold::Action a = ii*g1 + jj*g2;
+					std::vector < double > coords_ver = coords_q ( ver, tag::winding, a );
+					coords_Eu ( shadow ) = coords_ver;
+					if ( constraints .on_cell ( shadow ) )
+					{	successful_round = true;
+						Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
+						if ( fill_mapping )
+						mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
+						    ( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+						itbv .first->second .push_back
+							( std::pair < Manifold::Action, Cell > ( a, new_ver ) );         }  
+					ii += directions[d][0];
+					jj += directions[d][1];                                                   }  }
+			if ( successful_round )
+			{	first_unsuccessful_tries = 0;
+				last_unsuccessful_tries = 0;   }
+			else  // either we have not started yet, or we are approaching the end
+			{	if ( first_unsuccessful_tries > 0 )  // not started yet
+				{	first_unsuccessful_tries++;
+					if ( first_unsuccessful_tries > 50 ) goto give_up;  }
+				else  // approaching end
+				{	last_unsuccessful_tries++;
+					if ( last_unsuccessful_tries > 10 ) goto give_up;   }   }
+		}  // while true
+	give_up: ;  // next vertex, please
+	}  // end of loop over vertices
+
+	// the 'mapping' may contain vertices not actually used
+	// (some segments may have never been used) but we leave it like this
+
+	Mesh result = unfold_common ( that, built_ver, tag::over_region, constraints );
+
+	mani_Eu .set_as_working_manifold();
+
+	return result;
+	
+} // end of  unfold_local  with tag::two_generators
+
+
+inline Mesh unfold_local ( const Mesh & that,
+               const tag::OverRegion &, const Function::Inequality::Set & constraints,
+               const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+               size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
+               bool fill_mapping                                                             )
+	
+// if last argument is true,
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'that' mesh together with a winding (action)
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	assert ( manif_q );
+
+	// the action group may have one or two generators
+	size_t n = manif_q->actions .size();
+	assert ( n == manif_q->winding_nbs .size() );
+
+	if ( n == 1 )
+	return unfold_local ( that, tag::one_generator, tag::over_region, constraints,
+	                tag::return_map_between, tag::cells_of_dim, 0, mapping, fill_mapping  );
+	
+	assert ( n == 2 );
+	return unfold_local ( that, tag::two_generators, tag::over_region, constraints,
+	                tag::return_map_between, tag::cells_of_dim, 0, mapping, fill_mapping  );
+
+} // end of unfold_local
+
+} // end of anonymous namespace
+
+//----------------------------------------------------------------------------------//
+
+
+Mesh Mesh::unfold ( const tag::OverRegion &, const Function::Inequality::Set & constraints,
+                    const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+                    size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping )
+const
+	
+// take a mesh and unfold it over a given region of the plane
+// so we can export the resulting mesh in msh format
+
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'this' mesh together with a winding (action)
+	
+{ assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+
+	return unfold_local ( *this, tag::over_region, constraints,
+	           tag::return_map_between, tag::cells_of_dim, 0, mapping, true );
+	// last argument true means fill 'mapping'
+	
+} // end of Mesh::unfold
+
+
+Mesh Mesh::unfold ( const tag::OverRegion &, const Function::Inequality::Set & constraints )
+const
+	
+// take a mesh and unfold it over a given region of the plane
+// so we can export the resulting mesh in msh format
+
+{	std::map < Cell, std::pair < Cell, Manifold::Action > > mapping;
+
+	return unfold_local ( *this, tag::over_region, constraints,
+	             tag::return_map_between, tag::cells_of_dim, 0, mapping, false  );
+	// last argument false means do not bother with 'mapping'
+	
+} // end of Mesh::unfold
+
+
+Mesh Mesh::unfold ( const std::vector < tag::Util::Action > &,
+	                  const tag::OverRegion &, const Function::Inequality::Set & constraints,
+                    const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+                    size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping )
+const
+	
+// take a mesh and unfold it over a given region of the plane
+// so we can export the resulting mesh in msh format
+
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'this' mesh together with a winding (action)
+	
+{ assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+
+	assert ( false );  // not yet implemented
+	
+	return unfold_local ( *this, tag::over_region, constraints,
+	           tag::return_map_between, tag::cells_of_dim, 0, mapping, true );
+	// last argument true means fill 'mapping'
+	
+} // end of Mesh::unfold
+
+
+Mesh Mesh::unfold ( const std::vector < tag::Util::Action > &,
+	                  const tag::OverRegion &, const Function::Inequality::Set & constraints )
+const
+	
+// take a mesh and unfold it over a given region of the plane
+// so we can export the resulting mesh in msh format
+
+{	std::map < Cell, std::pair < Cell, Manifold::Action > > mapping;
+
+	assert ( false );  // not yet implemented
+	
+	return unfold_local ( *this, tag::over_region, constraints,
+	             tag::return_map_between, tag::cells_of_dim, 0, mapping, false  );
+	// last argument false means do not bother with 'mapping'
+	
+} // end of Mesh::unfold
+
+//----------------------------------------------------------------------------------//
 
 
 size_t & Cell::Numbering::Map::operator[] ( const Cell p )  // virtual from Cell::Numbering

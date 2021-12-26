@@ -1,5 +1,5 @@
 
-//   mesh.h  2021.12.20
+//   mesh.h  2021.12.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1008,12 +1008,14 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	  const tag::UseExistingVertices &                                                )
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::use_existing_vertices );  }
 
-	inline Mesh wrap ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
-	            const tag::UseExistingVertices &,
-									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-										size_t dim, std::map < Cell, Cell > & m                 )
-	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::use_existing_vertices, tag::return_map_between,
-												tag::cells_of_dim, dim, m  );  }
+	inline Mesh wrap ( const tag::Identify &, const Mesh & msh1,
+	                   const tag::With &, const Mesh & msh2,
+	                   const tag::UseExistingVertices &,
+	                   const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	                   size_t dim, std::map < Cell, Cell > & m                 )
+	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
+		                    tag::use_existing_vertices, tag::return_map_between,
+	                      tag::cells_of_dim, dim, m                           );  }
 
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
@@ -1099,6 +1101,95 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
 		                    tag::identify, msh3, tag::with, msh4,
 		                    tag::identify, msh5, tag::with, msh6, tag::use_existing_vertices );  }
+
+	// 'unfold' does the opposite : takes a mesh and unfolds it 
+	// over a given region of the plane so we can export the resulting mesh in msh format
+	
+	Mesh unfold ( const tag::OverRegion &, const tag::Util::InequalitySet & constraints,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+
+	Mesh unfold ( const std::vector < tag::Util::Action > &,
+	              const tag::OverRegion &, const tag::Util::InequalitySet & constraints,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+	
+	Mesh unfold ( const tag::OverRegion &, const tag::Util::InequalitySet & constraints ) const;
+
+	Mesh unfold ( const std::vector < tag::Util::Action > &,
+	              const tag::OverRegion &, const tag::Util::InequalitySet & constraints ) const;
+
+	// inline versions of unfold defined in function.h
+	
+	inline Mesh unfold ( const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2           ) const;
+	inline Mesh unfold ( const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3           ) const;
+	inline Mesh unfold ( const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3,
+	                     const tag::Util::InequalitySet & c4           ) const;
+	inline Mesh unfold ( const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+	inline Mesh unfold ( const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+	inline Mesh unfold ( const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3,
+	                     const tag::Util::InequalitySet & c4,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+
+	inline Mesh unfold ( const std::vector < tag::Util::Action > &, const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2           ) const;
+	inline Mesh unfold ( const std::vector < tag::Util::Action > &, const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3           ) const;
+	inline Mesh unfold ( const std::vector < tag::Util::Action > &, const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3,
+	                     const tag::Util::InequalitySet & c4           ) const;
+	inline Mesh unfold ( const std::vector < tag::Util::Action > &, const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+	inline Mesh unfold ( const std::vector < tag::Util::Action > &, const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
+	inline Mesh unfold ( const std::vector < tag::Util::Action > &, const tag::OverRegion &,
+	                     const tag::Util::InequalitySet & c1,
+	                     const tag::Util::InequalitySet & c2,
+	                     const tag::Util::InequalitySet & c3,
+	                     const tag::Util::InequalitySet & c4,
+	              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+	              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
+	const;
 
 	// we are still in class Mesh
 
@@ -1775,7 +1866,6 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	// we are still in class Mesh
 	// methods draw_ps and export_msh defined in global.cpp
-	// inline versions of draw_ps defined in function.h
 
 	void draw_ps ( std::string file_name );
 	void draw_ps ( std::string file_name,
@@ -1790,6 +1880,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::TwoGenerators &, const tag::OverRegion &,
 	               const tag::Util::InequalitySet & constraints                             );
+
+	// inline versions of draw_ps defined in function.h
+
 	inline void draw_ps ( std::string file_name,
 	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,

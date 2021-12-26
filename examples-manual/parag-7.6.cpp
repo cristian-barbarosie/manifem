@@ -45,10 +45,13 @@ int main ( )
 	for ( itv = vec .begin(); itv != vec .end(); itv++ )
 	{	Cell sq = *itv;  sq .remove_from_mesh ( torus );  }
 
-	// it makes no sense to export 'torus' in msh format
 	// we can draw an unfolded mesh
 	torus .draw_ps ("torus.eps", tag::unfold,
 	                 tag::over_region, x*x + 2.*y*y < 3.5 );
-
 	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;
+
+	// or we can build a new, unfolded mesh and subsequently export as msh file
+	Mesh unfolded = torus .unfold ( tag::over_region, x*x + 2.*y*y < 3.5 );
+	unfolded .export_msh ("torus.msh");
+	std::cout << "produced file torus.msh" << std::endl;
 }

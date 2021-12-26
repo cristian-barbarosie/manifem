@@ -46,10 +46,10 @@ static-lib: $(manifem_objects)
 	ar cr libmaniFEM.a $^
 
 clean:
-	rm -f *.o manifem-exe-* libmaniFEM.a
+	rm -f *.o manifem-exe-*
 
 clean-all: clean
-	rm -f *.eps *.msh
+	rm -f *.eps *.msh libmaniFEM.a
 
 .SECONDARY:
 
