@@ -3036,7 +3036,7 @@ inline Function::TakenOnWindingCell Function::operator()
 inline void Mesh::draw_ps ( std::string file_name,
          const tag::Unfold &, const std::vector < Function::Action > & v,
          const tag::OverRegion &, const tag::Util::InequalitySet & c1,
-                                  const tag::Util::InequalitySet & c2                  )
+                                  const tag::Util::InequalitySet & c2    ) const
 {	this->draw_ps ( file_name, tag::unfold, v, tag::over_region, c1 && c2 );  }
 
 //----------------------------------------------------------------------------------//
@@ -3045,7 +3045,7 @@ inline void Mesh::draw_ps ( std::string file_name,
          const tag::Unfold &, const std::vector < Function::Action > & v,
          const tag::OverRegion &, const tag::Util::InequalitySet & c1,
                                   const tag::Util::InequalitySet & c2,
-                                  const tag::Util::InequalitySet & c3                  )
+                                  const tag::Util::InequalitySet & c3     ) const
 {	this->draw_ps ( file_name, tag::unfold, v, tag::over_region, c1 && c2 && c3 );  }
 
 //----------------------------------------------------------------------------------//
@@ -3055,14 +3055,14 @@ inline void Mesh::draw_ps ( std::string file_name,
          const tag::OverRegion &, const tag::Util::InequalitySet & c1,
                                   const tag::Util::InequalitySet & c2,
                                   const tag::Util::InequalitySet & c3,
-                                  const tag::Util::InequalitySet & c4                  )
+                                  const tag::Util::InequalitySet & c4     ) const
 {	this->draw_ps ( file_name, tag::unfold, v, tag::over_region, c1 && c2 && c3 && c4 );  }
 
 														
 inline void Mesh::draw_ps ( std::string file_name,
                             const tag::Unfold &, const tag::OverRegion &,
                             const tag::Util::InequalitySet & c1,
-                            const tag::Util::InequalitySet & c2           )
+                            const tag::Util::InequalitySet & c2           ) const
 {	this->draw_ps ( file_name, tag::unfold, tag::over_region, c1 && c2 );  }
 
 
@@ -3070,7 +3070,7 @@ inline void Mesh::draw_ps ( std::string file_name,
                             const tag::Unfold &, const tag::OverRegion &,
                             const tag::Util::InequalitySet & c1,
                             const tag::Util::InequalitySet & c2,
-                            const tag::Util::InequalitySet & c3           )
+                            const tag::Util::InequalitySet & c3           ) const
 {	this->draw_ps ( file_name, tag::unfold, tag::over_region, c1 && c2 && c3 );  }
 
 
@@ -3079,7 +3079,7 @@ inline void Mesh::draw_ps ( std::string file_name,
                             const tag::Util::InequalitySet & c1,
                             const tag::Util::InequalitySet & c2,
                             const tag::Util::InequalitySet & c3,
-                            const tag::Util::InequalitySet & c4           )
+                            const tag::Util::InequalitySet & c4           ) const
 {	this->draw_ps ( file_name, tag::unfold, tag::over_region, c1 && c2 && c3 && c4 );  }
 
 //----------------------------------------------------------------------------------//
@@ -3087,29 +3087,28 @@ inline void Mesh::draw_ps ( std::string file_name,
 
 inline Mesh Mesh::unfold ( const tag::OverRegion &,
                            const tag::Util::InequalitySet & c1,
-                           const tag::Util::InequalitySet & c2           ) const
+                           const tag::Util::InequalitySet & c2 ) const
 {	return this->unfold ( tag::over_region, c1 && c2 );  }
 
 inline Mesh Mesh::unfold ( const tag::OverRegion &,
                            const tag::Util::InequalitySet & c1,
                            const tag::Util::InequalitySet & c2,
-                           const tag::Util::InequalitySet & c3           ) const
+                           const tag::Util::InequalitySet & c3 ) const
 {	return this->unfold ( tag::over_region, c1 && c2 && c3 );  }
 
 inline Mesh Mesh::unfold ( const tag::OverRegion &,
                            const tag::Util::InequalitySet & c1,
                            const tag::Util::InequalitySet & c2,
                            const tag::Util::InequalitySet & c3,
-                           const tag::Util::InequalitySet & c4           ) const
+                           const tag::Util::InequalitySet & c4 ) const
 {	return this->unfold ( tag::over_region, c1 && c2 && c3 && c4 );  }
 
 
 inline Mesh Mesh::unfold ( const tag::OverRegion &,
                            const tag::Util::InequalitySet & c1,
                            const tag::Util::InequalitySet & c2,
-              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
-const
+         const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+         size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping ) const
 {	return this->unfold ( tag::over_region, c1 && c2,
 	                      tag::return_map_between, tag::cells_of_dim, dim, mapping );  }
 
@@ -3117,9 +3116,8 @@ inline Mesh Mesh::unfold ( const tag::OverRegion &,
                            const tag::Util::InequalitySet & c1,
                            const tag::Util::InequalitySet & c2,
                            const tag::Util::InequalitySet & c3,
-              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
-const
+         const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+         size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping ) const
 {	return this->unfold ( tag::over_region, c1 && c2 && c3,
 	                      tag::return_map_between, tag::cells_of_dim, dim, mapping );  }
 
@@ -3128,9 +3126,8 @@ inline Mesh Mesh::unfold ( const tag::OverRegion &,
                            const tag::Util::InequalitySet & c2,
                            const tag::Util::InequalitySet & c3,
                            const tag::Util::InequalitySet & c4,
-              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
-const
+         const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+         size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping ) const
 {	return this->unfold ( tag::over_region, c1 && c2 && c3 && c4,
 	                      tag::return_map_between, tag::cells_of_dim, dim, mapping );  }
 
@@ -3156,9 +3153,8 @@ inline Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa, const t
 inline Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa, const tag::OverRegion &,
                            const tag::Util::InequalitySet & c1,
                            const tag::Util::InequalitySet & c2,
-              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
-const
+         const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+         size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping ) const
 {	return this->unfold ( aa, tag::over_region, c1 && c2,
 	                      tag::return_map_between, tag::cells_of_dim, dim, mapping );  }
 
@@ -3166,9 +3162,8 @@ inline Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa, const t
                            const tag::Util::InequalitySet & c1,
                            const tag::Util::InequalitySet & c2,
                            const tag::Util::InequalitySet & c3,
-              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
-const
+         const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+         size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping ) const
 {	return this->unfold ( aa, tag::over_region, c1 && c2 && c3,
 	                      tag::return_map_between, tag::cells_of_dim, dim, mapping );  }
 
@@ -3177,9 +3172,8 @@ inline Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa, const t
                            const tag::Util::InequalitySet & c2,
                            const tag::Util::InequalitySet & c3,
                            const tag::Util::InequalitySet & c4,
-              const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-              size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping )
-const
+         const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+         size_t dim, std::map < Cell, std::pair < Cell, tag::Util::Action > > & mapping ) const
 {	return this->unfold ( aa, tag::over_region, c1 && c2 && c3 && c4,
 	                      tag::return_map_between, tag::cells_of_dim, dim, mapping );  }
 

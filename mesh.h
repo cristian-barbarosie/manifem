@@ -1865,58 +1865,62 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	  const tag::Around &, const Cell &                    ) const;
 
 	// we are still in class Mesh
-	// methods draw_ps and export_msh defined in global.cpp
+	// methods  draw_ps  defined in global.cpp
 
-	void draw_ps ( std::string file_name );
+	void draw_ps ( std::string file_name ) const;
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const std::vector < tag::Util::Action > &,
-	               const tag::OverRegion &, const tag::Util::InequalitySet & constraints );
+	               const tag::OverRegion &, const tag::Util::InequalitySet & constraints ) const;
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::OverRegion &,
-	               const tag::Util::InequalitySet & constraints );
+	               const tag::Util::InequalitySet & constraints ) const;
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::OneGenerator &, const tag::OverRegion &,
-	               const tag::Util::InequalitySet & constraints                            );
+	               const tag::Util::InequalitySet & constraints                            ) const;
 	void draw_ps ( std::string file_name,
 	               const tag::Unfold &, const tag::TwoGenerators &, const tag::OverRegion &,
-	               const tag::Util::InequalitySet & constraints                             );
+	               const tag::Util::InequalitySet & constraints                            ) const;
 
 	// inline versions of draw_ps defined in function.h
 
 	inline void draw_ps ( std::string file_name,
 	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
-	                                    const tag::Util::InequalitySet & c2   );
+	                                    const tag::Util::InequalitySet & c2   ) const;
 	inline void draw_ps ( std::string file_name,
 	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2,
-	                                    const tag::Util::InequalitySet & c3    );
+	                                    const tag::Util::InequalitySet & c3    ) const;
 	inline void draw_ps ( std::string file_name,
 	           const tag::Unfold &, const std::vector < tag::Util::Action > &,
 	           const tag::OverRegion &, const tag::Util::InequalitySet & c1,
 	                                    const tag::Util::InequalitySet & c2,
 	                                    const tag::Util::InequalitySet & c3,
-	                                    const tag::Util::InequalitySet & c4    );
+	                                    const tag::Util::InequalitySet & c4    ) const;
 	inline void draw_ps ( std::string file_name,
 	                      const tag::Unfold &, const tag::OverRegion &,
 	                      const tag::Util::InequalitySet & c1,
-	                      const tag::Util::InequalitySet & c2           );
+	                      const tag::Util::InequalitySet & c2           ) const;
 	inline void draw_ps ( std::string file_name,
 	                      const tag::Unfold &, const tag::OverRegion &,
 	                      const tag::Util::InequalitySet & c1,
 	                      const tag::Util::InequalitySet & c2,
-	                      const tag::Util::InequalitySet & c3           );
+	                      const tag::Util::InequalitySet & c3           ) const;
 	inline void draw_ps ( std::string file_name,
 	                      const tag::Unfold &, const tag::OverRegion &,
 	                      const tag::Util::InequalitySet & c1,
 	                      const tag::Util::InequalitySet & c2,
 	                      const tag::Util::InequalitySet & c3,
-	                      const tag::Util::InequalitySet & c4           );
-	void draw_ps_3d ( std::string file_name );
-	void export_msh ( std::string f, Cell::Numbering & );
-	void export_msh ( std::string f, std::map < Cell, size_t > & );
-	void export_msh ( std::string f );
+	                      const tag::Util::InequalitySet & c4           ) const;
+	void draw_ps_3d ( std::string file_name ) const;
+	
+	// we are still in class Mesh
+	// methods  export_msh  defined in global.cpp
+
+	void export_msh ( std::string f, Cell::Numbering & ) const;
+	void export_msh ( std::string f, std::map < Cell, size_t > & ) const;
+	void export_msh ( std::string f ) const;
 	
 	// several versions of 'build' below are defined in global.cpp
 

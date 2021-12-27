@@ -33,13 +33,20 @@ int main ( )
 
 	Mesh sector ( tag::rectangle, AA, AB, BB, AB.reverse(), tag::winding );
 
-	// it makes no sense to export 'torus' in msh format
-	// but we can draw an unfolded mesh
+	// we can draw an unfolded mesh
 	sector .draw_ps ("sector.eps", tag::unfold,
 	                  { -2*g, -g, 0, g, 2*g, 3*g, 4*g, 5*g, 6*g,
 	                    7*g, 8*g, 9*g, 10*g, 11*g, 12*g, 13*g,
 	                    14*g, 15*g, 16*g, 17*g, 18*g, 19*g      },
 	                  tag::over_region, -2.1 < x < 2.3, -0.6 < y < 2.1 );
-
 	std::cout << "produced file sector.eps - please edit before viewing" << std::endl;
+
+	// or we can build a new, unfolded mesh and subsequently export as msh file
+	Mesh unf = sector .unfold ( { -2*g, -g, 0, g, 2*g, 3*g, 4*g, 5*g, 6*g,
+	                              7*g, 8*g, 9*g, 10*g, 11*g, 12*g, 13*g,
+	                              14*g, 15*g, 16*g, 17*g, 18*g, 19*g      },
+	                            tag::over_region, -2.1 < x < 2.3, -0.6 < y < 2.1 );
+	unf .export_msh ("sector.msh");
+	std::cout << "produced file sector.msh" << std::endl;
+
 }

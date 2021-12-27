@@ -2630,7 +2630,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 // gs -q -dNOPAUSE -dBATCH -sDEVICE=png16 -sOUTPUTFILE=out.png in.ps
 
 
-void Mesh::draw_ps ( std::string file_name )
+void Mesh::draw_ps ( std::string file_name ) const
 	
 {	// we use the current manifold
 	Manifold space = Manifold::working;
@@ -2711,7 +2711,7 @@ void Mesh::draw_ps ( std::string file_name )
 
 
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &,
-                     const tag::OverRegion &, const Function::Inequality::Set & constraints )
+         const tag::OverRegion &, const Function::Inequality::Set & constraints ) const
 
 // we draw several translations (or, more generally, transformations)
 // of each segment, within the region described by the constraints
@@ -2738,7 +2738,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &,
 
 
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneGenerator &,
-                     const tag::OverRegion &, const Function::Inequality::Set & constraints )
+               const tag::OverRegion &, const Function::Inequality::Set & constraints ) const
 
 // we draw several translations (or, more generally, transformations)
 // of each segment, within the region described by the constraints
@@ -2876,7 +2876,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneG
 
 
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoGenerators &,
-                     const tag::OverRegion &, const Function::Inequality::Set & constraints )
+              const tag::OverRegion &, const Function::Inequality::Set & constraints ) const
 
 // we draw several translations (or, more generally, transformations)
 // of each segment, within the region described by the constraints
@@ -3041,21 +3041,20 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
 void Mesh::draw_ps ( std::string file_name,
          const tag::Unfold &, const std::vector < Manifold::Action > & v,
-         const tag::OverRegion &, const Function::Inequality::Set & constraints )
+         const tag::OverRegion &, const Function::Inequality::Set & constraints ) const
 
 // we draw several translations (or, more generally, transformations)
 // of each segment, within the region described by the constraints
 	
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
+	assert ( space .exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	assert ( manif_q );
-	Function coords_q = space.coordinates();
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
-	Function x = coords_Eu[0],  y = coords_Eu[1];
+	Function coords_Eu = mani_Eu .coordinates();
+	assert ( coords_Eu .nb_of_components() == 2 );
+	Function x = coords_Eu [0], y = coords_Eu [1];
 
 	std::ofstream file_ps ( file_name );
 	file_ps << "please copy here the preamble from the end of file - after %EOF " << std::endl;
@@ -3070,21 +3069,21 @@ void Mesh::draw_ps ( std::string file_name,
 	std::vector < double > coords_base, coords_tip;
 
 	Mesh::Iterator it = this->iterator ( tag::over_segments );
-	for ( it.reset() ; it.in_range(); it++ )
+	for ( it .reset() ; it .in_range(); it++ )
 	{	Cell seg = *it;
-		Cell base = seg.base().reverse();
-		Cell tip  = seg.tip();
+		Cell base = seg .base() .reverse();
+		Cell tip  = seg .tip();
 		for ( std::vector < Manifold::Action > ::const_iterator
-						it_v = v.begin(); it_v != v.end(); it_v++                     )
+						it_v = v .begin(); it_v != v .end(); it_v++    )
 		{	Manifold::Action a = *it_v;
 			bool touches_region = false;
 			coords_base = coords_q ( base, tag::winding, a );
 			coords_Eu ( shadow ) = coords_base;
-			touches_region = touches_region or constraints.on_cell ( shadow );
-			a += seg.winding();
+			touches_region = touches_region or constraints .on_cell ( shadow );
+			a += seg .winding();
 			coords_tip = coords_q ( tip, tag::winding, a );
 			coords_Eu ( shadow ) = coords_tip;
-			touches_region = touches_region or constraints.on_cell ( shadow );
+			touches_region = touches_region or constraints .on_cell ( shadow );
 			if ( touches_region )
 			{	double xx = coords_base[0], yy = coords_base[1];
 				file_ps << xx << " " << yy << " moveto" << std::endl;
@@ -3172,7 +3171,7 @@ void Mesh::draw_ps ( std::string file_name,
 //  method below relies on some postscript macros for (very) rudimentary 3d drawings
 //  available at https://github.com/cristian-barbarosie/manifem/blob/main/3d.ps
 
-void Mesh::draw_ps_3d ( std::string file_name )
+void Mesh::draw_ps_3d ( std::string file_name ) const
 	
 {	// we use the current manifold
 	Manifold space = Manifold::working;
@@ -3275,7 +3274,7 @@ void Mesh::draw_ps_3d ( std::string file_name )
 //----------------------------------------------------------------------------------//
 
 
-void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
+void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering ) const
 
 // 'numb_map' should begin at 0
 // we add 1 to each number because gmsh seems to prefer numbers to begin at 1
@@ -3422,7 +3421,7 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering )
 } // end of Mesh::export_msh
 
 
-void Mesh::export_msh ( std::string f, std::map < Cell, size_t > & numb_map )
+void Mesh::export_msh ( std::string f, std::map < Cell, size_t > & numb_map ) const
 	
 // 'numb_map' should begin at 0
 // later, 'this->export_msh ( f, numbering )' will add 1 to each number
@@ -3434,7 +3433,7 @@ void Mesh::export_msh ( std::string f, std::map < Cell, size_t > & numb_map )
 } // end of Mesh::export_msh
 
 
-void Mesh::export_msh ( std::string f )
+void Mesh::export_msh ( std::string f ) const
 	
 // the numbering of vertices is produced on-the-fly
 
@@ -3595,7 +3594,6 @@ inline Mesh unfold_local ( const Mesh & that, const tag::OneGenerator &,
 	assert ( space.exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
 		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	assert ( manif_q );
 	Function coords_q = space.coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
 	Function coords_Eu = mani_Eu.coordinates();
@@ -3677,7 +3675,6 @@ inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
 	assert ( space.exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
 		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	assert ( manif_q );
 	Function coords_q = space.coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
 	Function coords_Eu = mani_Eu.coordinates();
@@ -3789,6 +3786,57 @@ inline Mesh unfold_local ( const Mesh & that,
 
 } // end of unfold_local
 
+
+inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Action > & aa,
+               const tag::OverRegion &, const Function::Inequality::Set & constraints,
+               const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+               size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
+               bool fill_mapping                                                             )
+	
+// if last argument is true,
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'that' mesh together with a winding (action)
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space .coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu .coordinates();
+
+	Cell shadow ( tag::vertex );
+	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_ver;
+	assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+	Mesh::Iterator it = that .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell ver = *it;
+		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::iterator, bool > itbv =
+		built_ver .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+		  ( ver, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+		assert ( itbv .second );
+		for ( std::vector < Manifold::Action > ::const_iterator
+						it_aa = aa .begin(); it_aa != aa .end(); it_aa ++ )
+		{	Manifold::Action a = *it_aa;
+			std::vector < double > coords_ver = coords_q ( ver, tag::winding, a );
+			coords_Eu ( shadow ) = coords_ver;
+			if ( constraints .on_cell ( shadow ) )
+			{	Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
+				if ( fill_mapping )
+				mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
+													( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+				itbv .first->second .push_back
+					( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                        }  }  }
+	
+	Mesh result = unfold_common ( that, built_ver, tag::over_region, constraints );
+
+	mani_Eu .set_as_working_manifold();
+
+	return result;
+
+} // end of unfold_local
+
 } // end of anonymous namespace
 
 //----------------------------------------------------------------------------------//
@@ -3829,7 +3877,7 @@ const
 } // end of Mesh::unfold
 
 
-Mesh Mesh::unfold ( const std::vector < tag::Util::Action > &,
+Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
 	                  const tag::OverRegion &, const Function::Inequality::Set & constraints,
                     const tag::ReturnMapBetween &, const tag::CellsOfDim &,
                     size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping )
@@ -3843,16 +3891,14 @@ const
 	
 { assert ( dim == 0 );  // 'mapping' required from vertices to vertices
 
-	assert ( false );  // not yet implemented
-	
-	return unfold_local ( *this, tag::over_region, constraints,
+	return unfold_local ( *this, aa, tag::over_region, constraints,
 	           tag::return_map_between, tag::cells_of_dim, 0, mapping, true );
 	// last argument true means fill 'mapping'
 	
 } // end of Mesh::unfold
 
 
-Mesh Mesh::unfold ( const std::vector < tag::Util::Action > &,
+Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
 	                  const tag::OverRegion &, const Function::Inequality::Set & constraints )
 const
 	
@@ -3861,9 +3907,7 @@ const
 
 {	std::map < Cell, std::pair < Cell, Manifold::Action > > mapping;
 
-	assert ( false );  // not yet implemented
-	
-	return unfold_local ( *this, tag::over_region, constraints,
+	return unfold_local ( *this, aa, tag::over_region, constraints,
 	             tag::return_map_between, tag::cells_of_dim, 0, mapping, false  );
 	// last argument false means do not bother with 'mapping'
 	
