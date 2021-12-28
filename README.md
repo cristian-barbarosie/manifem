@@ -17,8 +17,11 @@ However, maniFEM can be used at a basic level by people with no deep knowledge o
 Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
 [FEniCS/Dolphin](https://fenicsproject.org/), [deal.II](https://dealii.org/),
 [PETSc-FEM](https://cimec.org.ar/foswiki/Main/Cimec/PETScFEM)
+Strong and weak points of maniFEM are presented in the
+[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
+right after the introduction.
 
-In its current version, release 21.11, maniFEM works well for mesh generation,
+In its current version, release 21.12, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
@@ -40,7 +43,7 @@ ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@g
 see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
 
 To learn maniFEM, you should read the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.11).
+[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.12).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.

@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.24
+// finite-elem.cpp 2021.12.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -806,8 +806,8 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on
 	it++;  assert ( it .in_range() );  Cell Q = *it;
 	Cell QR = cll .boundary() .cell_in_front_of ( Q );
 	it++;  assert ( it .in_range() );  Cell R = *it;
-	#ifndef NDEBUG
 	Cell RP = cll .boundary() .cell_in_front_of ( R );
+	#ifndef NDEBUG
 	it++;  assert ( not it .in_range() );
 	#endif
 
@@ -969,8 +969,8 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 	it++;  assert ( it .in_range() );  Cell Q = *it;
 	Cell QR = cll .boundary() .cell_in_front_of ( Q );
 	it++;  assert ( it .in_range() );  Cell R = *it;
-	#ifndef NDEBUG
 	Cell RP = cll .boundary() .cell_in_front_of ( R );
+	#ifndef NDEBUG
 	it++;  assert ( not it .in_range() );
 	#endif
 
@@ -1265,7 +1265,7 @@ void dock_on_hand_quadrangle_Q1
 
 		case 3 :  // { int psi .deriv(x) }
 		
-			// computations inspired in UFL and FFC
+			// computations inspired in UFL and FFC, further optimized by hand
 			// https://fenics.readthedocs.io/projects/ufl/en/latest/
 			// https://fenics.readthedocs.io/projects/ffc/en/latest/
 
@@ -1310,7 +1310,7 @@ void dock_on_hand_quadrangle_Q1
 	
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
 		
-		// computations inspired in UFL and FFC
+		// computations inspired in UFL and FFC, further optimized by hand
 		// https://fenics.readthedocs.io/projects/ufl/en/latest/
 		// https://fenics.readthedocs.io/projects/ffc/en/latest/
 		// std::cout << "case 4 ";
@@ -5102,7 +5102,8 @@ std::string FiniteElement::WithMaster::info ( )
 
 std::string FiniteElement::StandAlone::TypeOne::Triangle::info ( )
 {	if ( this->cas == 0 ) return this->info_string;
-	return this->info_string + "arithmetic expressions based on output of FFC\n";  }
+	return this->info_string +
+		"arithmetic expressions based on output of FFC, further optimized by hand\n";  }
 
 
 std::string FiniteElement::StandAlone::TypeOne::Quadrangle::info ( )
@@ -5113,7 +5114,8 @@ std::string FiniteElement::StandAlone::TypeOne::Quadrangle::info ( )
 
 		case 3 :  // { int psi .deriv(x) }
 		case 4 :  // { int psi1 .deriv(x) * psi2 .deriv(y) }
-			return this->info_string + "arithmetic expressions based on output of FFC\n";
+			return this->info_string +
+				"arithmetic expressions based on output of FFC, further optimized by hand\n";
 
 		default : return this->info_string + "this case is not implemented yet\n";  }  }
 

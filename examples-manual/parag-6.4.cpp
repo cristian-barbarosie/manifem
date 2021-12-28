@@ -55,13 +55,16 @@ int main ()
 	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
 	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
 	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
-	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 15 );
-	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 15 );
-	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 15 );
-	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 15 );
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 10 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	size_t size_matrix = numbering.size();
+	std::cout << ABCD .number_of ( tag::vertices ) << " vertices" << std::endl;
+	std::cout << numbering .size() << " numbering" << std::endl;
+
+	size_t size_matrix = numbering .size();
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
 	Eigen::SparseMatrix <double> matrix_A ( size_matrix, size_matrix );
 	

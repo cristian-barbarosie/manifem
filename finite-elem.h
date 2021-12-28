@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.24
+// finite-elem.h 2021.12.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -602,8 +602,12 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 	// constructor
 
 	inline Segment ( Manifold m ) : FiniteElement::WithMaster ( m )
+	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Segment\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -650,8 +654,12 @@ class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster
 	// constructor
 
 	inline P1 ( Manifold m ) : FiniteElement::WithMaster ( m )
+	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -698,8 +706,12 @@ class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::
 	// constructor
 
 	inline Straight ( Manifold m ) : FiniteElement::WithMaster ( m )
-	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1::Straight\n";
+	#ifndef NDEBUG
+	{ this->info_string = "FiniteElement::WithMaster::Triangle::P2::Straight\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -750,8 +762,12 @@ class FiniteElement::WithMaster::Triangle::P2::Straight::Incremental
 	// constructor
 
 	inline Incremental ( Manifold m ) : FiniteElement::WithMaster ( m )
+	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Triangle::P2::Straight::Incremental\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -797,8 +813,12 @@ class FiniteElement::WithMaster::Triangle::P2::Curved : public FiniteElement::Wi
 	// constructor
 
 	inline Curved ( Manifold m ) : FiniteElement::WithMaster ( m )
-	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1\n";
+	#ifndef NDEBUG
+	{ this->info_string = "FiniteElement::WithMaster::Triangle::P2::Curved\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -844,8 +864,12 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 	// constructor
 
 	inline Quadrangle ( Manifold m ) : FiniteElement::WithMaster ( m )
+	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Quadrangle\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -1161,7 +1185,11 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	{ this->basis_numbering [ bf1.core ] = 0;
 		this->basis_numbering [ bf2.core ] = 1;
 		this->basis_numbering [ bf3.core ] = 2;
+	#ifndef NDEBUG
 		this->info_string = "FiniteElement::StandAlone::TypeOne::Triangle\n";  }
+	#else
+		                                                                       }
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -1221,7 +1249,11 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 		this->basis_numbering [ bf2.core ] = 1;
 		this->basis_numbering [ bf3.core ] = 2;
 		this->basis_numbering [ bf4.core ] = 3;
+	#ifndef NDEBUG
 		this->info_string = "FiniteElement::StandAlone::TypeOne::Quadrangle\n";  }
+	#else
+		                                                                         }
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -1278,7 +1310,11 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 
 	inline Parallelogram ( )
 	: FiniteElement::StandAlone::TypeOne::Quadrangle()
+	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::StandAlone::TypeOne::Parallelogram\n";  }
+	#else
+	{	}
+	#endif
 	
 	// two methods  dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );
@@ -1335,7 +1371,11 @@ class FiniteElement::StandAlone::TypeOne::Rectangle
 
 	inline Rectangle ( )
 	: FiniteElement::StandAlone::TypeOne::Parallelogram()
+	#ifndef NDEBUG
 	{	this->info_string = "FiniteElement::StandAlone::TypeOne::Rectangle\n";  }
+	#else
+	{	}
+	#endif
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll ) override;
@@ -1390,7 +1430,11 @@ class FiniteElement::StandAlone::TypeOne::Square
 
 	inline Square ( )
 	: FiniteElement::StandAlone::TypeOne::Rectangle()
+	#ifndef NDEBUG
 	{	this->info_string = "FiniteElement::StandAlone::TypeOne::Square\n";  }
+	#else
+	{	}
+	#endif
 	
 	// dock_on  virtual from FiniteElement::Core
 	void dock_on ( const Cell & cll );

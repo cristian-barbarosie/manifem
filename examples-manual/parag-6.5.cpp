@@ -108,8 +108,9 @@ int main ()
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
 			std::vector < double > result = fe .integrate 
 				( tag::pre_computed, tag::replace, bf1, tag::by, psiV, tag::replace, bf2, tag::by, psiW );
+			assert ( result .size() ) == 1;
 			matrix_A .coeffRef ( numbering[V], numbering[W] ) += result [0];
-		}  }  // end of both for loops
+		}  }  // end of for loops over vertices, end of for loop over cells
 	} // just a block of code 
 
 	// impose Dirichlet boundary conditions  u = xy
