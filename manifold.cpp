@@ -1,5 +1,5 @@
 
-// manifold.cpp 2021.11.13
+// manifold.cpp 2021.12.29
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
@@ -107,6 +107,75 @@ void Manifold::Quotient::set_coords ( const Function co )  // virtual from Manif
 {	Manifold::Quotient * m_q = tag::Util::assert_cast
 		< Manifold::Core*, Manifold::Quotient* > ( this );
 	m_q->coord_func = co;                                }
+
+//-----------------------------------------------------------------------------------------
+
+
+double Manifold::Euclid::measure ( ) const  // virtual from Manifold::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "Euclidian manifolds have infinite measure" << std::endl;
+	exit ( 1 );                                                            }
+
+
+double Manifold::Implicit::measure ( ) const  // virtual from Manifold::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "computing the measure of implicit manifolds is not implemented " << std::endl;
+	exit ( 1 );                                                                                  }
+
+
+double Manifold::Parametric::measure ( ) const  // virtual from Manifold::Core
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "computing the measure of parametric manifolds is not implemented " << std::endl;
+	exit ( 1 );                                                                                    }
+
+
+double Manifold::Quotient::measure ( ) const  // virtual from Manifold::Core
+// only significant for a circle or a torus (translations as generators)
+
+{	size_t nb_of_generators = this->actions .size();
+	Manifold base_manif = this->base_space;
+
+	if ( nb_of_generators == 1 )  // compute length
+	{	assert ( base_manif .coordinates() .nb_of_components() == 1 );
+		Function::ActionGenerator g1 = this->actions [0];
+		std::vector < double > v1 =
+			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
+			( g1 .transf, g1 .coords );
+		assert ( v1 .size() == 1 );
+		assert ( v1 [0] > 0. );
+		return v1 [0];                                                         }
+		
+	if ( nb_of_generators == 2 )  // compute area
+	{	assert ( base_manif .coordinates() .nb_of_components() == 2 );
+		Function::ActionGenerator g1 = this->actions [0];
+		Function::ActionGenerator g2 = this->actions [1];
+		std::vector < double > v1 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g1 .transf, g1 .coords );
+		assert ( v1 .size() == 2 );
+		std::vector < double > v2 =
+			Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+			( g2 .transf, g2 .coords );
+		assert ( v2 .size() == 2 );
+		const double area = v1[0]*v2[1] - v1[1]*v2[0];
+		assert ( area > 0. );
+		return area;                                                           }
+
+	if ( nb_of_generators == 2 )  // compute volume
+	{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+		          << __extension__ __PRETTY_FUNCTION__ << ": ";
+		std::cout << "computing the volume of a torus is not implemented " << std::endl;
+		exit ( 1 );                                                                     }
+
+	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "computing the measure of parametric manifolds is not implemented " << std::endl;
+	exit ( 1 );
+
+}  // end of  Manifold::Quotient::measure
 
 //-----------------------------------------------------------------------------------------
 
@@ -418,7 +487,7 @@ void Manifold::Euclid::pretty_interpolate ( const Cell & P,
 
 
 void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
-	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
+const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
 //  virtual from Manifold::Core
 
 // we could inline these, as interpolate_euclid, to gain speed	

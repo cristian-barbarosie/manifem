@@ -1,5 +1,5 @@
 
-// manifold.h 2021.11.13
+// manifold.h 2021.12.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -76,7 +76,7 @@ class Manifold
 	inline Manifold ( const tag::euclid &, const tag::OfDimension &, const size_t dim );
 
 	inline Manifold ( const tag::euclid &, const tag::OfDimension &, const size_t dim,
-                    const tag::DoNotSetAsWorking &                                   );
+                    const tag::DoNotSetAsWorking &                                  );
 
 	inline Manifold ( const tag::Implicit &, const Manifold &, const Function & );
 
@@ -112,6 +112,13 @@ class Manifold
 	// a non-existent manifold has null core
 	inline bool exists ( ) const { return core != nullptr; }
 
+	// measure of the entire manifold (lenght for 1D, area for 2D, volume for 3D)
+	// produces run-time error for Euclidian manifolds
+	// and for other manifolds whose measure is infinite (e.g. cylinder)
+	// and for manifolds whose measure is too difficult to compute (e.g. implicit manifolds)
+	// significant for torus
+ 	inline double measure ( ) const;
+	
 	// metric in the manifold (an inner product on the tangent space)
 	inline double inner_prod ( const Cell & P, const std::vector<double> & v,
                                              const std::vector<double> & w ) const;
@@ -246,6 +253,13 @@ class Manifold::Core
 
 	virtual void project ( Cell::Positive::Vertex * ) const = 0;
 
+	// measure of the entire manifold (lenght for 1D, area for 2D, volume for 3D)
+	// produces run-time error for Euclidian manifolds
+	// and for other manifolds whose measure is infinite (e.g. cylinder)
+	// and for manifolds whose measure is too difficult to compute (e.g. implicit manifolds)
+	// significant for torus
+	virtual double measure ( ) const = 0;
+	
 	// P = sA + sB,  s+t == 1
 	virtual void interpolate ( Cell::Positive::Vertex * P,
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const = 0;
@@ -310,6 +324,10 @@ inline Function Manifold::build_coordinate_system
 inline void Manifold::set_coordinates ( const Function co )
 {	assert ( this->core );
 	this->core->set_coords ( co );  }
+
+
+inline double Manifold::measure ( ) const
+{	return this->core->measure();  }
 
 
 // metric in the manifold (an inner product on the tangent space)
@@ -647,6 +665,10 @@ class Manifold::Euclid : public Manifold::Core
 	
 	void set_coords ( const Function co );  // virtual from Manifold::Core
 
+	// measure of the entire manifold, here produces run-time error
+	// (a Euclidian maifold has infinite measure)
+	double measure ( ) const;  // virtual from Manifold::Core
+
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core, here execution forbidden
 
@@ -729,7 +751,8 @@ class Manifold::Implicit : public Manifold::Core
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
   void interpolate ( Cell::Positive::Vertex * P,
-		const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const;
+		const std::vector < double > & coefs,
+		const std::vector < Cell::Positive::Vertex * > & points ) const;
 	
 	Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d );
 	//   virtual from Manifold::Core, here execution forbidden
@@ -739,6 +762,9 @@ class Manifold::Implicit : public Manifold::Core
 	void set_coords ( const Function co );  // virtual from Manifold::Core
 
 	// void project ( Cell::Positive::Vertex * ) const  stays pure virtual from Manifold::Core
+
+	// measure of the entire manifold, here produces run-time error
+	double measure ( ) const;  // virtual from Manifold::Core
 
 	class OneEquation; class TwoEquations;
 	
@@ -769,6 +795,9 @@ class Manifold::Implicit::OneEquation : public Manifold::Implicit
 
 	// void set_coords ( const Function co )  defined by Manifold::Implicit
 
+	// double measure ( ) const  virtual from Manifold::Core
+	// defined by Manifold::Implicit, execution forbidden
+
 };  // end of class Manifold::Implicit::OneEquation
 
 //-----------------------------------------------------------------------------------------
@@ -797,6 +826,9 @@ class Manifold::Implicit::TwoEquations : public Manifold::Implicit
 
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core, through Manifold::Implicit
+
+	// double measure ( ) const  virtual from Manifold::Core
+	// defined by Manifold::Implicit, execution forbidden
 
 };  // end of class Manifold::Implicit::TwoEquations
 
@@ -962,6 +994,9 @@ class Manifold::Parametric : public Manifold::Core
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core
 
+	// measure of the entire manifold, here produces run-time error
+	double measure ( ) const;  // virtual from Manifold::Core
+
 };  // end of class Manifold::Parametric
 
 //-----------------------------------------------------------------------------------------
@@ -1064,7 +1099,7 @@ class Manifold::Quotient : public Manifold::Core
 		double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const;
 	void interpolate ( Cell::Positive::Vertex * P,
 	  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action & exp                    ) const ;
+	  const tag::Winding &, const Manifold::Action & exp                         ) const ;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 	void interpolate ( Cell::Positive::Vertex * P,
@@ -1099,8 +1134,11 @@ class Manifold::Quotient : public Manifold::Core
 
 	// P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P,
-		const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const;
+		const std::vector < double > & coefs,
+		const std::vector < Cell::Positive::Vertex * > & points ) const;
 	
+	// measure of the entire manifold
+	double measure ( ) const;  // virtual from Manifold::Core
 	
 };  // end of class Manifold::Quotient
 
@@ -1113,23 +1151,23 @@ inline Manifold::Quotient::Quotient ( Manifold b, const Manifold::Action & a1 )
 
 {	assert ( a1.index_map.size() == 1 );
 	std::map < Function::ActionGenerator, short int > ::const_iterator
-		it = a1.index_map.begin();
+		it = a1 .index_map .begin();
 	assert ( it->second == 1 );
 	const Function::ActionGenerator & g1 = it->first;
 	this->actions = { g1 };
 
-	assert ( g1.coords.core == b.coordinates().core );
-	assert ( this->coord_func.core == nullptr );
-	this->winding_nbs.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	assert ( this->coord_func.core == nullptr );
+	assert ( g1 .coords .core == b .coordinates() .core );
+	assert ( this->coord_func .core == nullptr );
+	this->winding_nbs .emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	assert ( this->coord_func .core == nullptr );
 
-	if ( b.coordinates().nb_of_components() == 1 )
+	if ( b .coordinates() .nb_of_components() == 1 )
 	{	std::vector < double > v1 =
 			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
-			( g1.transf, g1.coords );
-		assert ( v1.size() > 0 );
-		this->coord_func.core = new Function::Scalar::MultiValued::JumpIsSum
-			( tag::associated_with, b.coordinates(), { g1 }, v1 );              }
+			( g1 .transf, g1 .coords );
+		assert ( v1 .size() == 1 );
+		this->coord_func .core = new Function::Scalar::MultiValued::JumpIsSum
+			( tag::associated_with, b .coordinates(), { g1 }, v1 );             }
 	else	
 	{	assert ( b.coordinates().nb_of_components() > 1 );
 		std::vector < double > v1 =
@@ -1156,46 +1194,46 @@ inline Manifold::Quotient::Quotient
 	
 : Manifold::Core(), base_space ( b ), actions { }
 
-{	assert ( a1.index_map.size() == 1 );
+{	assert ( a1 .index_map .size() == 1 );
 	std::map < Function::ActionGenerator, short int > ::const_iterator
-		it = a1.index_map.begin();
+		it = a1 .index_map .begin();
 	assert ( it->second == 1 );
 	const Function::ActionGenerator & g1 = it->first;
-	assert ( a2.index_map.size() == 1 );
-	it = a2.index_map.begin();
+	assert ( a2 .index_map .size() == 1 );
+	it = a2 .index_map .begin();
 	assert ( it->second == 1 );
 	const Function::ActionGenerator & g2 = it->first;
 	this->actions = { g1, g2 };
 
-	assert ( g1.coords.core == b.coordinates().core );
-	assert ( g2.coords.core == b.coordinates().core );
-	this->winding_nbs.reserve ( 2 );
-	this->winding_nbs.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	this->winding_nbs.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	assert ( b.coordinates().nb_of_components() >= 2 );
+	assert ( g1 .coords .core == b .coordinates() .core );
+	assert ( g2 .coords .core == b .coordinates() .core );
+	this->winding_nbs .reserve ( 2 );
+	this->winding_nbs .emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->winding_nbs .emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	assert ( b .coordinates() .nb_of_components() >= 2 );
 
 	assert ( this->coord_func.core == nullptr );
 	std::vector < double > v1 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-		( g1.transf, g1.coords );
+		( g1 .transf, g1 .coords );
 	std::vector < double > v2 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-		( g2.transf, g2.coords );
+		( g2 .transf, g2 .coords );
 	if ( v1.size() > 0 )
 	{	assert ( v2.size() > 0 );
-		this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
-			( tag::associated_with, b.coordinates(), { g1, g2 }, { v1, v2 } );  }
+		this->coord_func .core = new Function::Vector::MultiValued::JumpIsSum
+			( tag::associated_with, b .coordinates(), { g1, g2 }, { v1, v2 } );  }
 	else
 	{	std::pair < std::vector < std::vector < double > >, std::vector < double > >
 		p1 = Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression
-		     ( g1.transf, g1.coords ),
+		     ( g1 .transf, g1 .coords ),
 		p2 = Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression
-		     ( g2.transf, g2.coords );
-		this->coord_func.core = new Function::Vector::MultiValued::JumpIsLinear
+		     ( g2 .transf, g2 .coords );
+		this->coord_func .core = new Function::Vector::MultiValued::JumpIsLinear
 			( tag::associated_with, b.coordinates(), { g1, g2 },
-			  { p1.first, p2.first }, { p1.second, p2.second } );                       }
-	assert ( this->coord_func.core );
-	this->coord_func.core->nb_of_wrappers = 1;                                         }
+			  { p1 .first, p2 .first }, { p1 .second, p2 .second } );                  }
+	assert ( this->coord_func .core );
+	this->coord_func .core->nb_of_wrappers = 1;                                       }
 
 
 //-----------------------------------------------------------------------------------------
@@ -1206,45 +1244,45 @@ inline Manifold::Quotient::Quotient ( Manifold b,
 	
 : Manifold::Core(), base_space ( b ), actions { }
 
-{	assert ( a1.index_map.size() == 1 );
+{	assert ( a1 .index_map .size() == 1 );
 	std::map < Function::ActionGenerator, short int > ::const_iterator
-		it = a1.index_map.begin();
+		it = a1 .index_map .begin();
 	assert ( it->second == 1 );
 	const Function::ActionGenerator & g1 = it->first;
-	assert ( a2.index_map.size() == 1 );
-	it = a2.index_map.begin();
+	assert ( a2 .index_map .size() == 1 );
+	it = a2 .index_map .begin();
 	assert ( it->second == 1 );
 	const Function::ActionGenerator & g2 = it->first;
-	assert ( a3.index_map.size() == 1 );
-	it = a3.index_map.begin();
+	assert ( a3 .index_map .size() == 1 );
+	it = a3 .index_map .begin();
 	assert ( it->second == 1 );
 	const Function::ActionGenerator & g3 = it->first;
 	this->actions = { g1, g2, g3 };
 
-	assert ( g1.coords.core == b.coordinates().core );
-	assert ( g2.coords.core == b.coordinates().core );
-	assert ( g3.coords.core == b.coordinates().core );
-	this->winding_nbs.reserve ( 3 );
-	this->winding_nbs.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	this->winding_nbs.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
-	this->winding_nbs.emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	assert ( g1 .coords .core == b .coordinates() .core );
+	assert ( g2 .coords .core == b .coordinates() .core );
+	assert ( g3 .coords .core == b .coordinates() .core );
+	this->winding_nbs .reserve ( 3 );
+	this->winding_nbs .emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->winding_nbs .emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
+	this->winding_nbs .emplace_back ( tag::lives_on_positive_cells, tag::of_dim, 1 );
 	std::vector < double > v1 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-		( g1.transf, g1.coords );
-	assert ( v1.size() > 0 );
+		( g1 .transf, g1 .coords );
+	assert ( v1 .size() > 0 );
 	std::vector < double > v2 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-		( g2.transf, g2.coords );
-	assert ( v2.size() > 0 );
+		( g2 .transf, g2 .coords );
+	assert ( v2 .size() > 0 );
 	std::vector < double > v3 =
 		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
-		( g3.transf, g3.coords );
-	assert ( v3.size() > 0 );
-	assert ( b.coordinates().nb_of_components() >= 3 );
-	assert ( this->coord_func.core == nullptr );
-	this->coord_func.core = new Function::Vector::MultiValued::JumpIsSum
-		( tag::associated_with, b.coordinates(), { g1, g2, g3 }, { v1, v2, v3 } );
-	this->coord_func.core->nb_of_wrappers = 1;                                    }
+		( g3 .transf, g3 .coords );
+	assert ( v3 .size() > 0 );
+	assert ( b .coordinates() .nb_of_components() >= 3 );
+	assert ( this->coord_func .core == nullptr );
+	this->coord_func .core = new Function::Vector::MultiValued::JumpIsSum
+		( tag::associated_with, b .coordinates(), { g1, g2, g3 }, { v1, v2, v3 } );
+	this->coord_func .core->nb_of_wrappers = 1;                                    }
 
 //-----------------------------------------------------------------------------------------
 

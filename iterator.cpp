@@ -1,5 +1,5 @@
 
-// iterator.cpp 2021.12.13
+// iterator.cpp 2021.12.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -169,7 +169,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                      }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -178,7 +178,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                              }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -187,7 +187,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                              }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -196,7 +196,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                              }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -204,7 +204,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                              }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -213,7 +213,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -222,7 +222,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -231,7 +231,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -240,7 +240,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -249,7 +249,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -258,7 +258,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
@@ -267,7 +267,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 						<< __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
-	exit ( 1 );                                                             }
+	exit ( 1 );                                                            }
 
 //--------------------------------------------------------------------------------------------//
 

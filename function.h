@@ -1687,7 +1687,7 @@ class Function::ActionGenerator
 	{	Function::ActionGenerator::counter++;  }
 
 	inline ActionGenerator ( const Function::ActionGenerator & a )
-	:	id { a .id }, coords ( tag::non_existent ), transf ( tag::non_existent )
+	:	id { a .id }, coords ( a .coords ), transf ( a .transf )
 	{	}
 
 	inline ActionGenerator operator= ( const Function::ActionGenerator & a )

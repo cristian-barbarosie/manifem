@@ -17,7 +17,7 @@ int main ( )
 
 	// and divide RR by this equivalence relation
 	Manifold circle = RR .quotient ( g );
-	
+
 	// one vertex is enough to start the process
 	Cell A ( tag::vertex );  x (A) = 0.02;
 
