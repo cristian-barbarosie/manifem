@@ -73,7 +73,7 @@ int main ()
 	// there will be about 9 non-zero elements per column
 	// the diagonal entry plus eight neighbour vertices
 	
-	// unfortunately, the numbering provided by 'fe' is not contiguous
+	// unfortunately, in some cases the numbering provided by 'fe' is not contiguous
 	// so we fill the main diagonal with ones
 	// then we put zero for vertices belonging to ABCD
 	for ( size_t i = 0; i < size_matrix; i++ )

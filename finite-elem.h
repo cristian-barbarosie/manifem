@@ -1,5 +1,5 @@
 
-// finite-elem.h 2021.12.27
+// finite-elem.h 2021.12.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -540,9 +540,7 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	std::string info ( );  // virtual from FiniteElement::Core
 	#endif
 
-	class Segment;
-	struct Triangle { class P1;  struct P2 { class Straight; class Curved; }; };
-  class Quadrangle;
+	class Segment;  class Triangle;  class Quadrangle;
 	
 };  // end of  class FiniteElement::withMaster
 
@@ -584,7 +582,7 @@ inline void FiniteElement::pre_compute
 
 class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 
-// triangular finite elements which use a master element
+// linear finite elements which use a master element
 
 {	public :
 
@@ -633,7 +631,58 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 //-------------------------------------------------------------------------------------------------//
 
 
-class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster
+class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
+
+// triangular finite elements which use a master element
+
+// abstract class, instantiated in FiniteElement::WithMaster::Triangle::P1
+//   and in FiniteElement::WithMaster::Triangle::P2::{Straight,Curve}
+
+{	public :
+
+	// attributes inherited from FiniteElement::Core :
+	// Integrator integr
+	// std::map < Cell::Core *, Function > base_fun_1
+	// std::map < Cell::Core *, std::map < Cell::Core *, Function > > base_fun_2
+	// Cell docked_on
+	// std::string info_string (ifndef NDEBUG)
+
+	// attributes inherited from FiniteElement::WithMaster :
+	// Manifold master_manif
+	// Function transf
+
+	// constructor
+
+	inline Triangle ( Manifold m ) : FiniteElement::WithMaster ( m )
+	{	}
+	
+	// two methods  dock_on  stay pure virtual from FiniteElement::Core
+	// void dock_on ( const Cell & cll )
+	// void dock_on ( const Cell & cll, const tag::Winding & )
+
+	// two methods  dock_on  only significant for
+	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+	// virtual from FiniteElement::Core, execution forbidden
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
+	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
+  //                const tag::Winding &                                     )
+
+	// pre_compute virtual from FiniteElement::Core,
+	// defined by FiniteElement::WithMaster, execution forbidden
+
+	// Cell::Numbering & build_global_numbering ( )  stays pure virtual from FiniteElement::Core
+	
+	//  std::string info()  virtual from FiniteElement::Core
+	// defined by FiniteElement::WithMaster (ifndef NDEBUG)
+
+	class P1;  struct P2 { class Straight; class Curved; };
+
+};  // end of  class FiniteElement::WithMaster::Triangle
+
+//-------------------------------------------------------------------------------------------------//
+
+
+class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster::Triangle
 
 // triangular finite elements which use a master element, Lagrange P1
 // three affine basis functions, associated to each of the three vertices
@@ -653,7 +702,7 @@ class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster
 
 	// constructor
 
-	inline P1 ( Manifold m ) : FiniteElement::WithMaster ( m )
+	inline P1 ( Manifold m ) : FiniteElement::WithMaster::Triangle ( m )
 	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Triangle::P1\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }

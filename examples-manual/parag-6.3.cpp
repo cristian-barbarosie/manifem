@@ -39,8 +39,8 @@ int main ()
 	Function x = xy [0], y = xy [1];
 
 	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
+	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe .set_integrator ( tag::Gauss, tag::tri_6 );
 	FiniteElement fe_bdry ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ_bdry = fe_bdry .set_integrator ( tag::Gauss, tag::seg_3 );
 
@@ -53,7 +53,7 @@ int main ()
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
 	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
 	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 10 );
-	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
+	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA, tag::with_triangles );
 
 	// below we use a Cell::Numbering::Map
 	// which is essentially an  std::map < Cell, size_t >  disguised
@@ -100,7 +100,7 @@ int main ()
 	} // just a block of code 
 
 	Function heat_source = y*y;
-	// impose Neumann boundary conditions du/dn = 1.
+	// impose Neumann boundary conditions du/dn = heat_source
 	{ // just a block of code for hiding 'it'
 	Mesh::Iterator it = DA .iterator ( tag::over_segments );
 	for ( it .reset(); it .in_range(); it++ )
