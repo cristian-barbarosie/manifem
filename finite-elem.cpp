@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2021.12.27
+// finite-elem.cpp 2021.12.31
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -769,6 +769,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on ( const Cell & c
 
 		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );            }
 
+	// PQ = PQ .get_positive();  QR = QR .get_positive();  RP = RP .get_positive();
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
 	       ( P.core, Function ( (1.-2.*xi-2.*eta) * one_m_xi_m_eta,
@@ -854,6 +855,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on
 
 		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );            }
 
+	// PQ = PQ .get_positive();  QR = QR .get_positive();  RP = RP .get_positive();
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
 	       ( P.core, Function ( (1.-2.*xi-2.*eta) * one_m_xi_m_eta,
@@ -933,6 +935,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 
 		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );            }
 
+	// PQ = PQ .get_positive();  QR = QR .get_positive();  RP = RP .get_positive();
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
 	       ( P.core, Function ( one_m_xi_m_eta, tag::composed_with, this->transf ) ) );
@@ -1017,6 +1020,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 
 		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );            }
 
+	// PQ = PQ .get_positive();  QR = QR .get_positive();  RP = RP .get_positive();
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
 	       ( P.core, Function ( one_m_xi_m_eta, tag::composed_with, this->transf ) ) );

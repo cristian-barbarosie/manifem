@@ -1,9 +1,9 @@
 
-// finite-elem.h 2021.12.28
+// finite-elem.h 2022.01.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -58,8 +58,7 @@ namespace tag {
 	struct FirstVertex { };  static const FirstVertex first_vertex;
 	struct Straight { };  static const Straight straight;
 	struct Curved { };  static const Curved curved;
-	struct IncrementalBasisFunction { };
-		static const IncrementalBasisFunction incremental_basis_function;
+	struct IncrementalBasis { };  static const IncrementalBasis incremental_basis;
 }
 
 class FiniteElement;
@@ -239,7 +238,7 @@ class FiniteElement
 	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
 	                       const tag::lagrange &, const tag::OfDegree &, size_t deg,
-	                       const tag::Straight &, const tag::IncrementalBasisFunction & );
+	                       const tag::Straight &, const tag::IncrementalBasis & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
 	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
@@ -731,10 +730,10 @@ class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster
 
 };  // end of  class FiniteElement::withMaster::Triangle::P1
 
-//-----------------------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------------------------//
 
 
-class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::WithMaster
+class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::WithMaster::Triangle
 
 // triangular finite elements which use a master element, Lagrange P2
 // six quadratic basis functions, associated to each vertex and to each side
@@ -754,7 +753,7 @@ class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::
 
 	// constructor
 
-	inline Straight ( Manifold m ) : FiniteElement::WithMaster ( m )
+	inline Straight ( Manifold m ) : FiniteElement::WithMaster::Triangle ( m )
 	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Triangle::P2::Straight\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
@@ -789,7 +788,7 @@ class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::
 
 
 class FiniteElement::WithMaster::Triangle::P2::Straight::Incremental
-: public FiniteElement::WithMaster
+: public FiniteElement::WithMaster::Triangle
 
 // triangular finite elements which use a master element, Lagrange P2
 // three affine basis functions, associated to each vertex (the same as for P1)
@@ -810,7 +809,7 @@ class FiniteElement::WithMaster::Triangle::P2::Straight::Incremental
 
 	// constructor
 
-	inline Incremental ( Manifold m ) : FiniteElement::WithMaster ( m )
+	inline Incremental ( Manifold m ) : FiniteElement::WithMaster::Triangle ( m )
 	#ifndef NDEBUG
 	{ this->info_string = "FiniteElement::WithMaster::Triangle::P2::Straight::Incremental\n";
 		this->info_string += "(slow) symbolic computations coupled with Gauss quadrature\n";  }
@@ -1009,7 +1008,7 @@ inline FiniteElement::FiniteElement
 inline FiniteElement::FiniteElement
 ( const tag::WithMaster &, const tag::Triangle &,
   const tag::lagrange &, const tag::OfDegree &, size_t deg,
-  const tag::Straight &, const tag::IncrementalBasisFunction & )
+  const tag::Straight &, const tag::IncrementalBasis & )
 	
 :	core { nullptr }
 
