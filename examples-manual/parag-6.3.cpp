@@ -1,7 +1,7 @@
 
 // example presented in paragraph 6.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// rudimentary use of finite elements, 1D integrals
+// triangular Lagrange P1 finite elements, 1D integrals, 
 
 #include "maniFEM.h"
 #include "math.h"

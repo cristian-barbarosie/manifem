@@ -1,9 +1,9 @@
 
-// manifold.h 2021.12.29
+// manifold.h 2022.01.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -1398,7 +1398,7 @@ inline Manifold::Action Cell::Winding::operator-= ( const Manifold::Action & a )
 	return *this;                                                             }
 
 
-inline Cell::Winding Cell::winding ( )
+inline Cell::Winding Cell::winding ( ) const
 { return Cell::Winding ( *this );  }
 
 //-----------------------------------------------------------------------------------------

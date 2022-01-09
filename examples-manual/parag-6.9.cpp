@@ -1,7 +1,7 @@
 
-// example presented in paragraph 6.2 of the manual
+// example presented in paragraph 6.9 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// quadrilateral Lagrange Q1 finite elements
+// fast, hand-coded finite elements
 // solve the Laplace operator with Dirichlet boundary conditions
 
 #include "maniFEM.h"
@@ -40,8 +40,8 @@ int main ()
 	Function x = xy [0], y = xy [1];
 
 	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
+	FiniteElement fe ( tag::rectangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe .set_integrator ( tag::hand_coded );
 
 	// build a 10x10 square mesh
 	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
@@ -78,6 +78,13 @@ int main ()
 	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
 	vector_b .setZero();
 
+	// hand-coded integrators require an early declaration of
+	// the integrals we intend to compute later (after docking 'fe' on a cell)
+	Function bf1 ( tag::basis_function, tag::within, fe ),
+	         bf2 ( tag::basis_function, tag::within, fe );
+	integ .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
+	    tag::integral_of, { bf1 .deriv(x) * bf2 .deriv(x) + bf1 .deriv(y) * bf2 .deriv(y) } );
+
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
 	Mesh::Iterator it = ABCD .iterator ( tag::over_cells_of_max_dim );
@@ -99,8 +106,11 @@ int main ()
 			         d_psiW_dx = psiW .deriv (x),
 			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
-			matrix_A .coeffRef ( numbering[V], numbering[W] ) +=
-				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
+			std::vector < double > result = fe .integrate 
+				( tag::pre_computed, tag::replace, bf1, tag::by, psiV, tag::replace, bf2, tag::by, psiW );
+			assert ( result .size() == 1 );
+			matrix_A .coeffRef ( numbering[V], numbering[W] ) += result [0];
+		}  }  // end of for loops over vertices, end of for loop over cells
 	} // just a block of code 
 
 	// impose Dirichlet boundary conditions  u = xy

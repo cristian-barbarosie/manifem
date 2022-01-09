@@ -1,9 +1,9 @@
 
-//   mesh.h  2021.12.29
+//   mesh.h  2022.01.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -565,7 +565,7 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline void project ( const tag::Onto &, const Manifold m ) const;
 
 	class Winding;  // defined in function.h
-	inline Winding winding ( );  // defined in manifold.h
+	inline Winding winding ( ) const;  // defined in manifold.h
 		
 #ifndef NDEBUG
 	inline void print_everything ( );

@@ -14,22 +14,19 @@ It has no user-friendly interface nor graphic capabilities.
 The user should have some understanding of programming and of C++. 
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
 
-Similar products (competitors) : [FreeFem++](http://www3.freefem.org/),
-[FEniCS/Dolphin](https://fenicsproject.org/), [deal.II](https://dealii.org/),
-[PETSc-FEM](https://cimec.org.ar/foswiki/Main/Cimec/PETScFEM).
-Strong and weak points of maniFEM are presented in the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
+Similar products (competitors), as well as strong and weak points of maniFEM,
+are listed in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
 right after the introduction.
 
-In its current version, release 21.12, maniFEM works well for mesh generation,
+In its current version, release 22.01, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
 three-dimensional meshes are object of current work.
 The user can control variations in the element size;
 anisotropic Riemann metrics are object of current work.
-Lagrange finite elements of degree one are implemented for triangular and quadrangular cells;
-many other types of finite elements are still to be implemented.
+Lagrange finite elements of degree one and two are implemented for triangular
+and quadrangular cells; many other types of finite elements are still to be implemented.
 In the future, variational formulations will be implemented as C++ objects,
 thus allowing for compact and elegant code.
 A changelog is available at the end of the
@@ -43,7 +40,7 @@ ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@g
 see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
 
 To learn maniFEM, you should read the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 21.12).
+[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.01).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.
@@ -72,7 +69,7 @@ This work is supported by National Funding from FCT - Fundação para a Ciência
 Centro de Matemática, Aplicações Fundamentais e Investigação Operacional,
 project UID/MAT/04561/2020.
 
-Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 ManiFEM is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by

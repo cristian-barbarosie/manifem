@@ -45,8 +45,7 @@ int main ()
 	// declare the type of finite element
 	// FiniteElement fe ( tag::with_master, tag::quadrangle,
 	//                    tag::Lagrange, tag::of_degree, 1, tag::enumerate_cells );
-	FiniteElement fe ( tag::with_master, tag::quadrangle,
-	                   tag::Lagrange, tag::of_degree, 1  );
+	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
 	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
 	Cell::Numbering & numbering = fe .build_global_numbering ( tag::vertices );
 
