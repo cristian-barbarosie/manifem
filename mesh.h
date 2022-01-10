@@ -1,5 +1,5 @@
 
-//   mesh.h  2022.01.06
+//   mesh.h  2022.01.09
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -137,6 +137,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Onto { };  static const Onto onto;
 	struct EntireManifold { };  static const EntireManifold entire_manifold;
 	struct DesiredLength { };  static const DesiredLength desired_length;
+	struct Orientation { };  static const Orientation orientation;
+	enum OrientationChoice { random, intrinsic, inherent, shortest_path };
 	struct IntrinsicOrientation { };  static const IntrinsicOrientation intrinsic_orientation;
 	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
 	struct RandomOrientation { };  static const RandomOrientation random_orientation;
@@ -867,43 +869,31 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
          const tag::DesiredLength &, const Function & length                   );
 
 	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
-	       const tag::RandomOrientation &                                                 );
+	       const tag::Orientation &, const tag::OrientationChoice &                      );
 
 	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
-	       const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & );
-
-	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
-	       const tag::InherentOrientation &                                               );
-
-	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
-	       const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & );
+	       const tag::DesiredLength &, const Function & length,
+	       const tag::Orientation &, const tag::OrientationChoice &              );
 
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-	       const tag::DesiredLength &, const Function & length              );
-
-	inline Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-	              const tag::DesiredLength &, const Function & length,
-	              const tag::RandomOrientation &                                   )
-	:	Mesh ( tag::progressive, tag::boundary, interface, tag::desired_length, length )  { }
+	       const tag::DesiredLength &, const Function & length             );
 
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-	       const tag::DesiredLength &, const Function & length, const tag::IntrinsicOrientation & );
+	       const tag::DesiredLength &, const Function & length,
+				 const tag::Orientation &, const tag::OrientationChoice &        );
  
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-	       const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & );
-
-	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	       const tag::StartAt &, const Cell & start,
-	       const tag::Towards &, std::vector<double> normal,
+	       const tag::Towards &, std::vector < double > normal,
 	       const tag::DesiredLength &, const Function & length               );
 
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-	       const tag::Towards &, std::vector<double> tangent,
+	       const tag::Towards &, std::vector < double > tangent,
 	       const tag::StopAt &, const Cell & stop,
 	       const tag::DesiredLength &, const Function & length                 );
 
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-	       const tag::Towards &, std::vector<double> tangent,
+	       const tag::Towards &, std::vector < double > tangent,
 	       const tag::DesiredLength &, const Function & length                  );
 
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
@@ -914,25 +904,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	       const tag::DesiredLength &, const Function & length                  );
 
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-	       const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & );
-
-	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-	              const tag::StopAt &, const Cell & stop,
-	              const tag::DesiredLength &, const Function & length,
-	              const tag::RandomOrientation &                                      )
-	:	Mesh ( tag::progressive, tag::start_at, start, tag::stop_at, stop,
-		       tag::desired_length, length                                 )  { }
+	       const tag::DesiredLength &, const Function & length,
+	       const tag::Orientation &, const tag::OrientationChoice &           );
 
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	       const tag::StopAt &, const Cell & stop,
 	       const tag::DesiredLength &, const Function & length,
-	       const tag::InherentOrientation &                                    );
-
-	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-	              const tag::DesiredLength &, const Function & length,
-	              const tag::InherentOrientation &                                    )
-	:	Mesh ( tag::progressive, tag::start_at, start, tag::stop_at, start,
-		       tag::desired_length, length, tag::inherent_orientation       )  { }
+	       const tag::Orientation &, const tag::OrientationChoice &           );
 
 	inline Mesh & operator= ( const Mesh & c );
 	inline Mesh & operator= ( Mesh && c );

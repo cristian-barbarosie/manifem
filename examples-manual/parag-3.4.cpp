@@ -16,7 +16,7 @@ int main ()
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
 	RR3 .implicit ( x*x + y*y == 1., x*y == 4.*z );
-	Mesh circle ( tag::progressive, tag::desired_length, 0.1, tag::random_orientation );
+	Mesh circle ( tag::progressive, tag::desired_length, 0.1, tag::orientation, tag::random );
 
 	circle .draw_ps_3d ("circle-3d.eps");
 	circle .export_msh ("circle-3d.msh");

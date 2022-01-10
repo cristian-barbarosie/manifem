@@ -35,7 +35,7 @@ void main_1 ()
 	
 {	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
 	Function xyz = RR3 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xyz [0], y = xyz[1], z = xyz[2];
+	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
 	cout << "this example takes some time" << endl;
 	Function f1 = x*x + y*y + 0.1;

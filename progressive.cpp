@@ -77,9 +77,9 @@ class Manifold::Type::Euclidian::sq_dist
 
 	inline double operator() ( const Cell & A, const Cell & B )
 	{	double res = 0.;
-		const size_t nc = Manifold::working.coordinates().nb_of_components();
+		const size_t nc = Manifold::working .coordinates() .nb_of_components();
 		for ( size_t i = 0; i < nc; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
+		{	Function x = Manifold::working .coordinates() [i];
 			double tmp = x(B) - x(A);
 			res += tmp*tmp;                                  }
 		return res;                                                            }
@@ -115,16 +115,16 @@ class Manifold::Type::Quotient::sq_dist
 
 	inline double dist2
 	( const Cell & A, const Cell & B, const Manifold::Action & winding,
-		const Function & coords_Eu, const Function & coords_q                       )
+	  const Function & coords_Eu, const Function & coords_q            )
 	{	double res = 0.;
 		std::vector < double > coord_A = coords_Eu ( A ),
 		                       coord_B = coords_q ( B, tag::winding, winding );
-		const size_t nc = coord_A.size();
-		assert ( nc == coord_B.size() );
+		const size_t nc = coord_A .size();
+		assert ( nc == coord_B .size() );
 		for ( size_t i = 0; i < nc; i++ )
-		{	double tmp = coord_B[i] - coord_A[i];
-			res += tmp*tmp;                      }
-		return res;                                                        }
+		{	double tmp = coord_B [i] - coord_A [i];
+			res += tmp*tmp;                        }
+		return res;                                                            }
 
 	// we provide as Point not just a Cell but a Cell together with a winding number
 	// each call to SqDist will set the "winning" winding of the second Point B
@@ -134,20 +134,20 @@ class Manifold::Type::Quotient::sq_dist
 	inline double operator() ( std::pair < Cell, Manifold::Action > A,
 	                           std::pair < Cell, Manifold::Action > & B )
 	{	Manifold space = Manifold::working;
-		assert ( space.exists() );  // we use the current (quotient) manifold
+		assert ( space .exists() );  // we use the current (quotient) manifold
 		Manifold::Quotient * manif_q = tag::Util::assert_cast
-			< Manifold::Core*, Manifold::Quotient* > ( space.core );
+			< Manifold::Core*, Manifold::Quotient* > ( space .core );
 		assert ( manif_q );
 		Function coords_q = space.coordinates();
 		Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-		Function coords_Eu = mani_Eu.coordinates();
-		assert ( coords_Eu.nb_of_components() == 2 );
-		Function x = coords_Eu[0],  y = coords_Eu[1];
+		Function coords_Eu = mani_Eu .coordinates();
+		assert ( coords_Eu .nb_of_components() == 2 );
+		Function x = coords_Eu [0],  y = coords_Eu [1];
 
 		// the action group may have one or two generators
-		assert ( manif_q->actions.size() == 2 );
-		assert ( manif_q->winding_nbs.size() == 2 );
-		Function::ActionGenerator g1 = manif_q->actions[0], g2 = manif_q->actions[1];
+		assert ( manif_q->actions .size() == 2 );
+		assert ( manif_q->winding_nbs .size() == 2 );
+		Function::ActionGenerator g1 = manif_q->actions [0], g2 = manif_q->actions [1];
 	
 		std::vector < std::vector < short int > > directions
 			{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
@@ -159,24 +159,24 @@ class Manifold::Type::Quotient::sq_dist
 		size_t size_of_round = 0;
 		short int ii = 0, jj = 0;
 		// we choose a high value of 'dist', it will be overridden for ii == jj == 0
-		double dist = this->dist2 ( A.first, B.first, 0, coords_Eu, coords_q ) + 1.;
+		double dist = this->dist2 ( A .first, B .first, 0, coords_Eu, coords_q ) + 1.;
 		while ( unsuccessful_tries < 10 )
 		{	size_of_round++;
 			for ( size_t d = 0; d < 4; d++ )
 			{	if ( d == 2 ) size_of_round++;
 				for ( size_t i = 0; i < size_of_round; i++ )
 				{	Manifold::Action s = ii*g1 + jj*g2;
-					double di = this->dist2 ( A.first, B.first, s, coords_Eu, coords_q );
+					double di = this->dist2 ( A .first, B .first, s, coords_Eu, coords_q );
 					if ( di < dist )
 					{	dist = di;
-						B.second = s;
+						B .second = s;
 						unsuccessful_tries = 0;  }
-					ii += directions[d][0];
-					jj += directions[d][1];                                            }  }
+					ii += directions [d] [0];
+					jj += directions [d] [1];                                               }  }
 			unsuccessful_tries++;
 		}  // end of  while unsuccessful_tries < 10
 
-	return dist;                                                                       }
+	return dist;                                                                          }
 
 };  // end of  class Manifold::Type::Quotient::sq_dist
 
@@ -232,32 +232,29 @@ inline double approx_sqrt ( double arg, const tag::Around &, double centre, doub
 //-------------------------------------------------------------------------------------------------
 
 
-inline size_t get_topological_dim ( )
-// hidden in anonymous namespace
+inline size_t get_topological_dim ( )       // hidden in anonymous namespace
 	
 {	Manifold::Implicit::OneEquation * m_impl_1 =
-		dynamic_cast<Manifold::Implicit::OneEquation*> ( Manifold::working.core );
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( Manifold::working .core );
 	if ( m_impl_1 )
-	{	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*>
-			( m_impl_1->surrounding_space.core );
+	{	Manifold::Euclid * m_euclid = dynamic_cast < Manifold::Euclid* >
+			( m_impl_1->surrounding_space .core );
 		assert ( m_euclid );
-		return m_euclid->coord_func.nb_of_components() - 1;              }
+		return m_euclid->coord_func .nb_of_components() - 1;              }
 	Manifold::Implicit::TwoEquations * m_impl_2 =
-		dynamic_cast<Manifold::Implicit::TwoEquations*> ( Manifold::working.core );
+		dynamic_cast < Manifold::Implicit::TwoEquations* > ( Manifold::working .core );
 	if ( m_impl_2 )
-	{	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*>
-			( m_impl_2->surrounding_space.core );
-		assert ( m_euclid );
-		return m_euclid->coord_func.nb_of_components() - 2;              }
+		{	Manifold::Euclid * m_euclid = tag::Util::assert_cast
+				< Manifold::Core*, Manifold::Euclid* > ( m_impl_2->surrounding_space .core );
+		return m_euclid->coord_func .nb_of_components() - 2;                              }
 	assert ( false );  // we return zero just to avoid compilation errors
-	return 0;                                                                      }
+	return 0;                                                                             }
 
 //-------------------------------------------------------------------------------------------------
 
 
-std::vector < double > compute_tangent_vec
+std::vector < double > compute_tangent_vec      // hidden in anonymous namespace
 (	Cell start, bool check_orth, std::vector < double > given_vec )
-// hidden in anonymous namespace
 	
 // computes a vector tangent to Manifold::working at point 'start'
 
@@ -274,28 +271,28 @@ std::vector < double > compute_tangent_vec
 	{	const double coef = desired_len_at_point / std::sqrt(n);
 		// we make sums of n vectors in the canonical basis with both signs
 		std::vector < size_t > indices ( n+1 );
-		for ( size_t i = 0; i < n; i++ )  indices[i] = i;
-		indices[n] = progress_nb_of_coords;
+		for ( size_t i = 0; i < n; i++ )  indices [i] = i;
+		indices [n] = progress_nb_of_coords;
 		while ( true )
 		{	std::vector < short int > signs ( n, 1. );
 			while ( true )
 			{	std::vector < double > tangent ( progress_nb_of_coords, 0. );
-				for ( size_t i = 0; i < n; i++ )  tangent[indices[i]] = signs[i];
+				for ( size_t i = 0; i < n; i++ )  tangent [ indices[i] ] = signs [i];
 				// we normalize 'tangent'
-				for ( size_t i = 0; i < progress_nb_of_coords; i++ ) tangent[i] *= coef;
+				for ( size_t i = 0; i < progress_nb_of_coords; i++ ) tangent [i] *= coef;
 				// we project
 				for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-				{	Function x = Manifold::working.coordinates()[i];
-					x ( temporary_vertex ) = x ( start ) + tangent[i];  }
+				{	Function x = Manifold::working .coordinates() [i];
+					x ( temporary_vertex ) = x ( start ) + tangent [i];  }
 				Manifold::working.project ( temporary_vertex );
 				for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-				{	Function x = Manifold::working.coordinates()[i];
-					tangent[i] = x ( temporary_vertex ) - x ( start );  }
+				{	Function x = Manifold::working .coordinates() [i];
+					tangent [i] = x ( temporary_vertex ) - x ( start );  }
 				if ( check_orth )
 				{	double prod = Manifold::working.inner_prod ( start, tangent, given_vec );
 					double lambd = prod / sq_desired_len_at_point;
 					for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-						tangent[i] -= lambd * given_vec[i];                                      }
+						tangent [i] -= lambd * given_vec [i];                                      }
 				// we choose the longest projection
 				double n2 = Manifold::working.inner_prod ( start, tangent, tangent );
 				if ( n2 > longest_projection )
@@ -303,20 +300,20 @@ std::vector < double > compute_tangent_vec
 				// now change signs
 				bool found = false;
 				for ( int i = n-1; i >= 0; i-- )
-					if ( signs[i] == 1 )
-					{	found = true;  signs[i] = -1;
-						for ( size_t j = i+1; j < n; j++ ) signs[j] = 1;
+					if ( signs [i] == 1 )
+					{	found = true;  signs [i] = -1;
+						for ( size_t j = i+1; j < n; j++ ) signs [j] = 1;
 						break;                                            }
 				if ( not found ) break;                                                  }
  			// now change indices
 			bool found = false;
 			for ( int i = n-1; i >= 0; i-- )
-				if ( indices[i] < indices[i+1] - 1 )
+				if ( indices [i] < indices [i+1] - 1 )
 				{	found = true;
-					indices[i]++;
+					indices [i] ++;
 					for ( size_t j = i+1; j<n; j++ )
-					{	indices[j] = indices[j-1] + 1;
-						assert ( indices[j] < progress_nb_of_coords );     }
+					{	indices [j] = indices [j-1] + 1;
+						assert ( indices [j] < progress_nb_of_coords );     }
 					break;                                                            }
 			if ( not found ) break;                                                  }
 	}  // end of  for n
@@ -324,7 +321,7 @@ std::vector < double > compute_tangent_vec
 	double n2 = Manifold::working.inner_prod ( start, best_tangent, best_tangent );
 	double norm = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
 	double coef = desired_len_at_point / approx_sqrt ( n2, tag::around, norm*norm, norm );
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= coef;
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent [i] *= coef;
 	return best_tangent;
 
 }  // end of  compute_tangent_vec
@@ -837,16 +834,16 @@ inline void switch_orientation ( Cell cll )
 // this is always called from switch_orientation ( Mesh )
 // we should deal with segments separately, as well as with negative cells
 	
-{	Mesh msh = cll.boundary();
+{	Mesh msh = cll .boundary();
 	std::vector < Cell > vec_of_cells;
-	vec_of_cells.reserve ( msh.number_of ( tag::cells_of_max_dim ) );
-	Mesh::Iterator itt = msh.iterator ( tag::over_cells_of_max_dim, tag::force_positive );
-	for ( itt.reset(); itt.in_range(); itt++ )
-		vec_of_cells.push_back ( *itt );
+	vec_of_cells .reserve ( msh .number_of ( tag::cells_of_max_dim ) );
+	Mesh::Iterator itt = msh .iterator ( tag::over_cells_of_max_dim, tag::force_positive );
+	for ( itt .reset(); itt .in_range(); itt++ )
+		vec_of_cells .push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
 		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->reverse().add_to_mesh ( msh, tag::do_not_bother );                                      }
+		it->reverse() .add_to_mesh ( msh, tag::do_not_bother );                                     }
 // the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 // no need to call update_info_connected_one_dim because we are at hands with a closed loop
 // nb_of_segs remains the same, as well as first_ver and last_ver
@@ -863,14 +860,14 @@ void switch_orientation ( Mesh msh )
 // instead, call switch_orientation on each cell
 
 {	std::vector < Cell > vec_of_cells;
-	vec_of_cells.reserve ( msh.number_of ( tag::cells_of_max_dim ) );
-	Mesh::Iterator itt = msh.iterator ( tag::over_cells_of_max_dim );
-	for ( itt.reset(); itt.in_range(); itt++ )
-		vec_of_cells.push_back ( *itt );
+	vec_of_cells .reserve ( msh .number_of ( tag::cells_of_max_dim ) );
+	Mesh::Iterator itt = msh .iterator ( tag::over_cells_of_max_dim );
+	for ( itt .reset(); itt .in_range(); itt++ )
+		vec_of_cells .push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
 		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->reverse().add_to_mesh ( msh, tag::do_not_bother );                                      }
+		it->reverse() .add_to_mesh ( msh, tag::do_not_bother );                                     }
 // the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 // no need to call update_info_connected_one_dim because we are at hands with a closed loop
 // nb_of_segs remains the same, as well as first_ver and last_ver
@@ -986,9 +983,9 @@ inline void build_one_normal ( Cell & B, Cell & C, Cell & new_seg )
 //-------------------------------------------------------------------------------------------------
 
 
-inline void build_each_normal
-( Cell & B, Cell & C, Cell & new_seg, std::vector < double > & old_e, std::vector < double > & old_f )
-// hidden in anonymous namespace
+inline void build_each_normal     // hidden in anonymous namespace
+( Cell & B, Cell & C, Cell & new_seg,
+  std::vector < double > & old_e, std::vector < double > & old_f )
 
 // 'e' is the vector of the segment, 'f' is orthogonal
 // they are all of approximately the same length, equal to desired_length
@@ -1310,11 +1307,10 @@ void progress_relocate
 
 
 template < class manif_type >
-inline bool check_touching
+inline bool check_touching       // hidden in anonymous namespace
 (	Cell & ver, std::set < typename manif_type::winding_cell > & set_of_ver,
 	Cell & point_120, Cell & stop_point_120,
 	typename manif_type::metric_tree & cloud                                  )
-// hidden in anonymous namespace
 
 // analyse position of recently built vertex 'ver' relatively to other vertices on the interface
 // occasionally, different connected components of the interface touch and merge
@@ -1486,240 +1482,14 @@ inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, co
 //-------------------------------------------------------------------------------------------------
 
 
-void progressive_construct ( Mesh & msh,
-	const tag::StartAt &, const Cell & start,
-	const tag::Towards &, std::vector<double> & tangent,
-	const tag::StopAt &, const Cell & stop               )
-// hidden in anonymous namespace
-
-// builds a one-dimensional mesh (a curve)
-	
-// 'start' and 'stop' are vertices (may be one and the same)
-	
-{	assert ( start.dim() == 0 );
-	assert ( stop.dim() == 0 );
-
-	size_t counter = 1;
-	size_t max_counter = 0;  //  std::cin >> max_counter;
-	Cell A = start;
-	while ( true )
-	{	double d = Manifold::working.dist_sq ( A, stop );  // long range distance !
-		desired_len_at_point = desired_length ( A );
-		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-		double augm_length = desired_len_at_point * 1.618034,  // golden number
-		       augm_len_sq = augm_length * augm_length;
-		if ( d < augm_len_sq )
-		{	// below we could use the Riemannian metric
-			// however, the sign should be the same
-			std::vector < double > e ( progress_nb_of_coords );
-			double prod = 0.;
-			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-			{	Function x = Manifold::working.coordinates()[i];
-				e[i] = x(stop) - x(A);  // recover tangent from hook !
-				prod += tangent[i] * e[i];                        }
-			if ( prod > 0. )
-			{	Cell last ( tag::segment, A.reverse(), stop );
-				last.add_to_mesh ( msh, tag::do_not_bother );
-				// the meaning of tag::do_not_bother is explained
-				// at the end of paragraph 11.6 in the manual
-				// redistribute vertices
-				double n2 = Manifold::working.inner_prod ( A, e, e );
-				double norm = approx_sqrt ( n2, tag::around,
-			                              sq_desired_len_at_point, desired_len_at_point );
-				norm = approx_sqrt ( n2, tag::around, norm*norm, norm );
-				redistribute_vertices ( msh, start, stop, norm, 15 );
-				break;                                                                       }  }
-		Cell B ( tag::vertex );
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			x(B) = x(A) + tangent[i];                         }
-		if ( counter == max_counter ) return;
-		Manifold::working.project ( B );
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];  // recover tangent from hook !
-			tangent[i] = x(B) - x(A);                         }
-		double n2 = 0.;  // Manifold::working.inner_prod ( A, tangent, tangent ); ?!!
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }
-		n2 = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
-		n2 = desired_len_at_point / n2;
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= n2;
-		Cell AB ( tag::segment, A.reverse(), B );
-		AB.add_to_mesh ( msh, tag::do_not_bother );
-		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
-		counter++;  A = B;                                                                            }
-	
-		update_info_connected_one_dim ( msh, start, stop );
-		
-} // end of  progressive_construct
-
-//-------------------------------------------------------------------------------------------------
-
-
-void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & start,
-                             const tag::StopAt &, const Cell & stop                )
-// hidden in anonymous namespace
-	
-// builds a one-dimensional mesh (a curve)
-	
-// no tangent vector provided, thus no way of knowing which way to go
-// the only solution is to start walking in both directions simultaneously
-// the first one to reach 'stop' wins
-
-// 'start' and 'stop' are positive vertices (may be one and the same)
-
-{	assert ( start.dim() == 0 );
-	assert ( stop.dim() == 0 );
-	assert ( start.is_positive() );
-	assert ( stop.is_positive() );
-
-	desired_len_at_point = desired_length ( start );
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
-
-	// start walking along the manifold from 'start' in the direction of best_tangent
-	// and, simultaneously, in the opposite direction, given by -best_tangent
-	std::vector < double > tan1 = best_tangent, tan2 = best_tangent;
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ ) tan2[i] *= -1.;
-	Cell ver1 ( tag::vertex ), ver2 ( tag::vertex );
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-	{	Function x = Manifold::working.coordinates()[i];
-		x ( ver1 ) = x ( start );  x ( ver2 ) = x ( start );  }
-	int winner = 0;  //  will be 1 or -1
-	while ( true )
-	{	double augm_length = desired_length(ver1) * 1.5,
-		       augm_len_sq = augm_length * augm_length;
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			x ( temporary_vertex ) = x ( ver1 ) + tan1[i];  }
-		Manifold::working.project ( temporary_vertex );
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			tan1[i] = x ( temporary_vertex ) - x ( ver1 );
-			x ( ver1 ) = x ( temporary_vertex );            }
-		double d = Manifold::working.dist_sq ( ver1, stop );
-		if ( d < augm_len_sq )
-		{	double prod = 0.;
-			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-			{	Function x = Manifold::working.coordinates()[i];
-				prod += tan1[i] * ( x(stop) - x(ver1) );          }
-			if ( prod > 0. )  { winner = 1;  break;  }           }
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			x ( temporary_vertex ) = x ( ver2 ) + tan2[i];  }
-		Manifold::working.project ( temporary_vertex );
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			tan2[i] = x ( temporary_vertex ) - x ( ver2 );
-			x ( ver2 ) = x ( temporary_vertex );            }
-		d = Manifold::working.dist_sq ( ver2, stop );
-		if ( d < augm_len_sq )
-		{	double prod = 0.;
-			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-			{	Function x = Manifold::working.coordinates()[i];
-				prod += tan2[i] * ( x(stop) - x(ver2) );          }
-			if ( prod > 0. )  { winner = -1;  break;  }           }
-	}  // end of  while true
-
-	assert ( ( winner == 1 ) or ( winner == -1 ) );
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ ) best_tangent[i] *= winner;
-	progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
-	                        tag::stop_at, stop                                    );
-
-}  // end of progressive_construct
-
-//-------------------------------------------------------------------------------------------------
-
-
-void progressive_construct
-( Mesh & msh, const tag::StartAt &, const Cell & start, const tag::InherentOrientation & )
-// hidden in anonymous namespace
-
-// meshing process starts and stops at the same vertex
-
-{	assert ( start.dim() == 0 );
-	assert ( start.is_positive() );
-
-	desired_len_at_point = desired_length ( start );
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
-
-	progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
-                          tag::stop_at, start                                   );
-	update_info_connected_one_dim ( msh, start, start );
-	// define number of segments, first vertex, last vertex
-
-	if ( not correctly_oriented ( msh ) ) switch_orientation ( msh );
-}
-	
-//-------------------------------------------------------------------------------------------------
-
-
-void progressive_construct
-( Mesh & msh, const tag::StartAt &, const Cell & start,
-  const tag::StopAt &, const Cell & stop, const tag::InherentOrientation & )
-// hidden in anonymous namespace
-
-// 'start' and 'stop' are (different) positive vertices
-
-{	assert ( start.dim() == 0 );
-	assert ( stop.dim() == 0 );
-	assert ( start.is_positive() );
-	assert ( stop.is_positive() );
-	assert ( start != stop );
-
-	desired_len_at_point = desired_length ( start );
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
-
-	Mesh msh1 ( tag::whose_core_is,
-	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	    tag::freshly_created, tag::is_positive                                               );
-	// the number of segments does not count, and we don't know it yet
-	// we compute it after the mesh is built, by counting segments
-	// but we count segments using an iterator, and the iterator won't work
-	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-	// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-	// in iterator.cpp
-	progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
-                          tag::stop_at, stop );
-	update_info_connected_one_dim ( msh1, start, stop );
-	// define number of segments, first vertex, last vertex
-	
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
-	// the number of segments does not count, and we don't know it yet
-	Mesh msh2 ( tag::whose_core_is,
-	    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	    tag::freshly_created, tag::is_positive                                               );
-	// the number of segments does not count, and we don't know it yet
-	// we compute it after the mesh is built, by counting segments
-	// but we count segments using an iterator, and the iterator won't work
-	// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-	// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-	// in iterator.cpp
-	progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
-                          tag::stop_at, stop                                      );
-
-	switch_orientation ( msh2 );
-	update_info_connected_one_dim ( msh2, stop, start );
-	Mesh whole ( tag::join, msh1, msh2 );
-
-	if ( correctly_oriented ( whole ) ) msh = msh1;
-	else  {  switch_orientation ( msh2 );  msh = msh2;  }
-}
-	
-//-------------------------------------------------------------------------------------------------
-
-
 // manif_type is useful for distinguishing between
 // a quotient manifold and other types of manifold
 
 template < class manif_type >
-void progressive_construct
+void progressive_construct           // hidden in anonymous namespace
 (	Mesh & msh, const tag::StartAt &, Cell start,
 	const tag::Towards &, std::vector<double> & normal,
-	const tag::Boundary &, Mesh bdry                    )
-// hidden in anonymous namespace
+	const tag::Boundary &, Mesh bdry                   )
 
 // for two-dimensional meshes (arbitrary geometric dimension)
 	
@@ -2060,16 +1830,227 @@ search_for_start :  // execution only reaches this point through 'goto'
 //-------------------------------------------------------------------------------------------------
 
 
-inline void progressive_construct
-(	Mesh & msh, const tag::StartWithNonExistentMesh &,
-	const tag::StartAt, const Cell & start,
-	const tag::InherentOrientation &, bool check_and_switch )
+void progressive_construct ( Mesh & msh,
+	const tag::StartAt &, const Cell & start,
+	const tag::Towards &, std::vector < double > & tangent,
+	const tag::StopAt &, const Cell & stop                 )
 // hidden in anonymous namespace
+
+// builds a one-dimensional mesh (a curve)
+// orientation given by 'tangent'
 	
-// if last argument is true, compute inherent orientation
-// otherwise, random orientation
+// 'start' and 'stop' are vertices (may be one and the same)
+	
+{	assert ( start.dim() == 0 );
+	assert ( stop.dim() == 0 );
+
+	size_t counter = 1;
+	size_t max_counter = 0;  //  std::cin >> max_counter;
+	Cell A = start;
+	while ( true )
+	{	double d = Manifold::working.dist_sq ( A, stop );  // long range distance !
+		desired_len_at_point = desired_length ( A );
+		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+		double augm_length = desired_len_at_point * 1.618034,  // golden number
+		       augm_len_sq = augm_length * augm_length;
+		if ( d < augm_len_sq )
+		{	// below we could use the Riemannian metric
+			// however, the sign should be the same
+			std::vector < double > e ( progress_nb_of_coords );
+			double prod = 0.;
+			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+			{	Function x = Manifold::working.coordinates()[i];
+				e[i] = x(stop) - x(A);  // recover tangent from hook !
+				prod += tangent[i] * e[i];                        }
+			if ( prod > 0. )
+			{	Cell last ( tag::segment, A.reverse(), stop );
+				last.add_to_mesh ( msh, tag::do_not_bother );
+				// the meaning of tag::do_not_bother is explained
+				// at the end of paragraph 11.6 in the manual
+				// redistribute vertices
+				double n2 = Manifold::working.inner_prod ( A, e, e );
+				double norm = approx_sqrt ( n2, tag::around,
+			                              sq_desired_len_at_point, desired_len_at_point );
+				norm = approx_sqrt ( n2, tag::around, norm*norm, norm );
+				redistribute_vertices ( msh, start, stop, norm, 15 );
+				break;                                                                       }  }
+		Cell B ( tag::vertex );
+		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+		{	Function x = Manifold::working.coordinates()[i];
+			x(B) = x(A) + tangent[i];                         }
+		if ( counter == max_counter ) return;
+		Manifold::working.project ( B );
+		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+		{	Function x = Manifold::working.coordinates()[i];  // recover tangent from hook !
+			tangent[i] = x(B) - x(A);                         }
+		double n2 = 0.;  // Manifold::working.inner_prod ( A, tangent, tangent ); ?!!
+		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+		{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }
+		n2 = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
+		n2 = desired_len_at_point / n2;
+		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= n2;
+		Cell AB ( tag::segment, A.reverse(), B );
+		AB.add_to_mesh ( msh, tag::do_not_bother );
+		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
+		counter++;  A = B;                                                                      }
+	
+		update_info_connected_one_dim ( msh, start, stop );
+		
+} // end of  progressive_construct
+
+//-------------------------------------------------------------------------------------------------
+
+
+void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & start,
+                             const tag::StopAt &, const Cell & stop,
+                             const tag::Orientation &, const tag::OrientationChoice & oc )
+// hidden in anonymous namespace
+
+// 'start' and 'stop' are positive vertices (may be one and the same)
+
+{	assert ( start .dim() == 0 );
+	assert ( stop .dim() == 0 );
+	assert ( start .is_positive() );
+	assert ( stop .is_positive() );
+	assert ( msh .dim() == 1 );
+
+	desired_len_at_point = desired_length ( start );
+	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
+
+	switch ( oc )
+		
+	{	case tag::shortest_path :
+
+		{	// start walking along the manifold from 'start' in the direction of best_tangent
+			// and, simultaneously, in the opposite direction, given by -best_tangent
+			std::vector < double > tan1 = best_tangent, tan2 = best_tangent;
+			for ( size_t i = 0; i < progress_nb_of_coords; i++ ) tan2[i] *= -1.;
+			Cell ver1 ( tag::vertex ), ver2 ( tag::vertex );
+			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+			{	Function x = Manifold::working.coordinates()[i];
+				x ( ver1 ) = x ( start );  x ( ver2 ) = x ( start );  }
+			int winner = 0;  //  will be 1 or -1
+			while ( true )
+			{	double augm_length = desired_length(ver1) * 1.5,
+				       augm_len_sq = augm_length * augm_length;
+				for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+				{	Function x = Manifold::working.coordinates()[i];
+					x ( temporary_vertex ) = x ( ver1 ) + tan1[i];  }
+				Manifold::working.project ( temporary_vertex );
+				for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+				{	Function x = Manifold::working.coordinates()[i];
+					tan1[i] = x ( temporary_vertex ) - x ( ver1 );
+					x ( ver1 ) = x ( temporary_vertex );            }
+				double d = Manifold::working.dist_sq ( ver1, stop );
+				if ( d < augm_len_sq )
+				{	double prod = 0.;
+					for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+					{	Function x = Manifold::working.coordinates()[i];
+						prod += tan1[i] * ( x(stop) - x(ver1) );          }
+					if ( prod > 0. )  { winner = 1;  break;  }           }
+				for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+				{	Function x = Manifold::working.coordinates()[i];
+					x ( temporary_vertex ) = x ( ver2 ) + tan2[i];  }
+				Manifold::working.project ( temporary_vertex );
+				for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+				{	Function x = Manifold::working.coordinates()[i];
+					tan2[i] = x ( temporary_vertex ) - x ( ver2 );
+					x ( ver2 ) = x ( temporary_vertex );            }
+				d = Manifold::working.dist_sq ( ver2, stop );
+				if ( d < augm_len_sq )
+				{	double prod = 0.;
+					for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+					{	Function x = Manifold::working.coordinates()[i];
+						prod += tan2[i] * ( x(stop) - x(ver2) );          }
+					if ( prod > 0. )  { winner = -1;  break;  }           }
+			}  // end of  while true
+
+			assert ( ( winner == 1 ) or ( winner == -1 ) );
+			for ( size_t i = 0; i < progress_nb_of_coords; i++ ) best_tangent[i] *= winner;
+			progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
+			                        tag::stop_at, stop                                    );
+			break;                                                                            }
+
+		case tag::inherent :
+
+		{	assert ( start != stop );
+
+			Mesh msh1 ( tag::whose_core_is,
+			    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+			    tag::freshly_created, tag::is_positive                                               );
+			// the number of segments does not count, and we don't know it yet
+			// we compute it after the mesh is built, by counting segments
+			// but we count segments using an iterator, and the iterator won't work
+			// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+			// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+			// in iterator.cpp
+			progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
+  		                        tag::stop_at, stop );
+	
+			for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
+			// the number of segments does not count, and we don't know it yet
+			Mesh msh2 ( tag::whose_core_is,
+			    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+		  	  tag::freshly_created, tag::is_positive                                               );
+			// the number of segments does not count, and we don't know it yet
+			// we compute it after the mesh is built, by counting segments
+			// but we count segments using an iterator, and the iterator won't work
+			// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+			// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+			// in iterator.cpp
+			progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
+			                        tag::stop_at, stop                                      );
+
+			switch_orientation ( msh2 );
+			update_info_connected_one_dim ( msh2, stop, start );
+			Mesh whole ( tag::join, msh1, msh2 );
+
+			if ( correctly_oriented ( whole ) ) msh = msh1;
+			else  {  switch_orientation ( msh2 );  msh = msh2;  }
+			
+			break;                                                                                  }
+
+		default :	assert ( false );
+			
+	}  // end of  switch ( oc )
+
+}  // end of  progressive_construct
+
+//-------------------------------------------------------------------------------------------------
+
+
+void progressive_construct     // hidden in anonymous namespace
+( Mesh & msh, const tag::StartAt &, const Cell & start,
+  const tag::Orientation &, const tag::OrientationChoice & oc )
+
+// meshing process starts and stops at the same vertex
+
+{	assert ( start.dim() == 0 );
+	assert ( start.is_positive() );
+	assert ( oc == tag::inherent );
+
+	desired_len_at_point = desired_length ( start );
+	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
+
+	progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
+                          tag::stop_at, start                                   );
+
+	if ( not correctly_oriented ( msh ) ) switch_orientation ( msh );                    }
+	
+//-------------------------------------------------------------------------------------------------
+
+
+inline void progressive_construct     // hidden in anonymous namespace
+( Mesh & msh, const tag::StartWithNonExistentMesh &,
+  const tag::StartAt, const Cell & start,
+  const tag::Orientation &, const tag::OrientationChoice & oc )
+
+// last argument may be  tag::random  or  tag::inherent	
 
 {	assert ( not msh.exists() );
+	assert ( ( oc == tag::random ) or ( oc == tag::inherent ) );
 
 	// call to 'compute_tangent_vec' does not depend on the dimension of the mesh
 	desired_len_at_point = desired_length ( start );
@@ -2078,7 +2059,7 @@ inline void progressive_construct
 
 	// now we branch, depending on the dimension
 	if ( get_topological_dim() == 1 )
-	{	msh.core = new Mesh::Connected::OneDim
+	{	msh .core = new Mesh::Connected::OneDim
 			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
 		// the number of segments does not count, and we don't know it yet
 		// we compute it after the mesh is built, by counting segments
@@ -2087,8 +2068,7 @@ inline void progressive_construct
 		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
 		progressive_construct ( msh, tag::start_at, start, tag::towards, tangent,
-		                        tag::stop_at, start                              );
-		update_info_connected_one_dim ( msh, start, start );                        }
+		                        tag::stop_at, start                              );  }
 	else
 	{	assert ( get_topological_dim() == 2 );  // no 3D for now
 		assert ( progress_nb_of_coords == 3 );
@@ -2119,51 +2099,51 @@ inline void progressive_construct
 		update_info_connected_one_dim ( interf, B, B );
 		progressive_construct < Manifold::Type::Euclidian >
 			( msh, tag::start_at, AB.reverse(), tag::towards, normal, tag::boundary, interf );     }
-	// end of  else  with  msh.dim() == 2
-	
-	if ( not check_and_switch ) return;
+	// end of  else  with  topological dim == 2
+
+	if ( oc == tag::random ) return;
+	assert ( oc == tag::inherent );
 	if ( not correctly_oriented ( msh ) )  switch_orientation ( msh );
 	assert ( correctly_oriented ( msh ) );                                                        }
 
 //-------------------------------------------------------------------------------------------------
 	
 
-inline void progressive_construct
+inline void progressive_construct          // hidden in anonymous namespace
 (	Mesh & msh, const tag::StartWithNonExistentMesh &,
-	const tag::InherentOrientation &, bool check_and_switch )
-// hidden in anonymous namespace
-	
-// if last argument is true, compute inherent orientation
-// otherwise, random orientation
+  const tag::Orientation &, const tag::OrientationChoice & oc )
 
-{	// call to 'search_start_ver' does not depend on the dimension of the mesh
+// we assume the working manifold is compact
+// last argument may be  tag::random  or  tag::inherent
+
+{	assert ( ( oc == tag::random ) or ( oc == tag::inherent ) );
+
+	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
 	progressive_construct ( msh, tag::start_with_non_existent_mesh,
-                          tag::start_at, start, tag::inherent_orientation, check_and_switch );
+                          tag::start_at, start, tag::orientation, oc );
 }  // end of progressive_construct
 
 //-------------------------------------------------------------------------------------------------
 
 
-inline void progressive_construct
-(	Mesh & msh, const tag::StartAt &, const Cell & start,
-	const tag::Boundary &, Mesh interface,
-	const tag::InherentOrientation, bool check_and_switch )
-// hidden in anonymous namespace
+inline void progressive_construct         // hidden in anonymous namespace
+( Mesh & msh, const tag::StartAt &, const Cell & start,
+  const tag::Boundary &, Mesh interface,
+  const tag::Orientation &, const tag::OrientationChoice & oc )
 
-// if last argument is true, compute inherent orientation
-// otherwise, random orientation
+// 'oc' may be  inherent  random
 	
-{	assert ( Manifold::working.coordinates().nb_of_components() == 3 );
-	assert ( msh.dim() == 2 );
-	assert ( start.core->belongs_to ( interface.core, tag::same_dim, tag::oriented ) );
+{	assert ( Manifold::working .coordinates() .nb_of_components() == 3 );
+	assert ( msh .dim() == 2 );
+	assert ( start .core->belongs_to ( interface.core, tag::same_dim, tag::oriented ) );
 
 	// compute a normal vector, on an arbitrary side of 'start'
-	Cell A = start.base().reverse();
-	Cell B = start.tip();
-	Function x = Manifold::working.coordinates()[0];
-	Function y = Manifold::working.coordinates()[1];
-	Function z = Manifold::working.coordinates()[2];
+	Cell A = start .base() .reverse();
+	Cell B = start .tip();
+	Function x = Manifold::working .coordinates() [0];
+	Function y = Manifold::working .coordinates() [1];
+	Function z = Manifold::working .coordinates() [2];
 	std::vector < double > tan { x(B) - x(A), y(B) - y(A), z(B) - z(A) };
 	desired_len_at_point = desired_length ( A );
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
@@ -2173,16 +2153,17 @@ inline void progressive_construct
 	progressive_construct < Manifold::Type::Euclidian >
 		( msh, tag::start_at, start, tag::towards, nor, tag::boundary, interface );
 
-	if ( not check_and_switch ) return;
+	if ( oc == tag::random ) return;
+	assert ( oc == tag::inherent );
 
 	Mesh interf_rev ( tag::whose_core_is,   // of dimesion one
 		new Mesh::Fuzzy ( tag::of_dim, 2, tag::minus_one, tag::one_dummy_wrapper ),
 		tag::freshly_created, tag::is_positive                                      );
-	Mesh::Iterator it = interface.iterator ( tag::over_segments );
-	for ( it.reset(); it.in_range(); it++ )
-		(*it).reverse().add_to_mesh ( interf_rev );
-	assert ( start.reverse().core->belongs_to
-			( interf_rev.core, tag::same_dim, tag::oriented ) );
+	Mesh::Iterator it = interface .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		(*it) .reverse() .add_to_mesh ( interf_rev );
+	assert ( start .reverse() .core->belongs_to
+			( interf_rev .core, tag::same_dim, tag::oriented ) );
 
 	// std::cout << "wait a minute ..." << std::endl;
 	// build the mesh on the other side of 'interface'
@@ -2191,21 +2172,21 @@ inline void progressive_construct
 		new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
 		tag::freshly_created, tag::is_positive                                      );
 	progressive_construct < Manifold::Type::Euclidian >
-		( msh2, tag::start_at, start.reverse(), tag::towards, nor, tag::boundary, interf_rev );	
+		( msh2, tag::start_at, start .reverse(), tag::towards, nor, tag::boundary, interf_rev );	
 	// join everything to get a mesh on the entire manifold
-	Mesh glob ( tag::join, msh, msh2 );
+	Mesh whole ( tag::join, msh, msh2 );
 
-	if ( not correctly_oriented ( glob ) )
+	if ( not correctly_oriented ( whole ) )
 	{	switch_orientation ( msh2 );  msh = msh2;  }
-}
+
+}  // end of  progressive_construct
 
 //-------------------------------------------------------------------------------------------------
 	
 
-void progressive_construct
+void progressive_construct        // hidden in anonymous namespace
 (	Mesh & msh, const tag::StartAt &, const Cell & start,
-	const tag::Boundary &, Mesh interface                 )
-// hidden in anonymous namespace
+	const tag::Boundary &, Mesh interface                )
 
 // for two-dimensional meshes in RR^2 (intrinsic orientation)
 //   or in a 2D submanifold of RR^3 (random orientation)
@@ -2216,10 +2197,9 @@ void progressive_construct
 {	if ( Manifold::working.coordinates().nb_of_components() == 3 )
 	// surface in RR^3
 	{	progressive_construct ( msh, tag::start_at, start, tag::boundary, interface,
-		                        tag::inherent_orientation, false                     );
+		                        tag::orientation, tag::random                       );
 		// last argument 'false' means do not check orientation, leave it random
-
-		return;                                                                            }
+		return;                                                                        }
 	
 	// domain in the plane RR^2
 	Cell A = start.base().reverse();
@@ -2229,13 +2209,15 @@ void progressive_construct
 	std::vector < double > nor { y(A) - y(B), x(B) - x(A) };   // rotate with 90 deg
 
 	progressive_construct < Manifold::Type::Euclidian >
-		( msh, tag::start_at, start, tag::towards, nor, tag::boundary, interface );           }
-	
+		( msh, tag::start_at, start, tag::towards, nor, tag::boundary, interface );
+	// intrinsic orientation
+
+}  // end of  progressive_construct
+
 //-------------------------------------------------------------------------------------------------
 
 
-void progressive_construct
-(	Mesh & msh, const tag::Boundary &, Mesh interface )
+void progressive_construct (	Mesh & msh, const tag::Boundary &, Mesh interface )
 // hidden in anonymous namespace
 
 // for two-dimensional meshes in RR^2 (intrinsic orientation)
@@ -2250,20 +2232,19 @@ void progressive_construct
 //-------------------------------------------------------------------------------------------------
 
 
-void progressive_construct
+void progressive_construct               // hidden in anonymous namespace
 (	Mesh & msh, const tag::Boundary &, Mesh interface,
-	const tag::InherentOrientation, bool check_and_switch )
-// hidden in anonymous namespace
+	const tag::Orientation &, const tag::OrientationChoice & oc )
 
-// if last argument is true, compute inherent orientation
-// otherwise, random orientation
-
+// 'oc' may be  inherent  random
+	
 {	// we search for a starting point
 	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
+	assert ( ( oc == tag::inherent ) or ( oc == tag::random ) );
 	progressive_construct ( msh, tag::start_at, *it, tag::boundary, interface,
-	                        tag::inherent_orientation, check_and_switch        );   }
+	                        tag::orientation, oc                              );  }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -2274,18 +2255,21 @@ void progressive_construct
 
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length )
 
-// since no boundary is provided, we assume the working manifold is compact
+// since no boundary is provided, we assume the user wants the entire working manifold
+// we assume the working manifold is compact
+// we also assume the user wants the inherent orientation
+// a special case : mesh a quotient manifold entirely
 	
 :	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                        tag::inherent_orientation, true          );           }
-	// last argument true means : check orientation, switch it if necessary
+	                        tag::orientation, tag::inherent          );           }
+	// last argument means : check orientation, switch it if necessary
 
 //-------------------------------------------------------------------------------------------------
 
@@ -2293,6 +2277,10 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
              const tag::DesiredLength &, const Function &  length                  )
 
+// we assume 'manif' is a compact manifold
+// we also assume the user wants the inherent orientation
+// a special case : mesh a quotient manifold entirely
+	
 :	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
@@ -2300,12 +2288,12 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 	Manifold::working = manif;
 	
 	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                        tag::inherent_orientation, true          );
-	// last argument true means : check orientation, switch it if necessary
+	                        tag::orientation, tag::inherent          );
+	// last arguments means : check orientation, switch it if necessary
 
 	Manifold::working = tmp_manif;                                                }
 
@@ -2313,25 +2301,30 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 
 
 Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
-             const tag::RandomOrientation &                                                 )
+             const tag::Orientation &, const tag::OrientationChoice & oc                   )
 
+// since no boundary is provided, we assume the user wants the entire working manifold
+// we assume the working manifold is compact
+	
 :	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
 {	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates().nb_of_components();
 	desired_length = length;
 
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                        tag::inherent_orientation, false         );          }
-	// last argument false means : do not check orientation, leave it random
+	                        tag::orientation, oc                     );          }
 
 //-------------------------------------------------------------------------------------------------
 
 
 Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
-             const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
+             const tag::DesiredLength &, const Function & length,
+             const tag::Orientation &, const tag::OrientationChoice & oc           )
 
+// we assume 'manif' is a compact manifold
+	
 :	Mesh ( tag::non_existent )
 // we don't know yet the dimension, so we postpone the constructor
 
@@ -2339,244 +2332,13 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 	Manifold::working = manif;
 	
 	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                        tag::inherent_orientation, false         );
-	// last argument false means : do not check orientation, leave it random
+	                        tag::orientation, oc                     );
 
 	Manifold::working = tmp_manif;                                                }
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
-             const tag::InherentOrientation &                                               )
-
-:	Mesh ( tag::non_existent )
-// we don't know yet the dimension, so we postpone the constructor
- 	
-{	assert ( Manifold::working.coordinates().nb_of_components() == this->dim() + 1 );
-	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                        tag::inherent_orientation, true          );                }
-	// last argument true means : check orientation, switch it if necessary
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
-             const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
-
-:	Mesh ( tag::non_existent )
-// we don't know yet the dimension, so we postpone the constructor
-
-{	assert ( Manifold::working.coordinates().nb_of_components() == this->dim() + 1 );
-	Manifold tmp_manif = Manifold::working;
-	Manifold::working = manif;
-	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                        tag::inherent_orientation, true          );
-	// last argument true means : check orientation, switch it if necessary
-
-	Manifold::working = tmp_manif;                                                    }
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-             const tag::Towards &, std::vector<double> tangent,
-             const tag::StopAt &, const Cell & stop,
-             const tag::DesiredLength &, const Function & length                 )
-
-// 'start' and 'stop' are positive vertices, may be the same
-
-:	Mesh ( tag::whose_core_is,
-	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                                               )
-// the number of segments does not count, and we don't know it yet
-// we compute it after the mesh is built, by counting segments
-// but we count segments using an iterator, and the iterator won't work
-// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-// in iterator.cpp
-
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	desired_len_at_point = desired_length ( start );
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-
-	double n2 = 0.;  // ensure that normal has the right norm
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-	{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }
-	double coef = desired_len_at_point / std::sqrt(n2);
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= coef;
-
-	improve_tangent ( start, tangent );
-	// ensures again the norm is right, then projects on the tangent space
-
-	progressive_construct ( *this, tag::start_at, start, tag::towards, tangent,
-	                        tag::stop_at, stop                                  );
-	update_info_connected_one_dim ( *this, start, stop );  	                       }
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-             const tag::Towards &, std::vector<double> tangent,
-             const tag::DesiredLength &, const Function & length                  )
-
-: Mesh ( tag::whose_core_is,
-         new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-         tag::freshly_created, tag::is_positive                                               )
-// the number of segments does not count, and we don't know it yet
-// we compute it after the mesh is built, by counting segments
-// but we count segments using an iterator, and the iterator won't work
-// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-// in iterator.cpp
-
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	desired_len_at_point = desired_length ( start );
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
-
-	double n2 = 0.;  // ensure that normal has the right norm
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-	{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }
-	double coef = desired_len_at_point / std::sqrt(n2);
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= coef;
-	desired_length = length;
-
-	improve_tangent ( start, tangent );
-	// ensures again the norm is right, then projects on the tangent space
-
-	progressive_construct ( *this, tag::start_at, start, tag::towards, tangent,
-	                        tag::stop_at, start                                 );
-	update_info_connected_one_dim ( *this, start, start );                         }
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-             const tag::StopAt &, const Cell & stop,
-             const tag::DesiredLength &, const Function & length                 )
-
-:	Mesh ( tag::whose_core_is,
-	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                                               )
-// the number of segments does not count, and we don't know it yet
-// we compute it after the mesh is built, by counting segments
-// but we count segments using an iterator, and the iterator won't work
-// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-// in iterator.cpp
-
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop );   }
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-             const tag::DesiredLength &, const Function & length                 )
-
-:	Mesh ( tag::non_existent )
-// we don't know yet the dimension, so we postpone the constructor
-
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	if ( get_topological_dim() == 1 )
-	{	this->core = new Mesh::Connected::OneDim
-			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
-		// the number of segments does not count, and we don't know it yet
-		// we compute it after the mesh is built, by counting segments
-		// but we count segments using an iterator, and the iterator won't work
-		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-		// in iterator.cpp
-		if ( progress_nb_of_coords == 2 )
-			progressive_construct ( *this, tag::start_at, start, tag::inherent_orientation );
-		else  // random orientation
-			progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );       }
-	else
-	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
-		bool check_and_switch = ( progress_nb_of_coords == 3 );
-		progressive_construct ( *this, tag::start_with_non_existent_mesh, tag::start_at, start,
-		                        tag::inherent_orientation, check_and_switch                    ); }  }
-		// last argument true means : check orientation, switch it if necessary
-		// last argument false means : do not check orientation, leave it random
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-             const tag::DesiredLength &, const Function & length, const tag::RandomOrientation & )
-
-:	Mesh ( tag::non_existent )
-// we don't know yet the dimension, so we postpone the constructor
-	
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	if ( get_topological_dim() == 1 )
-	{	this->core = new Mesh::Connected::OneDim
-			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
-		// the number of segments does not count, and we don't know it yet
-		// we compute it after the mesh is built, by counting segments
-		// but we count segments using an iterator, and the iterator won't work
-		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-		// in iterator.cpp
-		progressive_construct ( *this, tag::start_at, start, tag::stop_at, start );  // random orientation
-		// update_info_connected_one_dim ( *this, start, start );
-	}
-	else
-	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
-		progressive_construct ( *this, tag::start_with_non_existent_mesh,
-	                          tag::start_at, start, tag::inherent_orientation, false );  }  }
-		// last argument false means : do not check orientation, leave it random
-
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-             const tag::StopAt &, const Cell & stop,
-             const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
-
-: Mesh ( tag::whose_core_is,
-         new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-         tag::freshly_created, tag::is_positive                                               )
-// the number of segments does not count, and we don't know it yet
-// we compute it after the mesh is built, by counting segments
-// but we count segments using an iterator, and the iterator won't work
-// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-// in iterator.cpp
-
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,
-	                        tag::inherent_orientation                        );  }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -2589,52 +2351,34 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 
 :	Mesh ( tag::whose_core_is,
 	       new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                                      )
+	       tag::freshly_created, tag::is_positive                                     )
 
 {	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
-	progressive_construct ( *this, tag::boundary, interface );                   }
+	progressive_construct ( *this, tag::boundary, interface );                    }
 	
 //-------------------------------------------------------------------------------------------------
 
 
 Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-             const tag::DesiredLength &, const Function & length, const tag::IntrinsicOrientation & )
+             const tag::DesiredLength &, const Function & length,
+             const tag::Orientation &, const tag::OrientationChoice & oc     )
 
 // for now, only works for two-dimensional meshes in RR2
 // should be adapted for three-dimensional meshes
 
 :	Mesh ( tag::whose_core_is,
 	       new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                                      )
+	       tag::freshly_created, tag::is_positive                                     )
 
 {	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
-	assert ( Manifold::working.coordinates().nb_of_components() == 2 );
-	progressive_construct ( *this, tag::boundary, interface );                   }
-	
-//-------------------------------------------------------------------------------------------------
-
-
-Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-             const tag::DesiredLength &, const Function & length, const tag::InherentOrientation & )
-
-// for two-dimensional meshes in RR^3
-
-:	Mesh ( tag::whose_core_is,
-	       new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                                      )
-
-{	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
-	desired_length = length;
-
-	assert ( Manifold::working.coordinates().nb_of_components() == 3 );
-	progressive_construct ( *this, tag::boundary, interface, tag::inherent_orientation, true );  }
+	assert ( Manifold::working.coordinates() .nb_of_components() == 2 );
+	progressive_construct ( *this, tag::boundary, interface, tag::orientation, oc );  }
 	
 //-------------------------------------------------------------------------------------------------
 
@@ -2642,16 +2386,16 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
              const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> normal,             
-             const tag::DesiredLength &, const Function & length               )
+             const tag::DesiredLength &, const Function & length             )
 	
 // 'start' is a vertex or segment belonging to 'interface'
 
 :	Mesh ( tag::whose_core_is,
 	       new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper ),
-	       tag::freshly_created, tag::is_positive                                      )
+	       tag::freshly_created, tag::is_positive                                     )
 
 {	temporary_vertex = Cell ( tag::vertex );
-	progress_nb_of_coords = Manifold::working.coordinates().nb_of_components();
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
 	progressive_construct < Manifold::Type::Euclidian >
@@ -2660,12 +2404,207 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 //-------------------------------------------------------------------------------------------------
 
 
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::Towards &, std::vector<double> tangent,
+             const tag::StopAt &, const Cell & stop,
+             const tag::DesiredLength &, const Function & length                )
+
+// 'start' and 'stop' are positive vertices, may be one and the same
+
+:	Mesh ( tag::whose_core_is,
+	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+	       tag::freshly_created, tag::is_positive                                              )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+
+	desired_len_at_point = desired_length ( start );
+	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+
+	double n2 = 0.;  // ensure that normal has the right norm
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	double temp = tangent [i];  temp *= temp;  n2 += temp;  }
+	double coef = desired_len_at_point / std::sqrt(n2);
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent [i] *= coef;
+
+	improve_tangent ( start, tangent );
+	// ensures again the norm is right, then projects on the tangent space
+
+	progressive_construct ( *this, tag::start_at, start, tag::towards, tangent,
+	                        tag::stop_at, stop                                 );  }
+
+//-------------------------------------------------------------------------------------------------
+
+
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::Towards &, std::vector<double> tangent,
+             const tag::DesiredLength &, const Function & length                )
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                               )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+
+	desired_len_at_point = desired_length ( start );
+	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+
+	double n2 = 0.;  // ensure that normal has the right norm
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }
+	double coef = desired_len_at_point / std::sqrt(n2);
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= coef;
+	desired_length = length;
+
+	improve_tangent ( start, tangent );
+	// ensures again the norm is right, then projects on the tangent space
+
+	progressive_construct ( *this, tag::start_at, start, tag::towards, tangent,
+	                        tag::stop_at, start                                );  }
+
+//-------------------------------------------------------------------------------------------------
+
+
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::DesiredLength &, const Function & length                )
+
+:	Mesh ( tag::non_existent )
+// we don't know yet the dimension, so we postpone the constructor
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+
+	if ( get_topological_dim() == 1 )
+	{	this->core = new Mesh::Connected::OneDim
+			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
+		// the number of segments does not count, and we don't know it yet
+		// we compute it after the mesh is built, by counting segments
+		// but we count segments using an iterator, and the iterator won't work
+		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// in iterator.cpp
+		// no stopping point, we assume the user wants to mesh the entire working manifold
+		// we assume the working manifold is compact
+		if ( progress_nb_of_coords == 2 )
+			progressive_construct ( *this, tag::start_at, start, tag::orientation, tag::inherent );
+		else  // random orientation
+			progressive_construct ( *this, tag::start_at, start,
+			                        tag::stop_at, start, tag::orientation, tag::random );          }
+	else
+	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
+		tag::OrientationChoice oc;
+		if ( progress_nb_of_coords == 2 ) oc = tag::intrinsic;
+		else oc = tag::inherent;
+		progressive_construct ( *this, tag::start_with_non_existent_mesh,
+		                        tag::start_at, start, tag::orientation, oc ); }                    }
+
+//-------------------------------------------------------------------------------------------------
+
+
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::DesiredLength &, const Function & length,
+             const tag::Orientation &, const tag::OrientationChoice & oc        )
+
+:	Mesh ( tag::non_existent )
+// we don't know yet the dimension, so we postpone the constructor
+	
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+
+	if ( get_topological_dim() == 1 )
+	{	this->core = new Mesh::Connected::OneDim
+			( tag::with, 1, tag::segments, tag::one_dummy_wrapper );
+		// the number of segments does not count, and we don't know it yet
+		// we compute it after the mesh is built, by counting segments
+		// but we count segments using an iterator, and the iterator won't work
+		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+		// in iterator.cpp
+		progressive_construct ( *this, tag::start_at, start,
+		                        tag::stop_at, start, tag::orientation, oc );   }
+	else
+	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
+		progressive_construct ( *this, tag::start_with_non_existent_mesh,
+	                          tag::start_at, start, tag::orientation, oc );  }        }
+
+//-------------------------------------------------------------------------------------------------
+
+
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::StopAt &, const Cell & stop,
+             const tag::DesiredLength &, const Function & length                )
+
+// build a one-dimensional mesh
+// no orientation provided, so we use shortest path
+	
+:	Mesh ( tag::whose_core_is,
+	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+	       tag::freshly_created, tag::is_positive                                              )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,
+	                        tag::orientation, tag::shortest_path            );    }
+
+//-------------------------------------------------------------------------------------------------
+
+
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::StopAt &, const Cell & stop,
+             const tag::DesiredLength &, const Function & length,
+             const tag::Orientation &, const tag::OrientationChoice & oc        )
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                              )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+	
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,
+	                        tag::orientation, oc                           );   }
+
+//-------------------------------------------------------------------------------------------------
+
+
 void print_winding ( Manifold::Action a )
 
 {	Manifold::Quotient * manif_q = dynamic_cast
-		< Manifold::Quotient* > ( Manifold::working.core );
+		< Manifold::Quotient* > ( Manifold::working .core );
 	assert ( manif_q );
-	Function xy = manif_q->base_space.coordinates();
+	Function xy = manif_q->base_space .coordinates();
 	Function x = xy[0], y = xy[1];
 	size_t n = manif_q->actions.size();
 	assert ( n == manif_q->winding_nbs.size() );

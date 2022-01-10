@@ -20,8 +20,8 @@ int main ()
 	Function r = power ( x*x + y*y, 0.25 );
 	RR2 .implicit ( x*sin(r) == y*cos(r) );
 
-	Cell A ( tag::vertex );  x (A) = std::pow (   3.14159,2.);  y (A) =  0.;
-	Cell B ( tag::vertex );  x (B) = std::pow ( 9*3.14159,2.);  y (B) =  0.;
+	Cell A ( tag::vertex );  x (A) = std::pow (   3.14159, 2.);  y (A) =  0.;
+	Cell B ( tag::vertex );  x (B) = std::pow ( 9*3.14159, 2.);  y (B) =  0.;
 	Mesh spiral ( tag::progressive, tag::start_at, A, tag::stop_at, B, tag::desired_length, 1. );
 
 	spiral .export_msh ("spiral.msh");

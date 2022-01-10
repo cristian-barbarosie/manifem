@@ -21,7 +21,7 @@ int main ()
 	// build the base (a closed curve)
 	nut .implicit ( x*x + 3.*z == 0. );
 
-	Mesh circle ( tag::progressive, tag::desired_length, 0.1, tag::random_orientation );
+	Mesh circle ( tag::progressive, tag::desired_length, 0.1, tag::orientation, tag::random );
 
 	nut .set_as_working_manifold();
 	Mesh bumpy ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.098 );
