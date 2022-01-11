@@ -21,8 +21,18 @@ int main ( )
 	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
 	Mesh circle ( tag::progressive, tag::start_at, A, tag::desired_length, 0.2 );
 
+	// should work just the same with     tag::orientation, tag::inherent
+	// should work with                   tag::orientation, tag::random,
+	//        but constructor  Mesh disk  below may enter in an endless process
+	//        of meshing the exterior of the disk
+	// should produce error message with  tag::orientation, tag::intrinsic
+
 	RR2 .set_as_working_manifold();
 	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.2 );
+
+	// should work just the same with     tag::orientation, tag::intrinsic
+	// should produce error message with  tag::orientation, tag::random
+	// should produce error message with  tag::orientation, tag::inherent
 
 	disk .export_msh ("disk.msh");
 	std::cout << "produced file disk.msh" << std::endl;

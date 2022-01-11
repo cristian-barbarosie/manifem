@@ -21,10 +21,17 @@ int main ()
 	// build the base (a closed curve)
 	nut .implicit ( x*x + 3.*z == 0. );
 
-	Mesh circle ( tag::progressive, tag::desired_length, 0.1, tag::orientation, tag::random );
+	Mesh circle ( tag::progressive, tag::desired_length, 0.1 );
+	// should produce error message if no orientation is provided
+	// should produce error message  with tag::orientation, tag::intrinsic
+	// should produce error message  with tag::orientation, tag::inherent
+
+	std::cout << "main line 28" << std::endl;
 
 	nut .set_as_working_manifold();
-	Mesh bumpy ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.098 );
+	Mesh bumpy ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.098,
+							 tag::orientation, tag::random );
+
 	bumpy .export_msh ("bumpy.msh");
 	
 	cout << "produced file bumpy.msh" << endl;

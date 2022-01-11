@@ -1,5 +1,5 @@
 
-//   mesh.h  2022.01.09
+//   mesh.h  2022.01.10
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -138,7 +138,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct EntireManifold { };  static const EntireManifold entire_manifold;
 	struct DesiredLength { };  static const DesiredLength desired_length;
 	struct Orientation { };  static const Orientation orientation;
-	enum OrientationChoice { random, intrinsic, inherent, shortest_path };
+	enum OrientationChoice { random, intrinsic, inherent, not_provided };
 	struct IntrinsicOrientation { };  static const IntrinsicOrientation intrinsic_orientation;
 	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
 	struct RandomOrientation { };  static const RandomOrientation random_orientation;

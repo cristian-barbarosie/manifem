@@ -20,7 +20,10 @@ int main ()
 	// cout << setprecision(10);
 
 	RR3 .implicit ( x*x + y*y + z*z == 1. );
-	Mesh sphere ( tag::progressive, tag::desired_length, 0.11 );
+	Mesh sphere ( tag::progressive, tag::desired_length, 0.11, tag::orientation, tag::intrinsic );
+
+	// should work just the same with  tag::orientation, tag::inherent
+	// should work with                tag::orientation, tag::random
 
 	sphere .export_msh ("sphere.msh");
 
