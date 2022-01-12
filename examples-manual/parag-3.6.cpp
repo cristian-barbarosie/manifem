@@ -16,15 +16,18 @@ int main ()
 	Function xyz = RR3 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
-	// cout << "this example takes some time" << endl;
-	// cout << setprecision(10);
-
 	RR3 .implicit ( x*x + y*y + z*z == 1. );
-	Mesh sphere ( tag::progressive, tag::desired_length, 0.11, tag::orientation, tag::intrinsic );
+	Mesh sphere ( tag::progressive, tag::desired_length, 0.11 );
 
-	// should work just the same with  tag::orientation, tag::inherent
-	// should work with                tag::orientation, tag::random
+	// should work just the same with     tag::orientation, tag::inherent
+	// should work with                   tag::orientation, tag::random
+	// should produce error message with  tag::orientation, tag::intrinsic
 
+	Mesh::Iterator it = sphere .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell ver = *it;
+	  sphere .baricenter ( ver );  }
+	
 	sphere .export_msh ("sphere.msh");
 
 	cout << "produced file sphere.msh" << endl;

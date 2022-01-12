@@ -1,5 +1,5 @@
 
-// progressive.cpp 2022.01.10
+// progressive.cpp 2022.01.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -839,16 +839,12 @@ bool correctly_oriented    // hidden in anonymous namespace
 //-------------------------------------------------------------------------------------------------
 
 
-inline void switch_orientation ( Cell cll )
+inline void switch_orientation_direct ( Mesh & msh )
 // hidden in anonymous namespace
-
-// this is always called from switch_orientation ( Mesh )
-// we should deal with segments separately, as well as with negative cells
 	
-{	Mesh msh = cll .boundary();
-	std::vector < Cell > vec_of_cells;
+{	std::vector < Cell > vec_of_cells;
 	vec_of_cells .reserve ( msh .number_of ( tag::cells_of_max_dim ) );
-	Mesh::Iterator itt = msh .iterator ( tag::over_cells_of_max_dim, tag::force_positive );
+	Mesh::Iterator itt = msh .iterator ( tag::over_cells_of_max_dim );
 	for ( itt .reset(); itt .in_range(); itt++ )
 		vec_of_cells .push_back ( *itt );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
@@ -862,15 +858,20 @@ inline void switch_orientation ( Cell cll )
 //-------------------------------------------------------------------------------------------------
 
 
-void switch_orientation ( Mesh msh )
+void switch_orientation_of_each_cell ( Mesh & msh )
 // hidden in anonymous namespace
 
-// 'msh' is a closed loop
+// 'msh' is a closed mesh (has no boundary)
 	
-// since 'msh' has just been created, we may choose not to use 'reverse'
-// instead, call switch_orientation on each cell
+// since 'msh' has just been created, we choose not to use 'reverse'
+// instead, call switch_orientation_direct on boundary of each cell
 
-{	std::vector < Cell > vec_of_cells;
+// does not work for one-dimensional meshes
+// because switch_orientation_direct does not work for segments
+// should be adapted
+
+{	assert ( msh .dim() == 2 );
+	std::vector < Cell > vec_of_cells;
 	vec_of_cells .reserve ( msh .number_of ( tag::cells_of_max_dim ) );
 	Mesh::Iterator itt = msh .iterator ( tag::over_cells_of_max_dim );
 	for ( itt .reset(); itt .in_range(); itt++ )
@@ -878,7 +879,10 @@ void switch_orientation ( Mesh msh )
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
 		it->remove_from_mesh ( msh, tag::do_not_bother );
 	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
-		it->reverse() .add_to_mesh ( msh, tag::do_not_bother );                                     }
+	{	Mesh bdry = it->boundary();
+		switch_orientation_direct ( bdry );  }
+	for ( std::vector<Cell>::iterator it = vec_of_cells.begin(); it != vec_of_cells.end(); it++ )
+		it->add_to_mesh ( msh, tag::do_not_bother );                                                }
 // the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 // no need to call update_info_connected_one_dim because we are at hands with a closed loop
 // nb_of_segs remains the same, as well as first_ver and last_ver
@@ -1932,7 +1936,8 @@ void progressive_construct     // hidden in anonymous namespace
                           tag::stop_at, start                                   );
 
 	if ( oc != tag::random )
-		if ( not correctly_oriented ( msh, tag::orientation, oc ) ) switch_orientation ( msh );   }
+		if ( not correctly_oriented ( msh, tag::orientation, oc ) )
+			switch_orientation_direct ( msh );                                                       }
 	
 //-------------------------------------------------------------------------------------------------
 
@@ -2040,12 +2045,12 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 		progressive_construct ( msh2, tag::start_at, start, tag::towards, best_tangent,
 		                        tag::stop_at, stop                                     );
 
-		switch_orientation ( msh2 );
+		switch_orientation_direct ( msh2 );
 		update_info_connected_one_dim ( msh2, stop, start );
 		Mesh whole ( tag::join, msh1, msh2 );
 
 		if ( correctly_oriented ( whole, tag::orientation, oc ) ) msh = msh1;
-		else  {  switch_orientation ( msh2 );  msh = msh2;  }
+		else  {  switch_orientation_direct ( msh2 );  msh = msh2;  }
 			
 		return;                                                                                  }
 
@@ -2102,13 +2107,20 @@ inline void progressive_construct     // hidden in anonymous namespace
 		assert ( progress_nb_of_coords == 2 );
 		assert ( ( oc == tag::inherent ) or ( oc == tag::not_provided ) );
 		// here we interpret "not provided" as "inherent"
-		if ( not correctly_oriented ( msh, tag::orientation, oc ) )  switch_orientation ( msh );
+		if ( not correctly_oriented ( msh, tag::orientation, oc ) )
+			switch_orientation_direct ( msh );
 		assert ( correctly_oriented ( msh, tag::orientation, oc ) );
-		return;                                                                                  }
+		return;                                                                            }
 
 	// else :  top dim > 1
 	{	assert ( get_topological_dim() == 2 );  // no 3D for now
 		assert ( progress_nb_of_coords == 3 );
+
+		if ( oc == tag::intrinsic )
+		{	std::cout << "intrinsic orientation makes no sense here" << std::endl
+			          << "did you mean inherent ?" << std::endl;
+			exit (1);                                                             }
+
 		msh.core = new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper );
 		Cell B ( tag::vertex );
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
@@ -2125,6 +2137,7 @@ inline void progressive_construct     // hidden in anonymous namespace
 		Cell CA ( tag::segment, C .reverse(), start );
 		Cell tri ( tag::triangle, AB, BC, CA );
 		tri.add_to_mesh ( msh );
+		
 		// Mesh interf ( tag::of_dimension_one );
 		Mesh interf ( tag::whose_core_is,
 		    new Mesh::Connected::OneDim ( tag::with, 3, tag::segments, tag::one_dummy_wrapper ),
@@ -2140,7 +2153,8 @@ inline void progressive_construct     // hidden in anonymous namespace
 		if ( oc == tag::random ) return;
 		assert ( ( oc == tag::inherent ) or ( oc == tag::not_provided ) );
 		// here we interpret "not provided" as "inherent"
-		if ( not correctly_oriented ( msh, tag::orientation, oc ) )  switch_orientation ( msh );
+		if ( not correctly_oriented ( msh, tag::orientation, oc ) )
+			switch_orientation_of_each_cell ( msh );
 		assert ( correctly_oriented ( msh, tag::orientation, oc ) );
 		return;                                                                                 }
 
@@ -2232,7 +2246,7 @@ inline void progressive_construct         // hidden in anonymous namespace
 	Mesh whole ( tag::join, msh, msh2 );
 	
 	if ( not correctly_oriented ( whole, tag::orientation, oc ) )
-	{	switch_orientation ( msh2 );  msh = msh2;  }
+	{	switch_orientation_of_each_cell ( msh2 );  msh = msh2;  }
 
 }  // end of  progressive_construct
 
@@ -2259,6 +2273,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
+
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
 	                        tag::start_at, start, tag::orientation, tag::not_provided );  }
 	// last argument is equivalent, in this case, to tag::inherent
@@ -2285,6 +2300,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
+
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
 	                        tag::start_at, start, tag::orientation, tag::not_provided );
 	// last argument is equivalent, in this case, to tag::inherent
@@ -2309,6 +2325,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
+
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
                           tag::start_at, start, tag::orientation, oc );        }
 
@@ -2333,6 +2350,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
+
 	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
                           tag::start_at, start, tag::orientation, oc );
 
@@ -2359,7 +2377,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
-	progressive_construct ( *this, tag::start_at, *it,         // line 2152
+	progressive_construct ( *this, tag::start_at, *it,         // line 2161
                           tag::boundary, interface, tag::orientation, tag::not_provided );  }
 	
 //-------------------------------------------------------------------------------------------------
@@ -2386,7 +2404,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
-	progressive_construct ( *this, tag::start_at, *it,         // line 2152
+	progressive_construct ( *this, tag::start_at, *it,         // line 2161
 	                        tag::boundary, interface, tag::orientation, oc );          }
 	
 //-------------------------------------------------------------------------------------------------

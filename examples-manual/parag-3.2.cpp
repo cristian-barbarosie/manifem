@@ -18,7 +18,7 @@ int main ( )
 	// Mesh circle ( tag::progressive, tag::entire_manifold, circle_manif, tag::desired_length, 0.2 );
 	// Mesh circle ( tag::progressive, tag::desired_length, 0.2 );
 
-	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
+	Cell A ( tag::vertex );  x (A) = 0.;  y (A) = 1.;
 	Mesh circle ( tag::progressive, tag::start_at, A, tag::desired_length, 0.2 );
 
 	// should work just the same with     tag::orientation, tag::inherent
