@@ -34,14 +34,14 @@ int main ( )
 	Manifold circle = RR2 .implicit ( x*x + y*y == 1. );
 	Mesh inner ( tag::progressive, tag::entire_manifold, circle, tag::desired_length, d );
 
-	Mesh bdry ( tag::join, { AB, BC, CD, DE, EF, FA, inner.reverse() } );
+	Mesh bdry ( tag::join, { AB, BC, CD, DE, EF, FA, inner .reverse() } );
 
 	RR2 .set_as_working_manifold();
 	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
 
-	Mesh torus = square .fold ( tag::identify, CD, tag::with, FA.reverse(),
-	                            tag::identify, BC, tag::with, EF.reverse(),
-	                            tag::identify, AB, tag::with, DE.reverse(),
+	Mesh torus = square .fold ( tag::identify, CD, tag::with, FA .reverse(),
+	                            tag::identify, BC, tag::with, EF .reverse(),
+	                            tag::identify, AB, tag::with, DE .reverse(),
 	                            tag::use_existing_vertices                 );
 
 	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;

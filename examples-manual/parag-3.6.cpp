@@ -4,11 +4,9 @@
 // meshes a sphere progressively
 
 #include "maniFEM.h"
-#include <iomanip>
 #include "math.h"
 
 using namespace maniFEM;
-using namespace std;
 
 int main ()
 
@@ -23,12 +21,13 @@ int main ()
 	// should work with                   tag::orientation, tag::random
 	// should produce error message with  tag::orientation, tag::intrinsic
 
-	Mesh::Iterator it = sphere .iterator ( tag::over_vertices );
-	for ( it .reset(); it .in_range(); it++ )
-	{	Cell ver = *it;
-	  sphere .baricenter ( ver );  }
+	// uncomment the three lines below to slightly improve the quality of the mesh
+	
+	// Mesh::Iterator it = sphere .iterator ( tag::over_vertices );
+	// for ( it .reset(); it .in_range(); it++ )
+	// {	Cell ver = *it;  sphere .baricenter ( ver );  }
 	
 	sphere .export_msh ("sphere.msh");
 
-	cout << "produced file sphere.msh" << endl;
+	std::cout << "produced file sphere.msh" << std::endl;
 }
