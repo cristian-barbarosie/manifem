@@ -48,7 +48,7 @@ int main ( )
 	ABC .add_to_mesh ( msh );
 	CDA .add_to_mesh ( msh );
 
-	msh .export_msh ( "cut-square.msh" );
+	msh .export_to_file ( tag::msh, "cut-square.msh");
 	std::cout << "produced file cut-square.msh" << std::endl;
 	
 }  // end of  main

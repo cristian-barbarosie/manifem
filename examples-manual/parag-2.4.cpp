@@ -8,9 +8,9 @@
 using namespace maniFEM;
 using namespace std;
 
-int main () {
+int main ()
 
-	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
@@ -22,7 +22,8 @@ int main () {
 	Mesh arc_of_hiperbola ( tag::segment, A .reverse(), B, tag::divided_in, 7 );
 
 	arc_of_hiperbola .draw_ps ("hiperbola.eps");
-	arc_of_hiperbola .export_msh ("hiperbola.msh");
+	arc_of_hiperbola .export_to_file ( tag::msh, "hiperbola.msh");
 	
 	cout << "produced files hiperbola.eps and hiperbola.msh" << endl;
-}
+
+}  // end of main

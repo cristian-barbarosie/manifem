@@ -119,7 +119,7 @@ int main ()
 	} // just a block of code for hiding names
 	
 	special_draw ( rect_mesh, cut, "square-cut-03.eps" );
-	rect_mesh.export_msh("square-03.msh"); 
+	rect_mesh.export_to_file ( tag::msh, "square-03.msh"); 
 	
 	// solve equilibrium problem, compute new psi
 	
@@ -133,7 +133,7 @@ int main ()
 		y(V)=y_bg(V);  }
 		
 	special_draw ( rect_mesh, cut, "square-cut-04.eps" );
-	rect_mesh.export_msh("square-04.msh"); 
+	rect_mesh.export_to_file ( tag::msh, "square-04.msh"); 
 		
 	size_t conta_it = 0;
 	
@@ -195,7 +195,7 @@ int main ()
 	}
 	
 	special_draw ( rect_mesh, cut, "square-cut-05.eps" );
-	rect_mesh.export_msh("square-05.msh"); 
+	rect_mesh.export_to_file ( tag::msh, "square-05.msh"); 
 	
 //	follow level line of new psi
 	
@@ -250,7 +250,7 @@ int main ()
 	}
 //	final:
 	special_draw ( rect_mesh, cut, "square-cut-06.eps" );
-	rect_mesh.export_msh("square-06.msh"); 
+	rect_mesh.export_to_file ( tag::msh, "square-06.msh"); 
 	
 		{ // just a block of code for hiding names
 //	size_t contador=0;
@@ -281,7 +281,8 @@ int main ()
 	}
 	}
 	special_draw ( rect_mesh, cut, "square-cut-07.eps" );
-	rect_mesh.export_msh("square-07.msh"); 
+	rect_mesh.export_to_file ( tag::msh, "square-07.msh"); 
+
 } // end of main
 	
 //-----------------------------------------------------------------------------------//
@@ -560,7 +561,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	}  // just a block of code for hiding names
 	
 	special_draw ( ambient, interf, "square-cut-01.eps" );
-	ambient.export_msh("square-01.msh"); 
+	ambient.export_to_file ( tag::msh, "square-01.msh"); 
 	
 	
                   
@@ -646,7 +647,7 @@ Mesh build_interface ( Mesh ambient, Function psi )
 	}  // just a block of code for hiding names
 	
 	special_draw ( ambient, interf, "square-cut-02.eps" );
-	ambient.export_msh("square-02.msh"); 
+	ambient.export_to_file ( tag::msh, "square-02.msh"); 
 
 	return interf;
 

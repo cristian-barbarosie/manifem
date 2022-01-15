@@ -22,8 +22,9 @@ int main ( )
 	Function x = cos ( theta ), y = sin ( theta );
 	// forget about theta; in future statements, x and y will be used
 	circle .set_coordinates ( x && y );
-	seg .export_msh ("circle.msh");
+	seg .export_to_file ( tag::msh, "circle.msh");
 	
 	std::cout << "produced file circle.msh" << std::endl;
-}
+
+}  // end of main
 

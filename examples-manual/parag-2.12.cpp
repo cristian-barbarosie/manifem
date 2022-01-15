@@ -27,7 +27,8 @@ int main ()
 	Mesh circle ( tag::join, SE, EN, NW, WS );
 
 	circle .draw_ps_3d ("circle-3d.eps");
-	circle .export_msh ("circle-3d.msh");
+	circle .export_to_file ( tag::msh, "circle-3d.msh");
 
 	cout << "produced files circle-3d.eps and circle-3d.msh" << endl;
-}
+
+}  // end of main

@@ -52,6 +52,7 @@ int main ( )
 
 	// or we can build a new, unfolded mesh and subsequently export as msh file
 	Mesh unfolded = torus .unfold ( tag::over_region, x*x + 2.*y*y < 3.5 );
-	unfolded .export_msh ("torus.msh");
+	unfolded .export_to_file ( tag::msh, "torus.msh");
 	std::cout << "produced file torus.msh" << std::endl;
-}
+
+}  // end of main

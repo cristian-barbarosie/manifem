@@ -30,9 +30,10 @@ int main ( )
 	// in rare occasions, we must call this function twice :
 	// limit_number_of_neighbours ( ellipse );
 
-	ellipse .export_msh ("ellipse.msh");
+	ellipse .export_to_file ( tag::msh, "ellipse.msh");
 	std::cout << "produced file ellipse.msh" << std::endl;
-}
+
+}  // end of main
 
 //-----------------------------------------------------------------------------------------
 

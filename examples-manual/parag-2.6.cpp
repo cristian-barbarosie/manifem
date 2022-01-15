@@ -41,7 +41,8 @@ int main ()
 	// and finally join the triangles :
 	Mesh hemisphere ( tag::join, ENup, NWup, WSup, SEup );
 	
-	hemisphere .export_msh ("hemisphere.msh");
+	hemisphere .export_to_file ( tag::msh, "hemisphere.msh");
 	
 	cout << "produced file hemisphere.msh" << endl;
-}
+
+}  // end of main

@@ -8,9 +8,9 @@
 using namespace maniFEM;
 using namespace std;
 
-int main () {
+int main ()
 
-	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
@@ -31,7 +31,8 @@ int main () {
 	Mesh disk ( tag::rectangle, NW, WS, SE, EN );
 
 	disk .draw_ps ("disk.eps");
-	disk .export_msh ("disk.msh");
+	disk .export_to_file ( tag::msh, "disk.msh");
 	
 	cout << "produced files disk.eps and disk.msh" << endl;
-}
+
+}  // end of main

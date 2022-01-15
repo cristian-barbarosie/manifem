@@ -85,4 +85,5 @@ int main ()
 	} // just a block of code for hiding names
 
 	return 0;
-}
+
+}  // end of main

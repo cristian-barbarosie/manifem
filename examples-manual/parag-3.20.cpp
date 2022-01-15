@@ -105,6 +105,7 @@ int main ()
 	               tag::desired_length, seg_size );
 
 	Mesh cone ( tag::join, ponta, cone_up );
-	cone .export_msh ("cone.msh");
+	cone .export_to_file ( tag::msh, "cone.msh");
 	cout << "produced file cone.msh" << endl;
-}
+
+}  // end of main

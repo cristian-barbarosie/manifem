@@ -109,7 +109,8 @@ int main ()
 	// now, this does not look exactly like example 2.8 in the manual ...
 	// it's not a mistake - it's a challenge to the reader to discover why
 	
-	bumpy .export_msh ("bumpy.msh");
+	bumpy .export_to_file ( tag::msh, "bumpy.msh");
 	
 	cout << "produced file bumpy.msh" << endl;
-}
+
+}  // end of main

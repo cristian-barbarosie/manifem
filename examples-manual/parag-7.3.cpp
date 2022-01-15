@@ -33,8 +33,9 @@ int main ( )
 	Function x = cos ( theta ), y = sin ( theta );
 	// forget about theta; in future statements, x, y and z will be used
 	cylinder_manif .set_coordinates ( x && y && z );
-	cylinder .export_msh ("cylinder.msh");
+	cylinder .export_to_file ( tag::msh, "cylinder.msh");
 	
 	std::cout << "produced file cylinder.msh" << std::endl;
-}
+
+}  // end of main
 

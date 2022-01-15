@@ -149,7 +149,7 @@ int main ()
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
 		
-	ABCD .export_msh ("square-Neumann.msh", numbering );
+	ABCD .export_to_file ( tag::msh, "square-Neumann.msh", numbering );
 	{ // just a block of code for hiding variables
 	ofstream solution_file ("square-Neumann.msh", fstream::app );
 	solution_file << "$NodeData" << endl;
@@ -171,5 +171,6 @@ int main ()
 	std::cout << "produced file square-Neumann.msh" << std::endl;
 
 	return 0;
-}
+
+}  // end of main
 

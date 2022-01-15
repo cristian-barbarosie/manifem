@@ -23,7 +23,8 @@ int main ()
 	spiral .set_coordinates ( x && y );
 
 	arc_of_spiral .draw_ps ("spiral.eps");
-	arc_of_spiral .export_msh ("spiral.msh");
+	arc_of_spiral .export_to_file ( tag::msh, "spiral.msh");
 
 	cout << "produced files spiral.eps and spiral.msh" << endl;
-}
+
+}  // end of main

@@ -37,4 +37,5 @@ int main ( )
 	                  tag::over_region, -2.1 < x < 2.1, -0.3 < y < 2.1 );
 
 	std::cout << "produced file sector.eps - please edit before viewing" << std::endl;
-}
+
+}  // end of main

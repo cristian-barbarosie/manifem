@@ -32,7 +32,8 @@ int main ( )
 	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.157 );
 
 	disk .draw_ps ("disk.eps");
-	disk .export_msh ("disk.msh");
+	disk .export_to_file ( tag::msh, "disk.msh");
 
 	std::cout << "produced files disk.eps and disk.msh" << std::endl;
-}
+
+}  // end of main

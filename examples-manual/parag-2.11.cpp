@@ -153,7 +153,7 @@ int main ( )
 		{	Cell ver = *it2;
 			if ( ver .is_inner_to ( sect ) ) sect .baricenter ( ver );  }  }
 
-	fisalis.export_msh ("physalis.msh");
+	fisalis.export_to_file ( tag::msh, "physalis.msh");
 
 	std::cout << "produced file physalis.msh" << std::endl;
 

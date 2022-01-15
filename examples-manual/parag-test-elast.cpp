@@ -305,7 +305,7 @@ int main ()
 	cg.compute ( matrix_A );
 	vector_sol = cg.solve ( vector_b );
 
-	ABCD.export_msh ("square_elast.msh", numbering );
+	ABCD.export_to_file ( tag::msh, "square_elast.msh", numbering );
 
 	{ // just a block of code for hiding variables
 	ofstream solution_file ("square_elast.msh", fstream::app );
@@ -335,10 +335,11 @@ int main ()
 		y(P) += vector_sol[i-1+N];
 	}
 
-	ABCD.export_msh ("square_elast_deform.msh", numbering );
+	ABCD.export_to_file ( tag::msh, "square_elast_deform.msh", numbering );
 
 	return 0;
-}
+
+}  // end of main
 
 /*
 

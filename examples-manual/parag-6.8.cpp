@@ -327,7 +327,8 @@ int main ()
 
 	std::cout << "integral computed with degree 2 finite elements " << integral
 						<< ", error " << std::abs ( integral - exact ) << std::endl;
-}
+
+}  // end of main
 
 //---------------------------------------------------------------------------------------------
 

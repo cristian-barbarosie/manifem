@@ -26,7 +26,8 @@ int main ()
 	// for ( it .reset(); it .in_range(); it++ )
 	// {	Cell ver = *it;  sphere .baricenter ( ver );  }
 	
-	sphere .export_msh ("sphere.msh");
+	sphere .export_to_file ( tag::msh, "sphere.msh");
 
 	std::cout << "produced file sphere.msh" << std::endl;
-}
+
+}  // end of main

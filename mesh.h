@@ -1897,11 +1897,11 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	void draw_ps_3d ( std::string file_name ) const;
 	
 	// we are still in class Mesh
-	// methods  export_msh  defined in global.cpp
+	// methods  export_to_file  defined in global.cpp
 
-	void export_msh ( std::string f, Cell::Numbering & ) const;
-	void export_msh ( std::string f, std::map < Cell, size_t > & ) const;
-	void export_msh ( std::string f ) const;
+	void export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & ) const;
+	void export_to_file ( const tag::Msh &, std::string f, std::map < Cell, size_t > & ) const;
+	void export_to_file ( const tag::Msh &, std::string f ) const;
 	
 	// several versions of 'build' below are defined in global.cpp
 

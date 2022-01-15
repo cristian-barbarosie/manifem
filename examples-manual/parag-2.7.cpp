@@ -107,7 +107,8 @@ int main ()
 		{ rect_S_SE, rect_S_SW, rect_E_SE, rect_E_NE, rect_N_NE, rect_N_NW,
 		  rect_W_SW, rect_W_NW, rect_up_SW, rect_up_SE, rect_up_NE, rect_up_NW } );
 	
-	bumpy .export_msh ("bumpy.msh");
+	bumpy .export_to_file ( tag::msh, "bumpy.msh");
 	
 	cout << "produced file bumpy.msh" << endl;
-}
+
+}  // end of main

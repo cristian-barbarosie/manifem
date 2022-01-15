@@ -26,9 +26,10 @@ int main ()
 
 	Mesh two_tori ( tag::progressive, tag::desired_length, 0.1 );
 
-	two_tori .export_msh ("two-tori.msh");
+	two_tori .export_to_file ( tag::msh, "two-tori.msh");
 	std::cout << "produced file two-tori.msh" << std::endl;
-}
+
+}  // end of main
 
 
 void main_1 ()
@@ -48,7 +49,8 @@ void main_1 ()
 
 	Mesh two_tori ( tag::progressive, tag::desired_length, 0.09 );
 
-	two_tori .export_msh ("two-tori.msh");
+	two_tori .export_to_file ( tag::msh, "two-tori.msh");
 	std::cout << "produced file two-tori.msh" << std::endl;
-}
+
+}  // end of main_1
 

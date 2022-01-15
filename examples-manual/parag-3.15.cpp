@@ -31,7 +31,8 @@ int main ()
 	Mesh bumpy ( tag::progressive, tag::boundary, circle,
                tag::start_at, S, tag::towards, N,
                tag::desired_length, 0.1                );
-	bumpy .export_msh ("bumpy.msh");
+	bumpy .export_to_file ( tag::msh, "bumpy.msh");
 	
 	cout << "produced file bumpy.msh" << endl;
-}
+
+}  // end of main

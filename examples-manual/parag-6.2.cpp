@@ -154,7 +154,7 @@ int main ()
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
 		
-	ABCD .export_msh ("square-Dirichlet.msh", numbering );
+	ABCD .export_to_file ( tag::msh, "square-Dirichlet.msh", numbering );
 
   { // just a block of code for hiding variables
 	std::ofstream solution_file ("square-Dirichlet.msh", std::fstream::app );
@@ -177,4 +177,5 @@ int main ()
 	std::cout << "produced file square-Dirichlet.msh" << std::endl;
 
 	return 0;
-}
+
+}  // end of main

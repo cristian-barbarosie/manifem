@@ -94,6 +94,7 @@ int main ( )
 			QRS .add_to_mesh ( ABCD );                               }
 		else assert ( false );                                                              }
 	
-	ABCD .export_msh ( "cut-squares.msh" );
+	ABCD .export_to_file ( tag::msh, "cut-squares.msh");
 	std::cout << "produced file cut-squares.msh" << std::endl;
-}
+
+}  // end of main

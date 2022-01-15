@@ -26,7 +26,8 @@ int main ()
 	circle_manif .set_coordinates ( x && y );
 
 	circle .draw_ps ("circle.eps");
-	circle .export_msh ("circle.msh");
+	circle .export_to_file ( tag::msh, "circle.msh");
 
 	cout << "produced files circle.eps and circle.msh" << endl;
-}
+
+}  // end of main

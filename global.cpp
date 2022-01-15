@@ -3322,7 +3322,7 @@ void Mesh::draw_ps_3d ( std::string file_name ) const
 //----------------------------------------------------------------------------------//
 
 
-void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering ) const
+void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & ver_numbering ) const
 
 // 'numb_map' should begin at 0
 // we add 1 to each number because gmsh seems to prefer numbers to begin at 1
@@ -3466,27 +3466,28 @@ void Mesh::export_msh ( std::string f, Cell::Numbering & ver_numbering ) const
 	{	std::cerr << "error writing msh file" << std::endl;
 		exit (1);                                    }
 
-} // end of Mesh::export_msh
+} // end of Mesh::export_to_file
 
 
-void Mesh::export_msh ( std::string f, std::map < Cell, size_t > & numb_map ) const
+void Mesh::export_to_file
+( const tag::Msh &, std::string f, std::map < Cell, size_t > & numb_map ) const
 	
 // 'numb_map' should begin at 0
-// later, 'this->export_msh ( f, numbering )' will add 1 to each number
+// later, 'this->export_to_file ( tag::msh, f, numbering )' will add 1 to each number
 
 {	Cell::Numbering::Map numbering ( & numb_map );
 
-	this->export_msh ( f, numbering );
+	this->export_to_file ( tag::msh, f, numbering );
 
-} // end of Mesh::export_msh
+} // end of Mesh::export_to_file
 
 
-void Mesh::export_msh ( std::string f ) const
+void Mesh::export_to_file ( const tag::Msh &, std::string f ) const
 	
 // the numbering of vertices is produced on-the-fly
 
 // we build a 'numbering' map beginning at 0
-// later, 'this->export_msh ( f, numbering )' will add 1 to each number
+// later, 'this->export_to_file ( tag::msh, f, numbering )' will add 1 to each number
 	
 {	Cell::Numbering::Map numbering;
 
@@ -3495,9 +3496,9 @@ void Mesh::export_msh ( std::string f ) const
 	for ( it.reset() ; it.in_range(); it++ )
 	{	Cell p = *it;  numbering [p] = counter;  ++counter;  }
 
-	this->export_msh ( f, numbering );
+	this->export_to_file ( tag::msh, f, numbering );
 
-} // end of Mesh::export_msh
+} // end of Mesh::export_to_file
 
 //----------------------------------------------------------------------------------//
 

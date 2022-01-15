@@ -47,6 +47,8 @@ int main ()
 	           tag::desired_length, seg_size                         );
 
 	Mesh all ( tag::join, cyl, sph );
-	all .export_msh ("sphere-cyl.msh");
+	all .export_to_file ( tag::msh, "sphere-cyl.msh");
+
 	cout << "produced file sphere-cyl.msh" << endl;
-}
+
+}  // end of main

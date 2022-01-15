@@ -35,7 +35,8 @@ int main ()
 
 	torus .set_coordinates ( x && y && z );
 
-	ABCD .export_msh ("torus.msh");
+	ABCD .export_to_file ( tag::msh, "torus.msh");
 
 	cout << "produced file torus.msh" << endl;
-}
+
+}  // end of main

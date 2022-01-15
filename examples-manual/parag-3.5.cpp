@@ -24,7 +24,8 @@ int main ()
 	Cell B ( tag::vertex );  x (B) = std::pow ( 9*3.14159, 2.);  y (B) =  0.;
 	Mesh spiral ( tag::progressive, tag::start_at, A, tag::stop_at, B, tag::desired_length, 1. );
 
-	spiral .export_msh ("spiral.msh");
+	spiral .export_to_file ( tag::msh, "spiral.msh");
 
 	cout << "produced file spiral.msh" << endl;
-}
+
+}  // end of main

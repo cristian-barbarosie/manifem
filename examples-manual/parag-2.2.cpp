@@ -8,9 +8,9 @@
 using namespace maniFEM;
 using namespace std;
 
-int main () {
+int main ()
 
-	// we choose our (geometric) space dimension :
+{	// we choose our (geometric) space dimension :
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	
 	// xy is a map defined on our future mesh with values in RR2 :
@@ -42,7 +42,8 @@ int main () {
 	Mesh arrow ( tag::join, ABG, CDEF );
 
 	arrow .draw_ps ( "arrow.eps");
-	arrow .export_msh ("arrow.msh");
+	arrow .export_to_file ( tag::msh, "arrow.msh");
 	
 	cout << "produced files arrow.eps and arrow.msh" << endl;
-}
+
+}  // end of main

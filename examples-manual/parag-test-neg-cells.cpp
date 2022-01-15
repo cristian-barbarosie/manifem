@@ -49,8 +49,9 @@ int main ()
 	std::cout << x(ver) << " " << y(ver) << std::endl;
 	Mesh::Iterator itt = rect_mesh .iterator ( tag::over_vertices, tag::around, ver );
 	itt .reset();  assert ( itt .in_range() );
+	}  // just a block of code for hiding 'it'
 	
-} }	
+}  // end of main	
 
 
 		

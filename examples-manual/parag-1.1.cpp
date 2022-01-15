@@ -8,9 +8,9 @@
 using namespace maniFEM;
 using namespace std;
 
-int main () {
+int main ()
 
-	// we choose our (geometric) space dimension :
+{	// we choose our (geometric) space dimension :
 	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
 	
 	// xyz is a map defined on our future mesh with values in RR3 :
@@ -39,7 +39,7 @@ int main () {
 	 
 	// We may want to visualize the resulting mesh.
 	// Here is one way to export the mesh in the "msh" format :
-	rect_mesh.export_msh ("rectangle.msh");
+	rect_mesh.export_to_file ( tag::msh, "rectangle.msh");
 	// rect_mesh.draw_ps ("rectangle.eps");
 	
 	// Let's define a symbolic function to integrate
@@ -52,4 +52,5 @@ int main () {
 	// cout << "integral of " << g.repr() << " = " << g.integrate ( rect_mesh, integ ) << endl;
 		
 	 cout << "produced file rectangle.msh" << endl;
-}
+
+}  // end of main

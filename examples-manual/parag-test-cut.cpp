@@ -562,10 +562,8 @@ int main ()
 									<< itt->second.counter_neg << std::endl;  }  }
 	} // just a block of code
 
-	
 	Cell E ( tag::vertex );
 	E.core->name = "E";
-	
 	
 }  // end of  main
 

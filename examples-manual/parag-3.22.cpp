@@ -28,8 +28,9 @@ int main ( )
 	RR2 .set_as_working_manifold();
 	Mesh disk ( tag::progressive, tag::boundary, circles, tag::desired_length, d );
 
-	disk .export_msh ("disk.msh");
+	disk .export_to_file ( tag::msh, "disk.msh");
 	disk .draw_ps ("disk.eps");
 
 	std::cout << "produced files disk.msh and disk.eps" << std::endl;
-}
+
+}  // end of main

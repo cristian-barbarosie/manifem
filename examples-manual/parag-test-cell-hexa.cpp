@@ -349,7 +349,7 @@ int main ( )
 	cout << "macro stress " << macro_stress(0,0) << " " << macro_stress(0,1) << " "
 	                        << macro_stress(1,0) << " " << macro_stress(1,1) << " " << endl;
 
-}
+}  // end of main
 
 
 //-----------------------------------------------------------------------------------------

@@ -8,9 +8,9 @@
 using namespace maniFEM;
 using namespace std;
 
-int main () {
+int main ()
 
-	// we choose our (geometric) space dimension :
+{	// we choose our (geometric) space dimension :
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	
 	// xy is a map defined on our future mesh with values in RR2 :
@@ -43,8 +43,9 @@ int main () {
 	Mesh BGHC ( tag::rectangle, GH, HC, BC .reverse(), BG );
 	Mesh L_shaped ( tag::join, ABCD, CEFD, BGHC );
 
-	L_shaped .export_msh ("L-shaped.msh");
+	L_shaped .export_to_file ( tag::msh, "L-shaped.msh");
 	L_shaped .draw_ps ( "L-shaped.eps");
 	
 	cout << "produced files L-shaped.msh and L-shaped.eps" << endl;
-}
+
+}  // end of main

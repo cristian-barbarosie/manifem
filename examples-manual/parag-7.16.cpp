@@ -43,7 +43,7 @@ int main ( )
 	// std::cout << "produced file cylinder.eps - please edit before viewing" << std::endl;
 
 	Mesh unf = cyl .unfold ( tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
-	unf .export_msh ("cylinder.msh");
+	unf .export_to_file ( tag::msh, "cylinder.msh");
 	std::cout << "produced file cylinder.msh" << std::endl;
 
 } // end of main

@@ -51,6 +51,7 @@ int main ( )
 
 	Mesh ring ( tag::join, sectors );
 
-	ring .export_msh ("ring.msh");
+	ring .export_to_file ( tag::msh, "ring.msh");
 	std::cout << "produced file ring.msh" << std::endl;
-}
+
+}  // end of main

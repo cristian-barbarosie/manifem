@@ -34,6 +34,7 @@ int main ( )
 	// should produce error message with  tag::orientation, tag::random
 	// should produce error message with  tag::orientation, tag::inherent
 
-	disk .export_msh ("disk.msh");
+	disk .export_to_file ( tag::msh, "disk.msh");
 	std::cout << "produced file disk.msh" << std::endl;
-}
+
+}  // end of main

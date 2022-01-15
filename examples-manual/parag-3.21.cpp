@@ -10,7 +10,6 @@
 #include "math.h"
 
 using namespace maniFEM;
-using namespace std;
 
 
 int main ()
@@ -18,6 +17,7 @@ int main ()
 {	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
 	Function xyz = RR3 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
+
 	double seg_size = 0.1;
 	// std::cout << "segment size : ";
 	// std::cin >> seg_size;
@@ -75,6 +75,7 @@ int main ()
 	OAV .add_to_mesh ( napkin );  OVB .add_to_mesh ( napkin );
 	OCW .add_to_mesh ( napkin );  OWD .add_to_mesh ( napkin );
 
-	napkin .export_msh ("napkin.msh");
-	cout << "produced file napkin.msh" << endl;
-}
+	napkin .export_to_file ( tag::msh, "napkin.msh");
+	std::cout << "produced file napkin.msh" << std::endl;
+
+}  // end of main

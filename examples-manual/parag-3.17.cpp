@@ -8,9 +8,9 @@
 using namespace maniFEM;
 using namespace std;
 
-int main () {
+int main ()
 
-	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
@@ -34,7 +34,8 @@ int main () {
 	Mesh diamond ( tag::progressive, tag::boundary, bdry, tag::desired_length, 0.1 );
 
 	diamond .draw_ps ("diamond.eps");
-	diamond .export_msh ("diamond.msh");
+	diamond .export_to_file ( tag::msh, "diamond.msh");
 	
 	cout << "produced files diamond.eps and diamond.msh" << endl;
-}
+
+}  // end of main

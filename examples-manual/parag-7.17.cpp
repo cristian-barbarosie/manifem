@@ -44,7 +44,8 @@ int main ( )
                    tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
 	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;	
-}
+
+}  // end of main
 
 //-----------------------------------------------------------------------------------------
 

@@ -37,10 +37,11 @@ int main ( )
               tag::start_at, P, tag::towards, { -1., 0., 0. },
               tag::desired_length, d                           );
 
-	disk .export_msh ("disk.msh");
+	disk .export_to_file ( tag::msh, "disk.msh");
 	RR3 .set_as_working_manifold();
 	RR3 .set_coordinates ( x && y );
 	disk .draw_ps ("disk.eps");
 
 	std::cout << "produced files disk.eps and disk.msh" << std::endl;
-}
+
+}  // end of main

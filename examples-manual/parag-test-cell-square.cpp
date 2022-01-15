@@ -358,7 +358,7 @@ int main ( )
 	
 	// we define the solution in all vertices of 'square'	(those not belonging to 'torus')
 	// it is easier to impose the zero average condition on 'square'
-	// it is also easier to export_msh
+	// it is also easier to export_to_file
 	
 	{ // just a block of code for hiding variables
 	size_t j = numbering [ B ];
@@ -434,7 +434,7 @@ int main ( )
 		vector_sol [ 2*i+1 ] -= sum_y;  }	
 	} // just a block of code
 	
-	square.export_msh ("cell-elast-strain-cell-sq.msh", numbering );
+	square.export_to_file ( tag::msh, "cell-elast-strain-cell-sq.msh", numbering );
 
 	{ // just a block of code for hiding variables
 	std::ofstream solution_file ("cell-elast-strain-cell-sq.msh", std::fstream::app );
@@ -458,7 +458,7 @@ int main ( )
 
 	std::cout << "produced file cell-elast-strain-cell-sq.msh" << std::endl;	
 							
-							}
+}  // end of main
 
 
 //-----------------------------------------------------------------------------------------

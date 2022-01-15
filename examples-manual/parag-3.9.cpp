@@ -7,7 +7,6 @@
 #include "math.h"
 
 using namespace maniFEM;
-using namespace std;
 
 
 int main ()
@@ -35,7 +34,8 @@ int main ()
 	{	Cell ver = *it;
 		if ( ver .is_inner_to ( bumpy ) )  bumpy .baricenter ( ver );  }
 	
-	bumpy .export_msh ("bumpy.msh");
+	bumpy .export_to_file ( tag::msh, "bumpy.msh");
 	
-	cout << "produced file bumpy.msh" << endl;
-}
+	std::cout << "produced file bumpy.msh" << std::endl;
+
+}  // end of main

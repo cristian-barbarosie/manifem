@@ -24,4 +24,4 @@ int main ( )
 	// with this vertex, we build a segment
 	Mesh seg ( tag::segment, A .reverse(), A, tag::divided_in, 10, tag::winding, g );
 
-}
+}  // end of main

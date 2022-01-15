@@ -43,6 +43,8 @@ int main ()
              tag::towards, { 0., 0., -1. }, tag::desired_length, seg_size             );
 
 	Mesh all ( tag::join, cyl, sph );
-	all .export_msh ("sphere-tunnel.msh");
+	all .export_to_file ( tag::msh, "sphere-tunnel.msh");
+
 	cout << "produced file sphere-tunnel.msh" << endl;
-}
+
+}  // end of main
