@@ -44,7 +44,7 @@ To learn maniFEM, you should read the
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.
-Latest code might be unstable; releases are stable.
+Current code might be unstable; releases are stable.
 To check which version of maniFEM is installed in your computer,
 see at the beginning of the file `maniFEM.h`.
 You can then run the examples in the manual :

@@ -42,12 +42,12 @@ int main ( )
 	Mesh torus = square .fold ( tag::identify, CD, tag::with, FA .reverse(),
 	                            tag::identify, BC, tag::with, EF .reverse(),
 	                            tag::identify, AB, tag::with, DE .reverse(),
-	                            tag::use_existing_vertices                 );
+	                            tag::use_existing_vertices                  );
 
 	std::cout << "produced folded mesh, now drawing, please wait" << std::endl << std::flush;
 	
 	torus .draw_ps ("torus.eps", tag::unfold,
-                   tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
+	                 tag::over_region, -2.1 < x < 4.3, -3.6 < y < 2.1 );
 
 	std::cout << "produced file torus.eps - please edit before viewing" << std::endl;	
 }

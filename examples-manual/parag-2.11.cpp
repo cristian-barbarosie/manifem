@@ -156,4 +156,5 @@ int main ( )
 	fisalis.export_msh ("physalis.msh");
 
 	std::cout << "produced file physalis.msh" << std::endl;
-}
+
+}  // end of main

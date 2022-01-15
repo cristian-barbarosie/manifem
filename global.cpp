@@ -1,9 +1,9 @@
 
-// global.cpp 2021.12.26
+// global.cpp 2022.01.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -23,6 +23,54 @@
 #include "maniFEM.h"
 
 using namespace maniFEM;
+
+//----------------------------------------------------------------------------------//
+
+//  https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
+
+#include <algorithm> 
+#include <cctype>
+#include <locale>
+
+// trim from start (in place)
+static inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s) {
+    ltrim(s);
+    rtrim(s);
+}
+
+// trim from start (copying)
+static inline std::string ltrim_copy(std::string s) {
+    ltrim(s);
+    return s;
+}
+
+// trim from end (copying)
+static inline std::string rtrim_copy(std::string s) {
+    rtrim(s);
+    return s;
+}
+
+// trim from both ends (copying)
+static inline std::string trim_copy(std::string s) {
+    trim(s);
+    return s;
+}
+
+//----------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
@@ -3453,6 +3501,253 @@ void Mesh::export_msh ( std::string f ) const
 
 //----------------------------------------------------------------------------------//
 
+void Mesh::import_msh ( Mesh * that, const std::string filename )
+
+{	std::ifstream ifstr ( filename );
+	std::string s;
+	std::getline ( ifstr, s );
+	assert ( trim_copy (s) == "$MeshFormat" );
+	double msh_version;  ifstr >> msh_version;
+	int binary_file;  ifstr >> binary_file;
+	assert ( binary_file == 0 );
+	std::getline ( ifstr, s );  // one more number and the endline
+	std::getline ( ifstr, s );
+	assert ( trim_copy (s) == "$EndMeshFormat" );
+
+	std::vector < double > x, y, z;
+	std::vector < size_t > tag_node;
+	bool all_z_zero = true;
+	while ( trim_copy (s) != "$Nodes" )  std::getline ( ifstr, s );
+	size_t nb_nodes;
+	if ( msh_version < 4. )
+	{	ifstr >> nb_nodes;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		x .reserve ( nb_nodes );
+		y .reserve ( nb_nodes );
+		z .reserve ( nb_nodes );
+		tag_node .reserve ( nb_nodes );
+		for ( size_t i = 0; i < nb_nodes; i++ )
+		{	size_t j;  ifstr >> j;
+			tag_node .push_back (j);
+			double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+			x .push_back (xx);
+			y .push_back (yy);
+			z .push_back (zz);
+			if ( zz != 0. ) all_z_zero = false;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );   }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes" );  }
+	else  // msh_version >= 4.
+	{	size_t numEntityBlocks, minNodeTag, maxNodeTag;
+		ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
+		assert ( numEntityBlocks == 1 );
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		x .reserve ( nb_nodes );
+		y .reserve ( nb_nodes );
+		z .reserve ( nb_nodes );
+		tag_node .reserve ( nb_nodes );
+		std::getline ( ifstr, s );  // four integer numbers
+		for ( size_t i = 0; i < nb_nodes; i++ )
+		{	size_t j;  ifstr >> j;     // tag
+			tag_node .push_back (j);
+			std::getline ( ifstr, s ); assert ( trim_copy (s) == "" );   }
+		for ( size_t i = 0; i < nb_nodes; i++ )
+		{	double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+			x .push_back (xx);
+			y .push_back (yy);
+			z .push_back (zz);
+			if ( zz != 0. ) all_z_zero = false;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );   }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes" );  }
+
+	size_t geom_dim;
+	if ( all_z_zero ) geom_dim = 2;
+	else geom_dim = 3;
+	Manifold RRd ( tag::Euclid, tag::of_dim, geom_dim );
+	Function coords = RRd .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	std::map < size_t, Cell > map_ver;
+	for ( size_t i = 0; i < nb_nodes; i++ )
+	{	Cell V ( tag::vertex );
+		coords [0] (V) = x [i];
+		coords [1] (V) = y [i];
+		if ( geom_dim == 3 ) coords [2] (V) = z [i];
+		map_ver .insert ( std::pair < size_t, Cell > ( tag_node[i], V ) );  }
+	
+	while ( trim_copy (s) != "$Elements" )  std::getline ( ifstr, s );
+	size_t nb_elem;
+	std::vector < size_t > tag_elem;
+	std::vector < int > elem_type;
+	std::vector < std::vector < size_t > > ver_of_elem;
+	std::vector < int > elem_size { 0, 2, 3, 4, 4, 8, 6, 5 };
+	std::vector < bool > elem_type_show_up
+		{ false, false, false, false, false, false, false, false };
+	assert ( elem_size .size() == elem_type_show_up .size() );
+	if ( msh_version < 4. )
+	{	ifstr >> nb_elem;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		tag_elem .reserve ( nb_elem );
+		elem_type .reserve ( nb_elem );
+		ver_of_elem .reserve ( nb_elem );
+		for ( size_t i = 0; i < nb_elem; i++ )
+		{	size_t ctag;  ifstr >> ctag;
+			tag_elem .push_back ( ctag );
+			int cll_type;  ifstr >> cll_type;
+			elem_type .push_back ( cll_type );
+			int k;  ifstr >> k;  // entity tag ?
+			std::vector < size_t > local_vec;
+			local_vec .reserve ( elem_size [ cll_type ] );
+			assert ( cll_type < int ( elem_size .size() ) );
+			elem_type_show_up [ cll_type ] = true;
+			for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
+			{	size_t j;  ifstr >> j;  local_vec .push_back (j);  }
+			ver_of_elem .push_back ( local_vec );
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements" );  }
+	else  // msh_version >= 4.
+	{	size_t numEntityBlocks, minElemTag, maxElemTag;
+		ifstr >> numEntityBlocks >> nb_elem >> minElemTag >> maxElemTag;
+		assert ( numEntityBlocks == 1 );
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		tag_elem .reserve ( nb_elem );
+		elem_type .reserve ( nb_elem );
+		ver_of_elem .reserve ( nb_elem );
+		size_t j;  ifstr >> j;  ifstr >> j;  //  entity dim, entity tag
+		int cll_type;  ifstr >> cll_type;
+		std::getline ( ifstr, s );  // one more number
+		elem_type_show_up [ cll_type ] = true;
+		for ( size_t i = 0; i < nb_elem; i++ )
+		{	size_t ctag;  ifstr >> ctag;
+			tag_elem .push_back ( ctag );
+			elem_type .push_back ( cll_type );
+			assert ( cll_type < int ( elem_size .size() ) );
+			std::vector < size_t > local_vec;
+			local_vec .reserve ( elem_size [ cll_type ] );
+			for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
+			{	ifstr >> j;  local_vec .push_back (j);  }
+			ver_of_elem .push_back ( local_vec );
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements" );  }
+
+	// focus on two cases for now : mesh of triangles, mesh of quadrilaterals
+
+	if ( elem_type_show_up [2] )  // triangle
+	{	for ( size_t i = 0; i < elem_size .size(); i++ )
+			if ( i != 2 ) assert ( not elem_type_show_up [i] );  }
+	else if ( elem_type_show_up [3] )  // quadrilateral
+	{	for ( size_t i = 0; i < elem_size .size(); i++ )
+			if ( i != 3 ) assert ( not elem_type_show_up [i] );  }
+
+	// each segment appears at most twice, with two opposite orientations
+
+	std::vector < std::pair < std::pair < size_t, size_t >, Cell > > segments;
+	std::vector < std::vector < size_t > > ::const_iterator it_ver = ver_of_elem .begin();
+	std::vector < int > ::const_iterator it_type = elem_type .begin();
+	for ( ; it_ver != ver_of_elem .end(); it_ver++, it_type++ )
+	{	assert ( it_type != elem_type .end() );
+		std::vector < size_t > ::const_iterator it_sides = it_ver->begin();
+		assert ( it_sides != it_ver->end() );
+		size_t tag_A = *it_sides, tag_first = tag_A;
+		it_sides ++;
+		while ( it_sides != it_ver->end() )
+		{	size_t tag_B = *it_sides;
+			// search for the pair of vertices A, B
+			bool seg_found = false;
+			for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
+			        ::const_iterator it_seg = segments .begin();
+			      it_seg != segments .end(); it_seg ++                            )
+			{	std::pair < size_t, size_t > p = it_seg->first;
+				// the same segment cannot appear with the same orientation
+				assert ( ( p .first != tag_A ) or ( p .second != tag_B ) );
+				// but it may show up with opposite orientation
+				if ( ( p .first != tag_B ) or ( p .second != tag_A ) ) continue;
+				seg_found = true;  break;                                        }
+			if ( not seg_found )
+			{	// build new segment
+				Cell seg ( tag::segment, map_ver [ tag_A ] .reverse(), map_ver [ tag_B ] );
+				segments .push_back ( { { tag_A, tag_B }, seg } );                          }
+			tag_A = tag_B;
+			it_sides ++;                                                                    }
+		// last segment which closes the loop : [ A first ]
+		// search for the pair of vertices A, first
+		bool seg_found = false;
+		for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
+		        ::const_iterator it_seg = segments .begin();
+		      it_seg != segments .end(); it_seg ++                            )
+		{	std::pair < size_t, size_t > p = it_seg->first;
+			// the same segment cannot appear with the same orientation
+			assert ( ( p .first != tag_A ) or ( p .second != tag_first ) );
+			// but it may show up with opposite orientation
+			if ( ( p .first != tag_first ) or ( p .second != tag_A ) ) continue;
+			seg_found = true;  break;                                            }
+		if ( not seg_found )
+		{	// build new segment
+			Cell seg ( tag::segment, map_ver [ tag_A ] .reverse(), map_ver [ tag_first ] );
+			segments .push_back ( { { tag_A, tag_first }, seg } );                          }  }
+	assert ( it_type == elem_type .end() );
+
+	// focus on two cases for now : mesh of triangles, mesh of quadrilaterals
+	
+	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
+	for ( it_ver = ver_of_elem .begin(), it_type = elem_type .begin();
+	      it_ver != ver_of_elem .end(); it_ver++, it_type++           )
+	{	assert ( it_type != elem_type .end() );
+		Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
+			( tag::whose_boundary_is,
+				Mesh ( tag::whose_core_is,
+			         new Mesh::Connected::OneDim ( tag::with, elem_size [ *it_type ],
+	               tag::segments, tag::one_dummy_wrapper                         ),
+	         tag::freshly_created ), tag::one_dummy_wrapper                        );
+		Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
+		std::vector < size_t > ::const_iterator it_sides = it_ver->begin();
+		assert ( it_sides != it_ver->end() );
+		size_t tag_A = *it_sides, tag_first = tag_A;
+		it_sides ++;
+		while ( it_sides != it_ver->end() )
+		{	size_t tag_B = *it_sides;
+			// search for the pair of vertices A, B
+			Cell seg ( tag::non_existent );
+			bool seg_found = false;
+			for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
+			        ::const_iterator it_seg = segments .begin();
+			      it_seg != segments .end(); it_seg ++                            )
+			{	std::pair < size_t, size_t > p = it_seg->first;
+				// the segment may appear with the same orientation
+				if ( ( p .first == tag_A ) and ( p .second == tag_B ) )
+				{	seg = it_seg->second;
+					seg_found = true;     }
+				// but it may also show up with opposite orientation
+				if ( ( p .first == tag_B ) and ( p .second == tag_A ) )
+				{	seg = it_seg->second .reverse();
+					seg_found = true;               }                       }
+			assert ( seg_found );
+			seg .core ->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
+			tag_A = tag_B;
+			it_sides ++;                                                                }
+		// last segment which closes the loop : [ A first ]
+		// search for the pair of vertices A, first
+		Cell seg ( tag::non_existent );
+		bool seg_found = false;
+		for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
+		        ::const_iterator it_seg = segments .begin();
+		      it_seg != segments .end(); it_seg ++                            )
+		{	std::pair < size_t, size_t > p = it_seg->first;
+			// the same segment may appear with the same orientation
+			if ( ( p .first == tag_A ) and ( p .second == tag_first ) )
+			{	seg = it_seg->second;
+				seg_found = true;     }
+			// but it may also show up with opposite orientation
+			if ( ( p .first == tag_first ) and ( p .second == tag_A ) )
+			{	seg = it_seg->second .reverse();
+				seg_found = true;               }                         }
+		assert ( seg_found );
+		seg .core ->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
+		new_cll .boundary() .closed_loop ( seg .tip() );
+		new_cll .add_to_mesh ( result );                                                  }
+	assert ( it_type == elem_type .end() );
+
+	*that = result;
+}
+
+//----------------------------------------------------------------------------------//
 
 namespace {  // anonymous namespace, mimics static linkage
 	

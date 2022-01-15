@@ -4,7 +4,6 @@
 // meshes a sphere progressively
 
 #include "maniFEM.h"
-#include "math.h"
 
 using namespace maniFEM;
 

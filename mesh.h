@@ -1,5 +1,5 @@
 
-//   mesh.h  2022.01.10
+//   mesh.h  2022.01.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -139,9 +139,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct DesiredLength { };  static const DesiredLength desired_length;
 	struct Orientation { };  static const Orientation orientation;
 	enum OrientationChoice { random, intrinsic, inherent, not_provided };
-	struct IntrinsicOrientation { };  static const IntrinsicOrientation intrinsic_orientation;
-	struct InherentOrientation { };  static const InherentOrientation inherent_orientation;
-	struct RandomOrientation { };  static const RandomOrientation random_orientation;
+	struct Import { };  static const Import import;
+	struct Msh { };  static const Msh msh;
 	struct Winding { };  static const Winding winding;
 	struct Singular { };  static const Singular singular;
 	struct Unfold { };  static const Unfold unfold;
@@ -849,7 +848,6 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
 	inline Mesh ( const tag::Join &,
 	              const Mesh &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
-	inline Mesh ( const tag::Join &, const std::vector < Mesh > & l );
 
 	template < typename container >
 	inline Mesh ( const tag::Join &, const container & l );
@@ -860,6 +858,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	template < typename container >
 	static inline void join_meshes ( Mesh * const that, const container & l );
 		
+	inline Mesh ( const tag::Import &, const tag::Msh &, const std::string );
+
+	void import_msh ( Mesh * that, const std::string filename );  // defined in global.cpp
+
 	// we are still in class Mesh
 	// constructors with tag::Progressive are defined in progressive.cpp
 	
@@ -5893,16 +5895,17 @@ inline void Mesh::join_meshes ( Mesh * const that, const container & l )
 	return;                                                                                  }
 
 
-inline Mesh::Mesh ( const tag::Join &, const std::vector < Mesh > & l )
-: Mesh ( tag::non_existent )
-{	Mesh::join_meshes ( this, l );  }
-
-
 template < typename container >
 inline Mesh::Mesh ( const tag::Join &, const container & l )
 : Mesh ( tag::non_existent )
 {	Mesh::join_meshes ( this, l );  }
 	
+//-----------------------------------------------------------------------------//
+
+
+inline Mesh::Mesh ( const tag::Import &, const tag::Msh &, const std::string filename )
+:	Mesh ( tag::non_existent )
+{	Mesh::import_msh ( this, filename );  }
 
 //-----------------------------------------------------------------------------//
 

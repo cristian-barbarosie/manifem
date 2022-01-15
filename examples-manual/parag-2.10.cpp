@@ -6,7 +6,6 @@
 #include "maniFEM.h"
 
 using namespace maniFEM;
-using namespace std;
 
 int main () {
 
@@ -35,5 +34,6 @@ int main () {
 	diamond .draw_ps ("diamond.eps");
 	diamond .export_msh ("diamond.msh");
 	
-	cout << "produced files diamond.eps and diamond.msh" << endl;
-}
+	std::cout << "produced files diamond.eps and diamond.msh" << std::endl;
+	
+}  // end of main
