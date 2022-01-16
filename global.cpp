@@ -1,5 +1,5 @@
 
-// global.cpp 2022.01.15
+// global.cpp 2022.01.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3329,70 +3329,123 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 
 {	// we use the current manifold
 	Manifold space = Manifold::working;
-	assert ( space.exists() );
-	Function coord = space.coordinates();
+	assert ( space .exists() );
+	Function coord = space .coordinates();
 
 	std::ofstream file_msh (f);
-	file_msh << "$MeshFormat" << std::endl << "2.2 0 8" << std::endl;
+	file_msh << "$MeshFormat" << std::endl << "4.1 0 4" << std::endl;
 	file_msh << "$EndMeshFormat" << std::endl;
-	
-	file_msh << "$Nodes" << std::endl << this->number_of(tag::cells_of_dim,0) << std::endl;
 
-	{ // just to make variables local : it, counter, x, y
+	// "Entities" section is optional in gmsh format 4.1, we skip it
+
+	size_t nb_nodes = this->number_of ( tag::cells_of_dim, 0 );
+	file_msh << "$Nodes" << std::endl;
+	file_msh << "1 " << nb_nodes << " 1 " << nb_nodes << std::endl;
+
+	// only one entity block
+	int top_dim = 2;
+	file_msh << top_dim << " 0 0 " << nb_nodes << std::endl;
+
+	{ // just a block for hiding 'it'
 	Mesh::Iterator it = this->iterator ( tag::over_vertices );
-	Function x = coord[0], y = coord[1];
-	if (coord.nb_of_components() == 2)
-	{	for ( it.reset() ; it.in_range(); it++ )
+	for ( it .reset() ; it .in_range(); it++ )
+	{	Cell p = *it;
+		file_msh << ver_numbering [p] + 1 << std::endl;  }
+
+	} { // just a block for hiding names : it, x, y
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
+	Function x = coord [0], y = coord [1];
+	if (coord .nb_of_components() == 2)
+	{	for ( it .reset() ; it .in_range(); it++ )
 		{	Cell p = *it;
-			file_msh << ver_numbering [p] + 1 << " "
-		           << x(p) << " " << y(p) << " " << 0 << std::endl;  }  }
+			file_msh << x(p) << " " << y(p) << " " << 0 << std::endl;  }  }
 	else
-	{	assert  ( coord.nb_of_components() == 3 );
-		Function z = coord[2];
+	{	assert ( coord .nb_of_components() == 3 );
+		Function z = coord [2];
 		for ( it.reset() ; it.in_range(); it++ )
 		{	Cell p = *it;
-			file_msh << ver_numbering [p] + 1 << " "
-		           << x(p) << " " << y(p) << " " << z(p) << std::endl;  }  }
+			file_msh << x(p) << " " << y(p) << " " << z(p) << std::endl;  }  }
 	file_msh << "$EndNodes" << std::endl;
-	} // just to make variables local : it, counter, x, y
+	} // just a block for hiding names 
 
 	file_msh << "$Elements" << std::endl;
-	file_msh << this->number_of ( tag::cells_of_dim, this->dim() ) << std::endl;
 
+	// we must create one block for each type of cell :
+	// segments, triangles, quadrilaterals
+	size_t nb_seg = 0, nb_tri = 0, nb_quad = 0;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = this->iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset() ; it .in_range(); it++ )
+	{	Cell cll = *it;
+		if ( cll .dim() == 1 )  {  nb_seg ++;  continue;  }
+		assert ( cll .dim() == 2 );
+		size_t n = cll .boundary() .number_of ( tag::cells_of_max_dim );
+		if ( n == 3 ) nb_tri ++;
+		else  {  assert ( n == 4 );  nb_quad ++;  }                      }
+	} // just a block for hiding 'it'
+
+	size_t nb_blocks = 1;
+	if ( nb_seg > 0 )
+	{	assert ( nb_tri == 0 );
+		assert ( nb_quad == 0 );  }
+	if ( ( nb_tri > 0 ) and ( nb_quad > 0 ) ) nb_blocks = 2;
+	
 	if ( this->dim() == 1 )
-	{	Mesh::Iterator it = this->iterator ( tag::over_segments );
+	{	assert ( nb_seg > 0 );
+		assert ( nb_tri == 0 );
+		assert ( nb_quad == 0 );
+		assert ( nb_blocks == 1 );
+		file_msh << "1 " << nb_seg << " 1 " << nb_seg << std::endl;
+		file_msh << "1 0 1 " << nb_seg << std::endl;
+		Mesh::Iterator it = this->iterator ( tag::over_segments );
 		size_t counter = 0;
-		for ( it.reset() ; it.in_range(); it++)
+		for ( it .reset() ; it .in_range(); it++)
 		{	++counter;
 			Cell elem = *it;
 			file_msh << counter << " 1 0 ";
 			Cell A = elem.base().reverse();
 			file_msh << ver_numbering [A] + 1 << " ";
 			Cell B = elem.tip();
-			file_msh << ver_numbering [B] + 1 << std::endl;    }  }
+			file_msh << ver_numbering [B] + 1 << std::endl;    }          }
 	else if ( this->dim() == 2 )
-	{	Mesh::Iterator it = this->iterator ( tag::over_cells_of_dim, 2 );
+	{	assert ( nb_seg == 0 );
+		Mesh::Iterator it = this->iterator ( tag::over_cells_of_max_dim );
+		file_msh << nb_blocks << " " << nb_tri + nb_quad << " 1 " << nb_tri + nb_quad << std::endl;
 		size_t counter = 0;
-		for ( it.reset() ; it.in_range(); it++)
-		{	++counter;
-			Cell elem = *it;
-			if ( elem.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 ) // a triangle
-				file_msh << counter << " 2 0 ";
-			else // a quadrilateral
-			{	assert ( elem.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				file_msh << counter << " 3 0 ";                                     }
-			Mesh::Iterator itt = elem.boundary().iterator ( tag::over_vertices, tag::require_order );
-			for ( itt.reset(); itt.in_range(); ++itt )
-			{	Cell p = *itt;  file_msh << ver_numbering [p] + 1 << " ";   }
-			file_msh << std::endl;                                                                 }  }
+		if ( nb_tri > 0 )
+		{	file_msh << "2 0 2 " << nb_tri << std::endl;
+			for ( it .reset() ; it .in_range(); it++)
+			{	Cell elem = *it;
+				if ( elem .boundary() .number_of ( tag::cells_of_max_dim ) == 3 ) // a triangle
+				{	++counter;
+					file_msh << counter;
+					Mesh::Iterator itt = elem .boundary()
+						.iterator ( tag::over_vertices, tag::require_order );
+					for ( itt .reset(); itt .in_range(); ++itt )
+					{	Cell p = *itt;  file_msh << " " << ver_numbering [p] + 1;   }
+					file_msh << std::endl;                                            }  }  }
+		assert ( counter == nb_tri );
+		if ( nb_quad > 0 )
+		{	file_msh << "2 0 3 " << nb_quad << std::endl;
+			for ( it .reset() ; it .in_range(); it++)
+			{	Cell elem = *it;
+				if ( elem .boundary() .number_of ( tag::cells_of_max_dim ) == 4 ) // a quadrilateral
+				{	++counter;
+					file_msh << counter;
+					Mesh::Iterator itt = elem .boundary()
+						.iterator ( tag::over_vertices, tag::require_order );
+					for ( itt .reset(); itt .in_range(); ++itt )
+					{	Cell p = *itt;  file_msh << " " << ver_numbering [p] + 1;   }
+					file_msh << std::endl;                                            }  }  }
+		assert ( counter == nb_tri + nb_quad );                                             }
 	else
-	{	assert ( this->dim() == 3);
-		Mesh::Iterator it = this->iterator ( tag::over_cells_of_dim, 3 );
+	{	assert ( this->dim() == 3);  assert ( false );
+		Mesh::Iterator it = this->iterator ( tag::over_cells_of_max_dim );
 		size_t counter = 0;
-		for ( it.reset() ; it.in_range(); it++)
+		for ( it .reset() ; it .in_range(); it++)
 		{	++counter;
 			Cell elem = *it;
-			size_t n_faces = elem.boundary().number_of ( tag::cells_of_dim, 2 );
+			size_t n_faces = elem .boundary() .number_of ( tag::cells_of_max_dim );
 			if ( n_faces == 4 ) // a tetrahedron
 				file_msh << counter << " 4 0 ";  // to finish !
 			else if ( n_faces == 6 )
@@ -3400,28 +3453,28 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 5 0 ";
-				Mesh::Iterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
-				itt.reset();  Cell back = *itt; // square face behind the cube
+				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
+				itt .reset();  Cell back = *itt; // square face behind the cube
 				// back is 0321 in gmsh's documentation
-				assert ( back.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				Mesh::Iterator itv = back.boundary().iterator ( tag::over_vertices, tag::backwards );
+				assert ( back .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+				Mesh::Iterator itv = back .boundary() .iterator ( tag::over_vertices, tag::backwards );
 				// backwards because we want the vertices ordered as 0, 1, 2, 3
-				itv.reset();  Cell ver_0 = *itv;
-				Cell seg_03 = back.boundary().cell_in_front_of(ver_0);
-				for ( ; itv.in_range(); ++itv )
+				itv .reset();  Cell ver_0 = *itv;
+				Cell seg_03 = back .boundary() .cell_in_front_of ( ver_0 );
+				for ( ; itv .in_range(); ++itv )
 				{	Cell p = *itv;  file_msh << ver_numbering [p] + 1 << " ";   }
-				Cell left_wall = elem.boundary().cell_in_front_of(seg_03); // square face on the left
+				Cell left_wall = elem .boundary() .cell_in_front_of ( seg_03 ); // square face on the left
 				// left_wall is 0473 in gmsh's documentation
-				assert ( left_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				Cell seg_04 = left_wall.boundary().cell_in_front_of(ver_0);
-				Cell ver_4 = seg_04.tip();
-				Cell seg_47 = left_wall.boundary().cell_in_front_of(ver_4);
-				Cell front = elem.boundary().cell_in_front_of(seg_47); // square face in front
+				assert ( left_wall .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+				Cell seg_04 = left_wall .boundary() .cell_in_front_of ( ver_0 );
+				Cell ver_4 = seg_04 .tip();
+				Cell seg_47 = left_wall .boundary() .cell_in_front_of ( ver_4 );
+				Cell front = elem .boundary() .cell_in_front_of ( seg_47 ); // square face in front
 				// front is 4567 in gmsh's documentation
-				assert ( front.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				Mesh::Iterator itvv = front.boundary().iterator ( tag::over_vertices, tag::require_order );
-				itvv.reset ( tag::start_at, ver_4 );
-				for ( ; itvv.in_range(); ++itvv )
+				assert ( front .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+				Mesh::Iterator itvv = front .boundary() .iterator ( tag::over_vertices, tag::require_order );
+				itvv .reset ( tag::start_at, ver_4 );
+				for ( ; itvv .in_range(); ++itvv )
 				{	Cell p = *itvv;  file_msh << ver_numbering [p] + 1 << " ";   }                }
 			else
 			{	assert( n_faces == 5 );
@@ -3429,35 +3482,35 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
 				file_msh << counter << " 6 0 ";
-				Mesh::Iterator itt = elem.boundary().iterator ( tag::over_cells_of_dim, 2 );
+				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
 				size_t n_tri = 0, n_rect = 0;
 				Cell base ( tag::non_existent );  // temporary non-existent cell
-				for( itt.reset(); itt.in_range(); ++itt )
+				for( itt .reset(); itt .in_range(); ++itt )
 				{	Cell face = *itt; // every face elem
-			    size_t n_edges = face.boundary().number_of ( tag::cells_of_dim, 1 );
+			    size_t n_edges = face .boundary() .number_of ( tag::cells_of_max_dim );
 					if ( n_edges == 3 )  { n_tri++;   base = face;              }
 					else                 { n_rect++;  assert ( n_edges == 4 );  }         }
 				assert ( n_tri == 2 );  assert ( n_rect == 3 );
 				// base is 021 in gmsh's documentation
-				assert ( base.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
-				Mesh::Iterator itv = base.boundary().iterator ( tag::over_vertices, tag::backwards );
+				assert ( base .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
+				Mesh::Iterator itv = base .boundary() .iterator ( tag::over_vertices, tag::backwards );
 				// backwards because we want the vertices ordered as 0, 1, 2
-				itv.reset();  Cell ver_0 = *itv;
-				Cell seg_02 = base.boundary().cell_in_front_of(ver_0);
-				for (  ; itv.in_range(); ++itv )
+				itv .reset();  Cell ver_0 = *itv;
+				Cell seg_02 = base .boundary() .cell_in_front_of ( ver_0 );
+				for (  ; itv .in_range(); ++itv )
 				{	Cell p = *itv;  file_msh << ver_numbering [p] + 1 << " ";   }
-				Cell right_wall = elem.boundary().cell_in_front_of(seg_02);
+				Cell right_wall = elem .boundary() .cell_in_front_of ( seg_02 );
 				// right_wall is 0352 in gmsh's documentation
-				assert ( right_wall.boundary().number_of ( tag::cells_of_dim, 1 ) == 4 );
-				Cell seg_03 = right_wall.boundary().cell_in_front_of(ver_0);
-				Cell ver_3 = seg_03.tip();
-				Cell seg_35 = right_wall.boundary().cell_in_front_of(ver_3);
-				Cell roof = elem.boundary().cell_in_front_of(seg_35);
+				assert ( right_wall .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+				Cell seg_03 = right_wall .boundary() .cell_in_front_of ( ver_0 );
+				Cell ver_3 = seg_03 .tip();
+				Cell seg_35 = right_wall .boundary() .cell_in_front_of ( ver_3 );
+				Cell roof = elem .boundary() .cell_in_front_of ( seg_35 );
 				// roof is 345 in gmsh's documentation
-				assert ( roof.boundary().number_of ( tag::cells_of_dim, 1 ) == 3 );
-				Mesh::Iterator itvv = roof.boundary().iterator ( tag::over_vertices, tag::require_order );
-				itvv.reset ( tag::start_at, ver_3 );
-				for ( ; itvv.in_range(); ++itvv )
+				assert ( roof .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
+				Mesh::Iterator itvv = roof .boundary() .iterator
+					( tag::over_vertices, tag::require_order );
+				for ( itvv .reset ( tag::start_at, ver_3 ); itvv .in_range(); ++itvv )
 				{	Cell p = *itvv;  file_msh << ver_numbering [p] + 1 << " ";  }               }
 			file_msh << std::endl;                                                                } }
 	file_msh << "$EndElements" << std::endl;
@@ -3507,22 +3560,22 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 {	std::ifstream ifstr ( filename );
 	std::string s;
 	std::getline ( ifstr, s );
-	assert ( trim_copy (s) == "$MeshFormat" );
+	assert ( trim_copy (s) == "$MeshFormat");
 	double msh_version;  ifstr >> msh_version;
 	int binary_file;  ifstr >> binary_file;
 	assert ( binary_file == 0 );
 	std::getline ( ifstr, s );  // one more number and the endline
 	std::getline ( ifstr, s );
-	assert ( trim_copy (s) == "$EndMeshFormat" );
+	assert ( trim_copy (s) == "$EndMeshFormat");
 
 	std::vector < double > x, y, z;
 	std::vector < size_t > tag_node;
 	bool all_z_zero = true;
-	while ( trim_copy (s) != "$Nodes" )  std::getline ( ifstr, s );
+	while ( trim_copy (s) != "$Nodes")  std::getline ( ifstr, s );
 	size_t nb_nodes;
 	if ( msh_version < 4. )
 	{	ifstr >> nb_nodes;
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
 		x .reserve ( nb_nodes );
 		y .reserve ( nb_nodes );
 		z .reserve ( nb_nodes );
@@ -3535,8 +3588,8 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 			y .push_back (yy);
 			z .push_back (zz);
 			if ( zz != 0. ) all_z_zero = false;
-			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );   }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes" );  }
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");   }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");  }
 	else  // msh_version >= 4.
 	{	size_t numEntityBlocks, minNodeTag, maxNodeTag;
 		ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
@@ -3547,6 +3600,7 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 		z .reserve ( nb_nodes );
 		tag_node .reserve ( nb_nodes );
 		std::getline ( ifstr, s );  // four integer numbers
+		// in the above : top_dim, entity_tag, nb_nodes
 		for ( size_t i = 0; i < nb_nodes; i++ )
 		{	size_t j;  ifstr >> j;     // tag
 			tag_node .push_back (j);
@@ -3558,7 +3612,7 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 			z .push_back (zz);
 			if ( zz != 0. ) all_z_zero = false;
 			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );   }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes" );  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");  }
 
 	size_t geom_dim;
 	if ( all_z_zero ) geom_dim = 2;
@@ -3573,7 +3627,7 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 		if ( geom_dim == 3 ) coords [2] (V) = z [i];
 		map_ver .insert ( std::pair < size_t, Cell > ( tag_node[i], V ) );  }
 	
-	while ( trim_copy (s) != "$Elements" )  std::getline ( ifstr, s );
+	while ( trim_copy (s) != "$Elements")  std::getline ( ifstr, s );
 	size_t nb_elem;
 	std::vector < size_t > tag_elem;
 	std::vector < int > elem_type;
@@ -3584,7 +3638,7 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 	assert ( elem_size .size() == elem_type_show_up .size() );
 	if ( msh_version < 4. )
 	{	ifstr >> nb_elem;
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
 		tag_elem .reserve ( nb_elem );
 		elem_type .reserve ( nb_elem );
 		ver_of_elem .reserve ( nb_elem );
@@ -3602,12 +3656,12 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 			{	size_t j;  ifstr >> j;  local_vec .push_back (j);  }
 			ver_of_elem .push_back ( local_vec );
 			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );  }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements" );  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");  }
 	else  // msh_version >= 4.
 	{	size_t numEntityBlocks, minElemTag, maxElemTag;
 		ifstr >> numEntityBlocks >> nb_elem >> minElemTag >> maxElemTag;
 		assert ( numEntityBlocks == 1 );
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
 		tag_elem .reserve ( nb_elem );
 		elem_type .reserve ( nb_elem );
 		ver_of_elem .reserve ( nb_elem );
@@ -3625,17 +3679,12 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 			for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
 			{	ifstr >> j;  local_vec .push_back (j);  }
 			ver_of_elem .push_back ( local_vec );
-			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );  }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements" );  }
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");  }
 
-	// focus on two cases for now : mesh of triangles, mesh of quadrilaterals
-
-	if ( elem_type_show_up [2] )  // triangle
-	{	for ( size_t i = 0; i < elem_size .size(); i++ )
-			if ( i != 2 ) assert ( not elem_type_show_up [i] );  }
-	else if ( elem_type_show_up [3] )  // quadrilateral
-	{	for ( size_t i = 0; i < elem_size .size(); i++ )
-			if ( i != 3 ) assert ( not elem_type_show_up [i] );  }
+	// focus on two cases for now : triangles, quadrilaterals
+	for ( size_t i = 0; i < elem_size .size(); i++ )
+		if ( ( i != 2 ) and ( i != 3 ) ) assert ( not elem_type_show_up [i] );
 
 	// each segment appears at most twice, with two opposite orientations
 
@@ -3685,7 +3734,7 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 			segments .push_back ( { { tag_A, tag_first }, seg } );                          }  }
 	assert ( it_type == elem_type .end() );
 
-	// focus on two cases for now : mesh of triangles, mesh of quadrilaterals
+	// focus on two cases for now : triangles, quadrilaterals
 	
 	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
 	for ( it_ver = ver_of_elem .begin(), it_type = elem_type .begin();
@@ -3746,7 +3795,8 @@ void Mesh::import_msh ( Mesh * that, const std::string filename )
 	assert ( it_type == elem_type .end() );
 
 	*that = result;
-}
+
+}  // end of  Mesh::import_msh
 
 //----------------------------------------------------------------------------------//
 
