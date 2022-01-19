@@ -1,5 +1,5 @@
 
-// global.cpp 2022.01.16
+// global.cpp 2022.01.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3343,7 +3343,7 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 	file_msh << "1 " << nb_nodes << " 1 " << nb_nodes << std::endl;
 
 	// only one entity block
-	int top_dim = 2;
+	int top_dim = this->dim();
 	file_msh << top_dim << " 0 0 " << nb_nodes << std::endl;
 
 	{ // just a block for hiding 'it'
@@ -3390,7 +3390,7 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 		assert ( nb_quad == 0 );  }
 	if ( ( nb_tri > 0 ) and ( nb_quad > 0 ) ) nb_blocks = 2;
 	
-	if ( this->dim() == 1 )
+	if ( top_dim == 1 )
 	{	assert ( nb_seg > 0 );
 		assert ( nb_tri == 0 );
 		assert ( nb_quad == 0 );
@@ -3402,12 +3402,12 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 		for ( it .reset() ; it .in_range(); it++)
 		{	++counter;
 			Cell elem = *it;
-			file_msh << counter << " 1 0 ";
+			file_msh << counter << " ";
 			Cell A = elem.base().reverse();
 			file_msh << ver_numbering [A] + 1 << " ";
 			Cell B = elem.tip();
 			file_msh << ver_numbering [B] + 1 << std::endl;    }          }
-	else if ( this->dim() == 2 )
+	else if ( top_dim == 2 )
 	{	assert ( nb_seg == 0 );
 		Mesh::Iterator it = this->iterator ( tag::over_cells_of_max_dim );
 		file_msh << nb_blocks << " " << nb_tri + nb_quad << " 1 " << nb_tri + nb_quad << std::endl;
@@ -3439,7 +3439,11 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 					file_msh << std::endl;                                            }  }  }
 		assert ( counter == nb_tri + nb_quad );                                             }
 	else
-	{	assert ( this->dim() == 3);  assert ( false );
+	{	assert ( top_dim == 3);
+		// for now, assume there is only one block of tetrahedra
+		size_t nb_tetra = this->number_of ( tag::cells_of_max_dim );
+		file_msh << "1 " <<  nb_tetra << " 1 " << nb_tetra << std::endl;
+		file_msh << "3 0 4 " <<  nb_tetra << std::endl;
 		Mesh::Iterator it = this->iterator ( tag::over_cells_of_max_dim );
 		size_t counter = 0;
 		for ( it .reset() ; it .in_range(); it++)
@@ -3447,11 +3451,24 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 			Cell elem = *it;
 			size_t n_faces = elem .boundary() .number_of ( tag::cells_of_max_dim );
 			if ( n_faces == 4 ) // a tetrahedron
-				file_msh << counter << " 4 0 ";  // to finish !
+			{	file_msh << counter;
+				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
+				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+				// our orientation is opposite to the one used by gmsh
+				// our normals point outwards, in gmsh normals point inwards
+				// pick any face :
+				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
+				itt .reset();  assert ( itt .in_range() );
+				Cell ABC = *itt;
+				Mesh::Iterator itv = ABC .boundary() .iterator ( tag::over_vertices, tag::backwards );
+				for ( itv .reset(); itv .in_range(); ++itv )
+				{	Cell p = *itv;  file_msh << " " << ver_numbering [p] + 1;   }
+					file_msh << std::endl;                                                               }
 			else if ( n_faces == 6 )
 			{	// 3d parallelogram = 8-node hexahedron = cube
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+				assert ( false );
 				file_msh << counter << " 5 0 ";
 				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
 				itt .reset();  Cell back = *itt; // square face behind the cube
@@ -3459,6 +3476,8 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 				assert ( back .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
 				Mesh::Iterator itv = back .boundary() .iterator ( tag::over_vertices, tag::backwards );
 				// backwards because we want the vertices ordered as 0, 1, 2, 3
+				// our orientation is opposite to the one used by gmsh
+				// our normals point outwards, in gmsh normals point inwards
 				itv .reset();  Cell ver_0 = *itv;
 				Cell seg_03 = back .boundary() .cell_in_front_of ( ver_0 );
 				for ( ; itv .in_range(); ++itv )
@@ -3481,22 +3500,26 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 				// triangular prism = 6-node prism
 				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
 				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+				assert ( false );
 				file_msh << counter << " 6 0 ";
 				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
 				size_t n_tri = 0, n_rect = 0;
-				Cell base ( tag::non_existent );  // temporary non-existent cell
+				Cell floor ( tag::non_existent );  // temporary non-existent cell
 				for( itt .reset(); itt .in_range(); ++itt )
 				{	Cell face = *itt; // every face elem
 			    size_t n_edges = face .boundary() .number_of ( tag::cells_of_max_dim );
-					if ( n_edges == 3 )  { n_tri++;   base = face;              }
+					if ( n_edges == 3 )  { n_tri++;   floor = face;             }
 					else                 { n_rect++;  assert ( n_edges == 4 );  }         }
 				assert ( n_tri == 2 );  assert ( n_rect == 3 );
-				// base is 021 in gmsh's documentation
-				assert ( base .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
-				Mesh::Iterator itv = base .boundary() .iterator ( tag::over_vertices, tag::backwards );
+				// 'floor' is 021 in gmsh's documentation
+				assert ( floor .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
+				Mesh::Iterator itv = floor .boundary() .iterator
+					( tag::over_vertices, tag::backwards );
 				// backwards because we want the vertices ordered as 0, 1, 2
+				// our orientation is opposite to the one used by gmsh
+				// our normals point outwards, in gmsh normals point inwards
 				itv .reset();  Cell ver_0 = *itv;
-				Cell seg_02 = base .boundary() .cell_in_front_of ( ver_0 );
+				Cell seg_02 = floor .boundary() .cell_in_front_of ( ver_0 );
 				for (  ; itv .in_range(); ++itv )
 				{	Cell p = *itv;  file_msh << ver_numbering [p] + 1 << " ";   }
 				Cell right_wall = elem .boundary() .cell_in_front_of ( seg_02 );
@@ -3506,7 +3529,7 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 				Cell ver_3 = seg_03 .tip();
 				Cell seg_35 = right_wall .boundary() .cell_in_front_of ( ver_3 );
 				Cell roof = elem .boundary() .cell_in_front_of ( seg_35 );
-				// roof is 345 in gmsh's documentation
+				// 'roof' is 345 in gmsh's documentation
 				assert ( roof .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
 				Mesh::Iterator itvv = roof .boundary() .iterator
 					( tag::over_vertices, tag::require_order );
@@ -3515,7 +3538,7 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 			file_msh << std::endl;                                                                } }
 	file_msh << "$EndElements" << std::endl;
 	
-	if ( ! file_msh.good() )
+	if ( ! file_msh .good() )
 	{	std::cerr << "error writing msh file" << std::endl;
 		exit (1);                                    }
 
@@ -3555,248 +3578,487 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f ) const
 
 //----------------------------------------------------------------------------------//
 
-void Mesh::import_msh ( Mesh * that, const std::string filename )
 
-{	std::ifstream ifstr ( filename );
+namespace {  // anonymous namespace, mimics static linkage
+
+inline int import_msh_2  // hidden in anonymous namespace
+( const std::string filename, int geom_dim,
+  std::vector < std::pair < std::pair < int, int >,
+    std::vector < std::pair < size_t, std::vector < size_t > > > > > & ver_of_elem,
+  std::map < size_t, Cell > & map_ver                                              )
+
+{	assert ( ( geom_dim == 2 ) or ( geom_dim == 3 ) );
+	double msh_version;
+
+	std::ifstream ifstr ( filename );
 	std::string s;
-	std::getline ( ifstr, s );
-	assert ( trim_copy (s) == "$MeshFormat");
-	double msh_version;  ifstr >> msh_version;
-	int binary_file;  ifstr >> binary_file;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$MeshFormat");
+	int binary_file;  ifstr >> msh_version >> binary_file;
+	assert ( msh_version < 4.);
 	assert ( binary_file == 0 );
 	std::getline ( ifstr, s );  // one more number and the endline
-	std::getline ( ifstr, s );
-	assert ( trim_copy (s) == "$EndMeshFormat");
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndMeshFormat");
 
-	std::vector < double > x, y, z;
-	std::vector < size_t > tag_node;
-	bool all_z_zero = true;
-	while ( trim_copy (s) != "$Nodes")  std::getline ( ifstr, s );
-	size_t nb_nodes;
-	if ( msh_version < 4. )
-	{	ifstr >> nb_nodes;
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
-		x .reserve ( nb_nodes );
-		y .reserve ( nb_nodes );
-		z .reserve ( nb_nodes );
-		tag_node .reserve ( nb_nodes );
-		for ( size_t i = 0; i < nb_nodes; i++ )
-		{	size_t j;  ifstr >> j;
-			tag_node .push_back (j);
-			double xx, yy, zz;  ifstr >> xx >> yy >> zz;
-			x .push_back (xx);
-			y .push_back (yy);
-			z .push_back (zz);
-			if ( zz != 0. ) all_z_zero = false;
-			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");   }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");  }
-	else  // msh_version >= 4.
-	{	size_t numEntityBlocks, minNodeTag, maxNodeTag;
-		ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
-		assert ( numEntityBlocks == 1 );
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
-		x .reserve ( nb_nodes );
-		y .reserve ( nb_nodes );
-		z .reserve ( nb_nodes );
-		tag_node .reserve ( nb_nodes );
-		std::getline ( ifstr, s );  // four integer numbers
-		// in the above : top_dim, entity_tag, nb_nodes
-		for ( size_t i = 0; i < nb_nodes; i++ )
-		{	size_t j;  ifstr >> j;     // tag
-			tag_node .push_back (j);
-			std::getline ( ifstr, s ); assert ( trim_copy (s) == "" );   }
-		for ( size_t i = 0; i < nb_nodes; i++ )
-		{	double xx, yy, zz;  ifstr >> xx >> yy >> zz;
-			x .push_back (xx);
-			y .push_back (yy);
-			z .push_back (zz);
-			if ( zz != 0. ) all_z_zero = false;
-			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );   }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");  }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$Nodes");
 
-	size_t geom_dim;
-	if ( all_z_zero ) geom_dim = 2;
-	else geom_dim = 3;
 	Manifold RRd ( tag::Euclid, tag::of_dim, geom_dim );
 	Function coords = RRd .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	std::map < size_t, Cell > map_ver;
-	for ( size_t i = 0; i < nb_nodes; i++ )
-	{	Cell V ( tag::vertex );
-		coords [0] (V) = x [i];
-		coords [1] (V) = y [i];
-		if ( geom_dim == 3 ) coords [2] (V) = z [i];
-		map_ver .insert ( std::pair < size_t, Cell > ( tag_node[i], V ) );  }
 	
+	size_t nb_nodes;  ifstr >> nb_nodes;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
+
+	for ( size_t i = 0; i < nb_nodes; i++ )
+	{	size_t j;  ifstr >> j;  assert ( j == i+1 );
+		double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+		Cell V ( tag::vertex );
+		coords [0] (V) = xx;
+		coords [1] (V) = yy;
+		if ( geom_dim == 3 )  coords [2] (V) = zz;
+		else  assert ( zz == 0. );
+		map_ver .insert ( std::pair < size_t, Cell > ( j, V ) );
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");   }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");
+
 	while ( trim_copy (s) != "$Elements")  std::getline ( ifstr, s );
 	size_t nb_elem;
-	std::vector < size_t > tag_elem;
-	std::vector < int > elem_type;
-	std::vector < std::vector < size_t > > ver_of_elem;
+	// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+	// we do not keep the dimension, it is implied by the geometry type
+	// we take ent_tag = 0, see assert k == 0 below
 	std::vector < int > elem_size { 0, 2, 3, 4, 4, 8, 6, 5 };
-	std::vector < bool > elem_type_show_up
-		{ false, false, false, false, false, false, false, false };
+	std::vector < int > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
+	// 1 segment, 2 triangle, 3 quadrilateral, 4 tetrahedron, 5 cube, 6 prism, 7 pyramid
+	int global_top_dim = 0;
+	std::vector < int > elem_type_show_up { -1, -1, -1, -1, -1, -1, -1, -1 };
 	assert ( elem_size .size() == elem_type_show_up .size() );
-	if ( msh_version < 4. )
-	{	ifstr >> nb_elem;
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
-		tag_elem .reserve ( nb_elem );
-		elem_type .reserve ( nb_elem );
-		ver_of_elem .reserve ( nb_elem );
-		for ( size_t i = 0; i < nb_elem; i++ )
-		{	size_t ctag;  ifstr >> ctag;
-			tag_elem .push_back ( ctag );
-			int cll_type;  ifstr >> cll_type;
-			elem_type .push_back ( cll_type );
-			int k;  ifstr >> k;  // entity tag ?
-			std::vector < size_t > local_vec;
-			local_vec .reserve ( elem_size [ cll_type ] );
-			assert ( cll_type < int ( elem_size .size() ) );
-			elem_type_show_up [ cll_type ] = true;
-			for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
-			{	size_t j;  ifstr >> j;  local_vec .push_back (j);  }
-			ver_of_elem .push_back ( local_vec );
-			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );  }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");  }
-	else  // msh_version >= 4.
-	{	size_t numEntityBlocks, minElemTag, maxElemTag;
-		ifstr >> numEntityBlocks >> nb_elem >> minElemTag >> maxElemTag;
-		assert ( numEntityBlocks == 1 );
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
-		tag_elem .reserve ( nb_elem );
-		elem_type .reserve ( nb_elem );
-		ver_of_elem .reserve ( nb_elem );
-		size_t j;  ifstr >> j;  ifstr >> j;  //  entity dim, entity tag
+	ifstr >> nb_elem;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "");
+	for ( size_t i = 0; i < nb_elem; i++ )
+	{	size_t cll_tag;  ifstr >> cll_tag;
 		int cll_type;  ifstr >> cll_type;
-		std::getline ( ifstr, s );  // one more number
-		elem_type_show_up [ cll_type ] = true;
+		if ( elem_dim [ cll_type ] > global_top_dim )  global_top_dim = elem_dim [ cll_type ];
+		int k;  ifstr >> k;  ifstr >> k;  ifstr >> k;
+		// we just ignore three integers
+		assert ( cll_type < int ( elem_size .size() ) );
+		if ( elem_type_show_up [ cll_type ] < 0 )
+		{	elem_type_show_up [ cll_type ] = ver_of_elem .size();
+			ver_of_elem .push_back ( { { 0, cll_type }, { } } );  }
+		ver_of_elem [ elem_type_show_up [ cll_type ] ] .second .push_back ( { cll_tag, { } } );
+		std::vector < size_t > & local_vec =
+			ver_of_elem [ elem_type_show_up [ cll_type ] ] .second .back() .second;
+		local_vec .reserve ( elem_size [ cll_type ] );
+		for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
+		{	size_t j;  ifstr >> j;  local_vec .push_back (j);  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );                             }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");
+
+	assert ( ( global_top_dim == 2 ) or ( global_top_dim == 3 ) );
+	return global_top_dim;
+	
+}  // end of  import_msh_2
+
+//----------------------------------------------------------------------------------//
+
+
+inline int import_msh_4  // hidden in anonymous namespace
+( const std::string filename, int geom_dim,
+  std::vector < std::pair < std::pair < int, int >,
+    std::vector < std::pair < size_t, std::vector < size_t > > > > > & ver_of_elem,
+  std::map < size_t, Cell > & map_ver                                              )
+
+{	assert ( ( geom_dim == 2 ) or ( geom_dim == 3 ) );
+	double msh_version;
+
+	std::ifstream ifstr ( filename );
+	std::string s;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$MeshFormat");
+	int binary_file;  ifstr >> msh_version >> binary_file;
+	assert ( msh_version >= 4.);
+	assert ( binary_file == 0 );
+	std::getline ( ifstr, s );  // one more number and the endline
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndMeshFormat");
+
+	std::getline ( ifstr, s );
+	if ( trim_copy (s) == "$PhysicalEntities")
+	{	// we skip section PhysicalEntities
+		while ( trim_copy (s) != "$EndPhysicalEntities")  std::getline ( ifstr, s );
+		std::getline ( ifstr, s );                                                   }
+
+	size_t nb_ent_0d = 0, nb_ent_1d = 0, nb_ent_2d = 0, nb_ent_3d = 0;
+	if ( trim_copy (s) == "$Entities")
+	{	ifstr >> nb_ent_0d >> nb_ent_1d >> nb_ent_2d >> nb_ent_3d;
+		// we skip the rest of this section
+		while ( trim_copy (s) != "$EndEntities")  std::getline ( ifstr, s );
+		std::getline ( ifstr, s );                                           }
+	// if there is no $Entities section, all nb_ent remain zero
+
+	if ( trim_copy (s) == "$PartitionedEntities")
+	{	// we skip section PartitionedEntities
+		while ( trim_copy (s) != "$EndPartitionedEntities")  std::getline ( ifstr, s );
+		std::getline ( ifstr, s );                                                      }
+
+	assert ( trim_copy (s) == "$Nodes");
+
+	Manifold RRd ( tag::Euclid, tag::of_dim, geom_dim );
+	Function coords = RRd .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	
+	size_t numEntityBlocks, minNodeTag, maxNodeTag, nb_nodes;
+	ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+
+	for ( size_t ent = 0; ent < numEntityBlocks; ent++ )
+	{	int top_dim, entity_tag, parametric;
+		size_t nbnodes;
+		ifstr >> top_dim >> entity_tag >> parametric >> nbnodes;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		std::vector < size_t > local_tag;
+		for ( size_t i = 0; i < nbnodes; i++ )
+		{	size_t j;  ifstr >> j;     // node tag
+			std::getline ( ifstr, s ); assert ( trim_copy (s) == "" );
+			assert ( j <= maxNodeTag );
+			local_tag .push_back (j);                                  }
+		for ( size_t i = 0; i < nbnodes; i++ )
+		{	double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+			Cell V ( tag::vertex );
+			coords [0] (V) = xx;
+			coords [1] (V) = yy;
+			if ( geom_dim == 3 ) coords [2] (V) = zz;
+			else  assert ( zz == 0. );
+			map_ver .insert ( { local_tag [i], V } );                   }  }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");
+
+	std::getline ( ifstr, s );
+	assert ( trim_copy (s) == "$Elements");
+	// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+	// we do not keep the dimension, it is implied by the geometry type
+	// we take ent_tag = 0, see assert k == 0 below
+	std::vector < int > elem_size { 0, 2, 3, 4, 4, 8, 6, 5 };
+	std::vector < int > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
+	// 1 segment, 2 triangle, 3 quadrilateral, 4 tetrahedron, 5 cube, 6 prism, 7 pyramid
+	int global_top_dim = 0;
+	std::vector < int > elem_type_show_up { -1, -1, -1, -1, -1, -1, -1, -1 };
+	assert ( elem_size .size() == elem_type_show_up .size() );
+	size_t minElemTag, maxElemTag, nb_elem;
+	ifstr >> numEntityBlocks >> nb_elem >> minElemTag >> maxElemTag;
+	for ( size_t ent = 0; ent < numEntityBlocks; ent++ )
+	{	int top_dim;  ifstr >> top_dim;
+		if ( global_top_dim < top_dim ) global_top_dim = top_dim;
+		size_t j;  ifstr >> j;  //  entity dim, entity tag
+		int cll_type;  ifstr >> cll_type >> nb_elem;
+		assert ( cll_type < int ( elem_size .size() ) );
+		if ( elem_type_show_up [ cll_type ] < 0 )
+		{	elem_type_show_up [ cll_type ] = ver_of_elem .size();
+			ver_of_elem .push_back ( { { 0, cll_type }, { } } );  }
 		for ( size_t i = 0; i < nb_elem; i++ )
-		{	size_t ctag;  ifstr >> ctag;
-			tag_elem .push_back ( ctag );
-			elem_type .push_back ( cll_type );
-			assert ( cll_type < int ( elem_size .size() ) );
-			std::vector < size_t > local_vec;
+		{	size_t cll_tag;  ifstr >> cll_tag;
+			ver_of_elem [ elem_type_show_up [ cll_type ] ] .second .push_back ( { cll_tag, { } } );
+			std::vector < size_t > & local_vec =
+				ver_of_elem [ elem_type_show_up [ cll_type ] ] .second .back() .second;
 			local_vec .reserve ( elem_size [ cll_type ] );
 			for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
 			{	ifstr >> j;  local_vec .push_back (j);  }
-			ver_of_elem .push_back ( local_vec );
-			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");  }
-		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");  }
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");                               }  }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");
 
-	// focus on two cases for now : triangles, quadrilaterals
-	for ( size_t i = 0; i < elem_size .size(); i++ )
-		if ( ( i != 2 ) and ( i != 3 ) ) assert ( not elem_type_show_up [i] );
-
-	// each segment appears at most twice, with two opposite orientations
-
-	std::vector < std::pair < std::pair < size_t, size_t >, Cell > > segments;
-	std::vector < std::vector < size_t > > ::const_iterator it_ver = ver_of_elem .begin();
-	std::vector < int > ::const_iterator it_type = elem_type .begin();
-	for ( ; it_ver != ver_of_elem .end(); it_ver++, it_type++ )
-	{	assert ( it_type != elem_type .end() );
-		std::vector < size_t > ::const_iterator it_sides = it_ver->begin();
-		assert ( it_sides != it_ver->end() );
-		size_t tag_A = *it_sides, tag_first = tag_A;
-		it_sides ++;
-		while ( it_sides != it_ver->end() )
-		{	size_t tag_B = *it_sides;
-			// search for the pair of vertices A, B
-			bool seg_found = false;
-			for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
-			        ::const_iterator it_seg = segments .begin();
-			      it_seg != segments .end(); it_seg ++                            )
-			{	std::pair < size_t, size_t > p = it_seg->first;
-				// the same segment cannot appear with the same orientation
-				assert ( ( p .first != tag_A ) or ( p .second != tag_B ) );
-				// but it may show up with opposite orientation
-				if ( ( p .first != tag_B ) or ( p .second != tag_A ) ) continue;
-				seg_found = true;  break;                                        }
-			if ( not seg_found )
-			{	// build new segment
-				Cell seg ( tag::segment, map_ver [ tag_A ] .reverse(), map_ver [ tag_B ] );
-				segments .push_back ( { { tag_A, tag_B }, seg } );                          }
-			tag_A = tag_B;
-			it_sides ++;                                                                    }
-		// last segment which closes the loop : [ A first ]
-		// search for the pair of vertices A, first
-		bool seg_found = false;
-		for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
-		        ::const_iterator it_seg = segments .begin();
-		      it_seg != segments .end(); it_seg ++                            )
-		{	std::pair < size_t, size_t > p = it_seg->first;
-			// the same segment cannot appear with the same orientation
-			assert ( ( p .first != tag_A ) or ( p .second != tag_first ) );
-			// but it may show up with opposite orientation
-			if ( ( p .first != tag_first ) or ( p .second != tag_A ) ) continue;
-			seg_found = true;  break;                                            }
-		if ( not seg_found )
-		{	// build new segment
-			Cell seg ( tag::segment, map_ver [ tag_A ] .reverse(), map_ver [ tag_first ] );
-			segments .push_back ( { { tag_A, tag_first }, seg } );                          }  }
-	assert ( it_type == elem_type .end() );
-
-	// focus on two cases for now : triangles, quadrilaterals
+	assert ( ( global_top_dim == 2 ) or ( global_top_dim == 3 ) );
+	return global_top_dim;
 	
-	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
-	for ( it_ver = ver_of_elem .begin(), it_type = elem_type .begin();
-	      it_ver != ver_of_elem .end(); it_ver++, it_type++           )
-	{	assert ( it_type != elem_type .end() );
-		Cell::Positive::HighDim * new_cll_ptr = new Cell::Positive::HighDim
-			( tag::whose_boundary_is,
-				Mesh ( tag::whose_core_is,
-			         new Mesh::Connected::OneDim ( tag::with, elem_size [ *it_type ],
-	               tag::segments, tag::one_dummy_wrapper                         ),
-	         tag::freshly_created ), tag::one_dummy_wrapper                        );
-		Cell new_cll ( tag::whose_core_is, new_cll_ptr, tag::freshly_created );
-		std::vector < size_t > ::const_iterator it_sides = it_ver->begin();
-		assert ( it_sides != it_ver->end() );
-		size_t tag_A = *it_sides, tag_first = tag_A;
-		it_sides ++;
-		while ( it_sides != it_ver->end() )
-		{	size_t tag_B = *it_sides;
-			// search for the pair of vertices A, B
-			Cell seg ( tag::non_existent );
-			bool seg_found = false;
-			for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
-			        ::const_iterator it_seg = segments .begin();
-			      it_seg != segments .end(); it_seg ++                            )
-			{	std::pair < size_t, size_t > p = it_seg->first;
-				// the segment may appear with the same orientation
-				if ( ( p .first == tag_A ) and ( p .second == tag_B ) )
-				{	seg = it_seg->second;
-					seg_found = true;     }
-				// but it may also show up with opposite orientation
-				if ( ( p .first == tag_B ) and ( p .second == tag_A ) )
-				{	seg = it_seg->second .reverse();
-					seg_found = true;               }                       }
-			assert ( seg_found );
-			seg .core ->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
-			tag_A = tag_B;
-			it_sides ++;                                                                }
-		// last segment which closes the loop : [ A first ]
-		// search for the pair of vertices A, first
-		Cell seg ( tag::non_existent );
-		bool seg_found = false;
-		for ( std::vector < std::pair < std::pair < size_t, size_t >, Cell > >
-		        ::const_iterator it_seg = segments .begin();
-		      it_seg != segments .end(); it_seg ++                            )
-		{	std::pair < size_t, size_t > p = it_seg->first;
-			// the same segment may appear with the same orientation
-			if ( ( p .first == tag_A ) and ( p .second == tag_first ) )
-			{	seg = it_seg->second;
-				seg_found = true;     }
-			// but it may also show up with opposite orientation
-			if ( ( p .first == tag_first ) and ( p .second == tag_A ) )
-			{	seg = it_seg->second .reverse();
-				seg_found = true;               }                         }
-		assert ( seg_found );
-		seg .core ->add_to_mesh ( new_cll .boundary() .core, tag::do_not_bother );
-		new_cll .boundary() .closed_loop ( seg .tip() );
-		new_cll .add_to_mesh ( result );                                                  }
-	assert ( it_type == elem_type .end() );
+}  // end of  import_msh_4
+
+//----------------------------------------------------------------------------------//
+
+
+inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
+( const int cll_type, const std::vector < size_t > & nodes,
+  std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > > & built_cells,
+  const std::map < size_t, Cell > & map_ver                                                     )
+	
+{	switch ( cll_type )
+	{	case 1 :   // segment
+		{	assert ( nodes .size() == 2 );
+			size_t a = nodes [0], b = nodes [1];
+			std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > >
+				::const_iterator it = built_cells .find ( a );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 1 ) continue;
+					if ( other_nodes [0] == b )  // found it !
+						return itt->second;                                    }  }
+			it = built_cells .find ( b );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 1 ) continue;
+					if ( other_nodes [0] == a )  // found it ! reversed
+						return itt->second .reverse();                         }  }
+			// we must build a new segment
+			// std::cout << "bulding segment " << a << " " << b << std::endl;
+			std::map < size_t, Cell > ::const_iterator it_a = map_ver .find (a),
+			                                           it_b = map_ver .find (b);
+			assert ( it_a != map_ver .end() );  assert ( it_b != map_ver .end() );
+			Cell seg ( tag::segment, it_a->second .reverse(), it_b->second );
+			std::vector < std::pair < std::vector < size_t >, Cell > >
+				& cells_with_a = built_cells [a];
+			// in the above, if key 'a' does not exist yet in 'built_cells',
+			// it will be inserted and an empty vector will be associated to it
+			cells_with_a .push_back ( { { b }, seg } );
+			return seg;                                                                      }
+		case 2 :   // triangle
+		{	assert ( nodes .size() == 3 );
+			size_t a = nodes [0], b = nodes [1], c = nodes [2];
+			std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > >
+				::const_iterator it = built_cells .find ( a );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 2 ) continue;
+					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == c ) )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == c ) and ( other_nodes [1] == b ) )  // found it ! reversed
+						return itt->second .reverse();                              }  }
+			it = built_cells .find ( b );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 2 ) continue;
+					if ( ( other_nodes [0] == c ) and ( other_nodes [1] == a ) )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == a ) and ( other_nodes [1] == c ) )  // found it ! reversed
+						return itt->second .reverse();                              }  }
+			it = built_cells .find ( c );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 2 ) continue;
+					if ( ( other_nodes [0] == a ) and ( other_nodes [1] == b ) )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == a ) )  // found it ! reversed
+						return itt->second .reverse();                              }  }
+			// we must build a new triangle
+			// std::cout << "bulding triangle " << a << " " << b << " " << c << std::endl;
+			Cell AB = retrieve_or_build_and_register ( 1, { a, b }, built_cells, map_ver );
+			Cell BC = retrieve_or_build_and_register ( 1, { b, c }, built_cells, map_ver );
+			Cell CA = retrieve_or_build_and_register ( 1, { c, a }, built_cells, map_ver );
+			Cell tri ( tag::triangle, AB, BC, CA );
+			std::vector < std::pair < std::vector < size_t >, Cell > >
+				& cells_with_a = built_cells [a];
+			// in the above, if key 'a' does not exist yet in 'built_cells',
+			// it will be inserted and an empty vector will be associated to it
+			cells_with_a .push_back ( { { b, c }, tri } );
+			return tri;                                                                        }
+		case 3 :   // quadrilateral
+		{	assert ( nodes .size() == 4 );
+			size_t a = nodes [0], b = nodes [1], c = nodes [2], d = nodes [3];
+			std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > >
+				::const_iterator it = built_cells .find ( a );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 3 ) continue;
+					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == c ) and
+					     ( other_nodes [1] == d )                                  )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == d ) and ( other_nodes [1] == c ) and
+					     ( other_nodes [1] == b )                                  )  // found it ! reversed
+						return itt->second .reverse();                                 }  }
+			it = built_cells .find ( b );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 3 ) continue;
+					if ( ( other_nodes [0] == c ) and ( other_nodes [1] == d ) and
+					     ( other_nodes [1] == a )                                  )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == a ) and ( other_nodes [1] == d ) and
+					     ( other_nodes [1] == c )                                  )  // found it ! reversed
+						return itt->second .reverse();                                 }  }
+			it = built_cells .find ( c );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 3 ) continue;
+					if ( ( other_nodes [0] == d ) and ( other_nodes [1] == a ) and
+					     ( other_nodes [1] == b )                                  )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == a ) and
+					     ( other_nodes [1] == d )                                  )  // found it ! reversed
+						return itt->second .reverse();                                 }  }
+			it = built_cells .find ( d );
+			if ( it != built_cells .end() )
+			{	std::vector < std::pair < std::vector < size_t >, Cell > >
+					::const_iterator itt = it->second .begin();
+				for ( ; itt != it->second .end(); itt++ )
+				{	const std::vector < size_t > & other_nodes = itt->first;
+					if ( other_nodes .size() != 3 ) continue;
+					if ( ( other_nodes [0] == a ) and ( other_nodes [1] == b ) and
+					     ( other_nodes [1] == c )                                  )  // found it !
+						return itt->second;
+					if ( ( other_nodes [0] == c ) and ( other_nodes [1] == b ) and
+					     ( other_nodes [1] == a )                                  )  // found it ! reversed
+						return itt->second .reverse();                                 }  }
+			// we must build a new quadrangle
+			// std::cout << "bulding quadrangle " << a << " " << b << " " << c << " " << d << std::endl;
+			Cell AB = retrieve_or_build_and_register ( 1, { a, b }, built_cells, map_ver );
+			Cell BC = retrieve_or_build_and_register ( 1, { b, c }, built_cells, map_ver );
+			Cell CD = retrieve_or_build_and_register ( 1, { c, d }, built_cells, map_ver );
+			Cell DA = retrieve_or_build_and_register ( 1, { d, a }, built_cells, map_ver );
+			Cell quad ( tag::quadrangle, AB, BC, CD, DA );
+			std::vector < std::pair < std::vector < size_t >, Cell > >
+				& cells_with_a = built_cells [a];
+			// in the above, if key 'a' does not exist yet in 'built_cells',
+			// it will be inserted and an empty vector will be associated to it
+			cells_with_a .push_back ( { { b, c, d }, quad } );
+			return quad;                                                                        }
+		default :  assert ( false );
+	}  // end of switch ( cll_type );
+
+	assert ( false );
+	return Cell ( tag::non_existent );  // just to avoid compilation errors
+		
+}	 // end of retrieve_or_build_and_register
+	
+//----------------------------------------------------------------------------------//
+
+
+inline void import_msh_common  // hidden in anonymous namespace
+( Mesh * that, std::vector < std::pair < std::pair < int, int >,
+     std::vector < std::pair < size_t, std::vector < size_t > > > > > & ver_of_elem,
+  std::map < size_t, Cell > & map_ver, size_t global_top_dim                        )
+
+// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+// we do not keep the dimension, it is implied by the geometry type
+
+{	// we trust that entities show up with increasingly higher dimension,
+	// so that faces and edges have already been constructed when we build a cell
+
+	// vertices have already been built, kept in map_ver
+	// we build cells of dimension >= 1
+	std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > > built_cells;
+	// if a cell, say abcd, has already been built, is gets registered in the above
+	// under built_cells [ tag_a, { { tag_b, tag_c, tag_d }, ABCD } ]
+
+	Mesh result ( tag::fuzzy, tag::of_dim, global_top_dim );
+
+	for ( size_t ent = 0; ent < ver_of_elem .size(); ent ++ )
+	{	size_t geom_type = ver_of_elem [ent] .first .second;
+		assert ( ( 1 <= geom_type ) and ( geom_type <= 7 ) );
+		std::vector < std::pair < size_t, std::vector < size_t > > > & elem =
+			ver_of_elem [ent] .second;
+		for ( size_t el = 0; el < elem .size(); el++ )
+		{	std::vector < size_t > & nodes = elem [el] .second;
+			Cell cll = retrieve_or_build_and_register ( geom_type, nodes, built_cells, map_ver );
+			if ( cll .dim() == global_top_dim )  cll .add_to_mesh ( result );                     }  }
 
 	*that = result;
 
-}  // end of  Mesh::import_msh
+}  // end of  import_msh_common
+
+//----------------------------------------------------------------------------------//
+
+
+void import_msh ( Mesh * that, const std::string filename )
+// hidden in anonymous namespace
+
+{	double msh_version;
+	int geom_dim;
+
+	// we perform a preliminary passage and find the version and
+	// the geometric dimension
+	{ // just a block of code for hiding names
+	std::ifstream ifstr ( filename );
+	std::string s;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$MeshFormat");
+	ifstr >> msh_version;
+	int binary_file;  ifstr >> binary_file;
+	if ( binary_file != 0 )
+	{	std::cout << "binary files not accepted" <<std::endl;
+		exit (1);                                             }
+	std::getline ( ifstr, s );  // one more number and the endline
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndMeshFormat");
+
+	while ( trim_copy (s) != "$Nodes")  std::getline ( ifstr, s );
+
+	size_t numEntityBlocks, minNodeTag, maxNodeTag;
+	bool all_z_zero = true;
+	size_t nb_nodes;
+	if ( msh_version < 4. )
+	{	ifstr >> nb_nodes;  maxNodeTag = nb_nodes;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");  }
+	else  // msh_version >= 4.
+	{	ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );       }
+
+	if ( msh_version < 4. )
+	{	for ( size_t i = 0; i < nb_nodes; i++ )
+		{	size_t j;  ifstr >> j;  assert ( j == i+1 );
+			double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+			if ( zz != 0. )  all_z_zero = false;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");   }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");  }
+	else  // msh_version >= 4.
+	{	int top_dim, entity_tag, parametric;
+		size_t nbnodes;
+		for ( size_t ent = 0; ent < numEntityBlocks; ent++ )
+		{	ifstr >> top_dim >> entity_tag >> parametric >> nbnodes;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+			for ( size_t i = 0; i < nbnodes; i++ )
+			{	size_t j;  ifstr >> j;     // node tag
+				std::getline ( ifstr, s ); assert ( trim_copy (s) == "" );
+				assert ( j <= maxNodeTag );                                 }
+			for ( size_t i = 0; i < nbnodes; i++ )
+			{	double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+				std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+				if ( zz != 0. ) all_z_zero = false;                                }  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");         }
+
+	if ( all_z_zero )  geom_dim = 2;
+	else  geom_dim = 3;
+	} // just a block of code for hiding 'ifstr'
+	
+	std::cout << "msh version " << msh_version << ", geom dim " << geom_dim << std::endl;
+	
+  std::vector < std::pair < std::pair < int, int >,
+	    std::vector < std::pair < size_t, std::vector < size_t > > > > > ver_of_elem;
+	// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+	// we do not keep the dimension, it is implied by the geometry type
+
+	std::map < size_t, Cell > map_ver;
+
+	size_t global_top_dim;
+	if ( msh_version < 4. )
+		global_top_dim = import_msh_2 ( filename, geom_dim, ver_of_elem, map_ver );
+	else  global_top_dim = import_msh_4 ( filename, geom_dim, ver_of_elem, map_ver );
+
+	import_msh_common ( that, ver_of_elem, map_ver, global_top_dim );
+
+}  // end of  import_msh
+
+} // end of anonymous namespace
+
+//----------------------------------------------------------------------------------//
+
+
+Mesh::Mesh ( const tag::Import &, const tag::Msh &, const std::string filename )
+:	Mesh ( tag::non_existent )
+{	import_msh ( this, filename );  }
+
 
 //----------------------------------------------------------------------------------//
 

@@ -1,5 +1,5 @@
 
-// manifold.h 2022.01.06
+// manifold.h 2022.01.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1414,6 +1414,17 @@ inline void Cell::project ( const tag::Onto &, const Manifold m ) const
 	Cell::Positive::Vertex * cll = ( Cell::Positive::Vertex * ) this->core;
 	m.core->project ( cll );                                                }
 		
+//-------------------------------------------------------------------------------------------------
+
+
+inline Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+                    const tag::Orientation &, const tag::OrientationChoice & oc,
+                    const tag::DesiredLength &, const Function & length                   )
+:	Mesh ( tag::progressive, tag::entire_manifold, manif,
+	       tag::desired_length, length, tag::orientation, oc )
+{	}
+
+//-------------------------------------------------------------------------------------------------
 
 }  // end of  namespace maniFEM
 

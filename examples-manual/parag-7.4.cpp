@@ -37,8 +37,9 @@ int main ( )
 	// and that it must take winding segments into account
 	// specific information about winding numbers is included in the two segments
 
-	// it makes no sense to export 'torus' in msh format
-	// we can draw an unfolded mesh
+	// we could export 'torus' in msh format, taking advantage of the $Periodic section
+	// (this is object of current work)
+	// we can directly draw an unfolded mesh
 	torus .draw_ps ("torus.eps", tag::unfold,
 	                 tag::over_region, -0.5 < x < 1.5, -0.2 < y < 1.2 );
 

@@ -21,7 +21,9 @@ int main ( )
 	// define new coordinates x and y as arithmetic expressions of theta
 	Function x = cos ( theta ), y = sin ( theta );
 	// forget about theta; in future statements, x and y will be used
-	circle .set_coordinates ( x && y );
+	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+	RR2 .set_coordinates ( x && y );
+
 	seg .export_to_file ( tag::msh, "circle.msh");
 	
 	std::cout << "produced file circle.msh" << std::endl;

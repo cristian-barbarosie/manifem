@@ -1,7 +1,7 @@
 
 // example presented in paragraph 3.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// builds a circle with an eccentric hole
+// builds a disk with an eccentric hole
 
 #include "maniFEM.h"
 using namespace maniFEM;

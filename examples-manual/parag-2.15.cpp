@@ -22,8 +22,10 @@ int main ()
 	Mesh small_piece ( tag::segment, B .reverse(), A, tag::divided_in, 1 );
 	Mesh circle ( tag::join, incomplete_circle, small_piece );
 
+	// forget about t, in future statements x and y will be used
 	Function x = cos(t), y = sin(t);
-	circle_manif .set_coordinates ( x && y );
+	Manifold RR2 ( tag::Euclid, tag::of_dimension, 2 );
+	RR2 .set_coordinates ( x && y );
 
 	circle .draw_ps ("circle.eps");
 	circle .export_to_file ( tag::msh, "circle.msh");

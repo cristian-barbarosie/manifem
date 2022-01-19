@@ -1,5 +1,5 @@
 
-//   mesh.h  2022.01.15
+//   mesh.h  2022.01.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -138,7 +138,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct EntireManifold { };  static const EntireManifold entire_manifold;
 	struct DesiredLength { };  static const DesiredLength desired_length;
 	struct Orientation { };  static const Orientation orientation;
-	enum OrientationChoice { random, intrinsic, inherent, not_provided };
+	enum OrientationChoice { random, intrinsic, inherent, geodesic, not_provided };
+	struct ShortestPath { };  static const ShortestPath shortest_path;
 	struct Import { };  static const Import import;
 	struct Msh { };  static const Msh msh;
 	struct Winding { };  static const Winding winding;
@@ -858,9 +859,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	template < typename container >
 	static inline void join_meshes ( Mesh * const that, const container & l );
 		
-	inline Mesh ( const tag::Import &, const tag::Msh &, const std::string );
-
-	void import_msh ( Mesh * that, const std::string filename );  // defined in global.cpp
+	Mesh ( const tag::Import &, const tag::Msh &, const std::string );  // defined in global.cpp
 
 	// we are still in class Mesh
 	// constructors with tag::Progressive are defined in progressive.cpp
@@ -873,9 +872,20 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
 	       const tag::Orientation &, const tag::OrientationChoice &                      );
 
+	inline Mesh ( const tag::Progressive &,
+				        const tag::Orientation &, const tag::OrientationChoice & oc,
+	              const tag::DesiredLength &, const Function & length             )
+	:	Mesh::Mesh ( tag::progressive, tag::desired_length, length, tag::orientation, oc )
+	{	}
+ 
 	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
 	       const tag::DesiredLength &, const Function & length,
 	       const tag::Orientation &, const tag::OrientationChoice &              );
+
+	inline Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+	              const tag::Orientation &, const tag::OrientationChoice & oc,
+	              const tag::DesiredLength &, const Function & length                   );
+	// defined in manifold.h
 
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	       const tag::DesiredLength &, const Function & length             );
@@ -883,6 +893,13 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	       const tag::DesiredLength &, const Function & length,
 				 const tag::Orientation &, const tag::OrientationChoice &        );
+ 
+	inline Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+				        const tag::Orientation &, const tag::OrientationChoice & oc,
+	              const tag::DesiredLength &, const Function & length             )
+	:	Mesh::Mesh ( tag::progressive, tag::boundary, interface,
+		             tag::desired_length, length, tag::orientation, oc )
+	{	}
  
 	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	       const tag::StartAt &, const Cell & start,
@@ -909,10 +926,37 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	       const tag::DesiredLength &, const Function & length,
 	       const tag::Orientation &, const tag::OrientationChoice &           );
 
+	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	              const tag::Orientation &, const tag::OrientationChoice & oc,
+	              const tag::DesiredLength &, const Function & length                )
+	:	Mesh ( tag::progressive, tag::start_at, start,
+		       tag::desired_length, length, tag::orientation, oc )
+	{	}
+
 	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	       const tag::StopAt &, const Cell & stop,
 	       const tag::DesiredLength &, const Function & length,
 	       const tag::Orientation &, const tag::OrientationChoice &           );
+
+	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	              const tag::StopAt &, const Cell & stop,
+	              const tag::Orientation &, const tag::OrientationChoice & oc,
+	              const tag::DesiredLength &, const Function & length                )
+	:	Mesh ( tag::progressive, tag::start_at, start, tag::stop_at, stop,
+		       tag::desired_length, length, tag::orientation, oc           )
+	{	}
+
+	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	       const tag::StopAt &, const Cell & stop,
+	       const tag::DesiredLength &, const Function & length,
+	       const tag::ShortestPath &                                          );
+
+	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	              const tag::StopAt &, const Cell & stop, const tag::ShortestPath &,
+	              const tag::DesiredLength &, const Function & length                )
+	:	Mesh ( tag::progressive, tag::start_at, start, tag::stop_at, stop,
+		       tag::desired_length, length, tag::shortest_path            )
+	{	}
 
 	inline Mesh & operator= ( const Mesh & c );
 	inline Mesh & operator= ( Mesh && c );
@@ -968,7 +1012,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2, tag::build_new_vertices );  }
 
 	inline Mesh wrap
-		( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
+	( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::BuildNewVertices &,
 									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
 										size_t dim, std::map < Cell, Cell > & m                 )
@@ -5900,13 +5944,6 @@ inline Mesh::Mesh ( const tag::Join &, const container & l )
 : Mesh ( tag::non_existent )
 {	Mesh::join_meshes ( this, l );  }
 	
-//-----------------------------------------------------------------------------//
-
-
-inline Mesh::Mesh ( const tag::Import &, const tag::Msh &, const std::string filename )
-:	Mesh ( tag::non_existent )
-{	Mesh::import_msh ( this, filename );  }
-
 //-----------------------------------------------------------------------------//
 
 

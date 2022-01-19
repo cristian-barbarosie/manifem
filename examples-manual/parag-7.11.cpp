@@ -33,8 +33,7 @@ int main ( )
 
 	Mesh sector ( tag::rectangle, AA, AB, BB, AB .reverse(), tag::winding );
 
-	// it makes no sense to export 'sector' in msh format
-	// but we can draw an unfolded mesh
+	// we can draw an unfolded mesh
 	sector .draw_ps ( "sector.eps", tag::unfold, { -2*rot, -rot, 0, rot, 2*rot },
 	                  tag::over_region, -2.1 < x < 2.1, -0.3 < y < 2.1 );
 

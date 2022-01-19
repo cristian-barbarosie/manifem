@@ -32,7 +32,8 @@ int main ( )
 	// define new coordinates x and y as arithmetic expressions of theta
 	Function x = cos ( theta ), y = sin ( theta );
 	// forget about theta; in future statements, x, y and z will be used
-	cylinder_manif .set_coordinates ( x && y && z );
+	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );	
+	RR3 .set_coordinates ( x && y && z );
 	cylinder .export_to_file ( tag::msh, "cylinder.msh");
 	
 	std::cout << "produced file cylinder.msh" << std::endl;

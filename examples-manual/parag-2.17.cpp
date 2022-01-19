@@ -32,10 +32,11 @@ int main ()
 	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 19 );
 	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 39 );
 
-	torus .set_as_working_manifold();
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	torus .set_coordinates ( x && y && z );
+	// forget about alpha and beta
+	Manifold RR3 ( tag::Euclid, tag::of_dimension, 3 );
+	RR3 .set_coordinates ( x && y && z );
 
 	ABCD .export_to_file ( tag::msh, "torus.msh");
 

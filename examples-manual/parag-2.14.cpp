@@ -19,8 +19,10 @@ int main ()
 	Cell B ( tag::vertex );  t (B) = 5.*pi;
 	Mesh arc_of_spiral ( tag::segment, A .reverse(), B, tag::divided_in, 50 );
 
+	// forget about t, in future statements x and y will be used
 	Function x = t * cos(t), y = t * sin(t);
-	spiral .set_coordinates ( x && y );
+	Manifold RR2 ( tag::Euclid, tag::of_dimension, 2 );
+	RR2 .set_coordinates ( x && y );
 
 	arc_of_spiral .draw_ps ("spiral.eps");
 	arc_of_spiral .export_to_file ( tag::msh, "spiral.msh");

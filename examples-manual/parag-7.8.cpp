@@ -40,7 +40,6 @@ int main ( )
 	for ( itv = vec .begin(); itv != vec .end(); itv++ )
 	{	Cell sq = *itv;  sq .remove_from_mesh ( torus );  }
 
-	// it makes no sense to export 'torus' in msh format
 	// we can draw an unfolded mesh
 	torus .draw_ps ("torus.eps", tag::unfold,
 	                 tag::over_region, -2. < x < 1.7, -0.4 < y < 1.5 );

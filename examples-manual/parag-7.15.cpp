@@ -33,8 +33,7 @@ int main ( )
 
 	Mesh sector ( tag::rectangle, AA, AA_vert, AA .reverse(), AA_vert .reverse(), tag::winding );
 
-	// it makes no sense to export 'torus' in msh format
-	// but we can draw an unfolded mesh
+	// we can draw an unfolded mesh
 	sector .draw_ps ("sector.eps", tag::unfold,
 	                  { -2*rot, -rot, 0, rot, 2*rot, zoom-2*rot, zoom-rot, zoom, zoom+rot,
 	                    zoom+2*rot, -zoom-2*rot, -zoom-rot, -zoom, -zoom+rot, -zoom+2*rot,

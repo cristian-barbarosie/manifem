@@ -1,5 +1,5 @@
 
-// progressive.cpp 2022.01.12
+// progressive.cpp 2022.01.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -789,7 +789,7 @@ bool correctly_oriented    // hidden in anonymous namespace
 	{	std::cout << error_message << std::endl;
 		exit (1);                               }
 
-	// for surfaces, we should search the vertex with zmax and check the orientation
+	// for surfaces, we search the vertex with zmax and check the orientation
 	// of all surrounding triangles (we need an iterator over cells around that vertex)
 	if ( msh.dim() != 1 )
 	{	assert ( msh.dim() == 2 );
@@ -1959,7 +1959,13 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	std::vector < double > best_tangent = compute_tangent_vec ( tag::at_point, start );
 
-	if ( oc == tag::not_provided )   // interpreted as "shortest path"
+	if ( oc == tag::not_provided )
+	{	std::cout << "when starting and stopping points are provided," << std::endl;
+		std::cout << "maniFEM needs to know how to choose the orientation of the curve;" << std::endl;
+		std::cout << "please specify either tag::orientation or tag::shortest_path" << std::endl;
+		exit (1);                                                                                    }
+	
+	if ( oc == tag::geodesic )   // shortest path
 
 	{	assert ( start != stop );
 		
@@ -2013,7 +2019,7 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 		                        tag::stop_at, stop                                    );
 		return;                                                                            }
 
-	if ( ( oc == tag::inherent ) or ( oc == tag::not_provided ) or ( oc == tag::random ) )
+	if ( ( oc == tag::inherent ) or ( oc == tag::random ) )
 
 	{	if ( start == stop )
 		{	progressive_construct ( msh, tag::start_at, start, tag::orientation, oc );
@@ -2117,7 +2123,7 @@ inline void progressive_construct     // hidden in anonymous namespace
 		assert ( progress_nb_of_coords == 3 );
 
 		if ( oc == tag::intrinsic )
-		{	std::cout << "intrinsic orientation makes no sense here" << std::endl
+		{	std::cout << "intrinsic orientation makes no sense here;" << std::endl
 			          << "did you mean inherent ?" << std::endl;
 			exit (1);                                                             }
 
@@ -2181,12 +2187,12 @@ inline void progressive_construct         // hidden in anonymous namespace
 	{	// domain in the plane RR^2, intrinsic orientation
 		
 		if ( oc == tag::random )
-		{	std::cout << "it is unsafe to try to mesh a plane region with random orientation"
+		{	std::cout << "it is unsafe to try to mesh a plane region with random orientation;"
 			          << std::endl;
 			std::cout << "the region may be unbounded" << std::endl;
 			exit (1);                                                                          }
 		if ( oc == tag::inherent )
-		{	std::cout << "inherent orientation does not apply to a plane region" << std::endl;
+		{	std::cout << "inherent orientation does not apply to a plane region;" << std::endl;
 			std::cout << "did you mean 'intrinsic' ?" << std::endl;
 			exit (1);                                                                           }
 		assert ( ( oc == tag::intrinsic ) or ( oc == tag::not_provided ) );
@@ -2591,7 +2597,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1945
 	                        tag::orientation, tag::not_provided             );    }
 
 //-------------------------------------------------------------------------------------------------
@@ -2616,8 +2622,34 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1945
 	                        tag::orientation, oc                            );   }
+
+//-------------------------------------------------------------------------------------------------
+
+
+Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+             const tag::StopAt &, const Cell & stop,
+             const tag::DesiredLength &, const Function & length,
+             const tag::ShortestPath &                                          )
+
+: Mesh ( tag::whose_core_is,
+         new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                              )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+	desired_length = length;
+	
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1945
+	                        tag::orientation, tag::geodesic                 );   }
+
 
 //-------------------------------------------------------------------------------------------------
 

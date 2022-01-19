@@ -46,7 +46,8 @@ int main ( )
 	         z = small_radius*sin(beta);
 
 	// forget about alpha and beta :
-	torus_manif .set_coordinates ( x && y && z );
+	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
+	RR3 .set_coordinates ( x && y && z );
 	// in future statements (e.g. for graphical representation)
 	// x, y and z will be used, not alpha nor beta :
 	torus .export_to_file ( tag::msh, "torus.msh");

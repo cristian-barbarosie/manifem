@@ -33,7 +33,9 @@ int main ()
 	         y = ( big_radius + small_radius * cos(beta) ) * sin(alpha),
 	         z = small_radius * sin(beta);
 
-	torus .set_coordinates ( x && y && z );
+	// forget about t, in future statements x and y will be used
+	Manifold RR3 ( tag::Euclid, tag::of_dimension, 3 );
+	RR3 .set_coordinates ( x && y && z );
 
 	ABCD .export_to_file ( tag::msh, "torus.msh");
 

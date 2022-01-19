@@ -63,7 +63,7 @@ int main ( )
 	double a = 0.15, b = 0.82;
 	Manifold curve2 = RR2 .implicit 
 		( smooth_min ( 300.*power((x-a+y+b)*(x-a+y+b),e) + power((x-a-y-b-1.)*(x-a-y-b-1.),e),
-		               300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
+		        300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
 	Mesh loop2 ( tag::progressive, tag::desired_length, 0.05 );
 
@@ -77,14 +77,14 @@ int main ( )
 	b = 0.82-1.4;
 	Manifold curve4 = RR2 .implicit 
 		( smooth_min ( 300.*power((x-a+y+b)*(x-a+y+b),e) + power((x-a-y-b-1.)*(x-a-y-b-1.),e),
-		               300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
+		        300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
 	Mesh loop4 ( tag::progressive, tag::desired_length, 0.05 );  // not used
 
 	a -= 2.3;  b = 0.82;
 	Manifold curve5 = RR2 .implicit 
 		( smooth_min ( 300.*power((x-a+y+b)*(x-a+y+b),e) + power((x-a-y-b-1.)*(x-a-y-b-1.),e),
-		               300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
+		        300.*power((x-2.-a-y-b)*(x-2.-a-y-b),e) + power((x-2.-a+y+b+1.)*(x-2.-a+y+b+1.),e),
 	                 tag::threshold, 1.5                     )  == 1. );
 	Mesh loop5 ( tag::progressive, tag::desired_length, 0.05 );  // not used
 
