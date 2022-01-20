@@ -114,7 +114,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct Pentagon { };  static const Pentagon pentagon;
 	struct Hexagon { };  static const Hexagon hexagon;
 	struct Tetrahedron { };  static const Tetrahedron tetrahedron;
-	struct Hexahedron { };  static const Hexahedron hexahedron;
+	struct Hexahedron { };  static const Hexahedron hexahedron, cube;
 	struct WhoseBoundaryIs { };  static const WhoseBoundaryIs whose_bdry_is;
 	                             static const WhoseBoundaryIs whose_boundary_is;
 	struct WhoseCoreIs { };  static const WhoseCoreIs whose_core_is;
@@ -509,6 +509,11 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
                                        const Cell & CD, const Cell & DE, const Cell & EA );
 	inline Cell ( const tag::Hexagon &, const Cell & AB, const Cell & BC,
                        const Cell & CD, const Cell & DE, const Cell & EF, const Cell & FA );
+	inline Cell ( const tag::Tetrahedron &, const Cell & face_1, const Cell & face_2,
+                                          const Cell & face_3, const Cell & face_4 );
+	inline Cell ( const tag::Hexahedron &, const Cell & face_1, const Cell & face_2,
+                                         const Cell & face_3, const Cell & face_4,
+                                         const Cell & face_5, const Cell & face_6 );
 
 	inline Cell & operator= ( const Cell & c );
 	inline Cell & operator= ( Cell && c );
@@ -2731,9 +2736,8 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 	                         const tag::OneDummyWrapper &                   );
 	inline PositiveHighDim ( const tag::WhoseBoundaryIs &, const Mesh & msh,
 	                         const tag::OneDummyWrapper &                   );
-	inline PositiveHighDim ( const tag::Triangle &,
-	                         const Cell & AB, const Cell & BC, const Cell & CA,
-	                         const tag::OneDummyWrapper &                       );
+	inline PositiveHighDim ( const tag::Triangle &, const Cell & AB, const Cell & BC,
+	                         const Cell & CA, const tag::OneDummyWrapper &           );
 	inline PositiveHighDim ( const tag::Quadrangle &, const Cell & AB, const Cell & BC,
 	                         const Cell & CD, const Cell & DA, const tag::OneDummyWrapper & );
 	inline PositiveHighDim ( const tag::Pentagon &, const Cell & AB, const Cell & BC,
@@ -2742,6 +2746,11 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 	inline PositiveHighDim ( const tag::Hexagon &, const Cell & AB, const Cell & BC,
 	                         const Cell & CD, const Cell & DE, const Cell & EF, const Cell & FA,
                            const tag::OneDummyWrapper &                                        );
+	inline PositiveHighDim ( const tag::Tetrahedron &, const Cell & face_1, const Cell & face_2,
+	                         const Cell & face_3, const Cell & face_4, const tag::OneDummyWrapper & );
+	inline PositiveHighDim ( const tag::Hexahedron &, const Cell & face_1, const Cell & face_2,
+	                         const Cell & face_3, const Cell & face_4,
+	                         const Cell & face_5, const Cell & face_6, const tag::OneDummyWrapper & );
 
 	PositiveHighDim ( const Cell::Positive::HighDim & ) = delete;
 	PositiveHighDim ( const Cell::Positive::HighDim && ) = delete;
@@ -6028,6 +6037,24 @@ inline Cell::Cell ( const tag::Hexagon &, const Cell & AB, const Cell & BC,
 	       tag::freshly_created                                             )
 {	}
 
+inline Cell::Cell ( const tag::Tetrahedron &, const Cell & face_1, const Cell & face_2,
+                                              const Cell & face_3, const Cell & face_4 )
+// the order of the faces does not count, they will cling according to their sides
+:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
+				 ( tag::tetrahedron, face_1, face_2, face_3, face_4, tag::one_dummy_wrapper ),
+	       tag::freshly_created                                                         )
+{	}
+
+inline Cell::Cell ( const tag::Hexahedron &, const Cell & face_1, const Cell & face_2,
+                                             const Cell & face_3, const Cell & face_4,
+                                             const Cell & face_5, const Cell & face_6 )
+// the order of the faces does not count, they will cling according to their sides
+:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
+				 ( tag::tetrahedron, face_1, face_2, face_3, face_4, tag::one_dummy_wrapper ),
+	       tag::freshly_created                                                         )
+{	}
+
+
 //-----------------------------------------------------------------------------//
 
 
@@ -6680,6 +6707,72 @@ inline Cell::PositiveHighDim::PositiveHighDim
 		< Mesh::Core*, Mesh::Connected::OneDim* > ( this->boundary() .core );
 	bdry->first_ver = AB .base();  // negative
 	bdry->last_ver = FA .tip();                                             }
+
+
+inline Cell::PositiveHighDim::PositiveHighDim
+( const tag::Tetrahedron &, const Cell & face_1, const Cell & face_2,
+  const Cell & face_3, const Cell & face_4, const tag::OneDummyWrapper & )
+	
+:	Cell::Positive::HighDim
+	( tag::whose_boundary_is,
+	  Mesh ( tag::whose_core_is,
+	         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one,
+	                                       tag::one_dummy_wrapper       ),
+	         tag::freshly_created                                         ),
+	  tag::one_dummy_wrapper                                                )
+
+{	assert ( face_1 .exists() );
+	assert ( face_2 .exists() );
+	assert ( face_3 .exists() );
+	assert ( face_4 .exists() );
+	assert ( face_1 .dim() == 2 );
+	assert ( face_2 .dim() == 2 );
+	assert ( face_3 .dim() == 2 );
+	assert ( face_4 .dim() == 2 );
+	// no need for glue_on_bdry_of : 'this' cell has just been created, it has no meshes above
+	// we call add_to_mesh instead (as if the mesh were not a boundary)
+	assert  ( this->boundary() .is_positive() );
+	face_1 .core->add_to_mesh ( this->boundary() .core );
+	face_2 .core->add_to_mesh ( this->boundary() .core );
+	face_3 .core->add_to_mesh ( this->boundary() .core );
+	face_4 .core->add_to_mesh ( this->boundary() .core );  }
+
+
+
+inline Cell::PositiveHighDim::PositiveHighDim
+( const tag::Hexahedron &, const Cell & face_1, const Cell & face_2,
+  const Cell & face_3, const Cell & face_4,
+  const Cell & face_5, const Cell & face_6, const tag::OneDummyWrapper & )
+	
+:	Cell::Positive::HighDim
+	( tag::whose_boundary_is,
+	  Mesh ( tag::whose_core_is,
+	         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one,
+	                                       tag::one_dummy_wrapper       ),
+	         tag::freshly_created                                         ),
+	  tag::one_dummy_wrapper                                                )
+
+{	assert ( face_1 .exists() );
+	assert ( face_2 .exists() );
+	assert ( face_3 .exists() );
+	assert ( face_4 .exists() );
+	assert ( face_5 .exists() );
+	assert ( face_6 .exists() );
+	assert ( face_1 .dim() == 2 );
+	assert ( face_2 .dim() == 2 );
+	assert ( face_3 .dim() == 2 );
+	assert ( face_4 .dim() == 2 );
+	assert ( face_5 .dim() == 2 );
+	assert ( face_6 .dim() == 2 );
+	// no need for glue_on_bdry_of : 'this' cell has just been created, it has no meshes above
+	// we call add_to_mesh instead (as if the mesh were not a boundary)
+	assert  ( this->boundary() .is_positive() );
+	face_1 .core->add_to_mesh ( this->boundary() .core );
+	face_2 .core->add_to_mesh ( this->boundary() .core );
+	face_3 .core->add_to_mesh ( this->boundary() .core );
+	face_4 .core->add_to_mesh ( this->boundary() .core );
+	face_5 .core->add_to_mesh ( this->boundary() .core );
+	face_6 .core->add_to_mesh ( this->boundary() .core );  }
 
 //---------------------------------------------------------------------------------
 

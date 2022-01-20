@@ -1,5 +1,5 @@
 
-// global.cpp 2022.01.19
+// global.cpp 2022.01.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3371,29 +3371,51 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 	file_msh << "$Elements" << std::endl;
 
 	// we must create one block for each type of cell :
-	// segments, triangles, quadrilaterals
-	size_t nb_seg = 0, nb_tri = 0, nb_quad = 0;
+	// segments, triangles, quadrilaterals, tetrahedra, cubes
+	size_t nb_seg = 0, nb_tri = 0, nb_quad = 0, nb_tetra = 0, nb_cub = 0, nb_prism = 0;
 	{ // just a block for hiding 'it'
 	Mesh::Iterator it = this->iterator ( tag::over_cells, tag::of_max_dim );
+	if ( top_dim == 1 )
 	for ( it .reset() ; it .in_range(); it++ )
 	{	Cell cll = *it;
-		if ( cll .dim() == 1 )  {  nb_seg ++;  continue;  }
+		assert ( cll .dim() == 1 );
+		nb_seg ++;                  }
+	if ( top_dim == 2 )
+	for ( it .reset() ; it .in_range(); it++ )
+	{	Cell cll = *it;
 		assert ( cll .dim() == 2 );
 		size_t n = cll .boundary() .number_of ( tag::cells_of_max_dim );
 		if ( n == 3 ) nb_tri ++;
 		else  {  assert ( n == 4 );  nb_quad ++;  }                      }
+	if ( top_dim == 3 )
+	for ( it .reset() ; it .in_range(); it++ )
+	{	Cell cll = *it;
+		assert ( cll .dim() == 3 );
+		size_t n = cll .boundary() .number_of ( tag::cells_of_max_dim );
+		if ( n == 4 ) nb_tetra ++;
+		else if ( n == 6 ) nb_prism ++;
+		else  {  assert ( n == 8 );  nb_cub ++;  }                      }
 	} // just a block for hiding 'it'
 
-	size_t nb_blocks = 1;
-	if ( nb_seg > 0 )
-	{	assert ( nb_tri == 0 );
-		assert ( nb_quad == 0 );  }
-	if ( ( nb_tri > 0 ) and ( nb_quad > 0 ) ) nb_blocks = 2;
+	// since there is no request to create specific entities,
+	// we just create one entity per element type of maximum topological dimension
+	size_t nb_blocks = 0;
+	if ( top_dim == 1 )   nb_blocks = 1;
+	if ( top_dim == 2 )
+	{	if ( nb_seg > 0 )   nb_blocks++;
+		if ( nb_quad > 0 )  nb_blocks++;  }
+	if ( top_dim == 3 )
+	{	if ( nb_tetra > 0 ) nb_blocks++;
+		if ( nb_prism > 0 ) nb_blocks++;
+		if ( nb_cub > 0 )   nb_blocks++;   }
 	
 	if ( top_dim == 1 )
-	{	assert ( nb_seg > 0 );
-		assert ( nb_tri == 0 );
+	{	assert ( nb_tri == 0 );
 		assert ( nb_quad == 0 );
+		assert ( nb_tetra == 0 );
+		assert ( nb_prism == 0 );
+		assert ( nb_cub == 0 );
+		assert ( nb_seg == this->number_of ( tag::cells_of_max_dim ) );
 		assert ( nb_blocks == 1 );
 		file_msh << "1 " << nb_seg << " 1 " << nb_seg << std::endl;
 		file_msh << "1 0 1 " << nb_seg << std::endl;
@@ -3403,12 +3425,17 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 		{	++counter;
 			Cell elem = *it;
 			file_msh << counter << " ";
-			Cell A = elem.base().reverse();
+			Cell A = elem .base() .reverse();
 			file_msh << ver_numbering [A] + 1 << " ";
-			Cell B = elem.tip();
+			Cell B = elem .tip();
 			file_msh << ver_numbering [B] + 1 << std::endl;    }          }
 	else if ( top_dim == 2 )
 	{	assert ( nb_seg == 0 );
+		assert ( nb_tetra == 0 );
+		assert ( nb_prism == 0 );
+		assert ( nb_cub == 0 );
+		assert ( nb_tri + nb_quad == this->number_of ( tag::cells_of_max_dim ) );
+		assert ( nb_blocks <= 2 );
 		Mesh::Iterator it = this->iterator ( tag::over_cells_of_max_dim );
 		file_msh << nb_blocks << " " << nb_tri + nb_quad << " 1 " << nb_tri + nb_quad << std::endl;
 		size_t counter = 0;
@@ -3440,107 +3467,135 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f, Cell::Numbering & v
 		assert ( counter == nb_tri + nb_quad );                                             }
 	else
 	{	assert ( top_dim == 3);
-		// for now, assume there is only one block of tetrahedra
-		size_t nb_tetra = this->number_of ( tag::cells_of_max_dim );
-		file_msh << "1 " <<  nb_tetra << " 1 " << nb_tetra << std::endl;
-		file_msh << "3 0 4 " <<  nb_tetra << std::endl;
+		assert ( nb_seg == 0 );
+		assert ( nb_tri == 0 );
+		assert ( nb_quad == 0 );
+		assert ( nb_tetra + nb_cub + nb_prism == this->number_of ( tag::cells_of_max_dim ) );
+		assert ( nb_blocks <= 3 );
+		file_msh << nb_blocks << " " <<  nb_tetra + nb_prism + nb_cub
+		         << " 1 " << nb_tetra + nb_prism + nb_cub << std::endl;
 		Mesh::Iterator it = this->iterator ( tag::over_cells_of_max_dim );
 		size_t counter = 0;
-		for ( it .reset() ; it .in_range(); it++)
-		{	++counter;
-			Cell elem = *it;
-			size_t n_faces = elem .boundary() .number_of ( tag::cells_of_max_dim );
-			if ( n_faces == 4 ) // a tetrahedron
-			{	file_msh << counter;
-				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
-				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
-				// our orientation is opposite to the one used by gmsh
-				// our normals point outwards, in gmsh normals point inwards
-				// pick any face :
-				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
-				itt .reset();  assert ( itt .in_range() );
-				Cell ABC = *itt;
-				Mesh::Iterator itv = ABC .boundary() .iterator ( tag::over_vertices, tag::backwards );
-				for ( itv .reset(); itv .in_range(); ++itv )
-				{	Cell p = *itv;  file_msh << " " << ver_numbering [p] + 1;   }
-					file_msh << std::endl;                                                               }
-			else if ( n_faces == 6 )
-			{	// 3d parallelogram = 8-node hexahedron = cube
-				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
-				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
-				assert ( false );
-				file_msh << counter << " 5 0 ";
-				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
-				itt .reset();  Cell back = *itt; // square face behind the cube
-				// back is 0321 in gmsh's documentation
-				assert ( back .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
-				Mesh::Iterator itv = back .boundary() .iterator ( tag::over_vertices, tag::backwards );
-				// backwards because we want the vertices ordered as 0, 1, 2, 3
-				// our orientation is opposite to the one used by gmsh
-				// our normals point outwards, in gmsh normals point inwards
-				itv .reset();  Cell ver_0 = *itv;
-				Cell seg_03 = back .boundary() .cell_in_front_of ( ver_0 );
-				for ( ; itv .in_range(); ++itv )
-				{	Cell p = *itv;  file_msh << ver_numbering [p] + 1 << " ";   }
-				Cell left_wall = elem .boundary() .cell_in_front_of ( seg_03 ); // square face on the left
-				// left_wall is 0473 in gmsh's documentation
-				assert ( left_wall .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
-				Cell seg_04 = left_wall .boundary() .cell_in_front_of ( ver_0 );
-				Cell ver_4 = seg_04 .tip();
-				Cell seg_47 = left_wall .boundary() .cell_in_front_of ( ver_4 );
-				Cell front = elem .boundary() .cell_in_front_of ( seg_47 ); // square face in front
-				// front is 4567 in gmsh's documentation
-				assert ( front .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
-				Mesh::Iterator itvv = front .boundary() .iterator ( tag::over_vertices, tag::require_order );
-				itvv .reset ( tag::start_at, ver_4 );
-				for ( ; itvv .in_range(); ++itvv )
-				{	Cell p = *itvv;  file_msh << ver_numbering [p] + 1 << " ";   }                }
-			else
-			{	assert( n_faces == 5 );
-				// triangular prism = 6-node prism
-				// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
-				// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
-				assert ( false );
-				file_msh << counter << " 6 0 ";
-				Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
-				size_t n_tri = 0, n_rect = 0;
-				Cell floor ( tag::non_existent );  // temporary non-existent cell
-				for( itt .reset(); itt .in_range(); ++itt )
-				{	Cell face = *itt; // every face elem
-			    size_t n_edges = face .boundary() .number_of ( tag::cells_of_max_dim );
-					if ( n_edges == 3 )  { n_tri++;   floor = face;             }
-					else                 { n_rect++;  assert ( n_edges == 4 );  }         }
-				assert ( n_tri == 2 );  assert ( n_rect == 3 );
-				// 'floor' is 021 in gmsh's documentation
-				assert ( floor .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
-				Mesh::Iterator itv = floor .boundary() .iterator
-					( tag::over_vertices, tag::backwards );
-				// backwards because we want the vertices ordered as 0, 1, 2
-				// our orientation is opposite to the one used by gmsh
-				// our normals point outwards, in gmsh normals point inwards
-				itv .reset();  Cell ver_0 = *itv;
-				Cell seg_02 = floor .boundary() .cell_in_front_of ( ver_0 );
-				for (  ; itv .in_range(); ++itv )
-				{	Cell p = *itv;  file_msh << ver_numbering [p] + 1 << " ";   }
-				Cell right_wall = elem .boundary() .cell_in_front_of ( seg_02 );
-				// right_wall is 0352 in gmsh's documentation
-				assert ( right_wall .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
-				Cell seg_03 = right_wall .boundary() .cell_in_front_of ( ver_0 );
-				Cell ver_3 = seg_03 .tip();
-				Cell seg_35 = right_wall .boundary() .cell_in_front_of ( ver_3 );
-				Cell roof = elem .boundary() .cell_in_front_of ( seg_35 );
-				// 'roof' is 345 in gmsh's documentation
-				assert ( roof .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
-				Mesh::Iterator itvv = roof .boundary() .iterator
-					( tag::over_vertices, tag::require_order );
-				for ( itvv .reset ( tag::start_at, ver_3 ); itvv .in_range(); ++itvv )
-				{	Cell p = *itvv;  file_msh << ver_numbering [p] + 1 << " ";  }               }
-			file_msh << std::endl;                                                                } }
+		if ( nb_tetra > 0 )
+		{	file_msh << "3 0 4 " <<  nb_tetra << std::endl;
+			for ( it .reset() ; it .in_range(); it++)
+			{	++counter;
+				Cell elem = *it;
+				size_t n_faces = elem .boundary() .number_of ( tag::cells_of_max_dim );
+				if ( n_faces == 4 ) // a tetrahedron
+				{	file_msh << counter;
+					// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
+					// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+					// our orientation is opposite to the one used by gmsh
+					// our normals point outwards, in gmsh normals point inwards
+					// pick any face :
+					Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
+					itt .reset();  assert ( itt .in_range() );
+					Cell ABC = *itt;
+					Mesh::Iterator itv = ABC .boundary() .iterator ( tag::over_vertices, tag::backwards );
+					for ( itv .reset(); itv .in_range(); ++itv )
+					{	Cell p = *itv;  file_msh << " " << ver_numbering [p] + 1;   }
+					// now the fourth vertex
+					Mesh::Iterator its = ABC .boundary() .iterator ( tag::over_cells_of_max_dim );
+					its .reset();  assert ( its .in_range() );
+					Cell seg = *its;
+					Cell face = elem .boundary() .cell_in_front_of ( seg );
+					Cell other_seg = face .boundary() .cell_behind ( seg .tip() );
+					Cell D = other_seg .base() .reverse();
+					file_msh << " " << ver_numbering [D] + 1 << std::endl;
+				}	}	}  // end of if, end of for, end of if
+		assert ( counter == nb_tetra );
+		if ( nb_cub > 0 )
+		{	file_msh << "3 0 5 " <<  nb_cub << std::endl;
+			for ( it .reset() ; it .in_range(); it++)
+			{	++counter;
+				Cell elem = *it;
+				size_t n_faces = elem .boundary() .number_of ( tag::cells_of_max_dim );
+				if ( n_faces == 6 )
+				{	// parallelipiped = 8-node hexahedron = cube
+					// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
+					// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+					file_msh << counter;
+					Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
+					itt .reset();  Cell back = *itt; // square face behind the cube
+					// back is 0321 in gmsh's documentation
+					assert ( back .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+					Mesh::Iterator itv = back .boundary() .iterator ( tag::over_vertices, tag::backwards );
+					// backwards because we want the vertices ordered as 0, 1, 2, 3
+					// our orientation is opposite to the one used by gmsh
+					// our normals point outwards, in gmsh normals point inwards
+					itv .reset();  Cell ver_0 = *itv;
+					Cell seg_03 = back .boundary() .cell_in_front_of ( ver_0 );
+					for ( ; itv .in_range(); ++itv )
+					{	Cell p = *itv;  file_msh << " " << ver_numbering [p] + 1;   }
+					Cell left_wall = elem .boundary() .cell_in_front_of ( seg_03 ); // square face on the left
+					// left_wall is 0473 in gmsh's documentation
+					assert ( left_wall .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+					Cell seg_04 = left_wall .boundary() .cell_in_front_of ( ver_0 );
+					Cell ver_4 = seg_04 .tip();
+					Cell seg_47 = left_wall .boundary() .cell_in_front_of ( ver_4 );
+					Cell front = elem .boundary() .cell_in_front_of ( seg_47 ); // square face in front
+					// front is 4567 in gmsh's documentation
+					assert ( front .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+					Mesh::Iterator itvv = front .boundary() .iterator
+						( tag::over_vertices, tag::require_order );
+					itvv .reset ( tag::start_at, ver_4 );
+					for ( ; itvv .in_range(); ++itvv )
+					{	Cell p = *itvv;  file_msh << " " << ver_numbering [p] + 1;   }
+				}	}	}  // end of if, end of for, end of it
+		assert ( counter == nb_tetra + nb_cub );
+		if ( nb_prism > 0 )
+		{	file_msh << "3 0 6 " <<  nb_prism << std::endl;
+			for ( it .reset() ; it .in_range(); it++)
+			{	++counter;
+				Cell elem = *it;
+				size_t n_faces = elem .boundary() .number_of ( tag::cells_of_max_dim );
+				if ( n_faces == 5 )
+				{	// triangular prism = 6-node prism
+					// see http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format
+					// and http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering
+					file_msh << counter;
+					Mesh::Iterator itt = elem .boundary() .iterator ( tag::over_cells_of_max_dim );
+					size_t n_tri = 0, n_rect = 0;
+					Cell floor ( tag::non_existent );  // temporary non-existent cell
+					for( itt .reset(); itt .in_range(); ++itt )
+					{	Cell face = *itt; // every face elem
+						size_t n_edges = face .boundary() .number_of ( tag::cells_of_max_dim );
+						if ( n_edges == 3 )  { n_tri++;   floor = face;             }
+						else                 { n_rect++;  assert ( n_edges == 4 );  }         }
+					assert ( n_tri == 2 );  assert ( n_rect == 3 );
+					// 'floor' is 021 in gmsh's documentation
+					assert ( floor .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
+					Mesh::Iterator itv = floor .boundary() .iterator
+						( tag::over_vertices, tag::backwards );
+					// backwards because we want the vertices ordered as 0, 1, 2
+					// our orientation is opposite to the one used by gmsh
+					// our normals point outwards, in gmsh normals point inwards
+					itv .reset();  Cell ver_0 = *itv;
+					Cell seg_02 = floor .boundary() .cell_in_front_of ( ver_0 );
+					for (  ; itv .in_range(); ++itv )
+					{	Cell p = *itv;  file_msh << " " << ver_numbering [p] + 1;   }
+					Cell right_wall = elem .boundary() .cell_in_front_of ( seg_02 );
+					// right_wall is 0352 in gmsh's documentation
+					assert ( right_wall .boundary() .number_of ( tag::cells_of_max_dim ) == 4 );
+					Cell seg_03 = right_wall .boundary() .cell_in_front_of ( ver_0 );
+					Cell ver_3 = seg_03 .tip();
+					Cell seg_35 = right_wall .boundary() .cell_in_front_of ( ver_3 );
+					Cell roof = elem .boundary() .cell_in_front_of ( seg_35 );
+					// 'roof' is 345 in gmsh's documentation
+					assert ( roof .boundary() .number_of ( tag::cells_of_max_dim ) == 3 );
+					Mesh::Iterator itvv = roof .boundary() .iterator
+						( tag::over_vertices, tag::require_order );
+					for ( itvv .reset ( tag::start_at, ver_3 ); itvv .in_range(); ++itvv )
+					{	Cell p = *itvv;  file_msh << " " << ver_numbering [p] + 1;  }
+				file_msh << std::endl;
+				}	}	}  // end of if, end of for, end of it
+		assert ( counter == nb_tetra + nb_cub + nb_prism );                                    }
 	file_msh << "$EndElements" << std::endl;
 	
 	if ( ! file_msh .good() )
 	{	std::cerr << "error writing msh file" << std::endl;
-		exit (1);                                    }
+		exit (1);                                           }
 
 } // end of Mesh::export_to_file
 
@@ -3732,8 +3787,8 @@ inline int import_msh_4  // hidden in anonymous namespace
 	// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
 	// we do not keep the dimension, it is implied by the geometry type
 	// we take ent_tag = 0, see assert k == 0 below
-	std::vector < int > elem_size { 0, 2, 3, 4, 4, 8, 6, 5 };
-	std::vector < int > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
+	const std::vector < int > elem_size { 0, 2, 3, 4, 4, 8, 6, 5 };
+	const std::vector < int > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
 	// 1 segment, 2 triangle, 3 quadrilateral, 4 tetrahedron, 5 cube, 6 prism, 7 pyramid
 	int global_top_dim = 0;
 	std::vector < int > elem_type_show_up { -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -3773,6 +3828,9 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
   std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > > & built_cells,
   const std::map < size_t, Cell > & map_ver                                                     )
 	
+// since in gmsh the maximum topological dimension is 3,
+// we do not keep 3D cells (they are built but not kept)
+
 {	switch ( cll_type )
 	{	case 1 :   // segment
 		{	assert ( nodes .size() == 2 );
@@ -3797,7 +3855,7 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 					if ( other_nodes [0] == a )  // found it ! reversed
 						return itt->second .reverse();                         }  }
 			// we must build a new segment
-			// std::cout << "bulding segment " << a << " " << b << std::endl;
+			// std::cout << "building segment " << a << " " << b << std::endl;
 			std::map < size_t, Cell > ::const_iterator it_a = map_ver .find (a),
 			                                           it_b = map_ver .find (b);
 			assert ( it_a != map_ver .end() );  assert ( it_b != map_ver .end() );
@@ -3846,7 +3904,7 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == a ) )  // found it ! reversed
 						return itt->second .reverse();                              }  }
 			// we must build a new triangle
-			// std::cout << "bulding triangle " << a << " " << b << " " << c << std::endl;
+			// std::cout << "building triangle " << a << " " << b << " " << c << std::endl;
 			Cell AB = retrieve_or_build_and_register ( 1, { a, b }, built_cells, map_ver );
 			Cell BC = retrieve_or_build_and_register ( 1, { b, c }, built_cells, map_ver );
 			Cell CA = retrieve_or_build_and_register ( 1, { c, a }, built_cells, map_ver );
@@ -3858,6 +3916,9 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 			cells_with_a .push_back ( { { b, c }, tri } );
 			return tri;                                                                        }
 		case 3 :   // quadrilateral
+		// how do we distinguish a quadrilateral from a tetrahedron ?
+		// a mesh should never have a square and a tetrahedron with the same nodes
+		// and anyway we do not keep tetrahedra (3D cells are built but not kept)
 		{	assert ( nodes .size() == 4 );
 			size_t a = nodes [0], b = nodes [1], c = nodes [2], d = nodes [3];
 			std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > >
@@ -3869,10 +3930,10 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 				{	const std::vector < size_t > & other_nodes = itt->first;
 					if ( other_nodes .size() != 3 ) continue;
 					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == c ) and
-					     ( other_nodes [1] == d )                                  )  // found it !
+					     ( other_nodes [2] == d )                                  )  // found it !
 						return itt->second;
 					if ( ( other_nodes [0] == d ) and ( other_nodes [1] == c ) and
-					     ( other_nodes [1] == b )                                  )  // found it ! reversed
+					     ( other_nodes [2] == b )                                  )  // found it ! reversed
 						return itt->second .reverse();                                 }  }
 			it = built_cells .find ( b );
 			if ( it != built_cells .end() )
@@ -3882,10 +3943,10 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 				{	const std::vector < size_t > & other_nodes = itt->first;
 					if ( other_nodes .size() != 3 ) continue;
 					if ( ( other_nodes [0] == c ) and ( other_nodes [1] == d ) and
-					     ( other_nodes [1] == a )                                  )  // found it !
+					     ( other_nodes [2] == a )                                  )  // found it !
 						return itt->second;
 					if ( ( other_nodes [0] == a ) and ( other_nodes [1] == d ) and
-					     ( other_nodes [1] == c )                                  )  // found it ! reversed
+					     ( other_nodes [2] == c )                                  )  // found it ! reversed
 						return itt->second .reverse();                                 }  }
 			it = built_cells .find ( c );
 			if ( it != built_cells .end() )
@@ -3895,10 +3956,10 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 				{	const std::vector < size_t > & other_nodes = itt->first;
 					if ( other_nodes .size() != 3 ) continue;
 					if ( ( other_nodes [0] == d ) and ( other_nodes [1] == a ) and
-					     ( other_nodes [1] == b )                                  )  // found it !
+					     ( other_nodes [2] == b )                                  )  // found it !
 						return itt->second;
 					if ( ( other_nodes [0] == b ) and ( other_nodes [1] == a ) and
-					     ( other_nodes [1] == d )                                  )  // found it ! reversed
+					     ( other_nodes [2] == d )                                  )  // found it ! reversed
 						return itt->second .reverse();                                 }  }
 			it = built_cells .find ( d );
 			if ( it != built_cells .end() )
@@ -3908,13 +3969,13 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 				{	const std::vector < size_t > & other_nodes = itt->first;
 					if ( other_nodes .size() != 3 ) continue;
 					if ( ( other_nodes [0] == a ) and ( other_nodes [1] == b ) and
-					     ( other_nodes [1] == c )                                  )  // found it !
+					     ( other_nodes [2] == c )                                  )  // found it !
 						return itt->second;
 					if ( ( other_nodes [0] == c ) and ( other_nodes [1] == b ) and
-					     ( other_nodes [1] == a )                                  )  // found it ! reversed
+					     ( other_nodes [2] == a )                                  )  // found it ! reversed
 						return itt->second .reverse();                                 }  }
 			// we must build a new quadrangle
-			// std::cout << "bulding quadrangle " << a << " " << b << " " << c << " " << d << std::endl;
+			// std::cout << "building quadrangle " << a << " " << b << " " << c << " " << d << std::endl;
 			Cell AB = retrieve_or_build_and_register ( 1, { a, b }, built_cells, map_ver );
 			Cell BC = retrieve_or_build_and_register ( 1, { b, c }, built_cells, map_ver );
 			Cell CD = retrieve_or_build_and_register ( 1, { c, d }, built_cells, map_ver );
@@ -3926,6 +3987,37 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 			// it will be inserted and an empty vector will be associated to it
 			cells_with_a .push_back ( { { b, c, d }, quad } );
 			return quad;                                                                        }
+		case 4 :   // tetrahedron
+		// how do we distinguish a quadrilateral from a tetrahedron ?
+		// a mesh should never have a square and a tetrahedron with the same nodes
+		// and anyway we do not keep tetrahedra (3D cells are built but not kept)
+		{	assert ( nodes .size() == 4 );
+			size_t a = nodes [0], b = nodes [1], c = nodes [2], d = nodes [3];
+			// since in gmsh the maximum topological dimension is 3,
+			// there is no use to keep 3D cells in built_cells -- we simply build a new tetrahedron
+			// std::cout << "building tetrahedron " << a << " " << b << " " << c << " " << d << std::endl;
+			Cell ABC = retrieve_or_build_and_register ( 2, { a, b, c }, built_cells, map_ver );
+			Cell ADB = retrieve_or_build_and_register ( 2, { a, d, b }, built_cells, map_ver );
+			Cell BDC = retrieve_or_build_and_register ( 2, { b, d, c }, built_cells, map_ver );
+			Cell ACD = retrieve_or_build_and_register ( 2, { a, c, d }, built_cells, map_ver );
+			Cell tetra ( tag::tetrahedron, ABC, ADB, BDC, ACD );
+			return tetra;                                                                        }
+		case 5 :   // hexahedron, parallelipiped, cube
+		{	assert ( nodes .size() == 8 );
+			size_t a = nodes [0], b = nodes [1], c = nodes [2], d = nodes [3],
+			       e = nodes [4], f = nodes [5], g = nodes [6], h = nodes [7];
+			// since in gmsh the maximum topological dimension is 3,
+			// there is no use to keep 3D cells in built_cells -- we simply build a new hexahedron
+			// std::cout << "building cube " << a << " " << b << " " << c << " " << d << " "
+			//           << e << " " << f << " " << g << " " << h << std::endl;
+			Cell ABCD = retrieve_or_build_and_register ( 3, { a, b, c, d }, built_cells, map_ver );
+			Cell HGFE = retrieve_or_build_and_register ( 3, { h, g, f, e }, built_cells, map_ver );
+			Cell BAEF = retrieve_or_build_and_register ( 3, { b, a, e, f }, built_cells, map_ver );
+			Cell ADHE = retrieve_or_build_and_register ( 3, { a, d, h, e }, built_cells, map_ver );
+			Cell DCGH = retrieve_or_build_and_register ( 3, { d, c, g, h }, built_cells, map_ver );
+			Cell CBFG = retrieve_or_build_and_register ( 3, { c, b, f, g }, built_cells, map_ver );
+			Cell cube ( tag::hexahedron, ABCD, HGFE, BAEF, ADHE, DCGH, CBFG );
+			return cube;                                                                            }
 		default :  assert ( false );
 	}  // end of switch ( cll_type );
 
@@ -3954,6 +4046,8 @@ inline void import_msh_common  // hidden in anonymous namespace
 	// if a cell, say abcd, has already been built, is gets registered in the above
 	// under built_cells [ tag_a, { { tag_b, tag_c, tag_d }, ABCD } ]
 
+	const std::vector < size_t > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
+
 	Mesh result ( tag::fuzzy, tag::of_dim, global_top_dim );
 
 	for ( size_t ent = 0; ent < ver_of_elem .size(); ent ++ )
@@ -3964,7 +4058,12 @@ inline void import_msh_common  // hidden in anonymous namespace
 		for ( size_t el = 0; el < elem .size(); el++ )
 		{	std::vector < size_t > & nodes = elem [el] .second;
 			Cell cll = retrieve_or_build_and_register ( geom_type, nodes, built_cells, map_ver );
+			assert ( cll .dim() == elem_dim [ geom_type ] );
 			if ( cll .dim() == global_top_dim )  cll .add_to_mesh ( result );                     }  }
+
+	// after all cells around a vertex or segment or face have been built,
+	// that vertex or segment or face can be eliminating from the database
+	// thus keeping its size down
 
 	*that = result;
 
@@ -4032,7 +4131,7 @@ void import_msh ( Mesh * that, const std::string filename )
 	else  geom_dim = 3;
 	} // just a block of code for hiding 'ifstr'
 	
-	std::cout << "msh version " << msh_version << ", geom dim " << geom_dim << std::endl;
+	// std::cout << "msh version " << msh_version << ", geom dim " << geom_dim << std::endl;
 	
   std::vector < std::pair < std::pair < int, int >,
 	    std::vector < std::pair < size_t, std::vector < size_t > > > > > ver_of_elem;
