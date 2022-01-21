@@ -1,5 +1,5 @@
 
-// global.cpp 2022.01.20
+// global.cpp 2022.01.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3714,7 +3714,7 @@ inline int import_msh_2  // hidden in anonymous namespace
 //----------------------------------------------------------------------------------//
 
 
-inline int import_msh_4  // hidden in anonymous namespace
+inline int import_msh_4_one_mesh  // hidden in anonymous namespace
 ( const std::string filename, int geom_dim,
   std::vector < std::pair < std::pair < int, int >,
     std::vector < std::pair < size_t, std::vector < size_t > > > > > & ver_of_elem,
@@ -3818,7 +3818,109 @@ inline int import_msh_4  // hidden in anonymous namespace
 	assert ( ( global_top_dim == 2 ) or ( global_top_dim == 3 ) );
 	return global_top_dim;
 	
-}  // end of  import_msh_4
+}  // end of  import_msh_4_one_mesh
+
+//----------------------------------------------------------------------------------//
+
+
+inline void import_msh_4_composed  // hidden in anonymous namespace
+( const std::string filename, int geom_dim,
+  std::vector < std::pair < std::pair < int, int >,
+    std::vector < std::pair < size_t, std::vector < size_t > > > > > & ver_of_elem,
+  std::map < size_t, Cell > & map_ver                                              )
+
+{	assert ( ( geom_dim == 2 ) or ( geom_dim == 3 ) );
+	double msh_version;
+
+	std::ifstream ifstr ( filename );
+	std::string s;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$MeshFormat");
+	int binary_file;  ifstr >> msh_version >> binary_file;
+	assert ( msh_version >= 4.);
+	assert ( binary_file == 0 );
+	std::getline ( ifstr, s );  // one more number and the endline
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndMeshFormat");
+
+	std::getline ( ifstr, s );
+	if ( trim_copy (s) == "$PhysicalNames")
+	{	// we skip section PhysicalEntities
+		while ( trim_copy (s) != "$EndPhysicalNames")  std::getline ( ifstr, s );
+		std::getline ( ifstr, s );                                                   }
+
+	size_t nb_ent_0d = 0, nb_ent_1d = 0, nb_ent_2d = 0, nb_ent_3d = 0;
+	if ( trim_copy (s) == "$Entities")
+	{	ifstr >> nb_ent_0d >> nb_ent_1d >> nb_ent_2d >> nb_ent_3d;
+		// we skip the rest of this section
+		while ( trim_copy (s) != "$EndEntities")  std::getline ( ifstr, s );
+		std::getline ( ifstr, s );                                           }
+	// if there is no $Entities section, all nb_ent remain zero
+
+	if ( trim_copy (s) == "$PartitionedEntities")
+	{	// we skip section PartitionedEntities
+		while ( trim_copy (s) != "$EndPartitionedEntities")  std::getline ( ifstr, s );
+		std::getline ( ifstr, s );                                                      }
+
+	assert ( trim_copy (s) == "$Nodes");
+
+	Manifold RRd ( tag::Euclid, tag::of_dim, geom_dim );
+	Function coords = RRd .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	
+	size_t numEntityBlocks, minNodeTag, maxNodeTag, nb_nodes;
+	ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+
+	for ( size_t ent = 0; ent < numEntityBlocks; ent++ )
+	{	int top_dim, entity_tag, parametric;
+		size_t nbnodes;
+		ifstr >> top_dim >> entity_tag >> parametric >> nbnodes;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+		std::vector < size_t > local_tag;
+		for ( size_t i = 0; i < nbnodes; i++ )
+		{	size_t j;  ifstr >> j;     // node tag
+			std::getline ( ifstr, s ); assert ( trim_copy (s) == "" );
+			assert ( j <= maxNodeTag );
+			local_tag .push_back (j);                                  }
+		for ( size_t i = 0; i < nbnodes; i++ )
+		{	double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+			Cell V ( tag::vertex );
+			coords [0] (V) = xx;
+			coords [1] (V) = yy;
+			if ( geom_dim == 3 ) coords [2] (V) = zz;
+			else  assert ( zz == 0. );
+			map_ver .insert ( { local_tag [i], V } );                   }  }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");
+
+	std::getline ( ifstr, s );
+	assert ( trim_copy (s) == "$Elements");
+	// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+	// we do not keep the dimension, it is implied by the geometry type
+	// we take ent_tag = 0, see assert k == 0 below
+	const std::vector < int > elem_size { 1, 2, 3, 4, 4, 8, 6, 5 };
+	const std::vector < int > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
+	// 0 vertex (changed from 15), 1 segment, 2 triangle, 3 quadrilateral,
+	// 4 tetrahedron, 5 cube, 6 prism, 7 pyramid
+	size_t minElemTag, maxElemTag, nb_elem;
+	ifstr >> numEntityBlocks >> nb_elem >> minElemTag >> maxElemTag;
+	for ( size_t ent = 0; ent < numEntityBlocks; ent++ )
+	{	int ent_dim, ent_tag;  ifstr >> ent_dim >> ent_tag;
+		int cll_type;  ifstr >> cll_type >> nb_elem;
+		// std::cout << "global.cpp line 3908, ent " << ent_tag << ", type " << cll_type << std::endl;
+		if ( cll_type == 15 )  cll_type = 0;
+		assert ( cll_type < int ( elem_size .size() ) );
+		ver_of_elem .push_back ( { { ent_tag, cll_type }, { } } );
+		for ( size_t i = 0; i < nb_elem; i++ )
+		{	size_t cll_tag;  ifstr >> cll_tag;
+			ver_of_elem .back() .second .push_back ( { cll_tag, { } } );
+			std::vector < size_t > & local_vec =
+				ver_of_elem .back() .second .back() .second;
+			local_vec .reserve ( elem_size [ cll_type ] );
+			for ( int jj = 0; jj < elem_size [ cll_type ]; jj ++ )
+			{	size_t j;  ifstr >> j;  local_vec .push_back (j);  }
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");      }  }
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndElements");
+
+}  // end of  import_msh_4_composed
 
 //----------------------------------------------------------------------------------//
 
@@ -4037,11 +4139,8 @@ inline void import_msh_common  // hidden in anonymous namespace
 // ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
 // we do not keep the dimension, it is implied by the geometry type
 
-{	// we trust that entities show up with increasingly higher dimension,
-	// so that faces and edges have already been constructed when we build a cell
-
-	// vertices have already been built, kept in map_ver
-	// we build cells of dimension >= 1
+{	// vertices have already been built, kept in map_ver
+	// here we build cells of dimension >= 1
 	std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > > built_cells;
 	// if a cell, say abcd, has already been built, is gets registered in the above
 	// under built_cells [ tag_a, { { tag_b, tag_c, tag_d }, ABCD } ]
@@ -4052,6 +4151,7 @@ inline void import_msh_common  // hidden in anonymous namespace
 
 	for ( size_t ent = 0; ent < ver_of_elem .size(); ent ++ )
 	{	size_t geom_type = ver_of_elem [ent] .first .second;
+		if ( geom_type == 15 )  continue;  // vertex
 		assert ( ( 1 <= geom_type ) and ( geom_type <= 7 ) );
 		std::vector < std::pair < size_t, std::vector < size_t > > > & elem =
 			ver_of_elem [ent] .second;
@@ -4062,7 +4162,7 @@ inline void import_msh_common  // hidden in anonymous namespace
 			if ( cll .dim() == global_top_dim )  cll .add_to_mesh ( result );                     }  }
 
 	// after all cells around a vertex or segment or face have been built,
-	// that vertex or segment or face can be eliminating from the database
+	// that vertex or segment or face can be eliminated from the database
 	// thus keeping its size down
 
 	*that = result;
@@ -4072,7 +4172,7 @@ inline void import_msh_common  // hidden in anonymous namespace
 //----------------------------------------------------------------------------------//
 
 
-void import_msh ( Mesh * that, const std::string filename )
+inline void import_msh ( Mesh * that, const std::string filename )
 // hidden in anonymous namespace
 
 {	double msh_version;
@@ -4143,15 +4243,147 @@ void import_msh ( Mesh * that, const std::string filename )
 	size_t global_top_dim;
 	if ( msh_version < 4. )
 		global_top_dim = import_msh_2 ( filename, geom_dim, ver_of_elem, map_ver );
-	else  global_top_dim = import_msh_4 ( filename, geom_dim, ver_of_elem, map_ver );
+	else  global_top_dim = import_msh_4_one_mesh ( filename, geom_dim, ver_of_elem, map_ver );
 
 	import_msh_common ( that, ver_of_elem, map_ver, global_top_dim );
 
 }  // end of  import_msh
 
+//----------------------------------------------------------------------------------//
+
+
+inline std::map < std::pair < int, int >, Mesh > import_msh_common  // hidden in anonymous namespace
+( std::vector < std::pair < std::pair < int, int >,
+     std::vector < std::pair < size_t, std::vector < size_t > > > > > & ver_of_elem,
+  std::map < size_t, Cell > & map_ver, size_t global_top_dim                        )
+
+// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+// we do not keep the dimension, it is implied by the geometry type
+
+{	// vertices have already been built, kept in map_ver
+	// here we build cells of dimension >= 1
+	std::map < size_t, std::vector < std::pair < std::vector < size_t >, Cell > > > built_cells;
+	// if a cell, say abcd, has already been built, is gets registered in the above
+	// under built_cells [ tag_a, { { tag_b, tag_c, tag_d }, ABCD } ]
+
+	const std::vector < size_t > elem_dim { 0, 1, 2, 2, 3, 3, 3, 3 };
+
+	std::map < std::pair < int, int >, Mesh > meshes;
+	
+	for ( size_t ent = 0; ent < ver_of_elem .size(); ent ++ )
+	{	int ent_tag = ver_of_elem [ent] .first .first;
+		int geom_type = ver_of_elem [ent] .first .second;
+		if ( geom_type == 0 )  continue;  // vertex (changed from 15 to 0)
+		assert ( ( 1 <= geom_type ) and ( geom_type <= 7 ) );
+		if ( global_top_dim > 0 )  assert ( elem_dim [ geom_type ] == global_top_dim );
+		Mesh result ( tag::fuzzy, tag::of_dim, elem_dim [ geom_type ] );
+		std::vector < std::pair < size_t, std::vector < size_t > > > & elem =
+			ver_of_elem [ent] .second;
+		for ( size_t el = 0; el < elem .size(); el++ )
+		{	std::vector < size_t > & nodes = elem [el] .second;
+			Cell cll = retrieve_or_build_and_register ( geom_type, nodes, built_cells, map_ver );
+			assert ( cll .dim() == elem_dim [ geom_type ] );
+		  cll .add_to_mesh ( result );                                                         }
+		// if elem_dim [ geom_type ] == 1  we should try to build a Connected Mesh instead
+		std::cout << "global.cpp line 4287 " << ent << " " << ver_of_elem [ent] .first .first
+							<< " " << ver_of_elem [ent] .first .second << std::endl;
+		std::pair < std::map < std::pair < int, int >, Mesh > ::iterator, bool > p =
+			meshes .insert ( { { elem_dim [ geom_type ], ent_tag }, result } );
+		assert ( p .second );
+	}
+
+	// after all cells around a vertex or segment or face have been built,
+	// that vertex or segment or face can be eliminated from the database
+	// thus keeping its size down
+
+	return meshes;
+
+}  // end of  import_msh_common
+
 } // end of anonymous namespace
 
 //----------------------------------------------------------------------------------//
+
+
+std::map < std::pair < int, int >, Mesh > import_msh ( const std::string filename )
+// hidden in anonymous namespace
+
+{	double msh_version;
+	int geom_dim;
+
+	// we perform a preliminary passage and find the version and
+	// the geometric dimension
+	{ // just a block of code for hiding names
+	std::ifstream ifstr ( filename );
+	std::string s;
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$MeshFormat");
+	ifstr >> msh_version;
+	int binary_file;  ifstr >> binary_file;
+	if ( binary_file != 0 )
+	{	std::cout << "binary files not accepted" <<std::endl;
+		exit (1);                                             }
+	std::getline ( ifstr, s );  // one more number and the endline
+	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndMeshFormat");
+
+	while ( trim_copy (s) != "$Nodes")  std::getline ( ifstr, s );
+
+	size_t numEntityBlocks, minNodeTag, maxNodeTag;
+	bool all_z_zero = true;
+	size_t nb_nodes;
+	if ( msh_version < 4. )
+	{	ifstr >> nb_nodes;  maxNodeTag = nb_nodes;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "");  }
+	else  // msh_version >= 4.
+	{	ifstr >> numEntityBlocks >> nb_nodes >> minNodeTag >> maxNodeTag;
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );       }
+
+	if ( msh_version < 4. )
+	{	for ( size_t i = 0; i < nb_nodes; i++ )
+		{	size_t j;  ifstr >> j;  assert ( j == i+1 );
+			double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+			if ( zz != 0. )  all_z_zero = false;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "");   }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");  }
+	else  // msh_version >= 4.
+	{	int top_dim, entity_tag, parametric;
+		size_t nbnodes;
+		for ( size_t ent = 0; ent < numEntityBlocks; ent++ )
+		{	ifstr >> top_dim >> entity_tag >> parametric >> nbnodes;
+			std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+			for ( size_t i = 0; i < nbnodes; i++ )
+			{	size_t j;  ifstr >> j;     // node tag
+				std::getline ( ifstr, s ); assert ( trim_copy (s) == "" );
+				assert ( j <= maxNodeTag );                                 }
+			for ( size_t i = 0; i < nbnodes; i++ )
+			{	double xx, yy, zz;  ifstr >> xx >> yy >> zz;
+				std::getline ( ifstr, s );  assert ( trim_copy (s) == "" );
+				if ( zz != 0. ) all_z_zero = false;                                }  }
+		std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndNodes");         }
+
+	if ( all_z_zero )  geom_dim = 2;
+	else  geom_dim = 3;
+	} // just a block of code for hiding 'ifstr'
+	
+	// std::cout << "msh version " << msh_version << ", geom dim " << geom_dim << std::endl;
+	
+  std::vector < std::pair < std::pair < int, int >,
+	    std::vector < std::pair < size_t, std::vector < size_t > > > > > ver_of_elem;
+	// ver_of_elem == [ { { ent_tag, geom_type }, [ { cll_tag, [ node_tag ] } ] } ]
+	// we do not keep the dimension, it is implied by the geometry type
+
+	std::map < size_t, Cell > map_ver;
+
+	size_t global_top_dim = 0;
+	if ( msh_version < 4. )
+		global_top_dim = import_msh_2 ( filename, geom_dim, ver_of_elem, map_ver );
+	else  import_msh_4_composed ( filename, geom_dim, ver_of_elem, map_ver );
+
+	return import_msh_common ( ver_of_elem, map_ver, global_top_dim );
+
+}  // end of  import_msh
+
+//----------------------------------------------------------------------------------//
+
 
 
 Mesh::Mesh ( const tag::Import &, const tag::Msh &, const std::string filename )
