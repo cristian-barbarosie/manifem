@@ -3733,9 +3733,9 @@ inline int import_msh_4  // hidden in anonymous namespace
 	std::getline ( ifstr, s );  assert ( trim_copy (s) == "$EndMeshFormat");
 
 	std::getline ( ifstr, s );
-	if ( trim_copy (s) == "$PhysicalEntities")
+	if ( trim_copy (s) == "$PhysicalNames")
 	{	// we skip section PhysicalEntities
-		while ( trim_copy (s) != "$EndPhysicalEntities")  std::getline ( ifstr, s );
+		while ( trim_copy (s) != "$EndPhysicalNames")  std::getline ( ifstr, s );
 		std::getline ( ifstr, s );                                                   }
 
 	size_t nb_ent_0d = 0, nb_ent_1d = 0, nb_ent_2d = 0, nb_ent_3d = 0;
