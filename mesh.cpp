@@ -4,6 +4,8 @@
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+
+//   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it

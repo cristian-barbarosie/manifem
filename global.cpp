@@ -1,9 +1,11 @@
 
-// global.cpp 2022.01.21
+// global.cpp 2022.01.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+
+//   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -556,7 +558,7 @@ void Mesh::build ( const tag::Triangle &,
 // beware, sides may be closed loops
 
 // tag::singular means Cell O is special, it is like the vertex of a cone
-// of the segments provided as arguments has O as base and other as tip
+// one of the segments provided as arguments has O as base and other as tip
 	
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current manifold
@@ -1082,20 +1084,20 @@ Mesh fold_common_no_sides
 
 // build 'corresp_seg' then call fold_common
 	
-{	if ( msh.dim() == 1 )
+{	if ( msh .dim() == 1 )
 	{	Mesh result ( tag::fuzzy, tag::of_dim, 1 );
-		Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
-		for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+		Mesh::Iterator it_seg = msh .iterator ( tag::over_segments );
+		for ( it_seg .reset(); it_seg .in_range(); it_seg++ )
 		{	Cell seg = *it_seg;
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
-			assert ( it_base_rev != corresp_ver.end() );
+				::const_iterator it_base_rev = corresp_ver.find ( seg .base() .reverse() );
+			assert ( it_base_rev != corresp_ver .end() );
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::const_iterator it_tip = corresp_ver.find ( seg.tip() );
-			assert ( it_tip != corresp_ver.end() );
+				::const_iterator it_tip = corresp_ver .find ( seg .tip() );
+			assert ( it_tip != corresp_ver .end() );
 			Cell new_seg ( tag::segment,
-			               it_base_rev->second.first.reverse(), it_tip->second.first );
-			new_seg.winding() = it_tip->second.second - it_base_rev->second.second;
+			               it_base_rev->second .first .reverse(), it_tip->second .first );
+			new_seg .winding() = it_tip->second .second - it_base_rev->second .second;
 			// new_seg.winding() = corresp_ver [ seg.tip()            ] .second -
 			//	                corresp_ver [ seg.base().reverse() ] .second  ;
 			new_seg.add_to_mesh ( result );                                            }
@@ -1107,23 +1109,23 @@ Mesh fold_common_no_sides
 		// we use a map -- for a faster code, we could use Cell::Core::hook
 		std::map < Cell, Cell > corresp_seg;
 
-		Mesh::Iterator it_seg = msh.iterator ( tag::over_segments );
-		for ( it_seg.reset(); it_seg.in_range(); it_seg++ )
+		Mesh::Iterator it_seg = msh .iterator ( tag::over_segments );
+		for ( it_seg .reset(); it_seg .in_range(); it_seg++ )
 		{	Cell seg = *it_seg;
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::const_iterator it_base_rev = corresp_ver.find ( seg.base().reverse() );
-			assert ( it_base_rev != corresp_ver.end() );
+				::const_iterator it_base_rev = corresp_ver .find ( seg .base() .reverse() );
+			assert ( it_base_rev != corresp_ver .end() );
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
-				::const_iterator it_tip = corresp_ver.find ( seg.tip() );
-			assert ( it_tip != corresp_ver.end() );
+				::const_iterator it_tip = corresp_ver .find ( seg .tip() );
+			assert ( it_tip != corresp_ver .end() );
 			Cell new_seg ( tag::segment,
-			               it_base_rev->second.first.reverse(), it_tip->second.first );
-			new_seg.winding() = it_tip->second.second - it_base_rev->second.second;
+			               it_base_rev->second .first .reverse(), it_tip->second .first );
+			new_seg.winding() = it_tip->second .second - it_base_rev->second .second;
 			// new_seg.winding() = corresp_ver [ seg.tip()            ] .second -
 			//	                corresp_ver [ seg.base().reverse() ] .second  ;
 			// inspired in item 24 of the book : Scott Meyers, Effective STL
-			std::map < Cell, Cell > ::iterator it_map = corresp_seg.lower_bound ( seg );
-			assert ( ( it_map == corresp_seg.end() ) or
+			std::map < Cell, Cell > ::iterator it_map = corresp_seg .lower_bound ( seg );
+			assert ( ( it_map == corresp_seg .end() ) or
 			         ( corresp_seg.key_comp()(seg,it_map->first) ) );
 			corresp_seg.emplace_hint ( it_map, std::piecewise_construct,
 			  std::forward_as_tuple ( seg ), std::forward_as_tuple ( new_seg ) );     }
@@ -1146,28 +1148,26 @@ Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
 	assert ( manif_q );
-	Function coords_q = space.coordinates();
+	Function coords_q = space .coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
-	Function x = coords_Eu[0],  y = coords_Eu[1];
+	Function coords_Eu = mani_Eu .coordinates();
 
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
 	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	for ( it_ver .reset(); it_ver .in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		Cell new_V ( tag::vertex );
-		x ( new_V ) = x ( V );   y ( new_V ) = y ( V );
+		coords_Eu ( new_V ) = coords_Eu (V);
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
+			::iterator it_map = corresp_ver .lower_bound ( V );
+		assert ( ( it_map == corresp_ver .end() ) or
 		         ( corresp_ver.key_comp()(V,it_map->first) ) );
-		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
+		corresp_ver .emplace_hint ( it_map, std::piecewise_construct,
 		    std::forward_as_tuple ( V ), std::forward_as_tuple
 		    ( std::pair < Cell, Manifold::Action > { new_V, 0 } ) );  }
 		// corresp_ver [ V ] = { new_V, 0 };
@@ -1187,24 +1187,21 @@ Mesh fold_no_sides ( Mesh * that, const tag::UseExistingVertices &,
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
 	assert ( manif_q );
-	Function coords_q = space.coordinates();
+	Function coords_q = space .coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
-	Function x = coords_Eu[0],  y = coords_Eu[1];
 
 	// we use a map -- for a faster code, we could use Cell::Core::hook
 	std::map < Cell, std::pair < Cell, Manifold::Action > > corresp_ver;
 
 	Mesh::Iterator it_ver = that->iterator ( tag::over_vertices );
-	for ( it_ver.reset(); it_ver.in_range(); it_ver++ )
+	for ( it_ver .reset(); it_ver .in_range(); it_ver++ )
 	{	Cell V = *it_ver;
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
-			::iterator it_map = corresp_ver.lower_bound ( V );
-		assert ( ( it_map == corresp_ver.end() ) or
+			::iterator it_map = corresp_ver .lower_bound ( V );
+		assert ( ( it_map == corresp_ver .end() ) or
 		         ( corresp_ver.key_comp()(V,it_map->first) ) );
 		corresp_ver.emplace_hint ( it_map, std::piecewise_construct,
 		    std::forward_as_tuple ( V ), std::forward_as_tuple
@@ -3217,7 +3214,7 @@ void Mesh::draw_ps ( std::string file_name,
 
 
 //  method below relies on some postscript macros for (very) rudimentary 3d drawings
-//  available at https://github.com/cristian-barbarosie/manifem/blob/main/3d.ps
+//  available at https://github.com/cristian-barbarosie/manifem, file 3d.ps
 
 void Mesh::draw_ps_3d ( std::string file_name ) const
 	

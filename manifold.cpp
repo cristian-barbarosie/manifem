@@ -2,6 +2,8 @@
 // manifold.cpp 2021.12.29
 
 //   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+
+//   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.

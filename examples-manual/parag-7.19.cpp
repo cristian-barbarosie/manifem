@@ -6,7 +6,7 @@
 
 // progressive mesh generation does not work yet on quotient manifolds
 // we fake the result by folding a mesh whose exterior boundary is a polygonal line
-// see https://github.com/cristian-barbarosie/attic/blob/main/five-V-holes.png
+// see https://github.com/cristian-barbarosie/attic, file five-V-holes.png
 
 #include "maniFEM.h"
 #include <set>

@@ -1,9 +1,11 @@
 
-//   mesh.h  2022.01.17
+//   mesh.h  2022.01.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+
+//   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
@@ -854,6 +856,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
 	inline Mesh ( const tag::Join &,
 	              const Mesh &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
+	inline Mesh ( const tag::Join &, const std::vector < Mesh > & l );
 
 	template < typename container >
 	inline Mesh ( const tag::Join &, const container & l );
@@ -5659,7 +5662,7 @@ inline Mesh::Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::Previou
 // builds a negative mesh from a positive one, assuming that reverse cells exist
 // used in Cell::boundary and in Mesh::Mesh below
 
-: Mesh ( tag::whose_core_is, c, tag::previously_existing,
+:	Mesh ( tag::whose_core_is, c, tag::previously_existing,
          tag::is_negative, tag::do_not_build_cells        )
 
 #ifndef NDEBUG
@@ -5679,7 +5682,7 @@ inline Mesh::Mesh ( const tag::WhoseCoreIs &, Mesh::Core * c, const tag::Previou
 // builds a negative mesh from a positive one, creating reverse cells if necessary
 // used in Mesh::Positive::reverse
 	
-: Mesh ( tag::whose_core_is, c, tag::previously_existing,
+:	Mesh ( tag::whose_core_is, c, tag::previously_existing,
          tag::is_negative, tag::do_not_build_cells        )
 
 {	Mesh::Iterator it ( tag::whose_core_is, c->iterator  // as they are : oriented
@@ -5726,7 +5729,7 @@ inline Mesh::Mesh ( const tag::DeepCopyOf &, const Mesh & msh, const tag::Fuzzy 
 
 inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n                )
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
 {	assert ( not A .is_positive() );
@@ -5742,7 +5745,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
                     const tag::DividedIn &, const size_t n,
                     const tag::Winding &, const tag::Util::Action & s )
 // due to the winding, A.reverse may be equal to B (mesh may be a closed loop)
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, n, tag::segments, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                               )
 {	assert ( not A .is_positive() );
@@ -5758,7 +5761,7 @@ inline Mesh::Mesh ( const tag::Segment &, const Cell & A, const Cell & B,
 
 inline Mesh::Mesh
 ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA )
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 {	this->build ( tag::triangle, AB, BC, CA );  }
@@ -5772,7 +5775,7 @@ inline Mesh::Mesh
 // and that it must take winding segments into account
 // specific information about winding numbers is included in the three segments
 
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
@@ -5791,7 +5794,7 @@ inline Mesh::Mesh
 // cell O is special, it's like the vertex of a cone
 // cell O must be the extremity of two of the three segments provided as arguments
 
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
@@ -5807,7 +5810,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 // 'wt' defaults to 'tag::not_with_triangles',
 // so constructor can be called with only five arguments
 
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
@@ -5827,7 +5830,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 // and that it must take winding segments into account
 // specific information about winding numbers is included in the four segments
 
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
@@ -5844,7 +5847,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 // and that it must take winding segmtnts into account
 // specific information about winding numbers is included in the four segments
 
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
@@ -5859,7 +5862,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 // 'wt' defaults to 'tag::not_with_triangles',
 // so constructor can be called with only seven arguments
 
-: Mesh ( tag::whose_core_is,
+:	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
          tag::freshly_created, tag::is_positive                                           )
 
@@ -5871,21 +5874,21 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 
 
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2 )
-: Mesh ( tag::join, std::vector { m1, m2 } )  { }
+:	Mesh ( tag::join, std::vector { m1, m2 } )  { }
 
 	
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3 )
-: Mesh ( tag::join, std::vector { m1, m2, m3 } )  { }
+:	Mesh ( tag::join, std::vector { m1, m2, m3 } )  { }
 
 
 inline Mesh::Mesh
 ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3, const Mesh & m4 )
-: Mesh ( tag::join, std::vector { m1, m2, m3, m4 } )  { }
+:	Mesh ( tag::join, std::vector { m1, m2, m3, m4 } )  { }
 
 
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3,
                                        const Mesh & m4, const Mesh & m5 )
-: Mesh ( tag::join, std::vector { m1, m2, m3, m4, m5 } )  { }
+:	Mesh ( tag::join, std::vector { m1, m2, m3, m4, m5 } )  { }
 
 
 template < typename container >  // static
@@ -5947,10 +5950,14 @@ inline void Mesh::join_meshes ( Mesh * const that, const container & l )
 	Mesh::join ( that, l );
 	return;                                                                                  }
 
+inline Mesh::Mesh ( const tag::Join &, const std::vector < Mesh > & l )
+:	Mesh ( tag::non_existent )
+{	Mesh::join_meshes ( this, l );  }
+
 
 template < typename container >
 inline Mesh::Mesh ( const tag::Join &, const container & l )
-: Mesh ( tag::non_existent )
+:	Mesh ( tag::non_existent )
 {	Mesh::join_meshes ( this, l );  }
 	
 //-----------------------------------------------------------------------------//
