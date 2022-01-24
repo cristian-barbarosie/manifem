@@ -1,5 +1,5 @@
 
-// progressive.cpp 2022.01.17
+// progressive.cpp 2022.01.23
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1503,7 +1503,7 @@ inline void update_info_connected_one_dim ( const Mesh msh, const Cell start, co
 // a quotient manifold and other types of manifold
 
 template < class manif_type >
-void progressive_construct           // hidden in anonymous namespace
+void progressive_construct           // hidden in anonymous namespace  // line 1506
 (	Mesh & msh, const tag::StartAt &, Cell start,
 	const tag::Towards &, std::vector<double> & normal,
 	const tag::Boundary &, Mesh bdry                   )
@@ -1944,7 +1944,7 @@ void progressive_construct     // hidden in anonymous namespace
 //-------------------------------------------------------------------------------------------------
 
 
-void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & start,
+void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & start,   // line 1947
                              const tag::StopAt &, const Cell & stop,
                              const tag::Orientation &, const tag::OrientationChoice & oc )
 // hidden in anonymous namespace
@@ -2072,7 +2072,7 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 //-------------------------------------------------------------------------------------------------
 
 
-inline void progressive_construct     // hidden in anonymous namespace
+inline void progressive_construct     // hidden in anonymous namespace  // line 2075
 ( Mesh & msh, const tag::StartWithNonExistentMesh &,
   const tag::StartAt, const Cell & start,
   const tag::Orientation &, const tag::OrientationChoice & oc )
@@ -2173,7 +2173,7 @@ inline void progressive_construct     // hidden in anonymous namespace
 //-------------------------------------------------------------------------------------------------
 	
 
-inline void progressive_construct         // hidden in anonymous namespace
+inline void progressive_construct         // hidden in anonymous namespace  // line 2175
 ( Mesh & msh, const tag::StartAt &, const Cell & start,
   const tag::Boundary &, Mesh interface,
   const tag::Orientation &, const tag::OrientationChoice & oc )
@@ -2282,7 +2282,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
 
-	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
+	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2075
 	                        tag::start_at, start, tag::orientation, tag::not_provided );  }
 	// last argument is equivalent, in this case, to tag::inherent
 
@@ -2309,7 +2309,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
 
-	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
+	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2075
 	                        tag::start_at, start, tag::orientation, tag::not_provided );
 	// last argument is equivalent, in this case, to tag::inherent
 
@@ -2334,7 +2334,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
 
-	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
+	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2075
                           tag::start_at, start, tag::orientation, oc );        }
 
 //-------------------------------------------------------------------------------------------------
@@ -2359,7 +2359,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 	// call to 'search_start_ver' does not depend on the dimension of the mesh
 	Cell start = search_start_ver ( );
 
-	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2062
+	progressive_construct ( *this, tag::start_with_non_existent_mesh,   // line 2075
                           tag::start_at, start, tag::orientation, oc );
 
 	Manifold::working = tmp_manif;                                                 }
@@ -2385,7 +2385,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
-	progressive_construct ( *this, tag::start_at, *it,         // line 2161
+	progressive_construct ( *this, tag::start_at, *it,         // line 2175
                           tag::boundary, interface, tag::orientation, tag::not_provided );  }
 	
 //-------------------------------------------------------------------------------------------------
@@ -2412,7 +2412,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	Mesh::Iterator it = interface.iterator ( tag::over_segments );
 	it.reset();  assert ( it.in_range() );
 
-	progressive_construct ( *this, tag::start_at, *it,         // line 2161
+	progressive_construct ( *this, tag::start_at, *it,         // line 2175
 	                        tag::boundary, interface, tag::orientation, oc );          }
 	
 //-------------------------------------------------------------------------------------------------
@@ -2433,7 +2433,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
-	progressive_construct < Manifold::Type::Euclidian >
+	progressive_construct < Manifold::Type::Euclidian >   // line 1506
 		( *this, tag::start_at, start, tag::towards, normal, tag::boundary, interface );  }
 	
 //-------------------------------------------------------------------------------------------------
@@ -2569,11 +2569,11 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
 		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
-		progressive_construct ( *this, tag::start_at, start,  // line 1939
+		progressive_construct ( *this, tag::start_at, start,  // line 1947
 		                        tag::stop_at, start, tag::orientation, oc );   }
 	else
 	{	assert ( get_topological_dim() == 2 );  // no 3D meshing for now
-		progressive_construct ( *this, tag::start_with_non_existent_mesh,  // line 2059
+		progressive_construct ( *this, tag::start_with_non_existent_mesh,  // line 2075
 	                          tag::start_at, start, tag::orientation, oc );  }        }
 
 //-------------------------------------------------------------------------------------------------
@@ -2599,7 +2599,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1945
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1947
 	                        tag::orientation, tag::not_provided             );    }
 
 //-------------------------------------------------------------------------------------------------
@@ -2624,7 +2624,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1945
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1947
 	                        tag::orientation, oc                            );   }
 
 //-------------------------------------------------------------------------------------------------
@@ -2649,7 +2649,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1945
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1947
 	                        tag::orientation, tag::geodesic                 );   }
 
 

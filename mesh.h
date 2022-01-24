@@ -1,5 +1,5 @@
 
-//   mesh.h  2022.01.22
+// mesh.h  2022.01.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
