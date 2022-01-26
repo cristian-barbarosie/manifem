@@ -1,5 +1,5 @@
 
-// mesh.h  2022.01.22
+// mesh.h  2022.01.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -496,23 +496,37 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	{	c .core = nullptr;  }
 
 	inline Cell ( const tag::WhoseBoundaryIs &, Mesh & );
+
 	inline Cell ( const tag::Vertex &, const tag::IsPositive & ispos = tag::is_positive );
+
 	inline Cell ( const tag::Segment &, const Cell & A, const Cell & B );
+
 	inline Cell ( const tag::Triangle &, const Cell & AB, const Cell & BC, const Cell & CA );
+
 	inline Cell ( const tag::Quadrangle &, const Cell & AB, const Cell & BC,
                                          const Cell & CD, const Cell & DA );
+
 	inline Cell ( const tag::Parallelogram &, const Cell & AB, const Cell & BC,
-                                            const Cell & CD, const Cell & DA );
+                                            const Cell & CD, const Cell & DA )
+	:	Cell ( tag::quadrangle, AB, BC, CD, DA )  { }
+	
 	inline Cell ( const tag::Rectangle &, const Cell & AB, const Cell & BC,
-                                        const Cell & CD, const Cell & DA );
+                                        const Cell & CD, const Cell & DA )
+	:	Cell ( tag::quadrangle, AB, BC, CD, DA )  { }
+
 	inline Cell ( const tag::Square &, const Cell & AB, const Cell & BC,
-                                     const Cell & CD, const Cell & DA );
+                                     const Cell & CD, const Cell & DA )
+	:	Cell ( tag::quadrangle, AB, BC, CD, DA )  { }
+
 	inline Cell ( const tag::Pentagon &, const Cell & AB, const Cell & BC,
                                        const Cell & CD, const Cell & DE, const Cell & EA );
+
 	inline Cell ( const tag::Hexagon &, const Cell & AB, const Cell & BC,
                        const Cell & CD, const Cell & DE, const Cell & EF, const Cell & FA );
+
 	inline Cell ( const tag::Tetrahedron &, const Cell & face_1, const Cell & face_2,
                                           const Cell & face_3, const Cell & face_4 );
+
 	inline Cell ( const tag::Hexahedron &, const Cell & face_1, const Cell & face_2,
                                          const Cell & face_3, const Cell & face_4,
                                          const Cell & face_5, const Cell & face_6 );
@@ -798,47 +812,61 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         );
+
 	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
 	                                          const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         )
 	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
+
 	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
 	                                      const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         )
 	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
+
 	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
 	                                   const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles & wt = tag::not_with_triangles         )
 	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
+	
+	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+	                                       const Mesh & east,  const Mesh & west,
+	                                       const Mesh & up   , const Mesh & down );
 
 	// same as above, but take into account winding segments
 	// specific information about widing numbers is included in the four segments
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
 	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles );
+
 	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	                                       const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles &, const tag::Winding &                  );
+
 	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
 	                                          const Mesh & north, const Mesh & west,
 	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, wt )  { }
+
 	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
 	                                          const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles &, const tag::Winding &                  )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
+
 	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
 	                                      const Mesh & north, const Mesh & west,
 	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, wt )  { }
+
 	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
 	                                      const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles &, const tag::Winding &                  )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
+
 	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
 	                                   const Mesh & north, const Mesh & west,
 	              const tag::Winding &, const tag::WithTriangles & wt = tag::not_with_triangles )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, wt )  { }
+
 	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
 	                                   const Mesh & north, const Mesh & west,
 	              const tag::WithTriangles &, const tag::Winding &                  )
@@ -1982,6 +2010,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	void build ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	             const Cell & NE, const Cell & NW, const size_t m, const size_t n,
 	             bool cut_rectangles_in_half                                      );
+	
+	void build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+	             const Mesh & east, const Mesh & west, const Mesh & up, const Mesh & down );
 	
 	#ifndef NDEBUG
 	inline void print_everything ( );
@@ -5819,8 +5850,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
                     const Mesh & east, const Mesh & north, const Mesh & west,
-                    const tag::Winding &,
-                    const tag::WithTriangles & wt                             )
+                    const tag::Winding &, const tag::WithTriangles & wt      )
 
 // 'wt' defaults to 'tag::not_with_triangles',
 // so constructor can be called with only six arguments
@@ -5840,7 +5870,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 
 inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
                     const Mesh & east, const Mesh & north, const Mesh & west,
-                    const tag::WithTriangles & wt, const tag::Winding &         )
+                    const tag::WithTriangles & wt, const tag::Winding &      )
 
 // the tag::winding provides no specific information,
 // it just warns maniFEM that we are on a quotient manifold
@@ -5879,6 +5909,16 @@ inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2 )
 	
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3 )
 :	Mesh ( tag::join, std::vector { m1, m2, m3 } )  { }
+
+
+inline Mesh::Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+                    const Mesh & east, const Mesh & west, const Mesh & up, const Mesh & down )
+
+:	Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::hexahedron, south, north, east, west, up, down );  }
 
 
 inline Mesh::Mesh
@@ -5999,14 +6039,6 @@ inline Cell::Cell ( const tag::Triangle &, const Cell & AB, const Cell & BC, con
 
 inline Cell::Cell ( const tag::Quadrangle &, const Cell & AB, const Cell & BC,
                                              const Cell & CD, const Cell & DA )
-:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
-	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
-	       tag::freshly_created                                           )
-{	}
-
-
-inline Cell::Cell ( const tag::Parallelogram &, const Cell & AB, const Cell & BC,
-                                                const Cell & CD, const Cell & DA )
 :	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
 	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
 	       tag::freshly_created                                           )
@@ -6750,6 +6782,9 @@ inline Cell::PositiveHighDim::PositiveHighDim
 ( const tag::Hexahedron &, const Cell & face_1, const Cell & face_2,
   const Cell & face_3, const Cell & face_4,
   const Cell & face_5, const Cell & face_6, const tag::OneDummyWrapper & )
+
+// we do not need to worry about which face is up, which is down and so on
+// faces' sides are like magnets, they will clink right
 	
 :	Cell::Positive::HighDim
 	( tag::whose_boundary_is,
