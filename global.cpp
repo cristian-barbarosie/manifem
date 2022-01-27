@@ -1,5 +1,5 @@
 
-// global.cpp 2022.01.26
+// global.cpp 2022.01.27
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1089,7 +1089,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Mesh north_west = north .common_edge ( tag::with, west );  // orientation compatible with 'north'
 
 	// we are looking at south and assume its four edges are oriented counter-clockwise
-	// (normal points towards exterior of the cube)
+	// (the normal points towards us, towards the exterior of the cube)
 	if ( down_south .last_vertex() == down_east .first_vertex() .reverse() )
 		// 'east' is on our left, we must switch them
 	{	Mesh tmp = east;  east = west;  west = tmp;
@@ -1136,38 +1136,74 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	assert ( nb_ud == north_east .number_of ( tag::segments ) );
 	assert ( nb_ud == north_west .number_of ( tag::segments ) );
 
-	// we make a copy of 'down' and raise it gradually until we touch 'up'
-	Mesh floor ( tag::fuzzy, tag::of_dim, 2 );
+	// we make a copy of half of the boundary and shrink it gradually, until we touch the other half
+	Mesh front ( tag::fuzzy, tag::of_dim, 2 );
 	{ // just a block of code for hiding 'it'
 	Mesh::Iterator it = down .iterator ( tag::over_cells_of_max_dim );
-	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( floor );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( front );
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = south .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( front );
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = west .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( front );
 	} // just a block of code for hiding 'it'
 
-	Cell seg_down_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
-	Cell seg_down_south = down_west .cell_behind ( ver_down_south_west, tag::surely_exists );
-	Cell seg_south_west = south_west .cell_behind ( ver_down_south_west, tag::surely_exists );
-	Cell square_down = down .cell_behind ( seg_down_west, tag::surely_exists );
-	Cell square_west = west .cell_in_front_of ( seg_down_west, tag::surely_exists );
-	Cell square_south = south .cell_in_front_of ( seg_west, tag::surely_exists );
+	// we shall use six vertices, one on each side of the cube, for interpolating coordinates
+	// to help us move in the right direction, we shall use six segments
+	// each segment points towards the vertex used for interpolation
+	Cell seg_down = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
+	Cell seg_south = down_west .cell_behind ( ver_down_south_west, tag::surely_exists );
+	Cell seg_west_kept = seg_down;  // points towards north
+	Cell seg_east_kept = down_east .cell_behind ( ver_down_south_east, tag::surely_exists );
+	// points towards north
 	
-	for ( size_t i_d = 1; i_d < nb_ud; i_d ++ )
-	{	
-		double frac_d = double(i_d) / double(nb_ud),  alpha = frac_d * (1.-frac_d);
+	for ( size_t i_up = 1; i_up < nb_ud; i_up ++ )   // counts jumps upwards
+	{	// we move 'seg_west_kept' up one square
+		Cell sq = west .cell_in_front_of ( seg_west_kept, tag::surely_exists );
+		Cell V = seg_west_kept .tip();;
+		seg_west_kept = sq .boundary() .cell_behind ( V, tag::surely_exists );
+		// 'seg_west_kept' is now vertical, points down
+		V = seg_west_kept .base() .reverse();
+		seg_west_kept = sq .boundary() .cell_behind ( V, tag::surely_exists );
+		// 'seg_west_kept' is horizontal again, points towards north
+		Cell seg_west = seg_west_kept;
+		// we move 'seg_east_kept' up one square
+		sq = east .cell_behind ( seg_east_kept, tag::surely_exists );
+		V = seg_east_kept .tip();;
+		seg_west_kept = sq .boundary() .cell_in_front_of ( V, tag::surely_exists );
+		// 'seg_east_kept' is now vertical, points up
+		V = seg_east_kept .tip();
+		seg_east_kept = sq .boundary() .cell_in_front_of ( V, tag::surely_exists )
+			.reverse ( tag::surely_exists);  // 'seg_east_kept' is horizontal again, points towards north
+		Cell seg_east = seg_east_kept;
+		double frac_up = double(i_up) / double(nb_ud),  alpha = frac_up * (1.-frac_up);
 		alpha = alpha * alpha * alpha;
-		for ( size_t i_S = 1; i_S < nb_SN; i_S ++ )
-		{	
-			double frac_S = double(i_S) / double(nb_SN),  beta = frac_S * (1.-frac_S);
+		for ( size_t i_north = 1; i_north < nb_SN; i_north ++ )    // counts jumps toward north
+		{	Cell ver_west = seg_west .tip();
+			Cell ver_east = seg_east .tip();
+			Cell seg2 = seg_west;  // horizontal, points towards north
+			sq = west .cell_behind ( seg_west, tag::surely_exists );
+			V = seg2 .tip();
+			Cell seg1 = sq .boundary() .cell_in_front_of ( V, tag::surely_exists );
+			// seg1 is vertical, points down
+			V = seg1 .tip();
+			seg1 = sq .boundary() .cell_in_front_of ( V, tag::surely_exists ) .reverse();
+			// seg1 is horizontal now, points towards north, it lies one square below seg2
+			// these two segments will move together towards east, keeping this relative position
+			double frac_N = double(i_north) / double(nb_SN),  beta = frac_N * (1.-frac_N);
 			beta = beta * beta * beta;
-			for ( size_t i_W = 1; i_W < nb_EW; i_W ++ )
+			for ( size_t i_east = 1; i_east < nb_EW; i_east ++ )    // counts jumps toward east
 			{	
-				double frac_W = double(i_W) / double(nb_EW),  gamma = frac_W * (1.-frac_W);
+		
+				double frac_E = double(i_east) / double(nb_EW),  gamma = frac_E * (1.-frac_E);
 				gamma = gamma * gamma * gamma;
 				double sum = std::sqrt ( alpha*beta + beta*gamma + alpha*gamma ),
 				       aa = alpha / sum, bb = beta / sum, cc = gamma / sum;
 				Cell new_ver ( tag::vertex );
 				space.interpolate ( new_ver,
-	bb*cc*frac_d,      ver_up,   aa*cc*frac_S,      ver_north, aa*bb*frac_W,      ver_east,
-	bb*cc*(1.-frac_d), ver_down, aa*cc*(1.-frac_S), ver_south, aa*bb*(1.-frac_W), ver_west );
+	bb*cc*frac_up,      ver_up,   aa*cc*frac_N,      ver_north, aa*bb*frac_E,      ver_east,
+	bb*cc*(1.-frac_up), ver_down, aa*cc*(1.-frac_N), ver_south, aa*bb*(1.-frac_E), ver_west );
 				
 	
 	
