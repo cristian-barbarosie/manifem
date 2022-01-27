@@ -278,37 +278,6 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 
 namespace {  // anonymous namespace, mimics static linkage
 
-Cell find_common_vertex ( const Mesh & seg1, const Mesh & seg2 )
-
-// we look for a common vertex, where seg1 ends and seg2 begins (in this order)
-// this does not apply to closed loops of course, so we give them a different treatment
-
-{	std::vector < Cell > vec;
-	Mesh::Iterator it = seg1.iterator ( tag::over_vertices );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell V = *it;
-		if ( V.belongs_to ( seg2 ) ) vec.push_back ( V );  }
-	assert ( vec.size() > 0 );
-	if ( vec.size() == 1 )  // one common vertex only, so we have no doubt
-		return vec[0];
-	assert ( vec.size() == 2 );  // it makes no sense to have more than two
-	// we are looking for the one where seg1 ends and seg2 begins
-	Cell V = vec[0];
-	if ( seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() )
-	{	// seg1 does not end in V, so this is not the vertex we are looking for
-		// perhaps the other one ?
-		V = vec[1];
-		assert ( not seg1.cell_in_front_of ( V, tag::may_not_exist ) .exists() );
-		// seg1 ends in V
-		assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
-		// seg2 begins in V
-		return V;                                                                 }
-	// else : seg1 ends in V
-	assert ( not seg2.cell_behind ( V, tag::may_not_exist ) .exists() );
-	// seg2 begins in V
-	return V;                                                                      }
-
-	
 void build_common
 ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
             const Cell & A, const Cell & B, const Cell & C,
@@ -487,6 +456,41 @@ void build_common
 	
 } // end of anonymous namespace
 
+//----------------------------------------------------------------------------------//
+
+
+Cell Mesh::common_vertex ( const tag::With &, const Mesh & seg2 ) const
+
+// we look for a common vertex, where 'this' ends and 'seg2' begins (in this order)
+// this does not apply to closed loops of course, so we give them a different treatment
+
+{	std::vector < Cell > vec;
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell V = *it;
+		if ( V .belongs_to ( seg2 ) ) vec .push_back ( V );  }
+	assert ( vec .size() > 0 );
+	if ( vec .size() == 1 )  // one common vertex only, so we have no doubt
+		return vec [0];
+	assert ( vec .size() == 2 );  // it makes no sense to have more than two
+	// we are looking for the one where 'this' ends and 'seg2' begins
+	Cell V = vec [0];
+	if ( this->cell_in_front_of ( V, tag::may_not_exist ) .exists() )
+	{	// 'this' does not end in V, so this is not the vertex we are looking for
+		// perhaps the other one ?
+		V = vec [1];
+		assert ( not this->cell_in_front_of ( V, tag::may_not_exist ) .exists() );
+		// 'this' ends in V
+		assert ( not seg2 .cell_behind ( V, tag::may_not_exist ) .exists() );
+		// seg2 begins in V
+		return V;                                                                 }
+	// else : 'this' ends in V
+	assert ( not seg2 .cell_behind ( V, tag::may_not_exist ) .exists() );
+	// seg2 begins in V
+	return V;                                                                      }
+
+//----------------------------------------------------------------------------------//
+
 
 void Mesh::build ( const tag::Triangle &,
                    const Mesh & AB, const Mesh & BC, const Mesh & CA,
@@ -502,9 +506,9 @@ void Mesh::build ( const tag::Triangle &,
 	// the process is different from the one in 'build' without tag::winding
 	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
 	// become meaningless
-	Cell A = find_common_vertex ( CA, AB );
-	Cell B = find_common_vertex ( AB, BC );
-	Cell C = find_common_vertex ( BC, CA );
+	Cell A = CA .common_vertex ( tag::with, AB );
+	Cell B = AB .common_vertex ( tag::with, BC );
+	Cell C = BC .common_vertex ( tag::with, CA );
 
 	// 'build_common' builds all triangles but the last four, near C
 	Manifold::Action winding_C_from_A;
@@ -577,8 +581,8 @@ void Mesh::build ( const tag::Triangle &,
 	if ( not O .belongs_to ( CA ) )  //  B == O
 	{	AB = C_A;  BC = A_B;  CA = B_C;  }
 
-	Cell A = find_common_vertex ( CA, AB );
-	Cell B = find_common_vertex ( AB, BC );	
+	Cell A = CA .common_vertex ( tag::with, AB );
+	Cell B = AB .common_vertex ( tag::with, BC );	
 
 	// 'build_common' builds all triangles but the last four, near C
 	// recall that C == O
@@ -704,7 +708,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		Cell ver_east = *it_east;
 		Cell ver_west = *it_west;
 		assert ( ver_west == D );
-		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
+		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1.-frac_N);
 		alpha = alpha*alpha*alpha;
 		it_south.reset();  it_south++;
 		it_north.reset();  it_north++;
@@ -714,11 +718,11 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			Cell C ( tag::vertex );  // create a new vertex
 			Cell ver_south = *it_south;
 			Cell ver_north = *it_north;
-			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
+			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1.-frac_E);
 			beta = beta*beta*beta;
 			double sum = alpha + beta, aa = alpha/sum, bb = beta/sum;
-			space.interpolate ( C, bb*(1-frac_N), ver_south, aa*frac_E,     ver_east,     
-		                         bb*frac_N,     ver_north, aa*(1-frac_E), ver_west );
+			space.interpolate ( C, bb*(1.-frac_N), ver_south, aa*frac_E,     ver_east,     
+		                         bb*frac_N,     ver_north, aa*(1.-frac_E), ver_west );
 			Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
 			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 			if ( cut_rectangles_in_half )
@@ -835,25 +839,25 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	// the process is different from the one in 'build' without tag::winding
 	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
 	// become meaningless
-	Cell SW = find_common_vertex ( west, south );
-	Cell SE = find_common_vertex ( south, east );
-	Cell NE = find_common_vertex ( east, north );
-	Cell NW = find_common_vertex ( north, west );
+	Cell SW = west  .common_vertex ( tag::with, south );
+	Cell SE = south .common_vertex ( tag::with, east );
+	Cell NE = east  .common_vertex ( tag::with, north );
+	Cell NW = north .common_vertex ( tag::with, west );
 	
-	size_t N_horiz = south.number_of ( tag::segments );
-	assert ( N_horiz == north.number_of ( tag::segments ) );
-	size_t N_vert = east.number_of ( tag::segments );
-	assert ( N_vert == west.number_of ( tag::segments ) );
+	size_t N_horiz = south .number_of ( tag::segments );
+	assert ( N_horiz == north .number_of ( tag::segments ) );
+	size_t N_vert = east .number_of ( tag::segments );
+	assert ( N_vert == west .number_of ( tag::segments ) );
 
 	// prepare horizon
 	std::list <Cell> horizon;
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = south.iterator ( tag::over_segments, tag::require_order );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell seg = *it;  horizon.push_back ( seg );  }
+	Mesh::Iterator it = south .iterator ( tag::over_segments, tag::require_order );
+	for ( it.reset(); it .in_range(); it++ )
+	{	Cell seg = *it;  horizon .push_back ( seg );  }
 	} // just a block of code for hiding 'it'
 
-	// we have to deal with possible winding segments
+	// we must deal with possible winding segments
 	// we choose that, at each interpolation operation, i.e., for each new vertex,
 	// the new vertex will have winding zero relatively to SW
 	// we must keep track of the windings of ver_south, ver_east, ver_north, ver_west, B, D
@@ -1019,25 +1023,46 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 //----------------------------------------------------------------------------------//
 
-Mesh Mesh::intersection ( const tag::With &, Mesh & m2 )
+Mesh Mesh::common_edge ( const tag::With &, const Mesh & m2 ) const
 
-// for the moment, we assume 'this' and 'm2' are two-dimensional meshes
-// and the 'intersection' is a common side, which we build as Connected::OneDim
-// in the future, we must take into account many other cases
+// 'this' and 'm2' are two-dimensional meshes
+// the common edge will be built as Connected::OneDim
+// in the future, we should introduce a method 'intersection' taking into account many other cases
 
-// orientation of 'intersection' will be compatible with 'this'
+// orientation of 'common edge' will be compatible with 'this'
 // thus, opposite to 'm2'
 	
 {	assert ( this->dim() == 2 );
 	assert ( m2 .dim() == 2 );
 
-	Mesh::iterator it = this->iterator ( tag::over_segments );
-}
-//----------------------------------------------------------------------------------//
+	Mesh result ( tag::fuzzy, tag::of_dim, 1 );
+	
+	Mesh::Iterator it = this->iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell seg = *it;
+		if ( not seg .belongs_to ( m2 ) )  continue;
+		if ( this->cell_in_front_of ( seg ) .exists() )
+		{	// looks like 'seg' is oriented according to 'm2'
+			assert ( not this->cell_behind ( seg ) .exists() );
+			assert ( m2 .cell_behind ( seg ) .exists() );
+			assert ( not m2 .cell_in_front_of ( seg ) .exists() );
+			seg .reverse() .add_to_mesh ( result );                }
+		else
+		{	// looks like 'seg' is oriented according to 'this'
+			assert ( this->cell_behind ( seg ) .exists() );
+			assert ( not m2 .cell_behind ( seg ) .exists() );
+			assert ( m2 .cell_in_front_of ( seg ) .exists() );
+			seg .add_to_mesh ( result );                       }     }
+
+	return result .convert_to ( tag::connected, tag::one_dim, tag::surely_exists );
+	
+}  // end of  Mesh::common_edge
+
+//-------------------------------------------------------------------------------------------------//
 
 	
 void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	                 const Mesh & east, const Mesh & west, const Mesh & up, const Mesh & down )
+	                 Mesh east, Mesh west, const Mesh & up, const Mesh & down        )
 
 // the cube may be in any position, faces may be curved
 // we can always rotate it and consider that 'up' is up, 'down' is down
@@ -1050,17 +1075,204 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 {	Manifold space = Manifold::working;
 	assert ( space.exists() );  // we use the current manifold
 
-	Mesh up_south = up .intersection ( tag::with, south );  // orientation compatible with 'up'
-	Mesh up_north = up .intersection ( tag::with, north );  // orientation compatible with 'up'
-	Mesh up_east = up .intersection ( tag::with, east );  // orientation compatible with 'up'
-	Mesh up_west = up .intersection ( tag::with, west );  // orientation compatible with 'up'
-	Mesh down_south = down .intersection ( tag::with, south );  // orientation compatible with 'down'
-	Mesh down_north = down .intersection ( tag::with, north );  // orientation compatible with 'down'
-	Mesh down_east = down .intersection ( tag::with, east );  // orientation compatible with 'down'
-	Mesh down_west = down .intersection ( tag::with, west );  // orientation compatible with 'down'
+	Mesh up_south = up .common_edge ( tag::with, south );  // orientation compatible with 'up'
+	Mesh up_north = up .common_edge ( tag::with, north );  // orientation compatible with 'up'
+	Mesh up_east = up .common_edge ( tag::with, east );  // orientation compatible with 'up'
+	Mesh up_west = up .common_edge ( tag::with, west );  // orientation compatible with 'up'
+	Mesh down_south = down .common_edge ( tag::with, south );  // orientation compatible with 'down'
+	Mesh down_north = down .common_edge ( tag::with, north );  // orientation compatible with 'down'
+	Mesh down_east = down .common_edge ( tag::with, east );  // orientation compatible with 'down'
+	Mesh down_west = down .common_edge ( tag::with, west );  // orientation compatible with 'down'
+	Mesh south_east = south .common_edge ( tag::with, east );  // orientation compatible with 'south'
+	Mesh south_west = south .common_edge ( tag::with, west );  // orientation compatible with 'south'
+	Mesh north_east = north .common_edge ( tag::with, east );  // orientation compatible with 'north'
+	Mesh north_west = north .common_edge ( tag::with, west );  // orientation compatible with 'north'
 
+	// we are looking at south and assume its four edges are oriented counter-clockwise
+	// (normal points towards exterior of the cube)
+	if ( down_south .last_vertex() == down_east .first_vertex() .reverse() )
+		// 'east' is on our left, we must switch them
+	{	Mesh tmp = east;  east = west;  west = tmp;
+		tmp = up_east;  up_east = up_west;  up_west = tmp;
+		tmp = down_east;  down_east = down_west;  down_west = tmp;
+		tmp = south_east;  south_east = south_west;  south_west = tmp;
+		tmp = north_east;  north_east = north_west;  north_west = tmp;  }
+
+	Cell ver_down_south_west = down_south .last_vertex();
+	assert ( ver_down_south_west == down_west .first_vertex() .reverse() );
+	assert ( ver_down_south_west == south_west .last_vertex() );
+	Cell ver_down_south_east = down_south .first_vertex() .reverse();
+	assert ( ver_down_south_east == down_east .last_vertex() );
+	assert ( ver_down_south_east == south_east .first_vertex() .reverse() );
+	Cell ver_up_south_east = up_south .last_vertex();
+	assert ( ver_up_south_east == up_east .first_vertex() .reverse() );
+	assert ( ver_up_south_east == south_east .last_vertex() );
+	Cell ver_up_south_west = up_south .first_vertex() .reverse();
+	assert ( ver_up_south_west == up_west .last_vertex() );
+	assert ( ver_up_south_west == south_west .first_vertex() .reverse() );
+	Cell ver_down_north_east = down_north .last_vertex();
+	assert ( ver_down_north_east == down_east .first_vertex() .reverse() );
+	assert ( ver_down_north_east == north_east .last_vertex() );
+	Cell ver_down_north_west = down_north .first_vertex() .reverse();
+	assert ( ver_down_north_west == down_west .last_vertex() );
+	assert ( ver_down_north_west == north_west .first_vertex() );
+	Cell ver_up_north_west = up_north .last_vertex();
+	assert ( ver_up_north_west == up_west .first_vertex() .reverse() );
+	assert ( ver_up_north_west == north_west .last_vertex() );
+	Cell ver_up_north_east = up_north .first_vertex() .reverse();
+	assert ( ver_up_north_east == up_east .last_vertex() );
+	assert ( ver_up_north_east == north_east .first_vertex() .reverse() );
+
+	size_t nb_SN = up_west .number_of ( tag::segments );
+	assert ( nb_SN == up_east .number_of ( tag::segments ) );
+	assert ( nb_SN == down_west .number_of ( tag::segments ) );
+	assert ( nb_SN == down_east .number_of ( tag::segments ) );
+	size_t nb_EW = up_south .number_of ( tag::segments );
+	assert ( nb_EW == up_north .number_of ( tag::segments ) );
+	assert ( nb_EW == down_south .number_of ( tag::segments ) );
+	assert ( nb_EW == down_north .number_of ( tag::segments ) );
+	size_t nb_ud = south_east .number_of ( tag::segments );
+	assert ( nb_ud == south_west .number_of ( tag::segments ) );
+	assert ( nb_ud == north_east .number_of ( tag::segments ) );
+	assert ( nb_ud == north_west .number_of ( tag::segments ) );
+
+	// we make a copy of 'down' and raise it gradually until we touch 'up'
+	Mesh floor ( tag::fuzzy, tag::of_dim, 2 );
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = down .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( floor );
+	} // just a block of code for hiding 'it'
+
+	Cell seg_down_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
+	Cell seg_down_south = down_west .cell_behind ( ver_down_south_west, tag::surely_exists );
+	Cell seg_south_west = south_west .cell_behind ( ver_down_south_west, tag::surely_exists );
+	Cell square_down = down .cell_behind ( seg_down_west, tag::surely_exists );
+	Cell square_west = west .cell_in_front_of ( seg_down_west, tag::surely_exists );
+	Cell square_south = south .cell_in_front_of ( seg_west, tag::surely_exists );
+	
+	for ( size_t i_d = 1; i_d < nb_ud; i_d ++ )
+	{	
+		double frac_d = double(i_d) / double(nb_ud),  alpha = frac_d * (1.-frac_d);
+		alpha = alpha * alpha * alpha;
+		for ( size_t i_S = 1; i_S < nb_SN; i_S ++ )
+		{	
+			double frac_S = double(i_S) / double(nb_SN),  beta = frac_S * (1.-frac_S);
+			beta = beta * beta * beta;
+			for ( size_t i_W = 1; i_W < nb_EW; i_W ++ )
+			{	
+				double frac_W = double(i_W) / double(nb_EW),  gamma = frac_W * (1.-frac_W);
+				gamma = gamma * gamma * gamma;
+				double sum = std::sqrt ( alpha*beta + beta*gamma + alpha*gamma ),
+				       aa = alpha / sum, bb = beta / sum, cc = gamma / sum;
+				Cell new_ver ( tag::vertex );
+				space.interpolate ( new_ver,
+	bb*cc*frac_d,      ver_up,   aa*cc*frac_S,      ver_north, aa*bb*frac_W,      ver_east,
+	bb*cc*(1.-frac_d), ver_down, aa*cc*(1.-frac_S), ver_south, aa*bb*(1.-frac_W), ver_west );
+				
+	
 	
 } // end of Mesh::build with tag::hexahedron
+
+//----------------------------------------------------------------------------------//
+
+
+void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+                   Mesh east, Mesh west, const Mesh & up, const Mesh & down,
+                   const tag::Winding &                                            )
+
+// the tag:::winding tells maniFEM that we are on a quotient manifold
+// and that the faces provided (south, east, north, west, up, down) may have winding edges
+
+// beware, south may be equal to north.reverse, east may be equal to west.reverse
+// or they may be not equal but share the same vertices (and segments, reversed)
+// beware, the correspondence may be not face-to-face,
+// e.g. the first vertex of south_east may show up somewhere in the middle of north_east
+
+// beware, edges may be closed loops
+	
+// the cube may be in any position, faces may be curved
+// we can always rotate it and consider that 'up' is up, 'down' is down
+// 'south' is close to the viewer, 'north' is far from the viewer
+
+// but we are left with two possibilities :
+// either 'east' is towards our left and 'west' is towards our right
+// or the other way around
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
+
+	Mesh up_south = up .common_edge ( tag::with, south );  // orientation compatible with 'up'
+	Mesh up_north = up .common_edge ( tag::with, north );  // orientation compatible with 'up'
+	Mesh up_east = up .common_edge ( tag::with, east );  // orientation compatible with 'up'
+	Mesh up_west = up .common_edge ( tag::with, west );  // orientation compatible with 'up'
+	Mesh down_south = down .common_edge ( tag::with, south );  // orientation compatible with 'down'
+	Mesh down_north = down .common_edge ( tag::with, north );  // orientation compatible with 'down'
+	Mesh down_east = down .common_edge ( tag::with, east );  // orientation compatible with 'down'
+	Mesh down_west = down .common_edge ( tag::with, west );  // orientation compatible with 'down'
+	Mesh south_east = south .common_edge ( tag::with, east );  // orientation compatible with 'south'
+	Mesh south_west = south .common_edge ( tag::with, west );  // orientation compatible with 'south'
+	Mesh north_east = north .common_edge ( tag::with, east );  // orientation compatible with 'north'
+	Mesh north_west = north .common_edge ( tag::with, west );  // orientation compatible with 'north'
+
+	// we are looking at south and assume its four edges are oriented counter-clockwise
+	// (normal points towards exterior of the cube)
+	if ( down_south .last_vertex() == down_east .first_vertex() .reverse() )
+		// 'east' is on our left, we must switch them
+	{	Mesh tmp = east;  east = west;  west = tmp;
+		tmp = up_east;  up_east = up_west;  up_west = tmp;
+		tmp = down_east;  down_east = down_west;  down_west = tmp;
+		tmp = south_east;  south_east = south_west;  south_west = tmp;
+		tmp = north_east;  north_east = north_west;  north_west = tmp;  }
+
+	Cell down_south_west = down_south .last_vertex();
+	assert ( down_south_west == down_west .first_vertex() .reverse() );
+	assert ( down_south_west == south_west .last_vertex() );
+	Cell down_south_east = down_south .first_vertex() .reverse();
+	assert ( down_south_east == down_east .last_vertex() );
+	assert ( down_south_east == south_east .first_vertex() .reverse() );
+	Cell up_south_east = up_south .last_vertex();
+	assert ( up_south_east == up_east .first_vertex() .reverse() );
+	assert ( up_south_east == south_east .last_vertex() );
+	Cell up_south_west = up_south .first_vertex() .reverse();
+	assert ( up_south_west == up_west .last_vertex() );
+	assert ( up_south_west == south_west .first_vertex() .reverse() );
+	Cell down_north_east = down_north .last_vertex();
+	assert ( down_north_east == down_east .first_vertex() .reverse() );
+	assert ( down_north_east == north_east .last_vertex() );
+	Cell down_north_west = down_north .first_vertex() .reverse();
+	assert ( down_north_west == down_west .last_vertex() );
+	assert ( down_north_west == north_west .first_vertex() );
+	Cell up_north_west = up_north .last_vertex();
+	assert ( up_north_west == up_west .first_vertex() .reverse() );
+	assert ( up_north_west == north_west .last_vertex() );
+	Cell up_north_east = up_north .first_vertex() .reverse();
+	assert ( up_north_east == up_east .last_vertex() );
+	assert ( up_north_east == north_east .first_vertex() .reverse() );
+	
+	size_t nb_SN = up_west .number_of ( tag::segments );
+	assert ( nb_SN == up_east .number_of ( tag::segments ) );
+	assert ( nb_SN == down_west .number_of ( tag::segments ) );
+	assert ( nb_SN == down_east .number_of ( tag::segments ) );
+	size_t nb_EW = up_south .number_of ( tag::segments );
+	assert ( nb_EW == up_north .number_of ( tag::segments ) );
+	assert ( nb_EW == down_south .number_of ( tag::segments ) );
+	assert ( nb_EW == down_north .number_of ( tag::segments ) );
+	size_t nb_ud = south_east .number_of ( tag::segments );
+	assert ( nb_ud == south_west .number_of ( tag::segments ) );
+	assert ( nb_ud == north_east .number_of ( tag::segments ) );
+	assert ( nb_ud == north_west .number_of ( tag::segments ) );
+
+	// we must deal with possible winding segments
+	// we choose that, at each interpolation operation, i.e., for each new vertex,
+	// the new vertex will have winding zero relatively to SW
+	// we must keep track of the windings of ver_south, ver_east, ver_north, ver_west, B, D
+	// (relatively to SW)
+
+	
+		
+
+	
+} // end of Mesh::build with tag::hexahedron and tag::winding
 
 //----------------------------------------------------------------------------------//
 

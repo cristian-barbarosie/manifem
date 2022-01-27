@@ -1,9 +1,9 @@
 
-// function.h 2021.12.26
+// function.h 2022.01.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -44,8 +44,6 @@ namespace tag
 	struct Immersion { };  static const Immersion immersion;
 	struct BuildJacobian { };  static const BuildJacobian build_jacobian;
 	struct ComposedWith { };  static const ComposedWith composed_with;
-	struct OneDim { };  static const OneDim one_dim;
-	struct HighDim { };  static const HighDim high_dim;
 	struct Iff { };  static const Iff iff;
 	struct PreviouslyNonExistent { };
 	  static const PreviouslyNonExistent previously_non_existent;

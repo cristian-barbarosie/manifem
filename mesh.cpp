@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.01.12
+// mesh.cpp 2022.01.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -4840,7 +4840,7 @@ void Mesh::NotZeroDim::add_neg_hd_cell  // virtual from Mesh::Core
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry, tag::do_not_bother );
 	
-	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                                 }
+	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                            }
 
 
 void Mesh::NotZeroDim::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
@@ -5039,13 +5039,120 @@ Mesh::Core * Mesh::NotZeroDim::build_deep_copy ( )
 //-----------------------------------------------------------------------------------------//
 
 
+Mesh Mesh::convert_to
+( const tag::Connected &, const tag::OneDim &, const tag::SurelyExists & ) const
+
+{	assert ( this->dim() == 1 );
+	assert ( this->number_of ( tag::segments ) > 0 );
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
+	it .reset();  assert ( it .in_range() );
+	Cell A = *it, start = A;
+	Cell stop ( tag::non_existent );
+	size_t nb_of_segs = 0;
+	bool closed_loop = false;
+	while ( true )
+	{	Cell seg = this->cell_in_front_of ( A, tag::may_not_exist );
+		if ( not seg .exists() )  // found the "stop"
+		{	stop = A;  continue;  }
+		nb_of_segs ++;
+		Cell B = seg .tip();
+		if ( A == B )  // closed loop
+		{	closed_loop = true;  continue;  }
+		A = B;                                                       }
+	if ( closed_loop )
+	{	assert ( not stop .exists() );
+		assert ( nb_of_segs == this->number_of ( tag::segments ) );
+		Mesh::Connected::OneDim * res_core =
+		    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
+		                                  tag::one_dummy_wrapper               );
+		Mesh result ( tag::whose_core_is, res_core,
+		    tag::freshly_created, tag::is_positive );
+		res_core->first_ver = A;
+		res_core->last_ver = A;
+		return result;                                                             }
+	assert ( stop .exists() );
+	while ( true )
+	{	Cell seg = this->cell_behind ( start, tag::may_not_exist );
+		if ( not seg .exists() )  // this is the true "start"
+			continue;
+		nb_of_segs ++;
+		Cell B = seg .tip();
+		start = B;                                                  }
+	assert ( nb_of_segs == this->number_of ( tag::segments ) );
+	Mesh::Connected::OneDim * res_core =
+	    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
+	                                  tag::one_dummy_wrapper               );
+	Mesh result ( tag::whose_core_is, res_core,
+	    tag::freshly_created, tag::is_positive );
+	res_core->first_ver = start;
+	res_core->last_ver = stop;
+	return result;                                                                  }
+
+//-----------------------------------------------------------------------------------------//
+
+
+Mesh Mesh::convert_to
+( const tag::Connected &, const tag::OneDim &, const tag::MayNotExist & ) const
+
+{	assert ( this->dim() == 1 );
+	assert ( this->number_of ( tag::segments ) > 0 );
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
+	it .reset();  assert ( it .in_range() );
+	Cell A = *it, start = A;
+	Cell stop ( tag::non_existent );
+	size_t nb_of_segs = 0;
+	bool closed_loop = false;
+	while ( true )
+	{	Cell seg = this->cell_in_front_of ( A, tag::may_not_exist );
+		if ( not seg .exists() )  // found the "stop"
+		{	stop = A;  continue;  }
+		nb_of_segs ++;
+		Cell B = seg .tip();
+		if ( A == B )  // closed loop
+		{	closed_loop = true;  continue;  }
+		A = B;                                                       }
+	if ( closed_loop )
+	{	assert ( not stop .exists() );
+		if ( nb_of_segs != this->number_of ( tag::segments ) )
+			return Mesh ( tag::non_existent );
+		Mesh::Connected::OneDim * res_core =
+		    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
+		                                  tag::one_dummy_wrapper               );
+		Mesh result ( tag::whose_core_is, res_core,
+		    tag::freshly_created, tag::is_positive );
+		res_core->first_ver = A;
+		res_core->last_ver = A;
+		return result;                                                             }
+	assert ( stop .exists() );
+	while ( true )
+	{	Cell seg = this->cell_behind ( start, tag::may_not_exist );
+		if ( not seg .exists() )  // this is the true "start"
+			continue;
+		nb_of_segs ++;
+		Cell B = seg .tip();
+		start = B;                                                  }
+	if ( nb_of_segs != this->number_of ( tag::segments ) )
+		return Mesh ( tag::non_existent );
+	Mesh::Connected::OneDim * res_core =
+	    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
+	                                  tag::one_dummy_wrapper               );
+	Mesh result ( tag::whose_core_is, res_core,
+	    tag::freshly_created, tag::is_positive );
+	res_core->first_ver = start;
+	res_core->last_ver = stop;
+	return result;                                                                  }
+
+
+//-----------------------------------------------------------------------------------------//
+
+
 // for one-dimensional meshes, if you call 'baricenter' on an extremity
 // nothing will happen
 
 // in contrast, for two or more dimensions, 'baricenter' will act even
 // on a vertex on the boundary of 'this' mesh
 // depending on the current working manifold, the resulting coordinates
-// may be projected on the boundary or not
+// may be projected on the boundary or may lean towards the interior of the mesh
 
 void Mesh::baricenter ( const Cell & ver )
 

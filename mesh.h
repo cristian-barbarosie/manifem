@@ -104,6 +104,9 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct OverCellsOfDim { };  static const OverCellsOfDim over_cells_of_dim;
 	struct OverCellsOfMaxDim { };  static const OverCellsOfMaxDim over_cells_of_max_dim;
 	struct OverCellsOfReverseOf { }; static const OverCellsOfReverseOf over_cells_of_reverse_of;
+	struct Connected { };  static const Connected connected;
+	struct OneDim { };  static const OneDim one_dim;
+	struct HighDim { };  static const HighDim high_dim;
 	struct Vertex { };  static const Vertex vertex; static const Vertex point;
 	struct Segment { };  static const Segment segment;
 	struct DividedIn { };  static const DividedIn divided_in;
@@ -829,8 +832,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
 	
 	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	                                       const Mesh & east,  const Mesh & west,
-	                                       const Mesh & up   , const Mesh & down );
+	              Mesh east, Mesh west, const Mesh & up, Mesh down                );
 
 	// same as above, but take into account winding segments
 	// specific information about widing numbers is included in the four segments
@@ -872,6 +874,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::WithTriangles &, const tag::Winding &                  )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
 
+	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+	              Mesh east, Mesh west, const Mesh & up, Mesh down, const tag::Winding & );
+	
 	inline Mesh
 	( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	  const Cell & NE, const Cell & NW, const size_t m, const size_t n,
@@ -1271,6 +1276,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Cell first_segment ( ) const;
 	inline Cell last_segment ( ) const;
 
+	Cell common_vertex ( const tag::With &, const Mesh & m2 ) const;  // defined in  global.cpp
+	Mesh common_edge ( const tag::With &, const Mesh & m2 ) const;  // defined in  global.cpp
+	
 	// we are still in class Mesh
 	
 	inline Cell cell_in_front_of
@@ -1308,6 +1316,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline void closed_loop ( const Cell & ver, size_t );
 	// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
 	// and number of segments
+
+	Mesh convert_to ( const tag::Connected &, const tag::OneDim &, const tag::SurelyExists & ) const;
+	Mesh convert_to ( const tag::Connected &, const tag::OneDim &, const tag::MayNotExist & ) const;
 
 	// we are still in class Mesh
 	
@@ -2012,7 +2023,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	             bool cut_rectangles_in_half                                      );
 	
 	void build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	             const Mesh & east, const Mesh & west, const Mesh & up, const Mesh & down );
+	             Mesh east, Mesh west, const Mesh & up, Mesh down );
+	
+	void build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+	             Mesh east, Mesh west, const Mesh & up, const Mesh & down, const tag::Winding & );
 	
 	#ifndef NDEBUG
 	inline void print_everything ( );
@@ -5885,6 +5899,26 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 	this->build ( tag::quadrangle, south, east, north, west, true, tag::winding );  }
 
 
+inline Mesh::Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+                    Mesh east, Mesh west, const Mesh & up, const Mesh & down )
+
+:	Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 4, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::hexahedron, south, north, east, west, up, down );  }
+
+
+inline Mesh::Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+                    Mesh east, Mesh west, const Mesh & up, const Mesh & down, const tag::Winding & )
+
+:	Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 4, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::hexahedron, south, north, east, west, up, down, tag::winding );  }
+
+
 inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
                     const Cell & NE, const Cell & NW, const size_t m, const size_t n,
                     const tag::WithTriangles & wt                                     )
@@ -5902,6 +5936,8 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	Mesh west  ( tag::segment, NW.reverse ( tag::build_if_not_exists ), SW, tag::divided_in, n );
 	this->build ( tag::quadrangle, south, east, north, west, wt != tag::not_with_triangles );     }
 
+//------------------------------------------------------------------------------------------------//
+
 
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2 )
 :	Mesh ( tag::join, std::vector { m1, m2 } )  { }
@@ -5909,16 +5945,6 @@ inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2 )
 	
 inline Mesh::Mesh ( const tag::Join &, const Mesh & m1, const Mesh & m2, const Mesh & m3 )
 :	Mesh ( tag::join, std::vector { m1, m2, m3 } )  { }
-
-
-inline Mesh::Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-                    const Mesh & east, const Mesh & west, const Mesh & up, const Mesh & down )
-
-:	Mesh ( tag::whose_core_is,
-         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
-         tag::freshly_created, tag::is_positive                                           )
-
-{	this->build ( tag::hexahedron, south, north, east, west, up, down );  }
 
 
 inline Mesh::Mesh
@@ -6039,22 +6065,6 @@ inline Cell::Cell ( const tag::Triangle &, const Cell & AB, const Cell & BC, con
 
 inline Cell::Cell ( const tag::Quadrangle &, const Cell & AB, const Cell & BC,
                                              const Cell & CD, const Cell & DA )
-:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
-	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
-	       tag::freshly_created                                           )
-{	}
-
-
-inline Cell::Cell ( const tag::Rectangle &, const Cell & AB, const Cell & BC,
-                                            const Cell & CD, const Cell & DA )
-:	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
-	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
-	       tag::freshly_created                                           )
-{	}
-
-
-inline Cell::Cell ( const tag::Square &, const Cell & AB, const Cell & BC,
-                                         const Cell & CD, const Cell & DA )
 :	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
 	         ( tag::quadrangle, AB, BC, CD, DA, tag::one_dummy_wrapper ),
 	       tag::freshly_created                                           )
