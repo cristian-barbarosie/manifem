@@ -1,7 +1,7 @@
 
 // example presented in paragraph 2.17 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// builds an imperfect donut (parametric, starts with high dimension)
+// builds an imperfect donut (parametric)
 
 #include "maniFEM.h"
 #include "math.h"
@@ -11,21 +11,15 @@ using namespace std;
 
 int main ()
 
-{	Manifold RR5 ( tag::Euclid, tag::of_dim, 5 );
-	Function xyzab = RR5 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xyzab [0], y = xyzab [1], z = xyzab [2], alpha = xyzab [3], beta = xyzab [4];
+{	Manifold torus ( tag::Euclid, tag::of_dim, 2 );
+	Function alpha_beta = torus .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function alpha = alpha_beta [0], beta = alpha_beta [1];
 
-	const double big_radius = 3, small_radius = 1;
-	Manifold torus = RR5 .parametric
-		( x == ( big_radius + small_radius * cos(beta) ) * cos(alpha),
-	    y == ( big_radius + small_radius * cos(beta) ) * sin(alpha),
-	    z == small_radius * sin(beta)                                );
-	
 	const double pi = 4. * std::atan(1.);
-	Cell A ( tag::vertex );  alpha (A) = 0.;       beta (A) = 0.;      torus .project (A);
-	Cell B ( tag::vertex );  alpha (B) = 0.;       beta (B) = 1.9*pi;  torus .project (B);
-	Cell C ( tag::vertex );  alpha (C) = 1.95*pi;  beta (C) = 1.9*pi;  torus .project (C);
-	Cell D ( tag::vertex );  alpha (D) = 1.95*pi;  beta (D) = 0.;      torus .project (D);
+	Cell A ( tag::vertex );  alpha (A) = 0.;       beta (A) = 0.;
+	Cell B ( tag::vertex );  alpha (B) = 0.;       beta (B) = 1.9*pi;
+	Cell C ( tag::vertex );  alpha (C) = 1.95*pi;  beta (C) = 1.9*pi;
+	Cell D ( tag::vertex );  alpha (D) = 1.95*pi;  beta (D) = 0.;
 
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 19 );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 39 );
@@ -34,7 +28,12 @@ int main ()
 
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	// forget about alpha and beta
+	const double big_radius = 3, small_radius = 1;
+	Function x = ( big_radius + small_radius * cos(beta) ) * cos(alpha),
+	         y = ( big_radius + small_radius * cos(beta) ) * sin(alpha),
+	         z = small_radius * sin(beta);
+
+	// forget about t, in future statements x and y will be used
 	Manifold RR3 ( tag::Euclid, tag::of_dimension, 3 );
 	RR3 .set_coordinates ( x && y && z );
 

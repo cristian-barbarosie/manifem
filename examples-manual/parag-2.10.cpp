@@ -1,7 +1,7 @@
 
 // example presented in paragraph 2.10 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// a diamond-shape domain in RR2 (alternating between manifolds)
+// half of a disk
 
 #include "maniFEM.h"
 
@@ -13,27 +13,34 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
-	Cell N ( tag::vertex );  x (N) =  0.;  y (N) =  1.;
-	Cell W ( tag::vertex );  x (W) = -1.;  y (W) =  0.;
-	Cell S ( tag::vertex );  x (S) =  0.;  y (S) = -1.;
-	Cell E ( tag::vertex );  x (E) =  1.;  y (E) =  0.;
+	Cell O ( tag::vertex );  x (O) =  0.;   y (O) = 0.;
+	Cell A ( tag::vertex );  x (A) =  1.;   y (A) = 0.;
+	Cell B ( tag::vertex );  x (B) =  0.5;  y (B) = 0.8;
+	Cell C ( tag::vertex );  x (C) = -0.5;  y (C) = 0.8;
+	Cell D ( tag::vertex );  x (D) = -1.;   y (D) = 0.;
 
-	RR2 .implicit ( x*y + x - y == -1. );
-	Mesh NW ( tag::segment, N .reverse(), W, tag::divided_in, 10 );
-	RR2 .implicit ( x*y - x - y ==  1. );
-	Mesh WS ( tag::segment, W .reverse(), S, tag::divided_in, 10 );
-	RR2 .implicit ( x*y - x + y == -1. );
-	Mesh SE ( tag::segment, S .reverse(), E, tag::divided_in, 10 );
-	RR2 .implicit ( x*y + x + y ==  1. );
-	Mesh EN ( tag::segment, E .reverse(), N, tag::divided_in, 10 );
+	Manifold circle = RR2 .implicit ( x*x + y*y == 1. );
+	circle .project (B);  circle .project (C);
+
+	// three arcs of circle :
+	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
 
 	RR2 .set_as_working_manifold();
 
-	Mesh diamond ( tag::rectangle, NW, WS, SE, EN );
+	Mesh OA ( tag::segment, O .reverse(), A, tag::divided_in, 10 );
+	Mesh OB ( tag::segment, O .reverse(), B, tag::divided_in, 10 );
+	Mesh OC ( tag::segment, O .reverse(), C, tag::divided_in, 10 );
+	Mesh OD ( tag::segment, O .reverse(), D, tag::divided_in, 10 );
 
-	diamond .draw_ps ("diamond.eps");
-	diamond .export_to_file ( tag::msh, "diamond.msh");
+	Mesh OAB ( tag::triangle, OA, AB, OB .reverse() );
+	Mesh OBC ( tag::triangle, OB, BC, OC .reverse() );
+	Mesh OCD ( tag::triangle, OC, CD, OD .reverse() );
+	Mesh half_disk ( tag::join, OAB, OBC, OCD );
+
+	half_disk .export_to_file ( tag::msh, "half-disk.msh");
 	
-	std::cout << "produced files diamond.eps and diamond.msh" << std::endl;
+	std::cout << "produced file half-disk.msh" << std::endl;
 	
 }  // end of main

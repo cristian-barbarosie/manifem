@@ -1170,6 +1170,12 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		seg_south_east = sq_bdry .cell_in_front_of ( seg_south_east .tip(), tag::surely_exists )
 		                 .reverse ( tag::surely_exists );
 		// 'seg_south_east' is horizontal again, points towards north
+		// we move 'seg_north_west' up one square
+		sq_bdry = west .cell_in_front_of ( seg_north_west, tag::surely_exists ) .boundary();
+		seg_north_west = sq_bdry .cell_behind ( seg_north_west .tip(), tag::surely_exists );
+		// 'seg_north_west' is now vertical, points down
+		seg_north_west = sq_bdry .cell_behind ( seg_north_west .base() .reverse(), tag::surely_exists );
+		// 'seg_north_west' is horizontal again, points towards north
 		Cell seg_west = seg_south_west;
 		Cell seg_east = seg_south_east;
 		Cell seg_down_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
@@ -1184,22 +1190,30 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			Cell seg_up    = seg_up_west;
 			Cell seg_down  = seg_down_west;
 			// the four segments above are horizontal and point towards east (right)
+			Cell seg_south = south_west .cell_behind  // points down
+				( seg_south_west .base() .reverse(), tag::surely_exists );
+			sq_bdry = south .cell_behind ( seg_south, tag::surely_exists );
+			seg_south = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+			Cell seg_north = north_west .cell_in_front_of  // points up
+				( seg_north_west .tip(), tag::surely_exists );
+			sq_bdry = north .cell_behind ( seg_north, tag::surely_exists ) .boundary();
+			seg_north = sq_bdry .cell_behind
+				( seg_north_west .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+			// 'seg_south' 'seg_north' point towards east (right)
 			Cell seg2 = seg_west;  // horizontal, points towards north
 			sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
 			V = seg2 .tip();
 			Cell seg1 = sq_bdry .cell_in_front_of ( V, tag::surely_exists );
 			// seg1 is vertical, points down
 			V = seg1 .tip();
-			seg1 = sq_bdry .cell_in_front_of ( V, tag::surely_exists ) .reverse();
+			seg1 = sq_bdry .cell_in_front_of ( V, tag::surely_exists ) .reverse ( tag::surely_exists );
 			// seg1 is horizontal now, points towards north, it lies one square below seg2
 			// these two segments will move together towards east, keeping this relative position
 			double frac_N = double(i_north) / double(nb_SN),  beta = frac_N * (1.-frac_N);
 			beta = beta * beta * beta;
 			for ( size_t i_east = 1; i_east < nb_EW; i_east ++ )    // counts jumps toward east
-			{	// move 'seg_down' 'seg_up' 'seg_south' and 'seg_north' towards east
-				Cell seg_south = 
-				Cell seg_north = 
-				sq_bdry = up .cell_in_front_of ( seg_down, tag::surely_exists ) .boundary();
+			{	// move 'seg_down' 'seg_up' towards east (right)
+				sq_bdry = up .cell_in_front_of ( seg_up, tag::surely_exists ) .boundary();
 				seg_up  = sq_bdry .cell_behind ( seg_up .tip(), tag::surely_exists );
 				// now 'seg_up' points towards west (right)
 				seg_up  = sq_bdry .cell_behind ( seg_up .base() .reverse(), tag::surely_exists );
@@ -1207,10 +1221,13 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				sq_bdry = down .cell_behind ( seg_down, tag::surely_exists ) .boundary();
 				seg_down  = sq_bdry .cell_in_front_of ( seg_down .tip(), tag::surely_exists );
 				// now 'seg_down' points towards east (left)
-				seg_down  = sq_bdry .cell_in_front_of ( seg_down .tip(), tag::surely_exists ) .reverse();
+				seg_down  = sq_bdry .cell_in_front_of
+					( seg_down .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
 				// 'seg_down' points again towards north
 				Cell ver_down = seg_down .tip();
 				Cell ver_up   = seg_up   .tip();
+				Cell ver_south = seg_south .tip();
+				Cell ver_north = seg_north .tip();
 				
 				double frac_E = double(i_east) / double(nb_EW),  gamma = frac_E * (1.-frac_E);
 				gamma = gamma * gamma * gamma;
@@ -1222,6 +1239,26 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	bb*cc*(1.-frac_up), ver_down, aa*cc*(1.-frac_N), ver_south, aa*bb*(1.-frac_E), ver_west );
 				
 	
+				// move 'seg_south' and 'seg_north' towards east (right)
+				sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
+				// 'sq' is above 'seg_south'
+				seg_south  = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+				// now 'seg_south' points up
+				sq_bdry = south .cell_in_front_of ( seg_south, tag::surely_exists ) .boundary();
+				// 'sq' is eastern (to the right) to 'seg_south'
+				seg_south  = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+				// 'seg_south' points again towards east (right)
+				sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
+				// 'sq' is above 'seg_north'
+				seg_north  = sq_bdry .cell_behind ( seg_north .tip(), tag::surely_exists );
+				// now 'seg_north' points down
+				sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
+				// 'sq' is eastern (to the right) to 'seg_north'
+				seg_north  = sq_bdry .cell_behind
+					( seg_north .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+				// 'seg_north' points again towards east (right)
+			}
+				
 			// move 'seg_down_west' and 'seg_up_west' towards north
 			seg_down_west = down_west .cell_in_front_of ( seg_down_west .tip(), tag::surely_exists );
 			seg_up_west = up_west .cell_behind ( seg_up_west .tip(), tag::surely_exists )
