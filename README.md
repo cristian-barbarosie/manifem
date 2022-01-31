@@ -22,7 +22,7 @@ In its current version, release 22.01, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
-three-dimensional meshes are object of current work.
+three-dimensional meshes limited to cubic cells for now.
 The user can control variations in the element size;
 anisotropic Riemann metrics are object of current work.
 Lagrange finite elements of degree one and two are implemented for triangular

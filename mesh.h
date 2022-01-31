@@ -1,5 +1,5 @@
 
-// mesh.h  2022.01.26
+// mesh.h  2022.01.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -832,7 +832,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	:	Mesh ( tag::quadrangle, south, east, north, west, wt )  { }
 	
 	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	              Mesh east, Mesh west, const Mesh & up, Mesh down                );
+	              Mesh east, Mesh west, const Mesh & up, const Mesh & down        );
 
 	// same as above, but take into account winding segments
 	// specific information about widing numbers is included in the four segments
@@ -875,7 +875,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
 
 	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	              Mesh east, Mesh west, const Mesh & up, Mesh down, const tag::Winding & );
+	              Mesh east, Mesh west, const Mesh & up, const Mesh & down, const tag::Winding & );
 	
 	inline Mesh
 	( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
@@ -2023,7 +2023,7 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	             bool cut_rectangles_in_half                                      );
 	
 	void build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	             Mesh east, Mesh west, const Mesh & up, Mesh down );
+	             Mesh east, Mesh west, const Mesh & up, const Mesh & down );
 	
 	void build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
 	             Mesh east, Mesh west, const Mesh & up, const Mesh & down, const tag::Winding & );
@@ -5900,7 +5900,7 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 
 
 inline Mesh::Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-                    Mesh east, Mesh west, const Mesh & up, const Mesh & down )
+                    Mesh east, Mesh west, const Mesh & up, const Mesh & down        )
 
 :	Mesh ( tag::whose_core_is,
          new Mesh::Fuzzy ( tag::of_dimension, 4, tag::minus_one, tag::one_dummy_wrapper ),
@@ -6099,8 +6099,9 @@ inline Cell::Cell ( const tag::Hexahedron &, const Cell & face_1, const Cell & f
                                              const Cell & face_5, const Cell & face_6 )
 // the order of the faces does not count, they will cling according to their sides
 :	Cell ( tag::whose_core_is, new Cell::Positive::HighDim
-				 ( tag::tetrahedron, face_1, face_2, face_3, face_4, tag::one_dummy_wrapper ),
-	       tag::freshly_created                                                         )
+           ( tag::hexahedron, face_1, face_2, face_3, face_4, face_5, face_6,
+             tag::one_dummy_wrapper                                          ),
+	       tag::freshly_created                                                  )
 {	}
 
 

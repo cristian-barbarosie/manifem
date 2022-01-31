@@ -1,7 +1,7 @@
 
 // example presented in paragraph 2.16 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// closes a circle in a cumbersome manner
+// builds a spiral mesh (parametric)
 
 #include "maniFEM.h"
 #include "math.h"
@@ -11,25 +11,22 @@ using namespace std;
 
 int main ()
 
-{	Manifold circle_manif ( tag::Euclid, tag::of_dim, 1 );
-	Function t = circle_manif .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+{	Manifold spiral ( tag::Euclid, tag::of_dim, 1 );
+	Function t = spiral .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	const double pi = 4. * std::atan(1.);
 	
-	Cell A ( tag::vertex );  t (A) = 0.;
-	Cell B ( tag::vertex );  t (B) = 1.9*pi;
-	Mesh incomplete_circle ( tag::segment, A .reverse(), B, tag::divided_in, 19 );
-
-	Mesh small_piece ( tag::segment, B .reverse(), A, tag::divided_in, 1 );
-	Mesh circle ( tag::join, incomplete_circle, small_piece );
+	Cell A ( tag::vertex );  t (A) = pi/2.;
+	Cell B ( tag::vertex );  t (B) = 5.*pi;
+	Mesh arc_of_spiral ( tag::segment, A .reverse(), B, tag::divided_in, 50 );
 
 	// forget about t, in future statements x and y will be used
-	Function x = cos(t), y = sin(t);
+	Function x = t * cos(t), y = t * sin(t);
 	Manifold RR2 ( tag::Euclid, tag::of_dimension, 2 );
 	RR2 .set_coordinates ( x && y );
 
-	circle .draw_ps ("circle.eps");
-	circle .export_to_file ( tag::msh, "circle.msh");
+	arc_of_spiral .draw_ps ("spiral.eps");
+	arc_of_spiral .export_to_file ( tag::msh, "spiral.msh");
 
-	cout << "produced files circle.eps and circle.msh" << endl;
+	cout << "produced files spiral.eps and spiral.msh" << endl;
 
 }  // end of main

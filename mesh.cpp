@@ -5044,6 +5044,7 @@ Mesh Mesh::convert_to
 
 {	assert ( this->dim() == 1 );
 	assert ( this->number_of ( tag::segments ) > 0 );
+
 	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	it .reset();  assert ( it .in_range() );
 	Cell A = *it, start = A;
@@ -5053,12 +5054,13 @@ Mesh Mesh::convert_to
 	while ( true )
 	{	Cell seg = this->cell_in_front_of ( A, tag::may_not_exist );
 		if ( not seg .exists() )  // found the "stop"
-		{	stop = A;  continue;  }
+		{	stop = A;  break;  }
 		nb_of_segs ++;
 		Cell B = seg .tip();
 		if ( A == B )  // closed loop
-		{	closed_loop = true;  continue;  }
+		{	closed_loop = true;  break;  }
 		A = B;                                                       }
+
 	if ( closed_loop )
 	{	assert ( not stop .exists() );
 		assert ( nb_of_segs == this->number_of ( tag::segments ) );
@@ -5071,22 +5073,26 @@ Mesh Mesh::convert_to
 		res_core->last_ver = A;
 		return result;                                                             }
 	assert ( stop .exists() );
+
 	while ( true )
 	{	Cell seg = this->cell_behind ( start, tag::may_not_exist );
-		if ( not seg .exists() )  // this is the true "start"
-			continue;
+		if ( not seg .exists() )  break;  // this is the true "start"
 		nb_of_segs ++;
-		Cell B = seg .tip();
-		start = B;                                                  }
+		start = seg .base() .reverse();                             }
 	assert ( nb_of_segs == this->number_of ( tag::segments ) );
+	
 	Mesh::Connected::OneDim * res_core =
 	    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
 	                                  tag::one_dummy_wrapper               );
-	Mesh result ( tag::whose_core_is, res_core,
-	    tag::freshly_created, tag::is_positive );
-	res_core->first_ver = start;
+	Mesh result ( tag::whose_core_is, res_core, tag::freshly_created, tag::is_positive );
+
+	Mesh::Iterator itt = this->iterator ( tag::over_segments );
+	for ( itt .reset(); itt .in_range(); itt++ )
+		(*itt) .add_to_mesh ( result, tag::do_not_bother );
+
+	res_core->first_ver = start .reverse();
 	res_core->last_ver = stop;
-	return result;                                                                  }
+	return result;                                                                        }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -5096,6 +5102,7 @@ Mesh Mesh::convert_to
 
 {	assert ( this->dim() == 1 );
 	assert ( this->number_of ( tag::segments ) > 0 );
+
 	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	it .reset();  assert ( it .in_range() );
 	Cell A = *it, start = A;
@@ -5105,12 +5112,13 @@ Mesh Mesh::convert_to
 	while ( true )
 	{	Cell seg = this->cell_in_front_of ( A, tag::may_not_exist );
 		if ( not seg .exists() )  // found the "stop"
-		{	stop = A;  continue;  }
+		{	stop = A;  break;  }
 		nb_of_segs ++;
 		Cell B = seg .tip();
 		if ( A == B )  // closed loop
-		{	closed_loop = true;  continue;  }
+		{	closed_loop = true;  break;  }
 		A = B;                                                       }
+
 	if ( closed_loop )
 	{	assert ( not stop .exists() );
 		if ( nb_of_segs != this->number_of ( tag::segments ) )
@@ -5124,23 +5132,28 @@ Mesh Mesh::convert_to
 		res_core->last_ver = A;
 		return result;                                                             }
 	assert ( stop .exists() );
+
 	while ( true )
 	{	Cell seg = this->cell_behind ( start, tag::may_not_exist );
-		if ( not seg .exists() )  // this is the true "start"
-			continue;
+		if ( not seg .exists() )  break;  // this is the true "start"
 		nb_of_segs ++;
-		Cell B = seg .tip();
-		start = B;                                                  }
+		start = seg .base() .reverse();                             }
+
 	if ( nb_of_segs != this->number_of ( tag::segments ) )
 		return Mesh ( tag::non_existent );
+
 	Mesh::Connected::OneDim * res_core =
 	    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
 	                                  tag::one_dummy_wrapper               );
-	Mesh result ( tag::whose_core_is, res_core,
-	    tag::freshly_created, tag::is_positive );
-	res_core->first_ver = start;
+	Mesh result ( tag::whose_core_is, res_core, tag::freshly_created, tag::is_positive );
+
+	Mesh::Iterator itt = this->iterator ( tag::over_segments );
+	for ( itt .reset(); itt .in_range(); itt++ )
+		(*itt) .add_to_mesh ( result, tag::do_not_bother );
+	
+	res_core->first_ver = start .reverse();
 	res_core->last_ver = stop;
-	return result;                                                                  }
+	return result;                                                                        }
 
 
 //-----------------------------------------------------------------------------------------//
