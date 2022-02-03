@@ -23,23 +23,39 @@ int main ()
 	Cell H ( tag::vertex );  x (H) = -1.;  y (H) =  1.;  z (H) =  1.;
 
 	const double p = 3.3;  // recommended values p > 3.
+	const double q = (1.-p) / 4.;
+
+	// although this restriction is not explicitly imposed,
+	// segments AB and GH will stay within the plane y == z
+	// because A, B, G and H do and because the equation given below
+	// is symmetric in y and z
+
+	// in paragraph 2.15, we impose explicitly a second equation
 	
-	RR3 .implicit ( x*x + y*y - p*z*z == 2.-p, x*x - p*y*y + z*z == 2.-p );
+	RR3 .implicit ( x*x + q*(y+z)*(y+z) == 2.-p );
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 15 );
-	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 15 );
-	Mesh EF ( tag::segment, E .reverse(), F, tag::divided_in, 15 );
 	Mesh GH ( tag::segment, G .reverse(), H, tag::divided_in, 15 );
 
-	RR3 .implicit ( x*x + y*y - p*z*z == 2.-p, - p*x*x + y*y + z*z == 2.-p );
+	// likewise, segments CD and EF will stay within the plane y == -z
+	RR3 .implicit ( x*x + q*(y-z)*(y-z) == 2.-p );
+	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 15 );
+	Mesh EF ( tag::segment, E .reverse(), F, tag::divided_in, 15 );
+
+	// segments AE and CG will stay within the plane x == z, and so on
+	RR3 .implicit ( y*y + q*(x+z)*(x+z) == 2.-p );
 	Mesh AE ( tag::segment, A .reverse(), E, tag::divided_in, 15 );
-	Mesh BF ( tag::segment, B .reverse(), F, tag::divided_in, 15 );
 	Mesh CG ( tag::segment, C .reverse(), G, tag::divided_in, 15 );
+
+	RR3 .implicit ( y*y + q*(x-z)*(x-z) == 2.-p );
+	Mesh BF ( tag::segment, B .reverse(), F, tag::divided_in, 15 );
 	Mesh DH ( tag::segment, D .reverse(), H, tag::divided_in, 15 );
 
-	RR3 .implicit ( - p*x*x + y*y + z*z == 2.-p, x*x - p*y*y + z*z == 2.-p );
-	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 15 );
+	RR3 .implicit ( z*z + q*(x+y)*(x+y) == 2.-p );
 	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 15 );
 	Mesh FG ( tag::segment, F .reverse(), G, tag::divided_in, 15 );
+
+	RR3 .implicit ( z*z + q*(x-y)*(x-y) == 2.-p );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 15 );
 	Mesh HE ( tag::segment, H .reverse(), E, tag::divided_in, 15 );
 
 	RR3 .implicit ( x*x + y*y - p*z*z == 2.-p );
@@ -54,6 +70,8 @@ int main ()
 	Mesh DHEA ( tag::rectangle, DH, HE, AE .reverse(), DA .reverse() );
 	Mesh BFGC ( tag::rectangle, BF, FG, CG .reverse(), BC .reverse() );
 
+	// back to the initial 3D Euclidian space :
+	
 	RR3 .set_as_working_manifold();
 	Mesh cube ( tag::cube, ABCD, EFGH .reverse(), BFGC, DHEA, CGHD, AEFB );
 

@@ -20,12 +20,12 @@
 //   You should have received a copy of the GNU Lesser General Public License
 //   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "mesh.h"
-#include "iterator.h"
-#include "field.h"
-#include "finite-elem.h"
-#include "function.h"
-#include "manifold.h"
+#include "src/mesh.h"
+#include "src/iterator.h"
+#include "src/field.h"
+#include "src/finite-elem.h"
+#include "src/function.h"
+#include "src/manifold.h"
 
 
 //-------------------------------------------------------------------------------------------------//

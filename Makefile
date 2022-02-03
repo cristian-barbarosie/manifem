@@ -3,16 +3,16 @@
 CC = g++
 
 # compiler flags
-# CFLAGS = -c -I . -I $(HOME)/include/ -std=c++17
-CFLAGS = -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
-# CFLAGS = -DMANIFEM_COLLECT_CM -Wshadow -Wall -c -I . -I $(HOME)/include/ -std=c++17
-# CFLAGS = -DMANIFEM_COLLECT_CM -DNDEBUG -O4 -c -I . -I $(HOME)/include/ -std=c++17
-# CFLAGS = -DNDEBUG -c -O4 -I . -I $(HOME)/include/ -std=c++17
-# CFLAGS = -DNDEBUG -c -I . -I $(HOME)/include/ -std=c++17
+# CFLAGS = -c -I . -I src/ -I $(HOME)/include/ -std=c++17
+CFLAGS = -Wshadow -Wall -c -I . -I src/ -I $(HOME)/include/ -std=c++17
+# CFLAGS = -DMANIFEM_COLLECT_CM -Wshadow -Wall -c -I . -I src/ -I $(HOME)/include/ -std=c++17
+# CFLAGS = -DNDEBUG -c -O4 -I . -I src/ -I $(HOME)/include/ -std=c++17
+# CFLAGS = -DMANIFEM_COLLECT_CM -DNDEBUG -O4 -c -I . -I src/ -I $(HOME)/include/ -std=c++17
+# CFLAGS = -DNDEBUG -c -I . -I src/ -I $(HOME)/include/ -std=c++17
 
 manifem_objects = iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o progressive.o
 
-%.o: %.cpp
+%.o: src/%.cpp
 	$(CC) $(CFLAGS) $^
 
 parag-%.o: examples-manual/parag-%.cpp

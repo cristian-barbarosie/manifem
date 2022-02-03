@@ -1,5 +1,5 @@
 
-// progressive.cpp 2022.01.23
+// progressive.cpp 2022.02.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2125,9 +2125,9 @@ inline void progressive_construct     // hidden in anonymous namespace  // line 
 		assert ( progress_nb_of_coords == 3 );
 
 		if ( oc == tag::intrinsic )
-		{	std::cout << "intrinsic orientation makes no sense here;" << std::endl
+		{	std::cout << "intrinsic orientation makes no sense here, "
 			          << "did you mean inherent ?" << std::endl;
-			exit (1);                                                             }
+			exit (1);                                                  }
 
 		msh.core = new Mesh::Fuzzy ( tag::of_dim, 3, tag::minus_one, tag::one_dummy_wrapper );
 		Cell B ( tag::vertex );

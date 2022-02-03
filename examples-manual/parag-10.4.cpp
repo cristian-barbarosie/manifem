@@ -25,13 +25,15 @@ int main ( )
 	RR2 .set_as_working_manifold();
 	Mesh ellipse ( tag::progressive, tag::boundary, curve, tag::desired_length, 0.33 );
 
+	ellipse .export_to_file ( tag::msh, "ellipse-before.msh");
+
 	limit_number_of_neighbours ( ellipse );
 
 	// in rare occasions, we must call this function twice :
 	// limit_number_of_neighbours ( ellipse );
 
-	ellipse .export_to_file ( tag::msh, "ellipse.msh");
-	std::cout << "produced file ellipse.msh" << std::endl;
+	ellipse .export_to_file ( tag::msh, "ellipse-after.msh");
+	std::cout << "produced files ellipse-before.msh and ellipse-after.msh" << std::endl;
 
 }  // end of main
 

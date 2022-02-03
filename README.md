@@ -13,16 +13,16 @@ ManiFEM is just a collection of C++ classes.
 It has no user-friendly interface nor graphic capabilities. 
 The user should have some understanding of programming and of C++. 
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
-Have a look at the [gallery](http://manifem.rd.ciencias.ulisboa.pt/gallery.html).	
+Have a look at the [gallery](http://manifem.rd.ciencias.ulisboa.pt/gallery/).	
 Similar products (competitors), as well as strong and weak points of maniFEM,
 are listed in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
-right after the introduction.
+at the end of section 1.
 
-In its current version, release 22.01, maniFEM works well for mesh generation,
+In its current version, release 22.02, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
-three-dimensional meshes limited to cubic cells for now.
+three-dimensional meshes are limited to cubic cells for now.
 The user can control variations in the element size;
 anisotropic Riemann metrics are object of current work.
 Lagrange finite elements of degree one and two are implemented for triangular
@@ -40,7 +40,7 @@ ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@g
 see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
 
 To learn maniFEM, you should read the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.01).
+[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.02).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.

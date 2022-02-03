@@ -21,6 +21,7 @@ int main ()
 	nut .implicit ( x*x + 3.*z == 0. );
 
 	Mesh circle ( tag::progressive, tag::desired_length, 0.1, tag::orientation, tag::random );
+
 	// should produce error message if no orientation is provided
 	// should produce error message  with tag::orientation, tag::intrinsic
 	// should produce error message  with tag::orientation, tag::inherent
