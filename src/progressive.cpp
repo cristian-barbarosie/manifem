@@ -1517,10 +1517,13 @@ void progressive_construct           // hidden in anonymous namespace  // line 1
 	// one more reason : bdry may be Mesh::Connected::OneDim,
 	// we want a Mesh::Fuzzy interface to play with
 	// in the future, we will want a Mesh::STSI
+
+	std::cout << "progressive.cpp line 1521" << std::endl;
+	
 	{ // just a block of code for hiding 'it', 'interface'
 	Mesh interface ( tag::fuzzy, tag::of_dim, 1 );
-	Mesh::Iterator it = bdry.iterator ( tag::over_cells_of_max_dim );
-	for ( it.reset(); it.in_range(); it++ ) (*it).add_to_mesh ( interface );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ ) (*it) .add_to_mesh ( interface );
 	progress_interface = interface;
 	} // just a block of code 
 	mesh_under_constr = msh;
@@ -1828,6 +1831,7 @@ search_for_start :  // execution only reaches this point through 'goto'
 	// we look for a segment in 'progress_interface' which has a normal
 	// 'progress_interface' is a one-dimensional mesh, not necessarily connected
 	// so we cannot use a Mesh::Iterator - perhaps an unstructured one ?
+	std::cout << "progressive.cpp line 1834" << std::endl;
 	if ( progress_interface.number_of ( tag::segments ) == 0 ) return;
 	// empty interface, meshing process ended
 	#ifndef NDEBUG

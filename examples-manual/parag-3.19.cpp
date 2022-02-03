@@ -22,24 +22,28 @@ int main ()
 	
 	Manifold cylinder = RR3 .implicit ( y*y + (z-0.5)*(z-0.5) == rc*rc );
 	Manifold intersection = cylinder .implicit ( x*x + y*y + z*z == rs*rs );
-	Cell start1 ( tag::vertex );  x ( start1 ) = 1.;  y ( start1 ) = 0.;  z ( start1 ) = 0.5 - rc;
-	intersection .project ( start1 );
-	Mesh circle_1 ( tag::progressive, tag::start_at, start1, tag::towards, { 0., 1., 0. },
+
+	// we choose names start_2 and circle_2 for consistency with paragraph 3.18
+	Cell start_2 ( tag::vertex );
+	x ( start_2 ) = 1.;  y ( start_2 ) = 0.;  z ( start_2 ) = 0.5 - rc;
+	intersection .project ( start_2 );
+	Mesh circle_2 ( tag::progressive, tag::start_at, start_2, tag::towards, { 0., 1., 0. },
 	                tag::desired_length, seg_size                                          );
 
-	Cell start2 ( tag::vertex );  x ( start2 ) = -1.;  y ( start2 ) = 0.;  z ( start2 ) = 0.5 - rc;
-	intersection .project ( start2 );
-	Mesh circle_2 ( tag::progressive, tag::start_at, start2, tag::towards, { 0., 1., 0. },
-                  tag::desired_length, seg_size                                          );
+	Cell start_3 ( tag::vertex );
+	x ( start_3 ) = -1.;  y ( start_3 ) = 0.;  z ( start_3 ) = 0.5 - rc;
+	intersection .project ( start_3 );
+	Mesh circle_3 ( tag::progressive, tag::start_at, start_3, tag::towards, { 0., 1., 0. },
+	                tag::desired_length, seg_size                                          );
 
-	Mesh two_circles ( tag::join, circle_1 .reverse(), circle_2 );
+	Mesh two_circles ( tag::join, circle_2 .reverse(), circle_3 );
 	cylinder .set_as_working_manifold();
-	Mesh cyl ( tag::progressive, tag::boundary, two_circles, tag::start_at, start1,
-						 tag::towards, { -1., 0., 0. }, tag::desired_length, seg_size         );
+	Mesh cyl ( tag::progressive, tag::boundary, two_circles, tag::start_at, start_2,
+	           tag::towards, { -1., 0., 0. }, tag::desired_length, seg_size         );
 
-	Mesh two_circles_rev ( tag::join, circle_1, circle_2 .reverse() );
+	Mesh two_circles_rev ( tag::join, circle_2, circle_3 .reverse() );
 	RR3 .implicit ( x*x + y*y + z*z == rs*rs );
-	Mesh sph ( tag::progressive, tag::boundary, two_circles_rev, tag::start_at, start1,
+	Mesh sph ( tag::progressive, tag::boundary, two_circles_rev, tag::start_at, start_2,
              tag::towards, { 0., 0., -1. }, tag::desired_length, seg_size             );
 
 	Mesh all ( tag::join, cyl, sph );

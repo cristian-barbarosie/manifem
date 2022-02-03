@@ -1,5 +1,5 @@
 
-// mesh.h  2022.01.29
+// mesh.h  2022.02.03
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -5971,17 +5971,20 @@ inline size_t Mesh::join ( Mesh * const that, const container & l )
 	typename container::const_iterator it = l .begin();
 	for ( ; it != l .end(); it++ )
 	{	Mesh m = *it;  // sweep all cells of m
-		n += m.number_of ( tag::cells_of_max_dim );
-		Mesh::Iterator itt = m.iterator ( tag::over_cells_of_max_dim );
+		n += m .number_of ( tag::cells_of_max_dim );
+		Mesh::Iterator itt = m .iterator ( tag::over_cells_of_max_dim );
 		for ( itt .reset(); itt .in_range(); itt++ )
 		{	Cell cll = *itt;
-			cll .add_to_mesh ( *that, tag::do_not_bother );  }          }
+			if ( cll .is_positive() )  std::cout << "positive cell" << std::endl;
+			else std::cout << "negative cell" << std::endl;
+			cll .add_to_mesh ( *that, tag::do_not_bother );  }             }
 	return n;                                                                 }
 
 
 template < typename container >  // static
 inline void Mesh::join_meshes ( Mesh * const that, const container & l )
 
+// if any of the meshes is not a Mesh::Connected::OneDim, 'this' will be Mesh::Fuzzy
 // if any of the meshes is not a Mesh::Connected::OneDim, 'this' will be Mesh::Fuzzy
 {	container ll = l;
 	std::deque < Mesh > d;
@@ -5990,19 +5993,20 @@ inline void Mesh::join_meshes ( Mesh * const that, const container & l )
 	Mesh m = *it;
 	Mesh::Connected::OneDim * mm = dynamic_cast < Mesh::Connected::OneDim* > ( m .core );
 	if ( mm == nullptr )  goto fuzzy;
-	d .push_back ( m );  ll .erase ( it );
+	d .push_back (m);  ll .erase ( it );
 	again :
 	for ( it = ll .begin(); it != ll .end(); it++ )
 	{	m = *it;
 		mm = dynamic_cast < Mesh::Connected::OneDim* > ( m .core );
 		if ( mm == nullptr )  goto fuzzy;
 		Mesh m_front = d .front();
-		if ( m_front.first_vertex() .reverse() == m .last_vertex() )
+		if ( m_front .first_vertex() .reverse() == m .last_vertex() )
 		{  d .push_front ( m );  ll .erase ( it );  goto again;  }
 		Mesh m_back = d .back();
 		if ( m_back .last_vertex() == m .first_vertex() .reverse() )
-		{  d .push_back ( m );  ll .erase ( it );  goto again;  }    }
+		{  d .push_back (m);  ll .erase ( it );  goto again;  }    }
 	// if some meshes have not moved to d (are still in ll), the mesh will be disconnected
+	std::cout << "mesh.h line 6006 " << ll .size() << std::endl << std::flush;
 	if ( ll .size() ) goto fuzzy;
   mm = new Mesh::Connected::OneDim ( tag::one_dummy_wrapper );
   that->core = mm;
@@ -6011,6 +6015,7 @@ inline void Mesh::join_meshes ( Mesh * const that, const container & l )
   mm->last_ver = d .back() .last_vertex();
 	return;
 	fuzzy :
+	std::cout << "mesh.h line 6015" << std::endl << std::flush;
 	that->core = new Mesh::Fuzzy ( tag::of_dim, l .front() .core->get_dim_plus_one(),
 	                               tag::minus_one, tag::one_dummy_wrapper             );
 	Mesh::join ( that, l );
