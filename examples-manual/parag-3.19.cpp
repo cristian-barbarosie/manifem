@@ -41,10 +41,10 @@ int main ()
 	Mesh cyl ( tag::progressive, tag::boundary, two_circles, tag::start_at, start_2,
 	           tag::towards, { -1., 0., 0. }, tag::desired_length, seg_size         );
 
-	Mesh two_circles_rev ( tag::join, circle_2, circle_3 .reverse() );
 	RR3 .implicit ( x*x + y*y + z*z == rs*rs );
-	Mesh sph ( tag::progressive, tag::boundary, two_circles_rev, tag::start_at, start_2,
-             tag::towards, { 0., 0., -1. }, tag::desired_length, seg_size             );
+	Mesh sph ( tag::progressive, tag::boundary, two_circles .reverse(),
+	           tag::start_at, start_2, tag::towards, { 0., 0., -1. },
+	           tag::desired_length, seg_size                           );
 
 	Mesh all ( tag::join, cyl, sph );
 	all .export_to_file ( tag::msh, "sphere-tunnel.msh");

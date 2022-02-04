@@ -1,5 +1,5 @@
 
-// progressive.cpp 2022.02.01
+// progressive.cpp 2022.02.04
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -41,7 +41,12 @@ namespace tag
 	static const StartWithNonExistentMesh start_with_non_existent_mesh;
 	struct AtPoint { };  static const AtPoint at_point ;                 }
 
+}  // end of  namespace maniFEM
+
+using namespace maniFEM;
+
 //-----------------------------------------------------------------------------------------
+
 
 // we want to deal with Euclidian manifolds and implicit submanifolds, on one side
 // quotient manifolds on the other side
@@ -52,7 +57,22 @@ namespace tag
 // each call to SqDist will set the "winning" winding of the second Point B
 // relatively to the first one A
 // (the winding number of a future segment AB where the minimum distance is achieved)
-	
+
+// perhaps change the template of MetricTree like
+// template < typename Point, typename SqDist, typname RichPoint = Point >
+// where RichPoint contains a winding number while Point does not
+// we will have to provide two versions of SqDist :
+//    SqDist ( const Point & A, const Point & B )
+//    SqDist ( const Point & A, RichPoint & B )
+// the latter sets the winding of B to that winding which achieves the minimum distance
+
+// for computing this winding number,
+// implement a discrete version of the steepest descent method
+// rather than a blind search as in draw_ps with tag::windng
+
+// or is it desirable to keep a winding number for each node in the cloud ?
+// e.g. relative to its parent ? or to the root ?
+// if yes, no need to introduce RichPoint
 	
 //-----------------------------------------------------------------------------------------
 
@@ -561,9 +581,12 @@ inline bool origin_outside ( const double & Ax, const double & Ay,
 // hidden in anonymous namespace
 
 {	return
-	   opposite_signs ( - ext_prod_R2 ( Bx-Ax, By-Ay, Ax, Ay ), ext_prod_R2 ( Bx-Ax, By-Ay, Cx-Ax, Cy-Ay ) )
-	or opposite_signs ( - ext_prod_R2 ( Cx-Bx, Cy-By, Bx, By ), ext_prod_R2 ( Cx-Bx, Cy-By, Ax-Bx, Ay-By ) )
-	or opposite_signs ( - ext_prod_R2 ( Ax-Cx, Ay-Cy, Cx, Cy ), ext_prod_R2 ( Ax-Cx, Ay-Cy, Bx-Cx, By-Cy ) ); }
+	   opposite_signs ( - ext_prod_R2 ( Bx-Ax, By-Ay, Ax, Ay ),
+	                      ext_prod_R2 ( Bx-Ax, By-Ay, Cx-Ax, Cy-Ay ) )
+	or opposite_signs ( - ext_prod_R2 ( Cx-Bx, Cy-By, Bx, By ),
+	                      ext_prod_R2 ( Cx-Bx, Cy-By, Ax-Bx, Ay-By ) )
+	or opposite_signs ( - ext_prod_R2 ( Ax-Cx, Ay-Cy, Cx, Cy ),
+	                      ext_prod_R2 ( Ax-Cx, Ay-Cy, Bx-Cx, By-Cy ) ); }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -774,7 +797,7 @@ bool correctly_oriented    // hidden in anonymous namespace
 // tells whether 'msh's orientation is consistent with the orientation of the
 // surrounding Euclidian space
 
-{	std::string error_message;
+{	std::string error_message = "????";
 	if ( oc == tag::inherent )
 		error_message = "inherent orientation only makes sense if co-dimension is one";
 	else
@@ -1238,6 +1261,8 @@ void progress_relocate
 	typename manif_type::metric_tree & cloud                      )
 // hidden in anonymous namespace
 
+// modifies normal_dir
+	
 // re-compute the placement of a newly created vertex
 
 // vertex has been located according to two segments, from angles_120 :   n == 2
@@ -1252,45 +1277,45 @@ void progress_relocate
 	// relocate point P by averaging all normals
 
 	std::list < typename manif_type::winding_cell > list_of_ver =
-		cloud.find_close_neighbours_of ( P, progress_long_dist );
+		cloud .find_close_neighbours_of ( P, progress_long_dist );
 	// P has not been added to the cloud yet, so it will not show up in 'list_of_ver'
-	set_of_ver.clear();
+	set_of_ver .clear();
 	for ( typename std::list < typename  manif_type::winding_cell >
-					::const_iterator it = list_of_ver.begin();
-        it != list_of_ver.end(); it++                               )
-		set_of_ver.insert ( *it );
+					::const_iterator it = list_of_ver .begin();
+        it != list_of_ver .end(); it++                            )
+		set_of_ver .insert ( *it );
 
 	std::vector < Cell > vector_of_seg;
 	// vector_of_seg will contain all segments whose both extremities belong to 'set_of-ver'
 	// but not the segments adjacent to P (since P does not belong to 'set_of_ver')
-	for ( std::set<Cell>::iterator it = set_of_ver.begin(); it != set_of_ver.end(); it++ )
+	for ( std::set < Cell > ::iterator it = set_of_ver .begin(); it != set_of_ver .end(); it++ )
 	{	Cell A = *it;
-		Cell AB = progress_interface.cell_in_front_of ( A );
-		if ( set_of_ver.find ( AB.tip() ) != set_of_ver.end() )
-			vector_of_seg.push_back ( AB );                        }
+		Cell AB = progress_interface .cell_in_front_of ( A );
+		if ( set_of_ver .find ( AB .tip() ) != set_of_ver .end() )
+			vector_of_seg .push_back ( AB );                        }
 
-	if ( vector_of_seg.empty() ) return;
+	if ( vector_of_seg .empty() ) return;
 
 	// there are two cases : 
 	// the piece of the interface that we just encountered may have normals or not
 	size_t counter = 0;
 	Cell kept_seg ( tag::non_existent );
-	for ( size_t i = 0; i < vector_of_seg.size(); i++ )
-	{	Cell seg_p = vector_of_seg[i];
-		if ( seg_p.core->hook.find(tag::normal_vector) == seg_p.core->hook.end() )
-		{	counter++;  kept_seg = seg_p;  }                                          }
+	for ( size_t i = 0; i < vector_of_seg .size(); i++ )
+	{	Cell seg_p = vector_of_seg [i];
+		if ( seg_p .core->hook .find ( tag::normal_vector ) == seg_p .core->hook .end() )
+		{	counter++;  kept_seg = seg_p;  }                                               }
 	if ( counter > 0 )  // there are 'counter' segments with no normal
 	{	// assert ( counter == 1 );
 		// build normal of 'kept_seg' from 'normal_dir'
-		Cell A = kept_seg.base().reverse();
-		Cell B = kept_seg.tip();
+		Cell A = kept_seg .base() .reverse();
+		Cell B = kept_seg .tip();
 		std::vector < double > tangent_dir ( progress_nb_of_coords );
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 		{	Function x = Manifold::working.coordinates()[i];
-			tangent_dir[i] = x(B) - x(A);  // recover tangent from hook !
-			normal_dir[i] *= -1.;                             }
+			tangent_dir [i] = x(B) - x(A);  // recover tangent from hook !
+			normal_dir [i] *= -1.;                             }
 	  improve_normal ( A, B, tangent_dir, normal_dir );  // modifies normal_dir
-		kept_seg.core->hook[tag::normal_vector] = static_cast < void * >
+		kept_seg .core->hook [ tag::normal_vector ] = static_cast < void * >
 			( new std::vector < double > { normal_dir } );  // optimize !!
 		Cell ret = build_normals ( kept_seg );
 		assert ( ret == kept_seg );                                           }
@@ -1518,8 +1543,6 @@ void progressive_construct           // hidden in anonymous namespace  // line 1
 	// we want a Mesh::Fuzzy interface to play with
 	// in the future, we will want a Mesh::STSI
 
-	std::cout << "progressive.cpp line 1521" << std::endl;
-	
 	{ // just a block of code for hiding 'it', 'interface'
 	Mesh interface ( tag::fuzzy, tag::of_dim, 1 );
 	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim );
@@ -1655,8 +1678,6 @@ angles_60 :
 // check_touching :
 
 	{ // just a block of code for hiding 'touch'
-	Function x = Manifold::working.coordinates()[0];
-	Function y = Manifold::working.coordinates()[1];
 	bool touch = check_touching < manif_type >
 		( vertex_recently_built, set_of_nearby_vertices,
       point_120, stop_point_120, cloud              );
@@ -1787,7 +1808,7 @@ angles_60 :
 	Cell P ( tag::vertex );  vertex_recently_built = P;
 	assert ( next_seg.core->hook.find(tag::normal_vector) !=
 	         next_seg.core->hook.end()                       );
-	std::vector < double > & f = * static_cast < std::vector < double > * >
+	std::vector < double > f = * static_cast < std::vector < double > * >
 		( next_seg.core->hook[tag::normal_vector] );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	Function x = Manifold::working.coordinates()[i];
@@ -1831,7 +1852,6 @@ search_for_start :  // execution only reaches this point through 'goto'
 	// we look for a segment in 'progress_interface' which has a normal
 	// 'progress_interface' is a one-dimensional mesh, not necessarily connected
 	// so we cannot use a Mesh::Iterator - perhaps an unstructured one ?
-	std::cout << "progressive.cpp line 1834" << std::endl;
 	if ( progress_interface.number_of ( tag::segments ) == 0 ) return;
 	// empty interface, meshing process ended
 	#ifndef NDEBUG
@@ -2708,4 +2728,3 @@ void test_sq_dist ()
 
 
 
-}  // end of  namespace maniFEM

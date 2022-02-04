@@ -5975,8 +5975,6 @@ inline size_t Mesh::join ( Mesh * const that, const container & l )
 		Mesh::Iterator itt = m .iterator ( tag::over_cells_of_max_dim );
 		for ( itt .reset(); itt .in_range(); itt++ )
 		{	Cell cll = *itt;
-			if ( cll .is_positive() )  std::cout << "positive cell" << std::endl;
-			else std::cout << "negative cell" << std::endl;
 			cll .add_to_mesh ( *that, tag::do_not_bother );  }             }
 	return n;                                                                 }
 
@@ -6006,7 +6004,6 @@ inline void Mesh::join_meshes ( Mesh * const that, const container & l )
 		if ( m_back .last_vertex() == m .first_vertex() .reverse() )
 		{  d .push_back (m);  ll .erase ( it );  goto again;  }    }
 	// if some meshes have not moved to d (are still in ll), the mesh will be disconnected
-	std::cout << "mesh.h line 6006 " << ll .size() << std::endl << std::flush;
 	if ( ll .size() ) goto fuzzy;
   mm = new Mesh::Connected::OneDim ( tag::one_dummy_wrapper );
   that->core = mm;
@@ -6015,7 +6012,6 @@ inline void Mesh::join_meshes ( Mesh * const that, const container & l )
   mm->last_ver = d .back() .last_vertex();
 	return;
 	fuzzy :
-	std::cout << "mesh.h line 6015" << std::endl << std::flush;
 	that->core = new Mesh::Fuzzy ( tag::of_dim, l .front() .core->get_dim_plus_one(),
 	                               tag::minus_one, tag::one_dummy_wrapper             );
 	Mesh::join ( that, l );
