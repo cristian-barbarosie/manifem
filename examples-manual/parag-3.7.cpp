@@ -16,7 +16,7 @@ int main ()
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
 	cout << "this example takes time" << endl;
-	Function f1 = x*x + y*y + 0.1;
+	Function f1 = x*x + y*y + 0.1;  // we add 0.1 to avoid singularities
 	Function f2 = 1. - power ( f1, -0.5 );
 	Function d1 = f1 * f2 * f2 + z*z;
 	Function f3 = (x-0.4)*(x-0.4) + z*z + 0.1;

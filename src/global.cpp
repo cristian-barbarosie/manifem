@@ -1,5 +1,5 @@
 
-// global.cpp 2022.01.31
+// global.cpp 2022.02.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -837,7 +837,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 	// recover corners from the sides
 	// the process is different from the one in 'build' without tag::winding
-	// here, sides may be closed loops and then methods 'first_vertex' and 'last_vertex'
+	// here, sides may be closed loops and thus methods 'first_vertex' and 'last_vertex'
 	// become meaningless
 	Cell SW = west  .common_vertex ( tag::with, south );
 	Cell SE = south .common_vertex ( tag::with, east );
@@ -1121,9 +1121,6 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Cell ver_down_north_west = down_north .first_vertex() .reverse();
 	assert ( ver_down_north_west == down_west .last_vertex() );
 	assert ( ver_down_north_west == north_west .first_vertex() .reverse() );
-	Cell ver_up_north_west = up_north .last_vertex();
-	assert ( ver_up_north_west == up_west .first_vertex() .reverse() );
-	assert ( ver_up_north_west == north_west .last_vertex() );
 	Cell ver_up_north_east = up_north .first_vertex() .reverse();
 	assert ( ver_up_north_east == up_east .last_vertex() );
 	assert ( ver_up_north_east == north_east .first_vertex() .reverse() );
@@ -1782,7 +1779,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 // beware, the correspondence may be not face-to-face,
 // e.g. the first vertex of south_east may show up somewhere in the middle of north_east
 
-// beware, edges may be closed loops
+// beware, edges may be closed loops, faces may be pieces of cylinder or 2D torus
 	
 // the cube may be in any position, faces may be curved
 // we can always rotate it and consider that 'up' is up, 'down' is down
@@ -1793,7 +1790,15 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 // or the other way around
 
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current manifold
+	assert ( space .exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu .coordinates();
+
+	// Function xyz = space .coordinates();
+	// Function x = xyz [0], y = xyz [1], z = xyz [2];
 
 	Mesh up_south = up .common_edge ( tag::with, south );  // orientation compatible with 'up'
 	Mesh up_north = up .common_edge ( tag::with, north );  // orientation compatible with 'up'
@@ -1808,41 +1813,6 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Mesh north_east = north .common_edge ( tag::with, east );  // orientation compatible with 'north'
 	Mesh north_west = north .common_edge ( tag::with, west );  // orientation compatible with 'north'
 
-	// we are looking at south and assume its four edges are oriented counter-clockwise
-	// (normal points towards exterior of the cube)
-	if ( down_south .last_vertex() == down_east .first_vertex() .reverse() )
-		// 'east' is on our left, we must switch them
-	{	Mesh tmp = east;  east = west;  west = tmp;
-		tmp = up_east;  up_east = up_west;  up_west = tmp;
-		tmp = down_east;  down_east = down_west;  down_west = tmp;
-		tmp = south_east;  south_east = south_west;  south_west = tmp;
-		tmp = north_east;  north_east = north_west;  north_west = tmp;  }
-
-	Cell down_south_west = down_south .last_vertex();
-	assert ( down_south_west == down_west .first_vertex() .reverse() );
-	assert ( down_south_west == south_west .last_vertex() );
-	Cell down_south_east = down_south .first_vertex() .reverse();
-	assert ( down_south_east == down_east .last_vertex() );
-	assert ( down_south_east == south_east .first_vertex() .reverse() );
-	Cell up_south_east = up_south .last_vertex();
-	assert ( up_south_east == up_east .first_vertex() .reverse() );
-	assert ( up_south_east == south_east .last_vertex() );
-	Cell up_south_west = up_south .first_vertex() .reverse();
-	assert ( up_south_west == up_west .last_vertex() );
-	assert ( up_south_west == south_west .first_vertex() .reverse() );
-	Cell down_north_east = down_north .last_vertex();
-	assert ( down_north_east == down_east .first_vertex() .reverse() );
-	assert ( down_north_east == north_east .last_vertex() );
-	Cell down_north_west = down_north .first_vertex() .reverse();
-	assert ( down_north_west == down_west .last_vertex() );
-	assert ( down_north_west == north_west .first_vertex() );
-	Cell up_north_west = up_north .last_vertex();
-	assert ( up_north_west == up_west .first_vertex() .reverse() );
-	assert ( up_north_west == north_west .last_vertex() );
-	Cell up_north_east = up_north .first_vertex() .reverse();
-	assert ( up_north_east == up_east .last_vertex() );
-	assert ( up_north_east == north_east .first_vertex() .reverse() );
-	
 	size_t nb_SN = up_west .number_of ( tag::segments );
 	assert ( nb_SN == up_east .number_of ( tag::segments ) );
 	assert ( nb_SN == down_west .number_of ( tag::segments ) );
@@ -1856,16 +1826,777 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	assert ( nb_ud == north_east .number_of ( tag::segments ) );
 	assert ( nb_ud == north_west .number_of ( tag::segments ) );
 
+	// it may happen that : up_south   == up_north   .reverse()
+	//                      down_south == down_north .reverse()
+	//                      up_east    == up_west    .reverse()       and so on ...
+	
+	// recover corners from the edges
+	// the process is different from the one in 'build' without tag::winding
+	// here, edges may be closed loops and thus methods 'first_vertex' and 'last_vertex'
+	// become meaningless
+
+	// we let our intuition be guided by drawing in paragraph 12.5 in the manual
+	// we are looking at south and assume its four edges are oriented counter-clockwise
+	// (the normal points towards us, towards the exterior of the cube)
+
+	Cell ver_down_south_west = down_south .common_vertex ( tag::with, down_west, tag::exactly_one );
+	assert ( ver_down_south_west .belongs_to ( south_west ) );
+
+	// true, 'down_south' is oriented accordingly to 'down', thus points left
+	// but is 'west' on our left ?
+	if ( not down_south .cell_behind ( ver_down_south_west, tag::may_not_exist ) .exists() )
+		// looks like 'east' is on our left, we must switch them
+	{	Mesh tmp = east;  east = west;  west = tmp;
+		tmp = up_east;  up_east = up_west;  up_west = tmp;
+		tmp = down_east;  down_east = down_west;  down_west = tmp;
+		tmp = south_east;  south_east = south_west;  south_west = tmp;
+		tmp = north_east;  north_east = north_west;  north_west = tmp;  }
+
+	// in the case when edges parallel to EW (up_south, down_south, up_north, down_north)
+	// are closed loops, the above 'if' will never return true (the cell exists always)
+	// thus, west may remain on our right and east on our left (opposite to the drawing in the manual)
+	// there is nothing we can do about it;  most probably  east == west .reverse()
+	// we will simply get a different orientation of the final mesh
+		
+	// since down_west is oriented accordingly to 'down', points away from us, towards north :
+	assert ( down_west .cell_in_front_of ( ver_down_south_west, tag::may_not_exist ) .exists() );
+	// since south_west is oriented accordingly to 'south', points down :
+	assert ( south_west .cell_behind ( ver_down_south_west, tag::may_not_exist ) .exists() );
+
+	Cell ver_down_south_east = down_south .common_vertex ( tag::with, down_east, tag::exactly_one );
+	assert ( ver_down_south_east .belongs_to ( south_east ) );
+	// since down_south is oriented accordingly to 'down', points left, towards west
+	assert ( down_south .cell_in_front_of ( ver_down_south_east, tag::may_not_exist ) .exists() );
+	// since down_east is oriented accordingly to 'down', points towards us, towards south
+	assert ( down_east .cell_behind ( ver_down_south_east, tag::may_not_exist ) .exists() );
+	// since south_east is oriented accordingly to 'south', points up
+	assert ( south_east .cell_in_front_of ( ver_down_south_east, tag::may_not_exist ) .exists() );
+	
 	// we must deal with possible winding segments
 	// we choose that, at each interpolation operation, i.e., for each new vertex,
-	// the new vertex will have winding zero relatively to SW
-	// we must keep track of the windings of ver_south, ver_east, ver_north, ver_west, B, D
-	// (relatively to SW)
+	// the new vertex will have winding zero relatively to ver_down_south_west
+	// we must keep track of the windings of ver_south, ver_south_west and others
+	// (relatively to ver_down_south_west)
 
+	Manifold::Action spin_ver_down_south_east;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = down_south .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_ver_down_south_east -= (*it) .winding();
+	} // just a block for hiding 'it'
 	
+	Cell ver_up_south_west = south_west .common_vertex ( tag::with, up, tag::exactly_one );
+	// since south_west is oriented accordingly to 'south', points down
+	assert ( south_west .cell_in_front_of ( ver_up_south_west, tag::may_not_exist ) .exists() );
+	// since up_south is oriented accordingly to 'up', points right, towards east
+	assert ( up_south .cell_in_front_of ( ver_up_south_west, tag::may_not_exist ) .exists() );
+	// since up_west is oriented accordingly to 'up', points towards us, towards south
+	assert ( up_west .cell_behind ( ver_up_south_west, tag::may_not_exist ) .exists() );
+
+	Manifold::Action spin_ver_up_south_west;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = south_west .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_ver_up_south_west -= (*it) .winding();
+	} // just a block for hiding 'it'
+	
+	Cell ver_up_south_east = south_east .common_vertex ( tag::with, up, tag::exactly_one );
+	// since south_east is oriented accordingly to 'south', points up
+	assert ( south_east .cell_behind ( ver_up_south_east, tag::may_not_exist ) .exists() );
+	// since up_south is oriented accordingly to 'up', points right, towards east
+	assert ( up_south .cell_behind ( ver_up_south_east, tag::may_not_exist ) .exists() );
+	// since up_east is oriented accordingly to 'up', points away from us, towards north
+	assert ( south_east .cell_in_front_of ( ver_up_south_east, tag::may_not_exist ) .exists() );
+
+	Manifold::Action spin_tmp_1 = spin_ver_up_south_west;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = up_south .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_tmp_1 += (*it) .winding();
+	} // just a block for hiding 'it'
+	#ifndef NDEBUG
+	Manifold::Action spin_tmp_2 = spin_ver_down_south_east;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = south_east .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_tmp_2 += (*it) .winding();
+	} // just a block for hiding 'it'
+	assert ( spin_tmp_1 == spin_tmp_2 );
+	#endif
+	Manifold::Action spin_ver_up_south_east = spin_tmp_1;
+	
+	Cell ver_down_north_west = north_west .common_vertex ( tag::with, down, tag::exactly_one );
+	// since north_west is oriented accordingly to 'north', points up
+	assert ( north_west .cell_in_front_of ( ver_down_north_west, tag::may_not_exist ) .exists() );
+	// since down_west is oriented accordingly to 'down', points away from us, towards north
+	assert ( down_west .cell_behind ( ver_down_north_west, tag::may_not_exist ) .exists() );
+	// since down_north is oriented accordingly to 'down', points right, towards east
+	assert ( down_north .cell_in_front_of ( ver_down_north_west, tag::may_not_exist ) .exists() );
+
+	Manifold::Action spin_ver_down_north_west;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = down_west .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_ver_down_north_west += (*it) .winding();
+	} // just a block for hiding 'it'
+	
+	Cell ver_down_north_east = north_east .common_vertex ( tag::with, down, tag::exactly_one );
+	// since north_east is oriented accordingly to 'north', points down
+	assert ( north_east .cell_behind ( ver_down_north_east, tag::may_not_exist ) .exists() );
+	// since down_east is oriented accordingly to 'down', points towards us, towards south
+	assert ( down_east .cell_in_front_of ( ver_down_north_east, tag::may_not_exist ) .exists() );
+	// since down_north is oriented accordingly to 'down', points right, towards east
+	assert ( down_north .cell_behind ( ver_down_north_east, tag::may_not_exist ) .exists() );
+
+	spin_tmp_1 = spin_ver_down_south_east;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = down_east .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_tmp_1 -= (*it) .winding();
+	} // just a block for hiding 'it'
+	#ifndef NDEBUG
+	spin_tmp_2 = spin_ver_down_north_west;
+	{ // just a block for hiding 'it'
+	Mesh::Iterator it = down_north .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+		spin_tmp_2 += (*it) .winding();
+	} // just a block for hiding 'it'
+	assert ( spin_tmp_1 == spin_tmp_2 );
+	#endif
+	Manifold::Action spin_ver_down_north_east = spin_tmp_1;
 		
+	// we make a copy of half of the boundary and shrink it gradually, until we touch the other half
+	Mesh front ( tag::fuzzy, tag::of_dim, 2 );
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = down .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( front );
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = south .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( front );
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = west .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )  (*it) .add_to_mesh ( front );
+	} // just a block of code for hiding 'it'
+	
+	// we use six vertices, one on each side of the cube, for interpolating coordinates
+	// to help us move in the right direction, we keep segments rather than vertices
+	Cell seg_south_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
+	// we keep winding number of these vertices, tips of the respective segments
+	Manifold::Action spin_south_west = seg_south_west .winding();
+  Cell seg_north_west = down_west .cell_behind ( ver_down_north_west, tag::surely_exists );
+	Manifold::Action spin_north_west = spin_ver_down_north_west;
+  Cell seg_south_east = down_east .cell_behind ( ver_down_south_east, tag::surely_exists )
+		.reverse ( tag::surely_exists );
+	Manifold::Action spin_south_east = spin_ver_down_sout_heast + seg_south_east .winding();
+	// the three segments above are horizontal and point towards north
+
+
+
+
 
 	
+	for ( size_t i_up = 1; i_up < nb_ud; i_up ++ )   // counts jumps upwards
+	{	// we move 'seg_south_west' up one square, keeping its base within 'south_west'
+		Mesh sq_bdry = west .cell_in_front_of ( seg_south_west, tag::surely_exists ) .boundary();
+		seg_south_west = sq_bdry .cell_behind ( seg_south_west .tip(), tag::surely_exists );
+		// 'seg_south_west' is now vertical, points down
+		seg_south_west = sq_bdry .cell_behind ( seg_south_west .base() .reverse(), tag::surely_exists );
+		// 'seg_south_west' is horizontal again, points towards north
+		// we move 'seg_south_east' up one square, keeping its base within 'south_east'
+		sq_bdry = east .cell_behind ( seg_south_east, tag::surely_exists ) .boundary();
+		seg_south_east = sq_bdry .cell_in_front_of ( seg_south_east .tip(), tag::surely_exists );
+		// 'seg_south_east' is now vertical, points up
+		seg_south_east = sq_bdry .cell_in_front_of ( seg_south_east .tip(), tag::surely_exists )
+		                 .reverse ( tag::surely_exists );
+		// 'seg_south_east' is horizontal again, points towards north
+		// we move 'seg_north_west' up one square, keeping its tip within 'north_east'
+		sq_bdry = west .cell_in_front_of ( seg_north_west, tag::surely_exists ) .boundary();
+		seg_north_west = sq_bdry .cell_behind ( seg_north_west .tip(), tag::surely_exists );
+		// 'seg_north_west' is now vertical, points down
+		seg_north_west = sq_bdry .cell_behind ( seg_north_west .base() .reverse(), tag::surely_exists );
+		// 'seg_north_west' is horizontal again, points towards north
+		
+		Cell seg_west = seg_south_west;
+		Cell seg_east = seg_south_east;
+		Cell seg_down_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
+		Cell seg_up_west = up_west .cell_behind ( ver_up_south_west, tag::surely_exists )
+		                   .reverse ( tag::surely_exists );
+		// the two segments above are horizontal and point towards north
+		double frac_up = double(i_up) / double(nb_ud), alpha = frac_up * (1.-frac_up);
+		alpha = alpha * alpha * alpha;
+
+		for ( size_t i_north = 1; i_north < nb_SN; i_north ++ )    // counts jumps toward north
+		{	Cell ver_west = seg_west .tip();
+			Cell ver_east = seg_east .tip();
+			Cell seg_up    = seg_up_west;
+			Cell seg_down  = seg_down_west;
+			// the two segments above are horizontal and point towards north
+			Cell seg_south = south_west .cell_behind  // points down
+				( seg_south_west .base() .reverse(), tag::surely_exists );
+			sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
+			seg_south = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+			Cell seg_north = north_west .cell_in_front_of  // points up
+				( seg_north_west .tip(), tag::surely_exists );
+			sq_bdry = north .cell_behind ( seg_north, tag::surely_exists ) .boundary();
+			seg_north = sq_bdry .cell_behind
+				( seg_north_west .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+			// 'seg_south' 'seg_north' point towards east (right)
+
+			// define 'seg1' and 'seg2'
+			Cell seg2 = seg_west;  // horizontal, points towards north
+			sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
+			Cell seg1 = sq_bdry .cell_in_front_of ( seg2 .tip(), tag::surely_exists );
+			// seg1 is vertical, points down
+			seg1 = sq_bdry .cell_in_front_of ( seg1 .tip(), tag::surely_exists )
+				.reverse ( tag::surely_exists );
+			// seg1 is horizontal now, points towards north, it lies one square below seg2
+			// these two segments will move together towards east, keeping this relative position
+			double frac_N = double(i_north) / double(nb_SN),  beta = frac_N * (1.-frac_N);
+			beta = beta * beta * beta;
+
+			for ( size_t i_east = 1; i_east < nb_EW; i_east ++ )    // counts jumps toward east
+			{	// move 'seg_up' and 'seg_down' towards east (right)
+				sq_bdry = up .cell_in_front_of ( seg_up, tag::surely_exists ) .boundary();
+				seg_up  = sq_bdry .cell_behind ( seg_up .tip(), tag::surely_exists );
+				// now 'seg_up' points towards west (left)
+				seg_up  = sq_bdry .cell_behind ( seg_up .base() .reverse(), tag::surely_exists );
+				// 'seg_up' points again towards north
+				sq_bdry = down .cell_behind ( seg_down, tag::surely_exists ) .boundary();
+				seg_down  = sq_bdry .cell_in_front_of ( seg_down .tip(), tag::surely_exists );
+				// now 'seg_down' points towards east (right)
+				seg_down  = sq_bdry .cell_in_front_of
+					( seg_down .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+				// 'seg_down' points again towards north
+				Cell ver_down  = seg_down  .tip();
+				Cell ver_up    = seg_up    .tip();
+				Cell ver_south = seg_south .tip();
+				Cell ver_north = seg_north .tip();
+
+				// we want to build a new cube
+				// three faces exist already
+				// we need to build three new faces
+				// before that, three new segments
+				// and before that, a new vertex
+				// looks like a poem, does it not ?
+				
+				double frac_E = double(i_east) / double(nb_EW),  gamma = frac_E * (1.-frac_E);
+				gamma = gamma * gamma * gamma;
+				double sum = std::sqrt ( alpha*beta + beta*gamma + alpha*gamma ),
+				       aa = alpha / sum, bb = beta / sum, cc = gamma / sum;
+				Cell new_ver ( tag::vertex );
+				space.interpolate ( new_ver,
+	bb*cc*frac_up,      ver_up,   aa*cc*frac_N,      ver_north, aa*bb*frac_E,      ver_east,
+	bb*cc*(1.-frac_up), ver_down, aa*cc*(1.-frac_N), ver_south, aa*bb*(1.-frac_E), ver_west );
+
+				// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+				// pointing towards north, 'seg1' lying one square below 'seg2'
+				Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+				Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+				Cell corner_down_NW = seg1 .tip();
+				Cell corner_up_NW = seg2 .tip();
+				Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+				Cell edge_WE_down_N =
+					face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+				Cell corner_down_NE = edge_WE_down_N .tip();
+				Cell corner_down_SW = seg1 .base() .reverse();
+				Cell edge_EW_down_S =
+					face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+				Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+				Cell corner_up_SW = seg2 .base() .reverse();
+				Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+				Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+				Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+				Cell corner_down_SE = edge_du_SE .base() .reverse();
+				Cell edge_NS_down_E = face_down .boundary()
+					.cell_behind ( corner_down_SE, tag::surely_exists );
+				Cell edge_WE_up_N ( tag::segment, corner_up_NW .reverse(), new_ver );
+				Cell edge_ud_NE ( tag::segment, new_ver .reverse(), corner_down_NE );
+				Cell edge_NS_up_E ( tag::segment, new_ver .reverse(), corner_up_SE );
+				Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
+				                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
+				Cell face_north ( tag::square, edge_ud_NE,            edge_WE_down_N .reverse(),
+				                               edge_ud_NW .reverse(), edge_WE_up_N              );
+				Cell face_east  ( tag::square, edge_NS_up_E,              edge_du_SE .reverse(),
+				                               edge_NS_down_E .reverse(), edge_ud_NE .reverse() );
+				Cell new_cube ( tag::cube, face_up, face_down,
+				                           face_south, face_north, face_east, face_west );
+				new_cube .add_to_mesh ( *this );
+
+				// propagate 'front'
+				face_west .remove_from_mesh ( front );
+				face_south .remove_from_mesh ( front );
+				face_down .remove_from_mesh ( front );
+				face_east .reverse() .add_to_mesh ( front );
+				face_north .reverse() .add_to_mesh ( front );
+				face_up .reverse() .add_to_mesh ( front );
+
+				// move 'seg1' and 'seg2' towards east (right)
+				seg1 = edge_NS_down_E .reverse();
+				seg2 = edge_NS_up_E .reverse();
+	
+				// move 'seg_south' and 'seg_north' towards east (right)
+				sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
+				// 'sq' is above 'seg_south'
+				seg_south  = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+				// now 'seg_south' points up
+				sq_bdry = south .cell_in_front_of ( seg_south, tag::surely_exists ) .boundary();
+				// 'sq' is eastern (to the right) to 'seg_south'
+				seg_south  = sq_bdry .cell_in_front_of ( seg_south .base() .reverse(), tag::surely_exists );
+				// 'seg_south' points again towards east (right)
+				sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
+				// 'sq' is above 'seg_north'
+				seg_north  = sq_bdry .cell_behind ( seg_north .tip(), tag::surely_exists );
+				// now 'seg_north' points down
+				sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
+				// 'sq' is eastern (to the right) to 'seg_north'
+				seg_north  = sq_bdry .cell_behind
+					( seg_north .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+				// 'seg_north' points again towards east (right)
+			}  // end of movement  west -> east
+
+			// build the last cube of this row
+
+			// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+			// pointing towards north, 'seg1' lying one square below 'seg2'
+			Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+			Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+			Cell corner_down_NW = seg1 .tip();
+			Cell corner_up_NW = seg2 .tip();
+			Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+			Cell edge_WE_down_N =
+				face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+			Cell corner_down_NE = edge_WE_down_N .tip();
+			Cell corner_down_SW = seg1 .base() .reverse();
+			Cell edge_EW_down_S =
+				face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+			Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+			Cell corner_up_SW = seg2 .base() .reverse();
+			Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+			Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+			Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+			Cell corner_down_SE = edge_du_SE .base() .reverse();
+			Cell edge_NS_down_E = face_down .boundary()
+				.cell_behind ( corner_down_SE, tag::surely_exists );
+			Cell face_east = east .cell_in_front_of ( edge_NS_down_E, tag::surely_exists );
+			Cell edge_du_NE = face_east .boundary()
+				.cell_in_front_of ( edge_NS_down_E .base() .reverse(), tag::surely_exists );
+			Cell new_ver = edge_du_NE .tip();  // well, not really new ...
+			Cell edge_NS_up_E = face_east .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
+			Cell edge_WE_up_N ( tag::segment, corner_up_NW .reverse(), new_ver );
+			Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
+			                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
+			Cell face_north ( tag::square, edge_du_NE .reverse(), edge_WE_down_N .reverse(),
+		                                 edge_ud_NW .reverse(), edge_WE_up_N              );
+			Cell new_cube ( tag::cube, face_up, face_down,
+											face_south, face_north, face_east, face_west );
+			new_cube .add_to_mesh ( *this );
+
+			// propagate 'front'
+			face_west .remove_from_mesh ( front );
+			face_south .remove_from_mesh ( front );
+			face_down .remove_from_mesh ( front );
+			face_north .reverse() .add_to_mesh ( front );
+			face_up .reverse() .add_to_mesh ( front );
+
+			// advance 'seg_west' and 'seg_east' towards north
+			sq_bdry = west .cell_in_front_of ( seg_west, tag::surely_exists ) .boundary();
+			seg_west  = sq_bdry .cell_behind ( seg_west .tip(), tag::surely_exists );
+			// now 'seg_west' points down
+			sq_bdry = west .cell_in_front_of ( seg_west, tag::surely_exists ) .boundary();
+			seg_west  = sq_bdry .cell_behind ( seg_west .tip(), tag::surely_exists ) .reverse();
+			// 'seg_west' points again towards north
+			sq_bdry = east .cell_behind ( seg_east, tag::surely_exists ) .boundary();
+			seg_east  = sq_bdry .cell_in_front_of ( seg_east .tip(), tag::surely_exists );
+			// now 'seg_east' points up
+			sq_bdry = east .cell_in_front_of ( seg_east, tag::surely_exists ) .boundary();
+			seg_east  = sq_bdry .cell_in_front_of ( seg_east .base() .reverse(), tag::surely_exists );
+			// 'seg_east' points again towards north
+				
+			// move 'seg_down_west' and 'seg_up_west' towards north
+			seg_up_west = up_west .cell_behind ( seg_up_west .tip(), tag::surely_exists ) .reverse();
+			seg_down_west = down_west .cell_in_front_of ( seg_down_west .tip(), tag::surely_exists );
+		}  // end of movement  south -> north
+
+		// build the last (northern) row of this layer
+
+		Cell ver_west = seg_west .tip();
+		Cell ver_east = seg_east .tip();
+		Cell seg_up    = seg_up_west;
+		Cell seg_down  = seg_down_west;
+		// the two segments above are horizontal and point towards north
+		Cell seg_south = south_west .cell_behind  // points down
+			( seg_south_west .base() .reverse(), tag::surely_exists );
+		sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
+		seg_south = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+		Cell seg_north = north_west .cell_in_front_of  // points up
+			( seg_north_west .tip(), tag::surely_exists );
+		sq_bdry = north .cell_behind ( seg_north, tag::surely_exists ) .boundary();
+		seg_north = sq_bdry .cell_behind
+			( seg_north_west .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+		// 'seg_south' 'seg_north' point towards east (right)
+
+		// define 'seg1' and 'seg2'
+		Cell seg2 = seg_west;  // horizontal, points towards north
+		sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
+		Cell seg1 = sq_bdry .cell_in_front_of ( seg2 .tip(), tag::surely_exists );
+		// seg1 is vertical, points down
+		seg1 = sq_bdry .cell_in_front_of ( seg1 .tip(), tag::surely_exists )
+			.reverse ( tag::surely_exists );
+		// seg1 is horizontal now, points towards north, it lies one square below seg2
+		// these two segments will move together towards east, keeping this relative position
+
+		for ( size_t i_east = 1; i_east < nb_EW; i_east ++ )    // counts jumps toward east
+		{	// move 'seg_up' and 'seg_down' towards east (right)
+			sq_bdry = up .cell_in_front_of ( seg_up, tag::surely_exists ) .boundary();
+			seg_up  = sq_bdry .cell_behind ( seg_up .tip(), tag::surely_exists );
+			// now 'seg_up' points towards west (left)
+			seg_up  = sq_bdry .cell_behind ( seg_up .base() .reverse(), tag::surely_exists );
+			// 'seg_up' points again towards north
+			sq_bdry = down .cell_behind ( seg_down, tag::surely_exists ) .boundary();
+			seg_down  = sq_bdry .cell_in_front_of ( seg_down .tip(), tag::surely_exists );
+			// now 'seg_down' points towards east (right)
+			seg_down  = sq_bdry .cell_in_front_of
+				( seg_down .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+			// 'seg_down' points again towards north
+			Cell ver_down  = seg_down  .tip();
+			Cell ver_up    = seg_up    .tip();
+			Cell ver_south = seg_south .tip();
+			Cell ver_north = seg_north .tip();
+
+			// we want to build a new cube
+			// four faces exist already
+			// we need to build two new faces
+			// before that, one new segment (no new vertex)
+			
+			// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+			// pointing towards north, 'seg1' lying one square below 'seg2'
+			Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+			Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+			Cell corner_down_NW = seg1 .tip();
+			Cell corner_up_NW = seg2 .tip();
+			Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+			Cell edge_WE_down_N =
+				face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+			Cell corner_down_NE = edge_WE_down_N .tip();
+			Cell corner_down_SW = seg1 .base() .reverse();
+			Cell edge_EW_down_S =
+				face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+			Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+			Cell corner_up_SW = seg2 .base() .reverse();
+			Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+			Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+			Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+			Cell corner_down_SE = edge_du_SE .base() .reverse();
+			Cell edge_NS_down_E = face_down .boundary()
+				.cell_behind ( corner_down_SE, tag::surely_exists );
+			Cell face_north = north .cell_in_front_of ( edge_ud_NW, tag::surely_exists );
+			Cell edge_WE_up_N = face_north .boundary()
+				.cell_in_front_of ( edge_ud_NW .base() .reverse(), tag::surely_exists );
+			Cell new_ver = edge_WE_up_N .tip();  // well, not really new ...
+			Cell edge_ud_NE = face_north .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
+			Cell edge_NS_up_E ( tag::segment, new_ver .reverse(), corner_up_SE );
+			Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
+			                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
+			Cell face_east  ( tag::square, edge_NS_up_E,              edge_du_SE .reverse(),
+			                               edge_NS_down_E .reverse(), edge_ud_NE .reverse() );
+			Cell new_cube ( tag::cube, face_up, face_down,
+			                           face_south, face_north, face_east, face_west );
+			new_cube .add_to_mesh ( *this );
+
+			// propagate 'front'
+			face_west .remove_from_mesh ( front );
+			face_south .remove_from_mesh ( front );
+			face_down .remove_from_mesh ( front );
+			face_east .reverse() .add_to_mesh ( front );
+			face_up .reverse() .add_to_mesh ( front );
+
+			// move 'seg1' and 'seg2' towards east (right)
+			seg1 = edge_NS_down_E .reverse();
+			seg2 = edge_NS_up_E .reverse();
+
+			// move 'seg_south' and 'seg_north' towards east (right)
+			sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
+			// 'sq' is above 'seg_south'
+			seg_south  = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+			// now 'seg_south' points up
+			sq_bdry = south .cell_in_front_of ( seg_south, tag::surely_exists ) .boundary();
+			// 'sq' is eastern (to the right) to 'seg_south'
+			seg_south  = sq_bdry .cell_in_front_of ( seg_south .base() .reverse(), tag::surely_exists );
+			// 'seg_south' points again towards east (right)
+			sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
+			// 'sq' is above 'seg_north'
+			seg_north  = sq_bdry .cell_behind ( seg_north .tip(), tag::surely_exists );
+			// now 'seg_north' points down
+			sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
+			// 'sq' is eastern (to the right) to 'seg_north'
+			seg_north  = sq_bdry .cell_behind
+				( seg_north .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+			// 'seg_north' points again towards east (right)
+		}  // end of movement  west -> east
+
+		// build the last cube of this last row
+
+		// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+		// pointing towards north, 'seg1' lying one square below 'seg2'
+		Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+		Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+		Cell corner_down_NW = seg1 .tip();
+		Cell corner_up_NW = seg2 .tip();
+		Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+		Cell edge_WE_down_N =
+			face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+		Cell corner_down_NE = edge_WE_down_N .tip();
+		Cell corner_down_SW = seg1 .base() .reverse();
+		Cell edge_EW_down_S =
+			face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+		Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+		Cell corner_up_SW = seg2 .base() .reverse();
+		Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+		Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+		Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+		Cell corner_down_SE = edge_du_SE .base() .reverse();
+		Cell edge_NS_down_E = face_down .boundary()
+			.cell_behind ( corner_down_SE, tag::surely_exists );
+		Cell face_east = east .cell_in_front_of ( edge_NS_down_E, tag::surely_exists );
+		Cell edge_du_NE = face_east .boundary()
+			.cell_in_front_of ( edge_NS_down_E .base() .reverse(), tag::surely_exists );
+		Cell face_north = north .cell_in_front_of ( edge_ud_NW, tag::surely_exists );
+		Cell edge_WE_up_N = face_north .boundary()
+			.cell_in_front_of ( edge_ud_NW .base() .reverse(), tag::surely_exists );
+		Cell new_ver = edge_WE_up_N .tip();  // well, not really new ...
+		Cell edge_NS_up_E = face_east .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
+		Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
+		                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
+		Cell new_cube ( tag::cube, face_up, face_down,
+										face_south, face_north, face_east, face_west );
+		new_cube .add_to_mesh ( *this );
+
+		// propagate 'front'
+		face_west .remove_from_mesh ( front );
+		face_south .remove_from_mesh ( front );
+		face_down .remove_from_mesh ( front );
+		face_up .reverse() .add_to_mesh ( front );
+
+	}  // end of movement upwards
+
+	// build the last (upper) layer
+
+	Cell seg_west = up_west .cell_behind ( ver_up_south_west, tag::surely_exists )
+		.reverse ( tag::surely_exists );
+
+	for ( size_t i_north = 1; i_north < nb_SN; i_north ++ )    // counts jumps toward north
+	{	Cell ver_west = seg_west .tip();
+
+		// define 'seg1' and 'seg2'
+		Cell seg2 = seg_west;  // horizontal, points towards north
+		Mesh sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
+		Cell seg1 = sq_bdry .cell_in_front_of ( seg2 .tip(), tag::surely_exists );
+		// seg1 is vertical, points down
+		seg1 = sq_bdry .cell_in_front_of ( seg1 .tip(), tag::surely_exists )
+			.reverse ( tag::surely_exists );
+		// seg1 is horizontal now, points towards north, it lies one square below seg2
+		// these two segments will move together towards east, keeping this relative position
+
+		for ( size_t i_east = 1; i_east < nb_EW; i_east ++ )    // counts jumps toward east
+		{	// we want to build a new cube
+			// four faces exist already
+			// we need to build two new faces
+			// one new segment, no new vertex
+				
+			// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+			// pointing towards north, 'seg1' lying one square below 'seg2'
+			Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+			Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+			Cell corner_down_NW = seg1 .tip();
+			Cell corner_up_NW = seg2 .tip();
+			Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+			Cell edge_WE_down_N =
+				face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+			Cell corner_down_NE = edge_WE_down_N .tip();
+			Cell corner_down_SW = seg1 .base() .reverse();
+			Cell edge_EW_down_S =
+				face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+			Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+			Cell corner_up_SW = seg2 .base() .reverse();
+			Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+			Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+			Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+			Cell corner_down_SE = edge_du_SE .base() .reverse();
+			Cell edge_NS_down_E = face_down .boundary()
+				.cell_behind ( corner_down_SE, tag::surely_exists );
+			Cell face_up = up .cell_in_front_of ( seg2, tag::surely_exists );
+			Cell edge_WE_up_N = face_up .boundary() .
+				cell_behind ( seg2 .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+			Cell new_ver = edge_WE_up_N .tip();  // well, not really new ...
+			Cell edge_NS_up_E = face_up .boundary() .cell_behind
+				( new_ver, tag::surely_exists ) .reverse ( tag::surely_exists );
+			Cell edge_ud_NE ( tag::segment, new_ver .reverse(), corner_down_NE );
+			Cell face_north ( tag::square, edge_ud_NE,            edge_WE_down_N .reverse(),
+			                               edge_ud_NW .reverse(), edge_WE_up_N              );
+			Cell face_east  ( tag::square, edge_NS_up_E,              edge_du_SE .reverse(),
+			                               edge_NS_down_E .reverse(), edge_ud_NE .reverse() );
+			Cell new_cube ( tag::cube, face_up, face_down,
+			                           face_south, face_north, face_east, face_west );
+			new_cube .add_to_mesh ( *this );
+
+			// propagate 'front'
+			face_west .remove_from_mesh ( front );
+			face_south .remove_from_mesh ( front );
+			face_down .remove_from_mesh ( front );
+			face_east .reverse() .add_to_mesh ( front );
+			face_north .reverse() .add_to_mesh ( front );
+
+			// move 'seg1' and 'seg2' towards east (right)
+			seg1 = edge_NS_down_E .reverse();
+			seg2 = edge_NS_up_E .reverse();
+	
+		}  // end of movement  west -> east
+
+		// build the last cube of this row (within the last layer)
+
+		// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+		// pointing towards north, 'seg1' lying one square below 'seg2'
+		Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+		Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+		Cell corner_down_NW = seg1 .tip();
+		Cell corner_up_NW = seg2 .tip();
+		Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+		Cell edge_WE_down_N =
+			face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+		Cell corner_down_NE = edge_WE_down_N .tip();
+		Cell corner_down_SW = seg1 .base() .reverse();
+		Cell edge_EW_down_S =
+			face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+		Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+		Cell corner_up_SW = seg2 .base() .reverse();
+		Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+		Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+		Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+		Cell corner_down_SE = edge_du_SE .base() .reverse();
+		Cell edge_NS_down_E = face_down .boundary()
+			.cell_behind ( corner_down_SE, tag::surely_exists );
+		Cell face_east = east .cell_in_front_of ( edge_NS_down_E, tag::surely_exists );
+		Cell edge_du_NE = face_east .boundary()
+			.cell_in_front_of ( edge_NS_down_E .base() .reverse(), tag::surely_exists );
+		Cell new_ver = edge_du_NE .tip();  // well, not really new ...
+		Cell edge_NS_up_E = face_east .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
+		Cell face_up = up .cell_in_front_of ( seg2, tag::surely_exists );
+		Cell edge_WE_up_N = face_up .boundary() .
+			cell_behind ( seg2 .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+		assert ( new_ver == edge_WE_up_N .tip() );
+		Cell face_north ( tag::square, edge_du_NE .reverse(), edge_WE_down_N .reverse(),
+	                                 edge_ud_NW .reverse(), edge_WE_up_N              );
+		Cell new_cube ( tag::cube, face_up, face_down,
+										face_south, face_north, face_east, face_west );
+		new_cube .add_to_mesh ( *this );
+
+		// propagate 'front'
+		face_west .remove_from_mesh ( front );
+		face_south .remove_from_mesh ( front );
+		face_down .remove_from_mesh ( front );
+		face_north .reverse() .add_to_mesh ( front );
+
+		seg_west = up_west .cell_behind ( seg_west .tip(), tag::surely_exists )
+			.reverse ( tag::surely_exists );
+	}  // end of movement  south -> north
+
+	// build the last (northern) row of this last layer
+
+	// define 'seg1' and 'seg2'
+	Cell seg2 = seg_west;  // horizontal, points towards north
+	Mesh sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
+	Cell seg1 = sq_bdry .cell_in_front_of ( seg2 .tip(), tag::surely_exists );
+	// seg1 is vertical, points down
+	seg1 = sq_bdry .cell_in_front_of ( seg1 .tip(), tag::surely_exists )
+		.reverse ( tag::surely_exists );
+	// seg1 is horizontal now, points towards north, it lies one square below seg2
+	// these two segments will move together towards east, keeping this relative position
+
+	for ( size_t i_east = 1; i_east < nb_EW; i_east ++ )    // counts jumps toward east
+	{	// we want to build a new cube
+		// five faces exist already
+		// we need to build one new face
+		// no new segment, no new vertex
+			
+		// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+		// pointing towards north, 'seg1' lying one square below 'seg2'
+		Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+		Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+		Cell corner_down_NW = seg1 .tip();
+		Cell corner_up_NW = seg2 .tip();
+		Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+		Cell edge_WE_down_N =
+			face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+		Cell corner_down_NE = edge_WE_down_N .tip();
+		Cell corner_down_SW = seg1 .base() .reverse();
+		Cell edge_EW_down_S =
+			face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+		Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+		Cell corner_up_SW = seg2 .base() .reverse();
+		Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+		Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+		Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+		Cell corner_down_SE = edge_du_SE .base() .reverse();
+		Cell edge_NS_down_E = face_down .boundary()
+			.cell_behind ( corner_down_SE, tag::surely_exists );
+		Cell face_north = north .cell_in_front_of ( edge_ud_NW, tag::surely_exists );
+		Cell edge_WE_up_N = face_north .boundary()
+			.cell_in_front_of ( edge_ud_NW .base() .reverse(), tag::surely_exists );
+		Cell new_ver = edge_WE_up_N .tip();  // well, not really new ...
+		Cell edge_ud_NE = face_north .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
+		Cell face_up = up .cell_in_front_of ( seg2, tag::surely_exists );
+		assert ( edge_WE_up_N == face_up .boundary()
+		    .cell_behind ( seg2 .tip(), tag::surely_exists ) .reverse ( tag::surely_exists ) );
+		Cell edge_NS_up_E = face_up .boundary() .cell_behind
+			( new_ver, tag::surely_exists ) .reverse ( tag::surely_exists );
+		Cell face_east  ( tag::square, edge_NS_up_E,              edge_du_SE .reverse(),
+		                               edge_NS_down_E .reverse(), edge_ud_NE .reverse() );
+		Cell new_cube ( tag::cube, face_up, face_down,
+		                           face_south, face_north, face_east, face_west );
+		new_cube .add_to_mesh ( *this );
+
+		// propagate 'front'
+		face_west .remove_from_mesh ( front );
+		face_south .remove_from_mesh ( front );
+		face_down .remove_from_mesh ( front );
+		face_east .reverse() .add_to_mesh ( front );
+
+		// move 'seg1' and 'seg2' towards east (right)
+		seg1 = edge_NS_down_E .reverse();
+		seg2 = edge_NS_up_E .reverse();
+
+	}  // end of movement  west -> east
+
+	// build the last cube of this last row of the last layer
+
+	// recall that 'seg1' and 'seg2' are two horizontal parallel segments
+	// pointing towards north, 'seg1' lying one square below 'seg2'
+	Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
+	Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
+	Cell corner_down_NW = seg1 .tip();
+	Cell corner_up_NW = seg2 .tip();
+	Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+	Cell edge_WE_down_N =
+		face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
+	Cell corner_down_NE = edge_WE_down_N .tip();
+	Cell corner_down_SW = seg1 .base() .reverse();
+	Cell edge_EW_down_S =
+		face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
+	Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
+	Cell corner_up_SW = seg2 .base() .reverse();
+	Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+	Cell corner_up_SE = edge_EW_up_S .base() .reverse();
+	Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
+	Cell corner_down_SE = edge_du_SE .base() .reverse();
+	Cell edge_NS_down_E = face_down .boundary()
+		.cell_behind ( corner_down_SE, tag::surely_exists );
+	Cell face_east = east .cell_in_front_of ( edge_NS_down_E, tag::surely_exists );
+	Cell face_north = north .cell_in_front_of ( edge_ud_NW, tag::surely_exists );
+	Cell face_up = up .cell_in_front_of ( seg2, tag::surely_exists );
+	Cell new_cube ( tag::cube, face_up, face_down,
+									face_south, face_north, face_east, face_west );
+	new_cube .add_to_mesh ( *this );
+
 } // end of Mesh::build with tag::hexahedron and tag::winding
 
 //----------------------------------------------------------------------------------//

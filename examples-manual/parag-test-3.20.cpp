@@ -17,11 +17,13 @@ int main ()
 
 	const double seg_size = 0.1;
 
-	// we change slightly f3 to highlight the intersection
-	Function f1 = x*x + y*y + 0.1;  // we add 0.1 to avoid singularities
+	// here, we don't need to add 0.1 to f1 and f3,
+	//       the shape of each torus avoids the singularities
+	// we change slightly f3 (replace 0.4 by 0.5) to highlight the intersection
+	Function f1 = x*x + y*y;
 	Function f2 = 1. - power ( f1, -0.5 );
 	Function d1 = f1 * f2 * f2 + z*z;  // squared distance to a circle in the xy plane
-	Function f3 = (x-0.5)*(x-0.5) + z*z + 0.1;
+	Function f3 = (x-0.5)*(x-0.5) + z*z;
 	Function f4 = 1. - power ( f3, -0.5 );
 	Function d2 = y*y + f3 * f4 * f4;  // squared distance to a circle in the xz plane
 
