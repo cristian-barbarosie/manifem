@@ -1175,7 +1175,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		seg_south_east = sq_bdry .cell_in_front_of ( seg_south_east .tip(), tag::surely_exists )
 		                 .reverse ( tag::surely_exists );
 		// 'seg_south_east' is horizontal again, points towards north
-		// we move 'seg_north_west' up one square, keeping its tip within 'north_east'
+		// we move 'seg_north_west' up one square, keeping its tip within 'north_west'
 		sq_bdry = west .cell_in_front_of ( seg_north_west, tag::surely_exists ) .boundary();
 		seg_north_west = sq_bdry .cell_behind ( seg_north_west .tip(), tag::surely_exists );
 		// 'seg_north_west' is now vertical, points down
@@ -1981,47 +1981,49 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	
 	// we use six vertices, one on each side of the cube, for interpolating coordinates
 	// to help us move in the right direction, we keep segments rather than vertices
+	// we keep winding numbers of these vertices, tips of the respective segments
 	Cell seg_south_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
-	// we keep winding number of these vertices, tips of the respective segments
 	Manifold::Action spin_south_west = seg_south_west .winding();
   Cell seg_north_west = down_west .cell_behind ( ver_down_north_west, tag::surely_exists );
 	Manifold::Action spin_north_west = spin_ver_down_north_west;
   Cell seg_south_east = down_east .cell_behind ( ver_down_south_east, tag::surely_exists )
 		.reverse ( tag::surely_exists );
-	Manifold::Action spin_south_east = spin_ver_down_sout_heast + seg_south_east .winding();
+	Manifold::Action spin_south_east = spin_ver_down_south_east + seg_south_east .winding();
 	// the three segments above are horizontal and point towards north
 
-
-
-
-
-	
 	for ( size_t i_up = 1; i_up < nb_ud; i_up ++ )   // counts jumps upwards
 	{	// we move 'seg_south_west' up one square, keeping its base within 'south_west'
 		Mesh sq_bdry = west .cell_in_front_of ( seg_south_west, tag::surely_exists ) .boundary();
 		seg_south_west = sq_bdry .cell_behind ( seg_south_west .tip(), tag::surely_exists );
 		// 'seg_south_west' is now vertical, points down
+		spin_south_west -= seg_south_west .winding();
 		seg_south_west = sq_bdry .cell_behind ( seg_south_west .base() .reverse(), tag::surely_exists );
 		// 'seg_south_west' is horizontal again, points towards north
 		// we move 'seg_south_east' up one square, keeping its base within 'south_east'
 		sq_bdry = east .cell_behind ( seg_south_east, tag::surely_exists ) .boundary();
 		seg_south_east = sq_bdry .cell_in_front_of ( seg_south_east .tip(), tag::surely_exists );
 		// 'seg_south_east' is now vertical, points up
+		spin_south_east += seg_south_east .winding();
 		seg_south_east = sq_bdry .cell_in_front_of ( seg_south_east .tip(), tag::surely_exists )
 		                 .reverse ( tag::surely_exists );
 		// 'seg_south_east' is horizontal again, points towards north
-		// we move 'seg_north_west' up one square, keeping its tip within 'north_east'
+		// we move 'seg_north_west' up one square, keeping its tip within 'north_west'
 		sq_bdry = west .cell_in_front_of ( seg_north_west, tag::surely_exists ) .boundary();
 		seg_north_west = sq_bdry .cell_behind ( seg_north_west .tip(), tag::surely_exists );
 		// 'seg_north_west' is now vertical, points down
+		spin_north_west -= seg_north_west .winding();
 		seg_north_west = sq_bdry .cell_behind ( seg_north_west .base() .reverse(), tag::surely_exists );
 		// 'seg_north_west' is horizontal again, points towards north
 		
 		Cell seg_west = seg_south_west;
+		Manifold::Action spin_west = spin_south_west;
 		Cell seg_east = seg_south_east;
+		Manifold::Action spin_east = spin_south_east;
 		Cell seg_down_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
+		Manifold::Action spin_down_west = seg_down_west .winding();
 		Cell seg_up_west = up_west .cell_behind ( ver_up_south_west, tag::surely_exists )
 		                   .reverse ( tag::surely_exists );
+		Manifold::Action spin_up_west = spin_ver_up_south_west + seg_up_west .winding();
 		// the two segments above are horizontal and point towards north
 		double frac_up = double(i_up) / double(nb_ud), alpha = frac_up * (1.-frac_up);
 		alpha = alpha * alpha * alpha;
@@ -2030,19 +2032,27 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		{	Cell ver_west = seg_west .tip();
 			Cell ver_east = seg_east .tip();
 			Cell seg_up    = seg_up_west;
+			Manifold::Action spin_up = spin_up_west;
 			Cell seg_down  = seg_down_west;
+			Manifold::Action spin_down = spin_down_west;
 			// the two segments above are horizontal and point towards north
 			Cell seg_south = south_west .cell_behind  // points down
 				( seg_south_west .base() .reverse(), tag::surely_exists );
 			sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
 			seg_south = sq_bdry .cell_in_front_of ( seg_south .tip(), tag::surely_exists );
+			Manifold::Action spin_south =
+				spin_south_west - seg_south_west .winding() + seg_south .winding();
 			Cell seg_north = north_west .cell_in_front_of  // points up
 				( seg_north_west .tip(), tag::surely_exists );
 			sq_bdry = north .cell_behind ( seg_north, tag::surely_exists ) .boundary();
 			seg_north = sq_bdry .cell_behind
 				( seg_north_west .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+			Manifold::Action spin_north = spin_north_west + seg_north .winding();
 			// 'seg_south' 'seg_north' point towards east (right)
 
+
+
+			
 			// define 'seg1' and 'seg2'
 			Cell seg2 = seg_west;  // horizontal, points towards north
 			sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
