@@ -1093,6 +1093,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Mesh north_east = north .common_edge ( tag::with, east );  // orientation compatible with 'north'
 	Mesh north_west = north .common_edge ( tag::with, west );  // orientation compatible with 'north'
 
+	// we let our intuition be guided by drawing in paragraph 12.5 in the manual
 	// we are looking at south and assume its four edges are oriented counter-clockwise
 	// (the normal points towards us, towards the exterior of the cube)
 	if ( down_south .last_vertex() == down_east .first_vertex() .reverse() )
