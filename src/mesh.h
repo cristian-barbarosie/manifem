@@ -1,5 +1,5 @@
 
-// mesh.h  2022.02.03
+// mesh.h  2022.02.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -69,6 +69,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct DoNotBother { };  static const DoNotBother do_not_bother;
 	struct SurelyExists { };  static const SurelyExists surely_exists;
 	struct CellsSurelyExist { };  static const CellsSurelyExist cells_surely_exist;
+	struct ExactlyOne { };  static const ExactlyOne exactly_one;
 	struct OfDimension { };  static const OfDimension of_dim;
 	                         static const OfDimension of_dimension;
 	struct OfMaxDim { };  static const OfMaxDim of_max_dim;
@@ -1276,8 +1277,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	inline Cell first_segment ( ) const;
 	inline Cell last_segment ( ) const;
 
-	Cell common_vertex ( const tag::With &, const Mesh & m2 ) const;  // defined in  global.cpp
-	Mesh common_edge ( const tag::With &, const Mesh & m2 ) const;  // defined in  global.cpp
+	// three methods below defined in  global.cpp
+	Cell common_vertex ( const tag::With &, const Mesh & m2 ) const;
+	Cell common_vertex ( const tag::With &, const Mesh & m2, const tag::ExactlyOne & ) const;
+	Mesh common_edge ( const tag::With &, const Mesh & m2 ) const;
 	
 	// we are still in class Mesh
 	

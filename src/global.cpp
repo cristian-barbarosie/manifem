@@ -1,5 +1,5 @@
 
-// global.cpp 2022.02.06
+// global.cpp 2022.02.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -278,7 +278,7 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 
 namespace {  // anonymous namespace, mimics static linkage
 
-void build_common
+	void build_common                                                   // line 281
 ( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
             const Cell & A, const Cell & B, const Cell & C,
   Cell & seg1, Cell & seg2, Manifold::Action & winding_C_from_A,
@@ -405,6 +405,9 @@ void build_common
 				double s = 2.* ( frac_AB + frac_BC + frac_CA );
 				frac_AB /= s;  frac_BC /= s;  frac_CA /= s;
 				S = Cell ( tag::vertex );
+				// we chose that S will have zero winding relatively to A
+				// but we have no control on the winding numbers of the six vertices
+				// used for interpolating coordinates, so we use six shadow vertices
 				v = coords_q ( P_AB, tag::winding, winding_P_AB );
 				coords_Eu ( shadow_P_AB ) = v;
 				v = coords_q ( Q_AB, tag::winding, winding_Q_AB );
@@ -455,6 +458,23 @@ void build_common
 }  // end of  build_common
 	
 } // end of anonymous namespace
+
+//----------------------------------------------------------------------------------//
+
+
+Cell Mesh::common_vertex ( const tag::With &, const Mesh & seg2, const tag::ExactlyOne & ) const
+
+// we look for a common vertex, where 'this' ends and 'seg2' begins (in this order)
+// this does not apply to closed loops of course, so we give them a different treatment
+
+{	std::vector < Cell > vec;
+	Mesh::Iterator it = this->iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell V = *it;
+		if ( V .belongs_to ( seg2 ) ) vec .push_back ( V );  }
+	assert ( vec .size() == 1 );
+	Cell V = vec [0];
+	return V;                                                  }
 
 //----------------------------------------------------------------------------------//
 
@@ -513,7 +533,7 @@ void Mesh::build ( const tag::Triangle &,
 	// 'build_common' builds all triangles but the last four, near C
 	Manifold::Action winding_C_from_A;
 	Cell seg1 ( tag::non_existent ), seg2 ( tag::non_existent );
-	build_common ( *this, AB, BC, CA, A, B, C, seg1, seg2, winding_C_from_A, true );
+	build_common ( *this, AB, BC, CA, A, B, C, seg1, seg2, winding_C_from_A, true );  // line 281
 	// last argument true means "no singularity", perform all checkings
 
 	// build last four triangles
@@ -1991,6 +2011,11 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Manifold::Action spin_south_east = spin_ver_down_south_east + seg_south_east .winding();
 	// the three segments above are horizontal and point towards north
 
+	// we use six shadow vertices for interpolation
+	Cell shadow_down  ( tag::vertex ), shadow_up    ( tag::vertex ),
+	     shadow_south ( tag::vertex ), shadow_north ( tag::vertex ),
+	     shadow_west  ( tag::vertex ), shadow_east  ( tag::vertex );
+
 	for ( size_t i_up = 1; i_up < nb_ud; i_up ++ )   // counts jumps upwards
 	{	// we move 'seg_south_west' up one square, keeping its base within 'south_west'
 		Mesh sq_bdry = west .cell_in_front_of ( seg_south_west, tag::surely_exists ) .boundary();
@@ -2031,6 +2056,10 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		for ( size_t i_north = 1; i_north < nb_SN; i_north ++ )    // counts jumps toward north
 		{	Cell ver_west = seg_west .tip();
 			Cell ver_east = seg_east .tip();
+			std::vector < double > v = coords_q ( ver_west, tag::winding, spin_west );
+			coords_Eu ( shadow_west ) = v;
+			v = coords_q ( ver_east, tag::winding, spin_east );
+			coords_Eu ( shadow_east ) = v;
 			Cell seg_up    = seg_up_west;
 			Manifold::Action spin_up = spin_up_west;
 			Cell seg_down  = seg_down_west;
@@ -2050,14 +2079,13 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			Manifold::Action spin_north = spin_north_west + seg_north .winding();
 			// 'seg_south' 'seg_north' point towards east (right)
 
-
-
-			
 			// define 'seg1' and 'seg2'
 			Cell seg2 = seg_west;  // horizontal, points towards north
+			Manifold::Action spin2 = spin_west;
 			sq_bdry = west .cell_behind ( seg_west, tag::surely_exists ) .boundary();
 			Cell seg1 = sq_bdry .cell_in_front_of ( seg2 .tip(), tag::surely_exists );
 			// seg1 is vertical, points down
+			Manifold::Action spin1 = spin_west + seg1 .winding();;
 			seg1 = sq_bdry .cell_in_front_of ( seg1 .tip(), tag::surely_exists )
 				.reverse ( tag::surely_exists );
 			// seg1 is horizontal now, points towards north, it lies one square below seg2
@@ -2070,11 +2098,13 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				sq_bdry = up .cell_in_front_of ( seg_up, tag::surely_exists ) .boundary();
 				seg_up  = sq_bdry .cell_behind ( seg_up .tip(), tag::surely_exists );
 				// now 'seg_up' points towards west (left)
+				spin_up -= seg_up .winding();
 				seg_up  = sq_bdry .cell_behind ( seg_up .base() .reverse(), tag::surely_exists );
 				// 'seg_up' points again towards north
 				sq_bdry = down .cell_behind ( seg_down, tag::surely_exists ) .boundary();
 				seg_down  = sq_bdry .cell_in_front_of ( seg_down .tip(), tag::surely_exists );
 				// now 'seg_down' points towards east (right)
+				spin_down += seg_down .winding();
 				seg_down  = sq_bdry .cell_in_front_of
 					( seg_down .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
 				// 'seg_down' points again towards north
@@ -2082,6 +2112,14 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				Cell ver_up    = seg_up    .tip();
 				Cell ver_south = seg_south .tip();
 				Cell ver_north = seg_north .tip();
+				v = coords_q ( ver_down, tag::winding, spin_down );
+				coords_Eu ( shadow_down ) = v;
+				v = coords_q ( ver_up, tag::winding, spin_up );
+				coords_Eu ( shadow_up ) = v;
+				v = coords_q ( ver_south, tag::winding, spin_south );
+				coords_Eu ( shadow_south ) = v;
+				v = coords_q ( ver_north, tag::winding, spin_north );
+				coords_Eu ( shadow_north ) = v;
 
 				// we want to build a new cube
 				// three faces exist already
@@ -2095,17 +2133,28 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				double sum = std::sqrt ( alpha*beta + beta*gamma + alpha*gamma ),
 				       aa = alpha / sum, bb = beta / sum, cc = gamma / sum;
 				Cell new_ver ( tag::vertex );
+				// we chose that new_ver will have zero winding relatively to ver_down_south_west
+				// but we have no control on the winding numbers of the six vertices
+				// used for interpolating coordinates, so we use shadow vertices
 				space.interpolate ( new_ver,
-	bb*cc*frac_up,      ver_up,   aa*cc*frac_N,      ver_north, aa*bb*frac_E,      ver_east,
-	bb*cc*(1.-frac_up), ver_down, aa*cc*(1.-frac_N), ver_south, aa*bb*(1.-frac_E), ver_west );
+				                    bb*cc*frac_up,     shadow_up,    aa*cc*frac_N,       shadow_north,
+				                    aa*bb*frac_E,      shadow_east,  bb*cc*(1.-frac_up), shadow_down,
+				                    aa*cc*(1.-frac_N), shadow_south, aa*bb*(1.-frac_E),  shadow_west );
 
+
+
+
+
+
+				
 				// recall that 'seg1' and 'seg2' are two horizontal parallel segments
 				// pointing towards north, 'seg1' lying one square below 'seg2'
 				Cell face_west = front .cell_behind ( seg2, tag::surely_exists );
 				Cell face_down = front .cell_behind ( seg1, tag::surely_exists );
 				Cell corner_down_NW = seg1 .tip();
 				Cell corner_up_NW = seg2 .tip();
-				Cell edge_ud_NW = face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
+				Cell edge_ud_NW =
+					face_west .boundary() .cell_behind ( corner_down_NW, tag::surely_exists );
 				Cell edge_WE_down_N =
 					face_down .boundary() .cell_in_front_of ( corner_down_NW, tag::surely_exists );
 				Cell corner_down_NE = edge_WE_down_N .tip();
@@ -2114,7 +2163,8 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 					face_down .boundary() .cell_behind ( corner_down_SW, tag::surely_exists );
 				Cell face_south = front .cell_in_front_of ( edge_EW_down_S, tag::surely_exists );
 				Cell corner_up_SW = seg2 .base() .reverse();
-				Cell edge_EW_up_S = face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
+				Cell edge_EW_up_S =
+					face_south .boundary() .cell_behind ( corner_up_SW, tag::surely_exists );
 				Cell corner_up_SE = edge_EW_up_S .base() .reverse();
 				Cell edge_du_SE = face_south .boundary() .cell_behind ( corner_up_SE );
 				Cell corner_down_SE = edge_du_SE .base() .reverse();
