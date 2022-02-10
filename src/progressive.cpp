@@ -228,7 +228,7 @@ Mesh progress_interface ( tag::non_existent );
 // these variables will be set when we start the meshing process,
 // in the body of the progressive Mesh constructor
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline double approx_sqrt ( double arg, const tag::Around &, double centre, double ini )
@@ -251,7 +251,7 @@ inline double approx_sqrt ( double arg, const tag::Around &, double centre, doub
 	return res;
 }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline size_t get_topological_dim ( )       // hidden in anonymous namespace
@@ -272,7 +272,7 @@ inline size_t get_topological_dim ( )       // hidden in anonymous namespace
 	assert ( false );  // we return zero just to avoid compilation errors
 	return 0;                                                                             }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 std::vector < double > compute_tangent_vec      // hidden in anonymous namespace
@@ -286,7 +286,8 @@ std::vector < double > compute_tangent_vec      // hidden in anonymous namespace
 	
 {	// Manifold::Implicit * m_impl =  dynamic_cast<Manifold::Implicit*> ( Manifold::working.core );
 	// assert ( m_impl );
-	// Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
+	// Manifold::Euclid * m_euclid =
+	// 	dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
 	// assert ( m_euclid );
 	std::vector < double > best_tangent;  double longest_projection = 0.;
 	for ( size_t n = 1; n <= progress_nb_of_coords; n++ )
@@ -348,7 +349,7 @@ std::vector < double > compute_tangent_vec      // hidden in anonymous namespace
 
 }  // end of  compute_tangent_vec
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline std::vector < double > compute_tangent_vec
@@ -363,7 +364,7 @@ inline std::vector < double > compute_tangent_vec
 {	return compute_tangent_vec ( start, true, given_vec );  }
 	// 'true' as second argument means "do check orthogonality"
 	
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell start )
@@ -374,7 +375,7 @@ inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell s
 {	return compute_tangent_vec ( start, false, std::vector<double>() );  }
 	// 'false' as second argument means "do not check orthogonality"
 
-//-------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 
 
 template < class manif_type >
@@ -386,7 +387,7 @@ inline void progress_add_point ( const typename manif_type::winding_cell & P,
 	P.core->hook[tag::node_in_cloud] = static_cast < void * > ( cloud.add ( P ) );  }
 // optimize !
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline bool positive_orientation
@@ -409,9 +410,9 @@ inline bool positive_orientation
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  prod += e[i] * f[i];
 	// we could have used the Riemannian product, but the sign should be the same
 	// code above is identical to part of progress_cos_sq_120
-	return prod < 0.;                                                                                   }
+	return prod < 0.;                                                                   }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline double progress_cos_sq_60
@@ -444,8 +445,8 @@ inline double progress_cos_sq_60
 	return prod * prod / norm1 / norm2;  // cosine square
 }
 
-//-------------------------------------------------------------------------------------------------
-			
+//---------------------------------------------------------------------------------------------
+
 
 inline double progress_cos_sq_120
 (	const Cell & A, const Cell & B, const Cell & C, const Cell & AB, const Cell & BC )
@@ -487,7 +488,7 @@ inline double progress_cos_sq_120
 	return prod * prod / norm1 / norm2;  // cosine square
 }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 			
 
 inline bool opposite_signs ( const double a, const double b )
@@ -496,11 +497,10 @@ inline bool opposite_signs ( const double a, const double b )
 	if ( a == 0. )  return true;
 	return b <= 0.;                  }
 
-//-------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 
 
-inline Cell search_start_ver_c1 ( )
-// hidden in anonymous namespace
+inline Cell search_start_ver_c1 ( )    // hidden in anonymous namespace
 
 // search for a starting point in a manifold of co-dimension one
 // e.g. a curve in the plane or a surface in 3D
@@ -508,7 +508,8 @@ inline Cell search_start_ver_c1 ( )
 {	Manifold::Implicit::OneEquation * m_impl =
 		dynamic_cast<Manifold::Implicit::OneEquation*> ( Manifold::working.core );
 	assert ( m_impl );
-	// Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
+	// Manifold::Euclid * m_euclid =
+	// 	dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
 	// assert ( m_euclid );
 	// Function m_impl->level_function;
 
@@ -561,10 +562,10 @@ inline Cell search_start_ver_c1 ( )
 							x ( tmp_ver_2 ) = x ( tmp_ver );                 }
 						v2 = v;                                               }
 					else assert( false );                                               }  }
-		size_of_cube *= 2;                                                                                 }
+		size_of_cube *= 2;                                                                          }
 }
 
-//-------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 
 
 inline double ext_prod_R2 ( const double vx, const double vy, const double wx, const double wy )
@@ -572,7 +573,7 @@ inline double ext_prod_R2 ( const double vx, const double vy, const double wx, c
 {	return vx*wy - wx*vy;  }
 
 
-//-------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 
 
 inline bool origin_outside ( const double & Ax, const double & Ay,
@@ -588,7 +589,7 @@ inline bool origin_outside ( const double & Ax, const double & Ay,
 	or opposite_signs ( - ext_prod_R2 ( Ax-Cx, Ay-Cy, Cx, Cy ),
 	                      ext_prod_R2 ( Ax-Cx, Ay-Cy, Bx-Cx, By-Cy ) ); }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline Cell search_start_ver_c2 ( )
@@ -599,7 +600,8 @@ inline Cell search_start_ver_c2 ( )
 {	Manifold::Implicit::TwoEquations * m_impl =
 		dynamic_cast<Manifold::Implicit::TwoEquations*> ( Manifold::working.core );
 	assert ( m_impl );
-	// Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
+	// Manifold::Euclid * m_euclid =
+	// 	dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
 	// assert ( m_euclid );
 
 	// this function is not called at some point in the manifold
@@ -685,7 +687,7 @@ inline Cell search_start_ver_c2 ( )
 		size_of_cube *= 2;                                                                          }
 }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline Cell search_start_ver ( )
@@ -702,50 +704,30 @@ inline Cell search_start_ver ( )
 	return search_start_ver_c2 ( );  // co-dimension two
 }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
-inline void redistribute_vertices ( const Mesh & msh,
-  const Cell & start, const Cell & stop, double last_length, size_t n )
-// hidden in anonymous namespace
+inline void redistribute_vertices                 // line 710
+( const Mesh & msh, const Cell & start, const Cell & stop, size_t n )
+// hidden in anonymous namespace    // called only once
 
-// perhaps just make some baricenters ?
-
-// chain of n segments, desired length d, last length d'
-// move p1 with   (d'-d) / n
-//    alpha x0 + beta x2 == x1 + (d'-d) / n   alpha+beta == 1
-//    x2 == x0 + 2d   x1 == x0 + d
-//    2 d beta == d + (d'-d)/ n 
-// move p2 with 2*(d'-d) / n
-//    alpha x1 + beta x3 == x2 + 2(d'-d)/n   alpha+beta == 1
-//    x1 == x0 + d + (d'-d)/n
-//    x3 == x0 + 3d
-//    alpha (d'-d)/n + 2 d beta == d + 2(d'-d)/n
-//    ( 2d - (d'-d)/n ) beta == d + (d'-d)/n
-// move p2 with 3*(d'-d) / n
-//    ( 2d - 2(d'-d)/n ) beta == d + (d'-d)/n
-
-// how to do this if the metric is not uniform ?
-// use sums of lengths os segments, mimiking geodesics
+// just make some baricenters
 	
-{	Cell A = msh.cell_behind(stop).base().reverse();
-	for ( size_t i = 1; i < n; i++ )
+{	Cell A = stop;
+	for ( size_t i = 0; i < n; i++ )
 	{	if ( A == start )  {  n = i;  break;  }
-		A = msh.cell_behind(A).base().reverse();  }
+		A = msh .cell_behind (A) .base() .reverse();  }
 	assert ( n > 1 );
-	Cell B = msh.cell_in_front_of(A).tip();
-	Cell C = msh.cell_in_front_of(B).tip();
-	double epsilon = ( last_length - desired_len_at_point ) / n;
-	double v1 = desired_len_at_point + epsilon,  v2 = 2*desired_len_at_point;
-	while ( C != stop )
-	{	double beta = v1/v2;
-		Manifold::working.interpolate ( B, 1.-beta, A, beta, C );
-		v2 -= epsilon;  assert ( v2 > 0. );
+	A = stop;
+	Cell B = msh .cell_behind (A) .base() .reverse();
+	Cell C = msh .cell_behind (B) .base() .reverse();
+	for ( size_t i = 2; i < n; i++ )
+	{	Manifold::working .interpolate ( B, 0.3, A, 0.4, B, 0.3, C );
+		if ( C == stop ) break;
 		A = B;  B = C;
-		C = msh.cell_in_front_of(B).tip();                            }
-	Manifold::working.interpolate ( B, 0.5, A, 0.5, C );               }
+		C = msh .cell_behind (B) .base() .reverse();                  }    }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline double get_z_baric ( const Cell & tri )
@@ -760,7 +742,7 @@ inline double get_z_baric ( const Cell & tri )
 	assert ( counter == 3 );
 	return  zz/3.;                                                               }
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 inline bool tri_correctly_oriented ( const Cell & tri )
@@ -1868,7 +1850,7 @@ search_for_start :  // execution only reaches this point through 'goto'
 
 }  // end of progressive_construct
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 
 void progressive_construct ( Mesh & msh,
@@ -1888,10 +1870,10 @@ void progressive_construct ( Mesh & msh,
 	size_t counter = 1;
 	size_t max_counter = 0;  //  std::cin >> max_counter;
 	Cell A = start;
+	desired_len_at_point = desired_length (A);
+	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 	while ( true )
 	{	double d = Manifold::working.dist_sq ( A, stop );  // long range distance !
-		desired_len_at_point = desired_length ( A );
-		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 		double augm_length = desired_len_at_point * 1.618034,  // golden number
 		       augm_len_sq = augm_length * augm_length;
 		if ( d < augm_len_sq )
@@ -1900,20 +1882,15 @@ void progressive_construct ( Mesh & msh,
 			std::vector < double > e ( progress_nb_of_coords );
 			double prod = 0.;
 			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-			{	Function x = Manifold::working.coordinates()[i];
+			{	Function x = Manifold::working .coordinates() [i];
 				e[i] = x(stop) - x(A);  // recover tangent from hook !
 				prod += tangent[i] * e[i];                        }
 			if ( prod > 0. )
 			{	Cell last ( tag::segment, A.reverse(), stop );
-				last.add_to_mesh ( msh, tag::do_not_bother );
+				last .add_to_mesh ( msh, tag::do_not_bother );
 				// the meaning of tag::do_not_bother is explained
 				// at the end of paragraph 11.6 in the manual
-				// redistribute vertices
-				double n2 = Manifold::working.inner_prod ( A, e, e );
-				double norm = approx_sqrt ( n2, tag::around,
-			                              sq_desired_len_at_point, desired_len_at_point );
-				norm = approx_sqrt ( n2, tag::around, norm*norm, norm );
-				redistribute_vertices ( msh, start, stop, norm, 15 );
+				redistribute_vertices ( msh, start, stop, 4 );    // line 710
 				break;                                                                       }  }
 		Cell B ( tag::vertex );
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
@@ -1921,6 +1898,8 @@ void progressive_construct ( Mesh & msh,
 			x(B) = x(A) + tangent[i];                         }
 		if ( counter == max_counter ) return;
 		Manifold::working.project ( B );
+		desired_len_at_point = desired_length (B);
+		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 		{	Function x = Manifold::working.coordinates()[i];  // recover tangent from hook !
 			tangent[i] = x(B) - x(A);                         }
