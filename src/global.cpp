@@ -1,5 +1,5 @@
 
-// global.cpp 2022.02.08
+// global.cpp 2022.02.09
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1078,7 +1078,7 @@ Mesh Mesh::common_edge ( const tag::With &, const Mesh & m2 ) const
 	
 }  // end of  Mesh::common_edge
 
-//-------------------------------------------------------------------------------------------------//
+//---------------------------------------------------------------------------------------------//
 
 	
 void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
@@ -1352,7 +1352,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				// 'seg_north' points again towards east (right)
 			}  // end of movement  west -> east
 
-			// build the last cube of this row
+			// build the last (eastern) cube of this row
 
 			// recall that 'seg1' and 'seg2' are two horizontal parallel segments
 			// pointing towards north, 'seg1' lying one square below 'seg2'
@@ -1538,7 +1538,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			// 'seg_north' points again towards east (right)
 		}  // end of movement  west -> east
 
-		// build the last cube of this last row
+		// build the last (eastern) cube of this last row of the current layer
 
 		// recall that 'seg1' and 'seg2' are two horizontal parallel segments
 		// pointing towards north, 'seg1' lying one square below 'seg2'
@@ -1658,7 +1658,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	
 		}  // end of movement  west -> east
 
-		// build the last cube of this row (within the last layer)
+		// build the last (eastern) cube of this row (within the last layer)
 
 		// recall that 'seg1' and 'seg2' are two horizontal parallel segments
 		// pointing towards north, 'seg1' lying one square below 'seg2'
@@ -1841,6 +1841,58 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	// Function xyz = space .coordinates();
 	// Function x = xyz [0], y = xyz [1], z = xyz [2];
 
+	#ifndef NDEBUG
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = south .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = north .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = east .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = west .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = up .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = down .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} // just a block of code for hiding 'it'
+	#endif
+	
 	Mesh up_south = up .common_edge ( tag::with, south );  // orientation compatible with 'up'
 	Mesh up_north = up .common_edge ( tag::with, north );  // orientation compatible with 'up'
 	Mesh up_east = up .common_edge ( tag::with, east );  // orientation compatible with 'up'
@@ -2202,6 +2254,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				edge_ud_NE .winding() = spin1 + edge_WE_down_N .winding();
 				Cell edge_NS_up_E ( tag::segment, new_ver .reverse(), corner_up_SE );
 				edge_NS_up_E .winding() = spin2 - seg2 .winding() + edge_EW_up_S .winding();
+				//  seg2  can be seen as  edge_NS_up_W
 				Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
 				                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
 				Cell face_north ( tag::square, edge_ud_NE,            edge_WE_down_N .reverse(),
@@ -2225,16 +2278,6 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				spin1 += edge_WE_down_N .winding();
 				seg2 = edge_NS_up_E .reverse();
 				spin2 = 0;
-
-
-
-
-
-
-
-
-
-				
 	
 				// move 'seg_south' and 'seg_north' towards east (right)
 				sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
@@ -2245,6 +2288,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				// 'sq' is eastern (to the right) to 'seg_south'
 				seg_south  =
 					sq_bdry .cell_in_front_of ( seg_south .base() .reverse(), tag::surely_exists );
+				spin_south += seg_south .winding();
 				// 'seg_south' points again towards east (right)
 				sq_bdry = north .cell_in_front_of ( seg_north, tag::surely_exists ) .boundary();
 				// 'sq' is above 'seg_north'
@@ -2254,10 +2298,11 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 				// 'sq' is eastern (to the right) to 'seg_north'
 				seg_north  = sq_bdry .cell_behind
 					( seg_north .tip(), tag::surely_exists ) .reverse ( tag::surely_exists );
+				spin_north += seg_north .winding();
 				// 'seg_north' points again towards east (right)
 			}  // end of movement  west -> east
 
-			// build the last cube of this row
+			// build the last (eastern) cube of this row
 
 			// recall that 'seg1' and 'seg2' are two horizontal parallel segments
 			// pointing towards north, 'seg1' lying one square below 'seg2'
@@ -2289,6 +2334,11 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			Cell edge_NS_up_E =
 				face_east .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
 			Cell edge_WE_up_N ( tag::segment, corner_up_NW .reverse(), new_ver );
+			edge_WE_up_N .winding() =
+				edge_ud_NW .winding() + edge_WE_down_N .winding() + edge_du_NE .winding();
+			//  seg2  can be seen as  edge_NS_up_W
+			assert ( edge_WE_up_N .winding() ==
+							 - seg2 .winding() - edge_EW_up_S .winding() - edge_NS_up_E .winding() );
 			Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
 			                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
 			Cell face_north ( tag::square, edge_du_NE .reverse(), edge_WE_down_N .reverse(),
@@ -2310,17 +2360,21 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			// now 'seg_west' points down
 			sq_bdry = west .cell_in_front_of ( seg_west, tag::surely_exists ) .boundary();
 			seg_west  = sq_bdry .cell_behind ( seg_west .tip(), tag::surely_exists ) .reverse();
+			spin_west += seg_west .winding();
 			// 'seg_west' points again towards north
 			sq_bdry = east .cell_behind ( seg_east, tag::surely_exists ) .boundary();
 			seg_east  = sq_bdry .cell_in_front_of ( seg_east .tip(), tag::surely_exists );
 			// now 'seg_east' points up
 			sq_bdry = east .cell_in_front_of ( seg_east, tag::surely_exists ) .boundary();
 			seg_east  = sq_bdry .cell_in_front_of ( seg_east .base() .reverse(), tag::surely_exists );
+			spin_east += seg_east .winding();
 			// 'seg_east' points again towards north
-				
+			
 			// move 'seg_down_west' and 'seg_up_west' towards north
 			seg_up_west = up_west .cell_behind ( seg_up_west .tip(), tag::surely_exists ) .reverse();
+			spin_up_west += seg_up_west .winding();
 			seg_down_west = down_west .cell_in_front_of ( seg_down_west .tip(), tag::surely_exists );
+			spin_down_west += seg_down_west .winding();
 		}  // end of movement  south -> north
 
 		// build the last (northern) row of this layer
@@ -2329,7 +2383,8 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		Cell ver_east = seg_east .tip();
 		Cell seg_up    = seg_up_west;
 		Cell seg_down  = seg_down_west;
-		// the two segments above are horizontal and point towards north
+		// 'seg_up' 'seg_down' are horizontal and point towards north
+		
 		Cell seg_south = south_west .cell_behind  // points down
 			( seg_south_west .base() .reverse(), tag::surely_exists );
 		sq_bdry = south .cell_behind ( seg_south, tag::surely_exists ) .boundary();
@@ -2403,6 +2458,10 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			Cell new_ver = edge_WE_up_N .tip();  // well, not really new ...
 			Cell edge_ud_NE = face_north .boundary() .cell_in_front_of ( new_ver, tag::surely_exists );
 			Cell edge_NS_up_E ( tag::segment, new_ver .reverse(), corner_up_SE );
+			edge_NS_up_E .winding() =
+				edge_ud_NE .winding() - edge_NS_down_E .winding() + edge_du_SE .winding();
+			assert ( edge_NS_up_E .winding() ==
+							 - edge_WE_up_N .winding() - seg2 .winding() - edge_EW_up_S .winding() );
 			Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
 			                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
 			Cell face_east  ( tag::square, edge_NS_up_E,              edge_du_SE .reverse(),
@@ -2443,7 +2502,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			// 'seg_north' points again towards east (right)
 		}  // end of movement  west -> east
 
-		// build the last cube of this last row
+		// build the last (eastern) cube of this last row of the current layer
 
 		// recall that 'seg1' and 'seg2' are two horizontal parallel segments
 		// pointing towards north, 'seg1' lying one square below 'seg2'
@@ -2708,6 +2767,18 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 									face_south, face_north, face_east, face_west );
 	new_cube .add_to_mesh ( *this );
 
+	#ifndef NDEBUG
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = this->iterator ( tag::over_cells_of_dim, 2 );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell face = *it;
+		Manifold::Action s;
+		Mesh::Iterator itt = face .boundary() .iterator ( tag::over_cells, tag::of_max_dim );
+		for ( itt .reset(); itt .in_range(); itt++ )  s += (*itt) .winding();
+		assert ( s == 0 );                                                                    }
+	} // just a block of code for hiding 'it'
+	#endif
+	
 } // end of Mesh::build with tag::hexahedron and tag::winding
 
 //----------------------------------------------------------------------------------//
