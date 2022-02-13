@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.01.26
+// mesh.cpp 2022.02.11
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -5057,30 +5057,24 @@ Mesh Mesh::convert_to
 		{	stop = A;  break;  }
 		nb_of_segs ++;
 		Cell B = seg .tip();
-		if ( A == B )  // closed loop
-		{	closed_loop = true;  break;  }
+		if ( B == start )  {  closed_loop = true;  break;  }
 		A = B;                                                       }
 
+	if ( not closed_loop )
+	{	assert ( stop .exists() );
+		while ( true )
+		{	Cell seg = this->cell_behind ( start, tag::may_not_exist );
+			if ( not seg .exists() )  break;  // this is the true "start"
+			nb_of_segs ++;
+			start = seg .base() .reverse();                              }  }
+
+	assert ( nb_of_segs == this->number_of ( tag::segments ) );
+	
 	if ( closed_loop )
 	{	assert ( not stop .exists() );
 		assert ( nb_of_segs == this->number_of ( tag::segments ) );
-		Mesh::Connected::OneDim * res_core =
-		    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
-		                                  tag::one_dummy_wrapper               );
-		Mesh result ( tag::whose_core_is, res_core,
-		    tag::freshly_created, tag::is_positive );
-		res_core->first_ver = A;
-		res_core->last_ver = A;
-		return result;                                                             }
-	assert ( stop .exists() );
-
-	while ( true )
-	{	Cell seg = this->cell_behind ( start, tag::may_not_exist );
-		if ( not seg .exists() )  break;  // this is the true "start"
-		nb_of_segs ++;
-		start = seg .base() .reverse();                             }
-	assert ( nb_of_segs == this->number_of ( tag::segments ) );
-	
+		stop = start;                                               }
+		
 	Mesh::Connected::OneDim * res_core =
 	    new Mesh::Connected::OneDim ( tag::with, nb_of_segs, tag::segments,
 	                                  tag::one_dummy_wrapper               );
@@ -5092,7 +5086,7 @@ Mesh Mesh::convert_to
 
 	res_core->first_ver = start .reverse();
 	res_core->last_ver = stop;
-	return result;                                                                        }
+	return result;                                                                         }
 
 //-----------------------------------------------------------------------------------------//
 

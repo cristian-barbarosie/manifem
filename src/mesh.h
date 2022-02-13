@@ -1320,8 +1320,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
 	// and number of segments
 
-	Mesh convert_to ( const tag::Connected &, const tag::OneDim &, const tag::SurelyExists & ) const;
-	Mesh convert_to ( const tag::Connected &, const tag::OneDim &, const tag::MayNotExist & ) const;
+	Mesh convert_to
+	( const tag::Connected &, const tag::OneDim &, const tag::SurelyExists & ) const;
+	Mesh convert_to
+	( const tag::Connected &, const tag::OneDim &, const tag::MayNotExist & ) const;
 
 	// we are still in class Mesh
 	
