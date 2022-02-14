@@ -1185,6 +1185,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	
 	Mesh unfold ( const tag::OverRegion &, const tag::Util::InequalitySet & constraints ) const;
 
+	Mesh unfold ( const std::vector < tag::Util::Action > & ) const;
+
 	Mesh unfold ( const std::vector < tag::Util::Action > &,
 	              const tag::OverRegion &, const tag::Util::InequalitySet & constraints ) const;
 

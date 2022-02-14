@@ -120,7 +120,8 @@ int main ()
 	                          cube_CBFG, cube_DCGH, cube_ADHE            } );
 
 	std::cout << "built 3D torus with round hole, now unfolding" << std::endl;
-	Mesh torus_unfolded = torus .unfold ( {0, gx, 2*gx, -gx, -2*gx }, tag::over_region, y > -10. );
+	Mesh torus_unfolded = torus .unfold
+		( {0, gx, 2*gx, -gx, -2*gx }, tag::over_region, -5. < x < 3., 4.5 * z < -x + 0.2 );
 
 	std::cout << "built unfolded mesh with " << torus_unfolded .number_of ( tag::cells_of_max_dim ) << " cubes, now exporting" << std::endl;
 	torus_unfolded .export_to_file ( tag::msh, "torus_of_cubes.msh");

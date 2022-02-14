@@ -6129,11 +6129,8 @@ void Mesh::draw_ps_3d ( std::string file_name ) const
 namespace {  // anonymous namespace, mimics static linkage
 	
 inline Mesh unfold_common ( const Mesh & that,
-   const std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > & built_ver,
-                     const tag::OverRegion &, const Function::Inequality::Set & constraints  )
+   const std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > & built_ver )
 
-// 'constraints' not used
-	
 {	// build new segments joinig vertices built previously (by the calling code)
 	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_seg;
 	{ // just a block of code for hiding 'it'
@@ -6439,7 +6436,7 @@ inline Mesh unfold_local ( const Mesh & that, const tag::OneGenerator &,
 	// the 'mapping' may contain vertices not actually used
 	// (some segments may have never been used) but we leave it like this
 
-	Mesh result = unfold_common ( that, built_ver, tag::over_region, constraints );
+	Mesh result = unfold_common ( that, built_ver );
 
 	mani_Eu .set_as_working_manifold();
 
@@ -6534,7 +6531,7 @@ inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
 	// the 'mapping' may contain vertices not actually used
 	// (some segments may have never been used) but we leave it like this
 
-	Mesh result = unfold_common ( that, built_ver, tag::over_region, constraints );
+	Mesh result = unfold_common ( that, built_ver );
 
 	mani_Eu .set_as_working_manifold();
 
@@ -6616,7 +6613,56 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 				itbv .first->second .push_back
 					( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                        }  }  }
 	
-	Mesh result = unfold_common ( that, built_ver, tag::over_region, constraints );
+	Mesh result = unfold_common ( that, built_ver );
+
+	mani_Eu .set_as_working_manifold();
+
+	return result;
+
+} // end of unfold_local
+
+
+inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Action > & aa,
+               const tag::ReturnMapBetween &, const tag::CellsOfDim &, size_t dim,
+               std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
+               bool fill_mapping                                                           )
+	
+// if last argument is true,
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'that' mesh together with a winding (action)
+	
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space.core );
+	Function coords_q = space .coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu .coordinates();
+
+	Cell shadow ( tag::vertex );
+	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_ver;
+	assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+	Mesh::Iterator it = that .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell ver = *it;
+		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::iterator, bool > itbv =
+		built_ver .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+		  ( ver, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+		assert ( itbv .second );
+		for ( std::vector < Manifold::Action > ::const_iterator
+						it_aa = aa .begin(); it_aa != aa .end(); it_aa ++ )
+		{	Manifold::Action a = *it_aa;
+			std::vector < double > coords_ver = coords_q ( ver, tag::winding, a );
+			coords_Eu ( shadow ) = coords_ver;
+			Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
+			if ( fill_mapping )
+			mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
+												( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+			itbv .first->second .push_back
+				( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                        }  }
+	
+	Mesh result = unfold_common ( that, built_ver );
 
 	mani_Eu .set_as_working_manifold();
 
@@ -6626,7 +6672,7 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 
 } // end of anonymous namespace
 
-//----------------------------------------------------------------------------------//
+//---------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const tag::OverRegion &, const Function::Inequality::Set & constraints,
@@ -6648,6 +6694,8 @@ const
 	
 } // end of Mesh::unfold
 
+//---------------------------------------------------------------------------------------------//
+
 
 Mesh Mesh::unfold ( const tag::OverRegion &, const Function::Inequality::Set & constraints )
 const
@@ -6662,6 +6710,8 @@ const
 	// last argument false means do not bother with 'mapping'
 	
 } // end of Mesh::unfold
+
+//---------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
@@ -6684,6 +6734,8 @@ const
 	
 } // end of Mesh::unfold
 
+//---------------------------------------------------------------------------------------------//
+
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
 	                  const tag::OverRegion &, const Function::Inequality::Set & constraints )
@@ -6695,6 +6747,22 @@ const
 {	std::map < Cell, std::pair < Cell, Manifold::Action > > mapping;
 
 	return unfold_local ( *this, aa, tag::over_region, constraints,
+	                      tag::return_map_between, tag::cells_of_dim, 0, mapping, false  );
+	// last argument false means do not bother with 'mapping'
+	
+} // end of Mesh::unfold
+
+//----------------------------------------------------------------------------------//
+
+
+Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa ) const
+	
+// take a mesh and unfold it over a given region of the plane
+// so we can export the resulting mesh in msh format
+
+{	std::map < Cell, std::pair < Cell, Manifold::Action > > mapping;
+
+	return unfold_local ( *this, aa,
 	                      tag::return_map_between, tag::cells_of_dim, 0, mapping, false  );
 	// last argument false means do not bother with 'mapping'
 	
