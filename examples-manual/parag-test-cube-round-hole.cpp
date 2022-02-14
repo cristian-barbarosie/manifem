@@ -102,22 +102,16 @@ int main ()
 	Mesh GHHG ( tag::quadrangle, GH, HHH, GGHH .reverse(), GGG .reverse(), tag::winding );
 	Mesh HEEH ( tag::quadrangle, HE, EEE, HHEE .reverse(), HHH .reverse(), tag::winding );
 
-	std::cout << "main line 105" << std::endl;
 	Mesh cube_ABCD ( tag::cube, ABCD, ABCD_s .reverse(), ABBA .reverse(), CDDC .reverse(),
 	                            DAAD .reverse(), BCCB .reverse(), tag::winding            );
-	std::cout << "main line 108" << std::endl;
 	Mesh cube_EFGH ( tag::cube, EFGH, EFGH_s .reverse(), EFFE .reverse(), GHHG .reverse(),
 	                            FGGF .reverse(), HEEH .reverse(), tag::winding            );
-	std::cout << "main line 111" << std::endl;
 	Mesh cube_BAEF ( tag::cube, BAEF, BAEF_s .reverse(), ABBA, EFFE .reverse(),
 	                            AEEA .reverse(), BFFB, tag::winding            );
-	std::cout << "main line 114" << std::endl;
 	Mesh cube_CBFG ( tag::cube, CBFG, CBFG_s .reverse(), BCCB, FGGF .reverse(),
 	                            BFFB .reverse(), CGGC, tag::winding            );
-	std::cout << "main line 118" << std::endl;
 	Mesh cube_DCGH ( tag::cube, DCGH, DCGH_s .reverse(), CDDC, GHHG .reverse(),
 	                            CGGC .reverse(), DHHD, tag::winding            );
-	std::cout << "main line 121" << std::endl;
 	Mesh cube_ADHE ( tag::cube, ADHE, ADHE_s .reverse(), DAAD, HEEH .reverse(),
 	                            DHHD .reverse(), AEEA, tag::winding            );
 
@@ -125,8 +119,8 @@ int main ()
 	Mesh torus ( tag::join, { cube_ABCD, cube_EFGH .reverse(), cube_BAEF,
 	                          cube_CBFG, cube_DCGH, cube_ADHE            } );
 
-	// Mesh torus_unfolded = torus .unfold ();
-	// torus_unfolded .export_to_file ( tag::msh, "torus_of_cubes.msh");
+	Mesh torus_unfolded = torus .unfold ( {0, gx, -gx }, tag::over_region, y > -10. );
+	torus_unfolded .export_to_file ( tag::msh, "torus_of_cubes.msh");
 	
 	// std::cout << "produced file cube.msh" << std::endl;
 
