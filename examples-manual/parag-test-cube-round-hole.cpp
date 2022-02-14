@@ -115,14 +115,17 @@ int main ()
 	Mesh cube_ADHE ( tag::cube, ADHE, ADHE_s .reverse(), DAAD, HEEH .reverse(),
 	                            DHHD .reverse(), AEEA, tag::winding            );
 
-	std::cout << "main line 124" << std::endl;
+	std::cout << "built six 3D meshes, now joining" << std::endl;
 	Mesh torus ( tag::join, { cube_ABCD, cube_EFGH .reverse(), cube_BAEF,
 	                          cube_CBFG, cube_DCGH, cube_ADHE            } );
 
-	Mesh torus_unfolded = torus .unfold ( {0, gx, -gx }, tag::over_region, y > -10. );
+	std::cout << "built 3D torus with round hole, now unfolding" << std::endl;
+	Mesh torus_unfolded = torus .unfold ( {0, gx, 2*gx, -gx, -2*gx }, tag::over_region, y > -10. );
+
+	std::cout << "built unfolded mesh with " << torus_unfolded .number_of ( tag::cells_of_max_dim ) << " cubes, now exporting" << std::endl;
 	torus_unfolded .export_to_file ( tag::msh, "torus_of_cubes.msh");
 	
-	// std::cout << "produced file cube.msh" << std::endl;
+	std::cout << "produced file torus_of_cubes.msh" << std::endl;
 
 }  // end of main
 

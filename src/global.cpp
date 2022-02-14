@@ -1,5 +1,5 @@
 
-// global.cpp 2022.02.13
+// global.cpp 2022.02.14
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -6172,7 +6172,7 @@ inline Mesh unfold_common ( const Mesh & that,
 		std::vector < std::pair < Manifold::Action, Cell > > > > built_faces;
 	// similar to built_ver, but keep also a "base" vertex
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = that .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = that .iterator ( tag::over_cells, tag::of_dim, 2 );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell cll = *it;
 		Mesh::Iterator it_seg =
@@ -6257,7 +6257,7 @@ inline Mesh unfold_common ( const Mesh & that,
 	}  // end of loop over cells
 	} // just a block of code for hiding 'it'
 
-	if ( true )  // dim == 2
+	if ( that .dim() == 2 )
 	{	Mesh result ( tag::fuzzy, tag::of_dim, 2 );
 		Mesh::Iterator it = that .iterator ( tag::over_cells_of_max_dim );
 		for ( it .reset(); it .in_range(); it++ )
@@ -6271,11 +6271,97 @@ inline Mesh unfold_common ( const Mesh & that,
 			for ( std::vector < std::pair < Manifold::Action, Cell > > ::const_iterator
 			      itA = vec .begin(); itA != vec .end(); itA++                         )
 			{ Cell new_cll = itA->second;;
-				new_cll .add_to_mesh ( result );  }                                               }
-		return result;                                                                           }
+				new_cll .add_to_mesh ( result );  }                                              }
+		return result;                                                                          }
 
-	assert ( false );
+	assert ( that .dim() == 3 );
 	Mesh result ( tag::fuzzy, tag::of_dim, 3 );
+
+	Mesh::Iterator it = that .iterator ( tag::over_cells_of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell cll = *it;
+		std::map < Cell, Manifold::Action > spin;
+
+		Mesh::Iterator it_fp = cll .boundary() .iterator
+			( tag::over_cells, tag::of_max_dim, tag::force_positive );
+		it_fp .reset();  assert ( it_fp .in_range() );
+		Cell base_face = *it_fp;
+		std::map < Cell, std::pair < Cell,
+			std::vector < std::pair < Manifold::Action, Cell > > > > ::iterator
+			it_ff = built_faces .find ( base_face );
+		if ( it_ff == built_faces .end() ) continue;
+		Cell base_ver = it_ff->second .first;
+		assert ( base_ver .is_positive() );
+		assert ( base_ver .belongs_to ( cll .boundary() ) );
+		spin [ base_ver ] = 0;
+		std::vector < std::pair < Manifold::Action, Cell > > &
+			vec = it_ff->second .second;
+			
+		while ( true )
+		{	bool all_covered = true;
+			Mesh::Iterator it_s = cll .boundary() .iterator ( tag::over_segments );
+			for ( it_s .reset(); it_s .in_range(); it_s ++ )
+			{	Cell seg = *it_s;
+				Cell A = seg .base() .reverse();
+				Cell B = seg .tip();
+				std::map < Cell, Manifold::Action > ::iterator it_A = spin .find (A);
+				std::map < Cell, Manifold::Action > ::iterator it_B = spin .find (B);
+				if ( it_A != spin .end() )
+				{	if ( it_B == spin .end() ) spin [B] = it_A->second + seg .winding();
+					else  assert ( spin [B] == it_A->second  + seg .winding() );
+					continue;                                                             }
+				if ( it_B != spin .end() )
+				{	if ( it_A == spin .end() ) spin [A] = it_B->second - seg .winding();
+					else  assert ( spin [A] == it_B->second  - seg .winding() );
+					continue;                                                             }
+				all_covered = false;                                                       }
+			if ( all_covered ) break;                                                      }
+
+		std::vector < std::pair < Manifold::Action, Cell > > ::iterator it_vec;
+		for ( it_vec = vec .begin(); it_vec != vec .end(); it_vec ++ )
+		{	Manifold::Action s = it_vec->first;
+			Mesh::Iterator it_f = cll .boundary() .iterator	( tag::over_cells, tag::of_max_dim );
+			Mesh bd ( tag::fuzzy, tag::of_dim, 2 );
+			bool all_covered = true;
+			for ( it_f .reset(); it_f .in_range(); it_f ++ )
+			{	Cell face = * it_f;
+				if ( face .is_positive() )
+				{	it_ff = built_faces .find ( face );
+					if ( it_ff == built_faces .end() )
+					{	all_covered = false;  break;  }
+					base_ver = it_ff->second .first;
+					std::vector < std::pair < Manifold::Action, Cell > > &
+						vvec = it_ff->second .second;
+					std::vector < std::pair < Manifold::Action, Cell > > ::iterator it_vvec;
+					bool not_found = true;
+					for ( it_vvec = vvec .begin(); it_vvec != vvec .end(); it_vvec ++ )
+					if ( it_vvec->first == s + spin [ base_ver ] )
+					{	not_found = false;
+						it_vvec->second .add_to_mesh ( bd );
+						break;                               }
+					if ( not_found )  {  all_covered = false;  break;  }                        }
+				else  // face is negative
+				{	it_ff = built_faces .find ( face .reverse() );
+					if ( it_ff == built_faces .end() )
+					{	all_covered = false;  break;  }
+					base_ver = it_ff->second .first;
+					std::vector < std::pair < Manifold::Action, Cell > > &
+						vvec = it_ff->second .second;
+					std::vector < std::pair < Manifold::Action, Cell > > ::iterator it_vvec;
+					bool not_found = true;
+					for ( it_vvec = vvec .begin(); it_vvec != vvec .end(); it_vvec ++ )
+					if ( it_vvec->first == s + spin [ base_ver ] )
+					{	not_found = false;
+						it_vvec->second .reverse() .add_to_mesh ( bd );
+						break;                                          }
+					if ( not_found )  {  all_covered = false;  break;  }                         }  }
+			if ( all_covered )
+			{	Cell new_cll ( tag::whose_boundary_is, bd );
+				new_cll .add_to_mesh ( result );             }
+		} // end of loop over it_vec
+				
+	}  //  end of loop over_cells_of_max_dim of 'that'
+
 	return result;
 			
 } // end of unfold_common
@@ -6505,7 +6591,6 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 	Function coords_q = space .coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
 	Function coords_Eu = mani_Eu .coordinates();
-	std::cout << "global.cpp line 6479" << std::endl;
 
 	Cell shadow ( tag::vertex );
 	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_ver;
