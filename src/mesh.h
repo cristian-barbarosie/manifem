@@ -1,9 +1,9 @@
 
-// mesh.h  2022.02.08
+// mesh.h  2022.02.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 - 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -31,6 +31,7 @@
 #include <deque>
 #include <map>
 #include <memory>
+#include "math.h"
 #include "assert.h"
 
 namespace maniFEM {
@@ -163,6 +164,14 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class CellCore;  //  aka  class Cell::Core
 		class MeshCore;  //  aka  class Mesh::Core
 		class CellIterator;  // aka  class Mesh::Iterator
+		static const double one_third, minus_one_third, one_sixth, minus_one_sixth,
+		                    two_thirds, minus_two_thirds, sqrt_2, sqrt_half,
+		                    sqrt_3, sqrt_third, sqrt_two_thirds, sqrt_three_quarters;
+		static const std::vector < std::vector < double > >
+			ortho_basis_in_R2, four_directions_in_R2, eight_directions_in_R2,
+			ortho_basis_in_R3, six_directions_in_R3, twentysix_directions_in_R3;
+		static const std::vector < std::vector < short int > >
+			four_int_directions_in_R2, six_int_directions_in_R3;
 		class Action;  //  aka class Function::Action, aka class Manfold::Action
 		// we define it in function.h because we need it for Function::MultiValued
 		// but we prefer the user to see it as an attribute of class Manifold
@@ -184,8 +193,6 @@ namespace tag {  // see paragraph 11.3 in the manual
 		#endif
 		static bool return_true ( );
 		static bool return_false ( );
-		static const double one_third, minus_one_third, one_sixth, minus_one_sixth,
-		                    two_thirds, minus_two_thirds;
 	};
 	struct MayBeNull { };  static const MayBeNull may_be_null;
 	struct SurelyNotNull { };  static const SurelyNotNull surely_not_null;

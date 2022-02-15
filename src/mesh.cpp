@@ -1,9 +1,9 @@
 
-// mesh.cpp 2022.02.11
+// mesh.cpp 2022.02.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 - 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -61,7 +61,47 @@ const double tag::Util::one_third = 1. / 3.,
              tag::Util::one_sixth = 1. / 6.,
              tag::Util::minus_one_sixth = - tag::Util::one_sixth,
              tag::Util::two_thirds = 2. / 3.,
-             tag::Util::minus_two_thirds = - tag::Util::two_thirds;
+             tag::Util::minus_two_thirds = - tag::Util::two_thirds,
+             tag::Util::sqrt_2 = std::sqrt (2.),
+             tag::Util::sqrt_half = 1./ tag::Util::sqrt_2,
+             tag::Util::sqrt_3 = std::sqrt (3.),
+             tag::Util::sqrt_third = 1./ tag::Util::sqrt_3,
+             tag::Util::sqrt_two_thirds = std::sqrt ( tag::Util::two_thirds ),
+             tag::Util::sqrt_three_quarters = std::sqrt (0.75);
+const std::vector < std::vector < double > >
+	tag::Util::ortho_basis_in_R2 { { 1., 0. }, { 0., 1. } },
+	tag::Util::ortho_basis_in_R3 { { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. } },
+	tag::Util::four_directions_in_R2 { { 1., 0. }, { 0., 1. }, { -1., 0. }, { 0., -1. } },
+	tag::Util::six_directions_in_R3 { { 1., 0., 0. },  { 0., 1., 0. }, { -1., 0., 0. },
+	                                  { 0., -1., 0. }, { 0., 0., 1. }, { 0, 0., -1. }  },
+	tag::Util::eight_directions_in_R2 { { 1., 0. },  {  tag::Util::sqrt_half,  tag::Util::sqrt_half },
+	                                    { 0., 1. },  { -tag::Util::sqrt_half,  tag::Util::sqrt_half },
+	                                    { -1., 0. }, { -tag::Util::sqrt_half, -tag::Util::sqrt_half },
+	                                    { 0., -1. }, {  tag::Util::sqrt_half, -tag::Util::sqrt_half } },
+	tag::Util::twentysix_directions_in_R3
+				{ { 1., 0., 0. }, { -1., 0., 0. }, { 0., 1., 0. }, 
+				  { 0., -1., 0. }, { 0., 0., 1. }, { 0., 0., -1. },
+				  { tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
+			  	{ tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
+				  { -tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
+				  { -tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
+				  { tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
+				  { tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
+			  	{ -tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
+				  { -tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
+				  { 0., tag::Util::sqrt_half, tag::Util::sqrt_half },
+				  { 0., tag::Util::sqrt_half, -tag::Util::sqrt_half },
+				  { 0., -tag::Util::sqrt_half, tag::Util::sqrt_half },
+			  	{ 0., -tag::Util::sqrt_half, -tag::Util::sqrt_half },
+					{  tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
+					{  tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
+					{  tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
+					{  tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third },
+					{ -tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
+					{ -tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
+					{ -tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
+					{ -tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third } };
+
 
 // int Cell::counter { 0 };
 

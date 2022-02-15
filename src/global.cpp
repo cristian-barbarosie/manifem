@@ -1,9 +1,9 @@
 
-// global.cpp 2022.02.14
+// global.cpp 2022.02.15
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 - 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -5760,8 +5760,8 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
-	std::vector < std::vector < short int > > directions
-		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+	const std::vector < std::vector < short int > > & directions = tag::Util::four_int_directions_in_R2;
+	//   { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } }
 	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
 	// and perhaps in other places
 
