@@ -72,7 +72,7 @@ static inline std::string trim_copy(std::string s) {
     return s;
 }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
@@ -105,7 +105,7 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 
 }  // end of Mesh::build with tag::segment
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
@@ -165,7 +165,7 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 
 }  // end of Mesh::build with tag::segment and tag::winding
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, const Mesh & CA )
@@ -273,7 +273,7 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 		
 } // end of Mesh::build with tag::triangle
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 namespace {  // anonymous namespace, mimics static linkage
@@ -459,7 +459,7 @@ void build_common                                                   // line 281
 	
 } // end of anonymous namespace
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Cell Mesh::common_vertex ( const tag::With &, const Mesh & seg2, const tag::ExactlyOne & ) const
@@ -479,7 +479,7 @@ Cell Mesh::common_vertex ( const tag::With &, const Mesh & seg2, const tag::Exac
 	Cell V = vec [0];
 	return V;                                                  }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Cell Mesh::common_vertex ( const tag::With &, const Mesh & seg2 ) const
@@ -512,7 +512,7 @@ Cell Mesh::common_vertex ( const tag::With &, const Mesh & seg2 ) const
 	// seg2 begins in V
 	return V;                                                                      }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Triangle &,
@@ -682,7 +682,7 @@ void Mesh::build ( const tag::Triangle &,
 
 } // end of Mesh::build with tag::triangle and tag::winding and tag::singular
 
-//----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
@@ -832,7 +832,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 } // end of Mesh::build with tag::quadrangle
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
@@ -1064,7 +1064,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 } // end of Mesh::build with tag::quadrangle and tag::winding
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 Mesh Mesh::common_edge ( const tag::With &, const Mesh & m2 ) const
 
@@ -1132,7 +1132,7 @@ Mesh Mesh::common_edge ( const tag::With &, const Mesh & m2 ) const
 	
 }  // end of  Mesh::common_edge
 
-//---------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
@@ -1795,7 +1795,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 
 } // end of Mesh::build with tag::hexahedron
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
@@ -2734,7 +2734,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	
 } // end of Mesh::build with tag::hexahedron and tag::winding
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::export_to_file
@@ -3049,7 +3049,7 @@ void Mesh::export_to_file ( const tag::Msh &, std::string f ) const
 
 } // end of Mesh::export_to_file
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 namespace {  // anonymous namespace, mimics static linkage
@@ -3129,7 +3129,7 @@ inline int import_msh_2  // hidden in anonymous namespace
 	
 }  // end of  import_msh_2
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 inline int import_msh_4_one_mesh  // hidden in anonymous namespace
@@ -3238,7 +3238,7 @@ inline int import_msh_4_one_mesh  // hidden in anonymous namespace
 	
 }  // end of  import_msh_4_one_mesh
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 inline void import_msh_4_composed  // hidden in anonymous namespace
@@ -3340,7 +3340,7 @@ inline void import_msh_4_composed  // hidden in anonymous namespace
 
 }  // end of  import_msh_4_composed
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
@@ -3546,7 +3546,7 @@ inline Cell retrieve_or_build_and_register  // hidden in anonymous namespace
 		
 }	 // end of retrieve_or_build_and_register
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 inline void import_msh_common  // hidden in anonymous namespace
@@ -3587,7 +3587,7 @@ inline void import_msh_common  // hidden in anonymous namespace
 
 }  // end of  import_msh_common
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 inline void import_msh ( Mesh * that, const std::string filename )
@@ -3667,7 +3667,7 @@ inline void import_msh ( Mesh * that, const std::string filename )
 
 }  // end of  import_msh
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 inline std::map < std::pair < int, int >, Mesh > import_msh_common  // hidden in anonymous namespace
@@ -3720,7 +3720,7 @@ inline std::map < std::pair < int, int >, Mesh > import_msh_common  // hidden in
 
 } // end of anonymous namespace
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 std::map < std::pair < int, int >, Mesh > import_msh ( const std::string filename )
@@ -3800,7 +3800,7 @@ std::map < std::pair < int, int >, Mesh > import_msh ( const std::string filenam
 
 }  // end of  import_msh
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 
@@ -3808,7 +3808,7 @@ Mesh::Mesh ( const tag::Import &, const tag::Msh &, const std::string filename )
 :	Mesh ( tag::non_existent )
 {	import_msh ( this, filename );  }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 namespace { // anonymous namespace, mimics static linkage
@@ -3866,7 +3866,7 @@ Mesh fold_common ( const Mesh & msh, const std::map < Cell, Cell > & corresp_seg
 
 }  // end of  fold_common
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_common_no_sides   // hidden in anonymous namespace
@@ -3927,7 +3927,7 @@ Mesh fold_common_no_sides   // hidden in anonymous namespace
 
 }  // end of  fold_common_no_sides
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
@@ -3967,7 +3967,7 @@ Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
 
 	return fold_common_no_sides ( *that, corresp_ver, dim, keep_map, m );     }
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_no_sides ( Mesh * that, const tag::UseExistingVertices &,
@@ -4004,7 +4004,7 @@ Mesh fold_no_sides ( Mesh * that, const tag::UseExistingVertices &,
 
 	return fold_common_no_sides ( *that, corresp_ver, dim, keep_map, m );               }
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_common_two_sides   // hidden in anonymous namespace
@@ -4068,7 +4068,7 @@ Mesh fold_common_two_sides   // hidden in anonymous namespace
 
 }  // end of  fold_common_two_sides
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh fold_two_sides    // hidden in anonymous namespace    // line 1283
@@ -4158,7 +4158,7 @@ Mesh fold_two_sides    // hidden in anonymous namespace    // line 1283
 }  // end of fold_two_sides with tag::build_new_vertices
 
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_two_sides    // hidden in anonymous namespace    // line 1373
@@ -4243,7 +4243,7 @@ Mesh fold_two_sides    // hidden in anonymous namespace    // line 1373
 }  // end of fold_two_sides with tag::use_existing_vertices
 
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_common_four_sides   // hidden in anonymous namespace
@@ -4329,7 +4329,7 @@ Mesh fold_common_four_sides   // hidden in anonymous namespace
 
 }  // end of  fold_common_four_sides
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh fold_four_sides   // hidden in anonymous namespace    // line 1544
@@ -4479,7 +4479,7 @@ Mesh fold_four_sides   // hidden in anonymous namespace    // line 1544
 
 }  // end of fold_four_sides with tag::build_new_vertices
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_four_sides    // hidden in anonymous namespace      // line 1694
@@ -4617,7 +4617,7 @@ Mesh fold_four_sides    // hidden in anonymous namespace      // line 1694
 
 }  // end of fold_four_sides with tag::use_existing_vertices
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_common_six_sides    // hidden in anonymous namespace
@@ -4727,7 +4727,7 @@ Mesh fold_common_six_sides    // hidden in anonymous namespace
 
 }  // end of  fold_common_six_sides
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_six_sides       // hidden in anonymous namespace   // line 1942
@@ -4999,7 +4999,7 @@ Mesh fold_six_sides       // hidden in anonymous namespace   // line 1942
 
 }  // end of fold_six_sides with tag::build_new_vertices
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
@@ -5255,7 +5255,7 @@ Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
 
 }  // anonymous namespace
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 // take a mesh and fold it around the current working manifold,
@@ -5290,7 +5290,7 @@ Mesh Mesh::fold ( const tag::UseExistingVertices & )
 	return fold_no_sides ( this, tag::use_existing_vertices, tag::return_map_between,
 	                       tag::cells_of_dim, 2, false, m                            );  }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 // take a mesh whose external boundary has two parallel sides and identify these two sides
@@ -5340,7 +5340,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 	                        tag::use_existing_vertices, tag::return_map_between,
 	                        tag::cells_of_dim, 2, false, m                      );  }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 // take a mesh having as external boundary a parallelogram
@@ -5402,7 +5402,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 	                         tag::use_existing_vertices, tag::return_map_between,
 	                         tag::cells_of_dim, 2, false, m                      );  }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 // take a mesh having as external boundary a hexagon
@@ -5476,7 +5476,7 @@ Mesh Mesh::fold ( const tag::Identify &, const Mesh & side_1,
 	                         tag::use_existing_vertices, tag::return_map_between,
 	                         tag::cells_of_dim, 2, false, m                      );  }
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 // gs -q -dNOPAUSE -dBATCH -sDEVICE=png16 -sOUTPUTFILE=out.png in.ps
@@ -5559,7 +5559,7 @@ void Mesh::draw_ps ( std::string file_name ) const
 
 } // end of  Mesh::draw_ps
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &,
@@ -5586,7 +5586,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &,
 
 } // end of  Mesh::draw_ps with tag::unfold
 	
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneGenerator &,
@@ -5724,7 +5724,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::OneG
 
 } // end of  Mesh::draw_ps with tag::unfold and tag::one_generator
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoGenerators &,
@@ -5760,10 +5760,8 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
-	const std::vector < std::vector < short int > > & directions = tag::Util::four_int_directions_in_R2;
+	const std::vector < std::vector < short int > > & directions = tag::Util::pm_ortho_basis_int [2];
 	//   { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } }
-	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
-	// and perhaps in other places
 
 	Mesh::Iterator it = this->iterator ( tag::over_segments );
 	for ( it .reset(); it .in_range(); it++ )
@@ -5888,7 +5886,7 @@ void Mesh::draw_ps ( std::string file_name, const tag::Unfold &, const tag::TwoG
 
 } // end of  Mesh::draw_ps with tag::unfold and tag::two_generators
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Mesh::draw_ps ( std::string file_name,
@@ -6017,7 +6015,7 @@ void Mesh::draw_ps ( std::string file_name,
 
 } // end of  Mesh::draw_ps with tag::unfold and tag::two_generators
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 //  method below relies on some postscript macros for (very) rudimentary 3d drawings
@@ -6123,7 +6121,7 @@ void Mesh::draw_ps_3d ( std::string file_name ) const
 
 } // end of  Mesh::draw_ps_3d
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 namespace {  // anonymous namespace, mimics static linkage
@@ -6363,32 +6361,34 @@ inline Mesh unfold_common ( const Mesh & that,
 			
 } // end of unfold_common
 
+//------------------------------------------------------------------------------------------------------//
 
+	
 inline Mesh unfold_local ( const Mesh & that, const tag::OneGenerator &,
                const tag::OverRegion &, const Function::Inequality::Set & constraints,
                const tag::ReturnMapBetween &, const tag::CellsOfDim &,
                size_t dim, std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
                bool fill_mapping                                                             )
 
+// this function unfolds the vertices
+	
 // if last argument is true,
 // besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
 // the corresponding vertex in 'that' mesh together with a winding (action)
 	
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
+	assert ( space .exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	Function coords_q = space.coordinates();
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
+	Function coords_Eu = mani_Eu .coordinates();
 
 	// here, the action group has two generators
-	assert ( manif_q->actions.size() == 1 );
-	assert ( manif_q->winding_nbs.size() == 1 );
+	assert ( manif_q->actions .size() == 1 );
+	assert ( manif_q->winding_nbs .size() == 1 );
 	Manifold::Action g = manif_q->actions[0];
 
-	// we begin by unfolding the vertices
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
 
@@ -6399,9 +6399,8 @@ inline Mesh unfold_local ( const Mesh & that, const tag::OneGenerator &,
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell ver = *it;
 		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
-			::iterator, bool > itbv =
-		built_ver .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
-		  ( ver, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+			::iterator, bool > itbv = built_ver .insert
+			( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > > ( ver, { } ) );
 		assert ( itbv .second );
 		short int iii = 0;  // is 0 at the first passage, will be 1 at the second passage
 		for ( short int dir = -1; dir < 2; dir += 2 )  // dir will be -1 and 1
@@ -6444,37 +6443,37 @@ inline Mesh unfold_local ( const Mesh & that, const tag::OneGenerator &,
 	
 } // end of  unfold_local  with tag::one_generator
 
+//------------------------------------------------------------------------------------------------------//
 
+	
 inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
                const tag::OverRegion &, const Function::Inequality::Set & constraints,
                const tag::ReturnMapBetween &, const tag::CellsOfDim &, size_t dim,
                std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
                bool fill_mapping                                                      )
 	
+// this function unfolds the vertices
+	
 // if last argument is true,
 // besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
 // the corresponding vertex in 'that' mesh together with a winding (action)
 	
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
+	assert ( space .exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * manif_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	Function coords_q = space.coordinates();
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
 	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
-	assert ( coords_Eu.nb_of_components() == 2 );
+	Function coords_Eu = mani_Eu .coordinates();
 
 	// here, the action group has two generators
-	assert ( manif_q->actions.size() == 2 );
-	assert ( manif_q->winding_nbs.size() == 2 );
+	assert ( manif_q->actions .size() == 2 );
+	assert ( manif_q->winding_nbs .size() == 2 );
 	Manifold::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1];
 
-	std::vector < std::vector < short int > > directions
-		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
-	// declare global, here and in progressive.cpp Manifold::Type::Quotient::sq_dist
-	// and perhaps in other places
+	std::vector < std::vector < short int > > directions = tag::Util::pm_ortho_basis_int [2];
+	// { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
 
-	// we begin by unfolding the vertices
 	Cell shadow ( tag::vertex );
 	std::vector < double > coords_base, coords_tip;
 
@@ -6485,13 +6484,13 @@ inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell ver = *it;
 		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
-			::iterator, bool > itbv =
-		built_ver .insert ( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
-		  ( ver, std::vector < std::pair < Manifold::Action, Cell > > () ) );
+			::iterator, bool > itbv = built_ver .insert
+			( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > > ( ver, { } ) );
 		assert ( itbv .second );
+
 		// we describe a sort of spiral
-		// if the first tries are out of the region, we give up after 50 unsuccsessful rounds
-		// at the end, we stop after 10 unsuccessful rounds
+		// if the first tries are out of the region, we give up after 20 unsuccsessful rounds
+		// at the end, we stop after 5 unsuccessful rounds
 		size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
 		size_t size_of_round = 0;
 		short int ii = 0, jj = 0;
@@ -6514,16 +6513,17 @@ inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
 							( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                 }
 					ii += directions[d][0];
 					jj += directions[d][1];                                                        }  }
+
 			if ( successful_round )
 			{	first_unsuccessful_tries = 0;
 				last_unsuccessful_tries = 0;   }
 			else  // either we have not started yet, or we are approaching the end
 			{	if ( first_unsuccessful_tries > 0 )  // not started yet
 				{	first_unsuccessful_tries++;
-					if ( first_unsuccessful_tries > 50 ) goto give_up;  }
+					if ( first_unsuccessful_tries > 20 ) goto give_up;  }
 				else  // approaching end
 				{	last_unsuccessful_tries++;
-					if ( last_unsuccessful_tries > 10 ) goto give_up;   }   }
+					if ( last_unsuccessful_tries > 5 ) goto give_up;   }   }
 		}  // while true
 	give_up: ;  // next vertex, please
 	}  // end of loop over vertices
@@ -6539,6 +6539,123 @@ inline Mesh unfold_local ( const Mesh & that, const tag::TwoGenerators &,
 	
 } // end of  unfold_local  with tag::two_generators
 
+//------------------------------------------------------------------------------------------------------//
+
+	
+inline Mesh unfold_local ( const Mesh & that, const tag::ThreeGenerators &,
+               const tag::OverRegion &, const Function::Inequality::Set & constraints,
+               const tag::ReturnMapBetween &, const tag::CellsOfDim &, size_t dim,
+               std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping,
+               bool fill_mapping                                                      )
+
+// this function unfolds the vertices
+	
+// if last argument is true,
+// besides the unfolded Mesh, return a mapping giving, for each vertex of the new mesh,
+// the corresponding vertex in 'that' mesh together with a winding (action)
+	
+{	Manifold space = Manifold::working;
+	assert ( space .exists() );  // we use the current (quotient) manifold
+	Manifold::Quotient * manif_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
+	Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu .coordinates();
+
+	// here, the action group has two generators
+	assert ( manif_q->actions .size() == 3 );
+	assert ( manif_q->winding_nbs .size() == 3 );
+	Manifold::Action g1 = manif_q->actions[0], g2 = manif_q->actions[1], g3 = manif_q->actions[2];
+
+	std::vector < std::vector < short int > > basis = tag::Util::ortho_basis_int [3];
+	// { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } }
+
+	Cell shadow ( tag::vertex );
+	std::vector < double > coords_base, coords_tip;
+
+	size_t counter = 0;
+	// build new vertices within the given region
+	std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > > built_ver;
+	assert ( dim == 0 );  // 'mapping' required from vertices to vertices
+	Mesh::Iterator it = that .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell ver = *it;
+		counter++;
+		// std::cout << "global.cpp line 6586, vertex " << counter << std::endl;
+		std::pair < std::map < Cell, std::vector < std::pair < Manifold::Action, Cell > > >
+			::iterator, bool > itbv = built_ver .insert
+			( std::pair < Cell, std::vector < std::pair < Manifold::Action, Cell > > > ( ver, { } ) );
+		assert ( itbv .second );
+
+		// we treat separately the zero winding case
+		if ( constraints .on_cell ( ver ) )
+		{	Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_Eu ( ver );
+			if ( fill_mapping )
+				mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
+				  ( new_ver, std::pair < Cell, Manifold::Action > ( ver, 0 ) ) );
+			itbv .first->second .push_back
+				( std::pair < Manifold::Action, Cell > ( 0, new_ver ) );                    }
+
+		std::vector < int > size { 0, 0, 0 };
+		std::vector < Manifold::Action > gen { g1, g2, g3 };
+
+		// if the first tries are out of the region, we give up after 20 unsuccsessful rounds
+		// at the end, we stop after 5 unsuccessful rounds
+		size_t first_unsuccessful_tries = 1, last_unsuccessful_tries = 0;
+		while ( true )
+		{	bool successful_round = false;
+			size_t j = 1, k = 2;
+			for ( size_t i = 0; i < 3; i++ )
+				// check face 'i' of the cube (two opposite faces actually)
+				// they are located at size[i] and -size[i]
+				// and have dimensions 2*size[j]+1 x 2*size[k]+1
+				// in other words : {size[i],-size[i]} x [-size[j],size[j]] x [-size[k],size[k]]
+				
+			{	size[i] ++;
+				for ( short int sign = -1; sign <= 1; sign += 2 )
+				for ( int jj = -size[j]; jj <= size[j]; jj++ )
+				for ( int kk = -size[k]; kk <= size[k]; kk++ )
+					
+				{	Manifold::Action a = sign*size[i]*gen[i] + jj*gen[j] + kk*gen[k];
+					std::vector < double > coords_ver = coords_q ( ver, tag::winding, a );
+					coords_Eu ( shadow ) = coords_ver;
+					if ( constraints .on_cell ( shadow ) )
+					{	successful_round = true;
+						Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
+						if ( fill_mapping )
+						mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
+						    ( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+						itbv .first->second .push_back
+							( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                 }  }
+				j++;  if ( j > 2 ) j = 0;
+				k++;  if ( k > 2 ) k = 0;                                                            }
+				
+			if ( successful_round )
+			{	first_unsuccessful_tries = 0;
+				last_unsuccessful_tries = 0;   }
+			else  // either we have not started yet, or we are approaching the end
+			{	if ( first_unsuccessful_tries > 0 )  // not started yet
+				{	first_unsuccessful_tries++;
+					if ( first_unsuccessful_tries > 20 ) goto give_up;  }
+				else  // approaching end
+				{	last_unsuccessful_tries++;
+					if ( last_unsuccessful_tries > 5 ) goto give_up;   }   }
+		}  // while true
+	give_up: ;  // next vertex, please
+	}  // end of loop over vertices
+
+	// the 'mapping' may contain vertices not actually used
+	// (some segments may have never been used) but we leave it like this
+
+	Mesh result = unfold_common ( that, built_ver );
+
+	mani_Eu .set_as_working_manifold();
+
+	return result;
+	
+} // end of  unfold_local  with tag::three_generators
+
+//------------------------------------------------------------------------------------------------------//
 
 inline Mesh unfold_local ( const Mesh & that,
                const tag::OverRegion &, const Function::Inequality::Set & constraints,
@@ -6564,11 +6681,17 @@ inline Mesh unfold_local ( const Mesh & that,
 	return unfold_local ( that, tag::one_generator, tag::over_region, constraints,
 	                tag::return_map_between, tag::cells_of_dim, 0, mapping, fill_mapping  );
 	
-	assert ( n == 2 );
+	if ( n == 2 )
 	return unfold_local ( that, tag::two_generators, tag::over_region, constraints,
 	                tag::return_map_between, tag::cells_of_dim, 0, mapping, fill_mapping  );
 
+	assert ( n== 3 );
+	return unfold_local ( that, tag::three_generators, tag::over_region, constraints,
+	                tag::return_map_between, tag::cells_of_dim, 0, mapping, fill_mapping  );
+
 } // end of unfold_local
+
+//------------------------------------------------------------------------------------------------------//
 
 
 inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Action > & aa,
@@ -6621,6 +6744,8 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 
 } // end of unfold_local
 
+//------------------------------------------------------------------------------------------------------//
+
 
 inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Action > & aa,
                const tag::ReturnMapBetween &, const tag::CellsOfDim &, size_t dim,
@@ -6672,7 +6797,7 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 
 } // end of anonymous namespace
 
-//---------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const tag::OverRegion &, const Function::Inequality::Set & constraints,
@@ -6694,7 +6819,7 @@ const
 	
 } // end of Mesh::unfold
 
-//---------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const tag::OverRegion &, const Function::Inequality::Set & constraints )
@@ -6711,7 +6836,7 @@ const
 	
 } // end of Mesh::unfold
 
-//---------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
@@ -6734,7 +6859,7 @@ const
 	
 } // end of Mesh::unfold
 
-//---------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
@@ -6752,7 +6877,7 @@ const
 	
 } // end of Mesh::unfold
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa ) const
@@ -6768,7 +6893,7 @@ Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa ) const
 	
 } // end of Mesh::unfold
 
-//----------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 size_t & Cell::Numbering::Map::operator[] ( const Cell p )  // virtual from Cell::Numbering

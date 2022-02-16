@@ -56,6 +56,13 @@ std::vector < std::vector < void(*)(Cell::Core*,void*) > >
 std::vector < std::vector < void* > > Cell::data_for_init_pos ( Mesh::maximum_dimension_plus_one );
 std::vector < std::vector < void* > > Cell::data_for_init_neg ( Mesh::maximum_dimension_plus_one );
 
+const std::vector < std::vector < std::vector < short int > > >
+	tag::Util::ortho_basis_int { { }, { { 1 } }, { { 1, 0 }, { 0, 1 } },
+	                             { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } } },
+	tag::Util::pm_ortho_basis_int { { }, { { 1 }, { -1 } },
+		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } },
+		{ { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { -1, 0, 0 }, { 0, -1, 0 }, { 0, 0, -1 } } };
+
 const double tag::Util::one_third = 1. / 3.,
              tag::Util::minus_one_third = - tag::Util::minus_one_third,
              tag::Util::one_sixth = 1. / 6.,
@@ -68,44 +75,45 @@ const double tag::Util::one_third = 1. / 3.,
              tag::Util::sqrt_third = 1./ tag::Util::sqrt_3,
              tag::Util::sqrt_two_thirds = std::sqrt ( tag::Util::two_thirds ),
              tag::Util::sqrt_three_quarters = std::sqrt (0.75);
-const std::vector < std::vector < double > >
-	tag::Util::ortho_basis_in_R2 { { 1., 0. }, { 0., 1. } },
-	tag::Util::ortho_basis_in_R3 { { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. } },
-	tag::Util::four_directions_in_R2 { { 1., 0. }, { 0., 1. }, { -1., 0. }, { 0., -1. } },
-	tag::Util::six_directions_in_R3 { { 1., 0., 0. },  { 0., 1., 0. }, { -1., 0., 0. },
-	                                  { 0., -1., 0. }, { 0., 0., 1. }, { 0, 0., -1. }  },
-	tag::Util::eight_directions_in_R2 { { 1., 0. },  {  tag::Util::sqrt_half,  tag::Util::sqrt_half },
-	                                    { 0., 1. },  { -tag::Util::sqrt_half,  tag::Util::sqrt_half },
-	                                    { -1., 0. }, { -tag::Util::sqrt_half, -tag::Util::sqrt_half },
-	                                    { 0., -1. }, {  tag::Util::sqrt_half, -tag::Util::sqrt_half } },
-	tag::Util::twentysix_directions_in_R3
-				{ { 1., 0., 0. }, { -1., 0., 0. }, { 0., 1., 0. }, 
-				  { 0., -1., 0. }, { 0., 0., 1. }, { 0., 0., -1. },
-				  { tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
-			  	{ tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
-				  { -tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
-				  { -tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
-				  { tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
-				  { tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
-			  	{ -tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
-				  { -tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
-				  { 0., tag::Util::sqrt_half, tag::Util::sqrt_half },
-				  { 0., tag::Util::sqrt_half, -tag::Util::sqrt_half },
-				  { 0., -tag::Util::sqrt_half, tag::Util::sqrt_half },
-			  	{ 0., -tag::Util::sqrt_half, -tag::Util::sqrt_half },
-					{  tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
-					{  tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
-					{  tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
-					{  tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third },
-					{ -tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
-					{ -tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
-					{ -tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
-					{ -tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third } };
+
+const std::vector < std::vector < std::vector < double > > >
+	tag::Util::ortho_basis_double { { }, { { 1. } }, { { 1., 0. }, { 0., 1. } },
+	                                { { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. } } },
+	tag::Util::pm_ortho_basis_double { { }, { { 1. }, { -1. } },
+		{ { 1., 0. }, { 0., 1. }, { -1., 0. }, { 0., -1. } },
+		{ { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. }, { -1., 0., 0. }, { 0., -1., 0 }, { 0., 0., -1. } } },
+	tag::Util::directions { { }, { { 1. }, { -1. } },
+		{ { 1., 0. },  {  tag::Util::sqrt_half,  tag::Util::sqrt_half },
+		  { 0., 1. },  { -tag::Util::sqrt_half,  tag::Util::sqrt_half },
+		  { -1., 0. }, { -tag::Util::sqrt_half, -tag::Util::sqrt_half },
+		  { 0., -1. }, {  tag::Util::sqrt_half, -tag::Util::sqrt_half } },
+		{ { 1., 0., 0. }, { -1., 0., 0. }, { 0., 1., 0. }, 
+		  { 0., -1., 0. }, { 0., 0., 1. }, { 0., 0., -1. },
+		  { tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
+		 	{ tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
+		  { -tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
+		  { -tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
+		  { tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
+		  { tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
+		 	{ -tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
+		  { -tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
+		  { 0., tag::Util::sqrt_half, tag::Util::sqrt_half },
+		  { 0., tag::Util::sqrt_half, -tag::Util::sqrt_half },
+		  { 0., -tag::Util::sqrt_half, tag::Util::sqrt_half },
+		 	{ 0., -tag::Util::sqrt_half, -tag::Util::sqrt_half },
+			{  tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
+			{  tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
+			{  tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
+			{  tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third },
+			{ -tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
+			{ -tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
+			{ -tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
+			{ -tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third } } };
 
 
 // int Cell::counter { 0 };
 
-//-----------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 bool tag::Util::Core::default_dispose_query ( tag::Util::Core::DelegateDispose * that )
@@ -140,7 +148,7 @@ bool tag::Util::Core::dispose_query_cell_with_reverse ( tag::Util::Core::Delegat
 	return false;     }
 #endif  // MANIFEM_COLLECT_CM	
 
-//-----------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 namespace { // anonymous namespace, mimics static linkage

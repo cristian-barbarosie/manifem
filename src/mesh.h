@@ -156,6 +156,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct OverRegion { };  static const OverRegion over_region;
 	struct OneGenerator { };  static const OneGenerator one_generator;
 	struct TwoGenerators { };  static const TwoGenerators two_generators;
+	struct ThreeGenerators { };  static const ThreeGenerators three_generators;
 	struct ShadowVertices { };  static const ShadowVertices shadow_vertices;
 
 	struct Util
@@ -164,14 +165,13 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class CellCore;  //  aka  class Cell::Core
 		class MeshCore;  //  aka  class Mesh::Core
 		class CellIterator;  // aka  class Mesh::Iterator
+		static const std::vector < std::vector < std::vector < short int > > >
+			ortho_basis_int, pm_ortho_basis_int;
 		static const double one_third, minus_one_third, one_sixth, minus_one_sixth,
 		                    two_thirds, minus_two_thirds, sqrt_2, sqrt_half,
 		                    sqrt_3, sqrt_third, sqrt_two_thirds, sqrt_three_quarters;
-		static const std::vector < std::vector < double > >
-			ortho_basis_in_R2, four_directions_in_R2, eight_directions_in_R2,
-			ortho_basis_in_R3, six_directions_in_R3, twentysix_directions_in_R3;
-		static const std::vector < std::vector < short int > >
-			four_int_directions_in_R2, six_int_directions_in_R3;
+		static const std::vector < std::vector < std::vector < double > > >
+			ortho_basis_double, pm_ortho_basis_double, directions;
 		class Action;  //  aka class Function::Action, aka class Manfold::Action
 		// we define it in function.h because we need it for Function::MultiValued
 		// but we prefer the user to see it as an attribute of class Manifold
