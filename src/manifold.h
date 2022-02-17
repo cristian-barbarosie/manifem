@@ -1,9 +1,9 @@
 
-// manifold.h 2022.02.09
+// manifold.h 2022.02.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -114,7 +114,7 @@ class Manifold
 	// a non-existent manifold has null core
 	inline bool exists ( ) const { return core != nullptr; }
 
-	// measure of the entire manifold (lenght for 1D, area for 2D, volume for 3D)
+	// measure of the entire manifold (length for 1D, area for 2D, volume for 3D)
 	// produces run-time error for Euclidian manifolds
 	// and for other manifolds whose measure is infinite (e.g. cylinder)
 	// and for manifolds whose measure is too difficult to compute (e.g. implicit manifolds)
@@ -237,6 +237,35 @@ class Manifold
 
 };  // end of  class Manifold
 
+//------------------------------------------------------------------------------------------------------//
+
+
+inline Cell::Cell ( const tag::Vertex &, const tag::OfCoordinates &, const std::vector < double > & v,
+                    const tag::IsPositive & ispos                                                     )
+// by default, ispos = tag::is_positive, so may be called with only three arguments
+:	Cell ( tag::whose_core_is, new Cell::Positive::Vertex ( tag::one_dummy_wrapper ),
+         tag::freshly_created                                                       )
+{	Manifold & space = Manifold::working;
+	assert ( space .exists() );  // we use the current manifold
+	Function coords = space .coordinates();
+	assert ( v .size() == coords .nb_of_components() );
+	coords ( *this ) = v;                              }
+
+
+inline Cell::Cell ( const tag::Vertex &, const tag::OfCoordinates &, const std::vector < double > & v,
+                    const tag::Project &, const tag::IsPositive & ispos                               )
+// by default, ispos = tag::is_positive, so may be called with only three arguments
+:	Cell ( tag::whose_core_is, new Cell::Positive::Vertex ( tag::one_dummy_wrapper ),
+         tag::freshly_created                                                       )
+{	Manifold & space = Manifold::working;
+	assert ( space .exists() );  // we use the current manifold
+	Function coords = space .coordinates();
+	assert ( v .size() == coords .nb_of_components() );
+	coords ( *this ) = v;
+	space .project ( *this );                           }
+
+//------------------------------------------------------------------------------------------------------//
+
 
 class Manifold::Core
 
@@ -269,6 +298,7 @@ class Manifold::Core
 	// and for other manifolds whose measure is infinite (e.g. cylinder)
 	// and for manifolds whose measure is too difficult to compute (e.g. implicit manifolds)
 	// significant for torus
+	
 	virtual double measure ( ) const = 0;
 	
 	// P = sA + sB,  s+t == 1
@@ -333,6 +363,8 @@ class Manifold::Core
 														 const std::vector < Cell::Positive::Vertex * > & points ) const = 0;
 
 }; // end of class Manifold::Core
+
+//------------------------------------------------------------------------------------------------------//
 
 
 inline Function Manifold::coordinates ( ) const
@@ -658,7 +690,8 @@ inline void Manifold::interpolate
 inline void Manifold::project ( const Cell & cll ) const
 {	assert ( cll .is_positive () );
 	assert ( cll .dim() == 0 );
-	this->core->project ( ( Cell::Positive::Vertex * ) cll .core );  }
+	this->core->project ( tag::Util::assert_cast
+	 < Cell::Core*, Cell::Positive::Vertex* > ( cll .core ) );  }
 
 
 inline Manifold Manifold::implicit ( const Function::Equality eq ) const
@@ -680,7 +713,7 @@ inline Manifold Manifold::parametric ( const Function::Equality eq1,
         const Function::Equality eq2, const Function::Equality eq3 ) const
 {	return Manifold ( tag::parametric, *this, eq1, eq2, eq3 );  }
 
-//------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 class Manifold::Euclid : public Manifold::Core
@@ -775,7 +808,7 @@ class Manifold::Euclid : public Manifold::Core
 	double measure ( ) const;  // virtual from Manifold::Core
 
 	void project ( Cell::Positive::Vertex * ) const;
-	// virtual from Manifold::Core, here execution forbidden
+	// virtual from Manifold::Core, here does nothing
 
 };  // end of class Manifold::Euclid
 

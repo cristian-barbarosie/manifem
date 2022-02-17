@@ -1,5 +1,5 @@
 
-// global.cpp 2022.02.15
+// global.cpp 2022.02.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -76,32 +76,32 @@ static inline std::string trim_copy(std::string s) {
 
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
-                   const tag::DividedIn &, size_t n                      )
+                   const tag::DividedIn &, size_t n                     )
 
 // see paragraph 12.2 in the manual
 	
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current manifold
+	assert ( space .exists() );  // we use the current manifold
 
-	assert ( not A.is_positive() );
-	Cell posA = A.reverse();
-	assert ( posA.is_positive() );
-	assert ( B.is_positive() );
-	assert ( A.dim() == 0 );
-	assert ( B.dim() == 0 );
+	assert ( not A .is_positive() );
+	Cell posA = A .reverse();
+	assert ( posA .is_positive() );
+	assert ( B .is_positive() );
+	assert ( A .dim() == 0 );
+	assert ( B .dim() == 0 );
 
 	Cell prev_point = A;
 	for ( size_t i=1; i < n; ++i )
 	{	Cell P ( tag::vertex );
-		double frac = double(i)/double(n);
-		space.interpolate ( P, 1.-frac, posA, frac, B );
+		double frac = double(i) / double(n);
+		space .interpolate ( P, 1.-frac, posA, frac, B );
 		Cell seg ( tag::segment, prev_point, P );
-		assert ( seg.exists() );
+		assert ( seg .exists() );
 		seg.add_to_mesh ( *this, tag::do_not_bother );
-		assert ( P.exists() );
-		prev_point = P.reverse();                         }
+		assert ( P .exists() );
+		prev_point = P .reverse();                         }
 	Cell seg ( tag::segment, prev_point, B );
-	seg.add_to_mesh ( *this, tag::do_not_bother );
+	seg .add_to_mesh ( *this, tag::do_not_bother );
 
 }  // end of Mesh::build with tag::segment
 
@@ -110,58 +110,58 @@ void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
 
 void Mesh::build ( const tag::Segment &, const Cell & A, const Cell & B,
                    const tag::DividedIn &, size_t n,
-                   const tag::Winding &, const tag::Util::Action & s )
+                   const tag::Winding &, const tag::Util::Action & s    )
 
 // see paragraph 12.2 in the manual
 // in this version, the segment may be a loop around a cylinder or torus
 // beware, A.reverse() and B may be one and the same vertex !
 	
 {	Manifold space = Manifold::working;
-	assert ( space.exists() );  // we use the current (quotient) manifold
+	assert ( space .exists() );  // we use the current (quotient) manifold
 	Manifold::Quotient * mani_q = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Quotient* > ( space.core );
-	Function coords_q = space.coordinates();
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
 	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
-	Function coords_Eu = mani_Eu.coordinates();
+	Function coords_Eu = mani_Eu .coordinates();
 
-	assert ( not A.is_positive() );
-	Cell posA = A.reverse();
-	assert ( posA.is_positive() );
-	assert ( B.is_positive() );
-	assert ( A.dim() == 0 );
-	assert ( B.dim() == 0 );
+	assert ( not A .is_positive() );
+	Cell posA = A .reverse();
+	assert ( posA .is_positive() );
+	assert ( B .is_positive() );
+	assert ( A .dim() == 0 );
+	assert ( B .dim() == 0 );
 
 	Cell shadow_of_B ( tag::vertex );
-	if ( coords_Eu.nb_of_components() == 1 )
+	if ( coords_Eu .nb_of_components() == 1 )
 	{	double new_co = coords_q ( B, tag::winding, s );
 		coords_Eu ( shadow_of_B ) = new_co;            }
 	else
-	{	assert ( coords_Eu.nb_of_components() > 1 );
+	{	assert ( coords_Eu .nb_of_components() > 1 );
 		std::vector < double > new_co = coords_q ( B, tag::winding, s );
 		coords_Eu ( shadow_of_B ) = new_co;                           }
 
 	Cell prev_point = A;
 	for ( size_t i=1; i < n; ++i )
 	{	Cell P ( tag::vertex );
-		double frac = double(i)/double(n);
-		mani_Eu.interpolate ( P, 1.-frac, posA, frac, shadow_of_B );
+		double frac = double(i) / double(n);
+		mani_Eu .interpolate ( P, 1.-frac, posA, frac, shadow_of_B );
 		Cell seg ( tag::segment, prev_point, P );
-		assert ( seg.exists() );
+		assert ( seg .exists() );
 		seg.add_to_mesh ( *this, tag::do_not_bother );
-		assert ( P.exists() );
-		prev_point = P.reverse();                                     }
+		assert ( P .exists() );
+		prev_point = P .reverse();                                     }
 
 	Cell seg ( tag::segment, prev_point, B );
-	// size_t nb_spins = mani_q->winding_nbs.size();
+	// size_t nb_spins = mani_q->winding_nbs .size();
 	// for ( size_t i = 0; i < nb_spins; i++ )
-	// {	Field::ShortInt & sp = mani_q->winding_nbs[i];
-	// 	std::map<Function::ActionGenerator,short int>::const_iterator it =
-	// 		s.index_map.lower_bound(mani_q->actions[i]);
-	// 	sp.on_cell ( seg.core ) = it->second;                     }
-	seg.winding() = s;
-	seg.add_to_mesh ( *this, tag::do_not_bother );
+	// {	Field::ShortInt & sp = mani_q->winding_nbs [i];
+	// 	std::map < Function::ActionGenerator, short int > ::const_iterator it =
+	// 		s .index_map .lower_bound(mani_q->actions[i]);
+	// 	sp .on_cell ( seg .core ) = it->second;                                 }
+	seg .winding() = s;
+	seg .add_to_mesh ( *this, tag::do_not_bother );
 
-	space.set_as_working_manifold();
+	space .set_as_working_manifold();
 
 }  // end of Mesh::build with tag::segment and tag::winding
 

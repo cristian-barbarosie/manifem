@@ -1,5 +1,5 @@
 
-// mesh.h  2022.02.15
+// mesh.h  2022.02.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -26,10 +26,13 @@
 #define MANIFEM_MESH_H
 
 #include <iostream>
+#include <cstring>
+
 #include <vector>
 #include <list>
 #include <deque>
 #include <map>
+
 #include <memory>
 #include "math.h"
 #include "assert.h"
@@ -89,6 +92,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct StartAt { };  static const StartAt start_at;
 	struct StopAt { };  static const StopAt stop_at;
 	struct Towards { };  static const Towards towards;
+	struct OfCoordinates { };  static const OfCoordinates of_coords, of_coordinates;
 	struct Boundary { };  static const Boundary boundary;
 	struct BoundaryOf { };  static const BoundaryOf boundary_of;
 	struct SizeMeshes { };  static const SizeMeshes size_meshes;
@@ -129,6 +133,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct HasSize { };  static const HasSize has_size;
 	struct ReserveSize { };  static const ReserveSize reserve_size;
 	struct Pretty { };  static const Pretty pretty;
+	struct Project { };  static const Project project;
 	struct Adapt { };  static const Adapt adapt;
 	struct Identify { };  static const Identify identify;
 	struct With { };  static const With with;
@@ -207,6 +212,152 @@ namespace tag {  // see paragraph 11.3 in the manual
 	namespace local_functions { };
 
 }  // end of namespace tag
+
+//-----------------------------------------------------------------------------//
+
+
+template <typename T>
+class Tensor
+
+{	// data:
+	public:
+	std::vector < T > elements;
+	std::list < size_t > dimensions, cumulative_dims;
+	size_t total_dim;
+	
+	// constructors:
+	inline Tensor ( ) { };
+	inline Tensor ( const std::list < size_t > dims )
+	{	dimensions = dims;
+		allocate_space (); };
+	inline Tensor (const std::list < char > dims)
+	{	dimensions = str2list ( dims );
+		allocate_space ();             };
+	inline Tensor ( const char dims[] )
+	{	dimensions = str2list ( dims );
+		allocate_space ();             };
+	inline Tensor ( size_t i, size_t j,
+	         size_t k, size_t l )
+	{	dimensions .push_back (i);
+		dimensions .push_back (j);
+		dimensions .push_back (k);
+		dimensions .push_back (l);
+		allocate_space ();        };
+	inline Tensor ( size_t i, size_t j, size_t k )
+	{	dimensions .push_back (i);
+		dimensions .push_back (j);
+		dimensions .push_back (k);
+		allocate_space ();        };
+	inline Tensor ( size_t i, size_t j )
+	{	dimensions .push_back (i);
+		dimensions .push_back (j);
+		allocate_space ();         };
+	inline Tensor ( size_t i )
+	{	dimensions .push_back (i);
+		allocate_space ();        };
+	inline ~Tensor () { };
+
+	// methods:
+	inline std::list < size_t > str2list ( const std::list < char > lc )
+	{	const size_t izero = size_t ('0');
+		std::list < char > ::iterator i;
+		for ( i = lc .begin(); i != lc .end(); i++)
+		{	assert ( *i >= '0' );
+			assert ( *i <= '9' ); }
+		std::list < size_t > li;
+		for ( i = lc.begin(); i != lc .end(); i++)
+			li .push_back ( size_t (*i) - izero );
+		return li;                                   }
+	inline std::list < size_t > str2list ( const char lc[] )
+	{	const size_t izero = size_t ('0');
+		for ( size_t i=0 ; i < std::strlen (lc); i++)
+		{	assert ( lc[i] >= '0' );
+			assert ( lc[i] <= '9' ); }
+		std::list < size_t > li;
+		for ( size_t i=0; i < std::strlen (lc); i++ )
+			li .push_back ( size_t ( lc[i] ) - izero );
+		return li;                                 }
+	inline void allocate_space ()
+	{	total_dim = 1;
+		std::list < size_t > ::iterator k;
+		for ( k = dimensions .begin(); k != dimensions .end(); k++)
+		{	cumulative_dims .push_back ( total_dim );
+			total_dim *= *k;                         }
+		// elements .reserve ( total_dim );
+		elements .insert ( elements .end(), total_dim, 0.0 );
+		assert ( elements .size() == total_dim );                    };
+	inline size_t pointer ( std::list < size_t > index ) const
+	{	assert ( index .size() == dimensions .size() );
+		size_t pointer = 0;
+		std::list < size_t > ::const_iterator i, d, cd;
+		for ( i = index .begin(), d = dimensions .begin(),
+		      cd =cumulative_dims.begin();
+		      i != index.end(); i++, d++, cd++)
+		{	assert ( *i < *d );
+			pointer += (*i) * (*cd); }
+		return pointer;                                   }
+	inline T& operator() ( std::list < size_t > index )
+	{ return ( elements [ pointer ( index ) ] );  }
+	inline const T& operator() ( std::list < size_t > index ) const
+	{ return ( elements [ pointer ( index ) ] );  }
+	inline T& operator[] ( const char index[] )
+	{ return operator() ( str2list ( index ) );  }
+	inline const T& operator() ( const char index[] ) const
+	{ return operator() ( str2list ( index ) );  }
+	inline T& operator() ( size_t i, size_t j,
+	               size_t k, size_t l )
+	{	assert ( dimensions .size() == 4 );
+		std::list < size_t > index;
+		index .push_back (i);
+		index .push_back (j);
+		index .push_back (k);
+		index .push_back (l);
+		return operator() ( index );        }
+	inline const T& operator()( size_t i, size_t j,
+	                     size_t k, size_t l ) const
+	{	assert ( dimensions .size() == 4 );
+		std::list < size_t > index;
+		index .push_back (i);
+		index .push_back (j);
+		index .push_back (k);
+		index .push_back (l);
+		return operator() ( index );        }
+	inline T& operator() ( size_t i, size_t j, size_t k )
+	{	assert ( dimensions .size() == 3 );
+		std::list < size_t > index;
+		index .push_back (i);
+		index .push_back (j);
+		index .push_back (k);
+		return operator() ( index );        }
+	inline const T& operator() ( size_t i, size_t j, size_t k ) const
+	{	assert ( dimensions .size() == 3 );
+		std::list < size_t > index;
+		index .push_back (i);
+		index .push_back (j);
+		index .push_back (k);
+		return operator() ( index );        }
+	inline T& operator() ( size_t i, size_t j )
+	{	assert ( dimensions .size() == 2 );
+		std::list < size_t > index;
+		index .push_back (i);
+		index .push_back (j);
+		return operator() ( index );        }
+	inline const T& operator() ( size_t i, size_t j ) const
+	{	assert ( dimensions .size() == 2 );
+		std::list < size_t > index;
+		index .push_back (i);
+		index .push_back (j);
+		return operator() ( index );        }
+	inline const T& operator() ( size_t i ) const
+	{	assert ( dimensions .size() == 1 );
+		std::list < size_t > index ( 1, i );
+		return operator() ( index );       }
+	inline T& operator[] ( size_t i )
+	{	assert ( dimensions .size() == 1 );
+	  std::list < size_t > index ( 1, i );
+		return operator() ( index );       }
+
+};  // end of  class Tensor
 
 //-----------------------------------------------------------------------------//
 
@@ -509,6 +660,12 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline Cell ( const tag::WhoseBoundaryIs &, Mesh & );
 
 	inline Cell ( const tag::Vertex &, const tag::IsPositive & ispos = tag::is_positive );
+
+	inline Cell ( const tag::Vertex &, const tag::OfCoordinates &, const std::vector < double > &,
+	              const tag::IsPositive & ispos = tag::is_positive                                );
+	inline Cell ( const tag::Vertex &, const tag::OfCoordinates &, const std::vector < double > &,
+	              const tag::Project &, const tag::IsPositive & ispos = tag::is_positive          );
+	// these two constructors are defined in  manifold.h  because we need to set coordinates and to project
 
 	inline Cell ( const tag::Segment &, const Cell & A, const Cell & B );
 

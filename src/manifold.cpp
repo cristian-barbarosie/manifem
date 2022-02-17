@@ -1,7 +1,7 @@
 
-// manifold.cpp 2022.02.09
+// manifold.cpp 2022.02.17
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -845,31 +845,29 @@ void Manifold::Implicit::OneEquation::project ( Cell::Positive::Vertex * P_c ) c
 
 // just a few steps of Newton's method for under-determined equations
 
-// we could inline this, as interpolate_implicit_one, to gain speed	
-	
 {	const Function & coord = this->get_coord_func();
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	const Function & lev_func = this->level_function;
-	assert ( lev_func.nb_of_components() == 1 );
+	assert ( lev_func .nb_of_components() == 1 );
 	const Function & grad_lev = this->grad_lev_func;
-	assert ( grad_lev.nb_of_components() == n );
+	assert ( grad_lev .nb_of_components() == n );
 	const Cell P ( tag::whose_core_is, P_c, tag::previously_existing, tag::surely_not_null );
 	// do we really need a temporary wrapper for P_c ? !!
 	for ( short int k = 0; k < Manifold::Implicit::steps_for_Newton; k++ )
 	// we move doubles around a lot
 	// how to do it faster ?
 	// somehow bind references to coord_at_P to 'coord'
-	{	std::vector<double> coord_at_P = coord ( P );
-		double lev_at_P = lev_func ( P );
-		std::vector<double> grad_lev_at_P = grad_lev ( P );
+	{	std::vector < double > coord_at_P = coord (P);
+		double lev_at_P = lev_func (P);
+		std::vector < double > grad_lev_at_P = grad_lev (P);
 		double norm2 = 0.;
 		for ( size_t i = 0; i < n; i++ )
-		{	double & tmp = grad_lev_at_P[i];
-			norm2 += tmp*tmp;                 }
+		{	double & tmp = grad_lev_at_P [i];
+			norm2 += tmp * tmp;               }
 		double coef = lev_at_P / norm2;
 		for ( size_t i = 0; i < n; i++ )
-			coord_at_P[i] -= coef * grad_lev_at_P[i];
-		coord ( P ) = coord_at_P;                            }                                   }
+			coord_at_P [i] -= coef * grad_lev_at_P [i];
+		coord (P) = coord_at_P;                            }                                   }
 
 
 void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) const
@@ -879,39 +877,39 @@ void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) 
 // we could inline this, as interpolate_implicit_two, to gain speed	
 	
 {	const Function & coord = this->get_coord_func();
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	const Function & lev_func_1 = this->level_function_1;
-	assert ( lev_func_1.nb_of_components() == 1 );
+	assert ( lev_func_1 .nb_of_components() == 1 );
 	const Function & grad_lev_1 = this->grad_lev_func_1;
-	assert ( grad_lev_1.nb_of_components() == n );
+	assert ( grad_lev_1 .nb_of_components() == n );
 	const Function & lev_func_2 = this->level_function_2;
-	assert ( lev_func_2.nb_of_components() == 1 );
+	assert ( lev_func_2 .nb_of_components() == 1 );
 	const Function & grad_lev_2 = this->grad_lev_func_2;
-	assert ( grad_lev_2.nb_of_components() == n );
+	assert ( grad_lev_2 .nb_of_components() == n );
 	const Cell P ( tag::whose_core_is, P_c, tag::previously_existing, tag::surely_not_null );
 	// do we really need a temporary wrapper for P_c ? !!
 	for ( short int k = 0; k < Manifold::Implicit::steps_for_Newton; k++ )
 	// we move doubles around a lot
 	// how to do it faster ?
 	// somehow bind references to coord_at_P to 'coord'
-	{	std::vector<double> coord_at_P = coord ( P );
-		double lev_1_at_P = lev_func_1 ( P );
-		std::vector<double> grad_lev_1_at_P = grad_lev_1 ( P );
-		double lev_2_at_P = lev_func_2 ( P );
-		std::vector<double> grad_lev_2_at_P = grad_lev_2 ( P );
+	{	std::vector < double > coord_at_P = coord (P);
+		double lev_1_at_P = lev_func_1 (P);
+		std::vector < double > grad_lev_1_at_P = grad_lev_1 (P);
+		double lev_2_at_P = lev_func_2 (P);
+		std::vector < double > grad_lev_2_at_P = grad_lev_2 (P);
 		double a11 = 0., a12 = 0., a22 = 0.;
 		for ( size_t i = 0; i < n; i++ )
-		{	double & tmp1 = grad_lev_1_at_P[i];
-			double & tmp2 = grad_lev_2_at_P[i];
-			a11 += tmp1*tmp1;
-			a12 += tmp1*tmp2;
-			a22 += tmp2*tmp2;                    }
+		{	double & tmp1 = grad_lev_1_at_P [i];
+			double & tmp2 = grad_lev_2_at_P [i];
+			a11 += tmp1 * tmp1;
+			a12 += tmp1 * tmp2;
+			a22 += tmp2 * tmp2;                  }
 		double det = a11*a22 - a12*a12;
 		double l1 = ( - a22 * lev_1_at_P + a12 * lev_2_at_P ) / det;
 		double l2 = (   a12 * lev_1_at_P - a11 * lev_2_at_P ) / det;
 		for ( size_t i = 0; i < n; i++ )
-			coord_at_P[i] += l1 * grad_lev_1_at_P[i] + l2 * grad_lev_2_at_P[i];
-		coord ( P ) = coord_at_P;                                               }                }
+			coord_at_P [i] += l1 * grad_lev_1_at_P[i] + l2 * grad_lev_2_at_P[i];
+		coord (P) = coord_at_P;                                                }                }
 
 
 void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
