@@ -391,11 +391,9 @@ int main ()
 		for ( size_t j = 0; j < geom_dim; j++ )
 			constr [i] += ( x [j] - points ( i, j ) ) * ( x [j] - points ( i, j ) );  }
 
-	for ( size_t i = 0; i < geom_dim; i++ )
-		std::cout << " " << x [i];
+	for ( size_t i = 0; i < geom_dim; i++ ) std::cout << " " << x [i];
 	std::cout << " ---> ";
-	for ( size_t i = 0; i < n_points; i++ )
-		std::cout << " " << constr [i] + 1.;
+	for ( size_t i = 0; i < n_points; i++ ) std::cout << " " << constr [i] + 1.;
 	std::cout << std::endl;
 
 	Tensor < double > grad_constr ( n_points, geom_dim );
@@ -414,11 +412,9 @@ int main ()
 		{	constr [i] = -1.;
 			for ( size_t j = 0; j < geom_dim; j++ )
 				constr [i] += ( x [j] - points ( i, j ) ) * ( x [j] - points ( i, j ) );  }
-		for ( size_t i = 0; i < geom_dim; i++ )
-			std::cout << " " << x [i];
+		for ( size_t i = 0; i < geom_dim; i++ ) std::cout << " " << x [i];
 		std::cout << " ---> ";
-		for ( size_t i = 0; i < n_points; i++ )
-			std::cout << " " << constr [i] + 1.;
+		for ( size_t i = 0; i < n_points; i++ ) std::cout << " " << constr [i] + 1.;
 		std::cout << std::endl;
 
 		// test stopping criterion :
