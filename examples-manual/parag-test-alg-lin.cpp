@@ -315,6 +315,7 @@ void conjugate_gradient   // Polak Ribiere
 
 //---------------------------------------------------------------------------------------------------//
 
+
 void simple_gradient
 ( std::vector < double > & x, const std::vector < double > constr,
 	const Tensor < double > & grad_constr, std::vector < double > & grad,

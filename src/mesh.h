@@ -1,5 +1,5 @@
 
-// mesh.h  2022.02.17
+// mesh.h  2022.02.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -182,6 +182,11 @@ namespace tag {  // see paragraph 11.3 in the manual
 		// but we prefer the user to see it as an attribute of class Manifold
 		class InequalitySet;  //  aka  class Function::Inequality::Set
 		// defined in function.f
+		template <typename T> class Tensor;
+		static void conjugate_gradient   // defined in manifold.cpp
+		( std::vector < double > & x, const std::vector < double > constr,
+		  const tag::Util::Tensor < double > & grad_constr, std::vector < double > & grad,
+		  std::vector < double > & direc, bool first_step                                 );
 		inline static size_t assert_diff ( const size_t a, const size_t b )
 		{	assert ( a >= b );  return  a - b;  }
 		template < typename X, typename Y > inline static Y assert_cast ( X x )
@@ -217,7 +222,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 
 
 template <typename T>
-class Tensor
+class tag::Util::Tensor
 
 {	// data:
 	public:

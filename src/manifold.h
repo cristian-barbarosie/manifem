@@ -1,5 +1,5 @@
 
-// manifold.h 2022.02.17
+// manifold.h 2022.02.19
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -81,15 +81,14 @@ class Manifold
                     const tag::DoNotSetAsWorking &                                  );
 
 	inline Manifold ( const tag::Implicit &, const Manifold &, const Function & );
-
 	inline Manifold ( const tag::Implicit &,
 	                  const Manifold &, const Function &, const Function & );
+	inline Manifold ( const tag::Implicit &,
+	                  const Manifold &, const Function &, const Function &, const Function & );
 	
 	inline Manifold ( const tag::Parametric &, const Manifold &, const Function::Equality & );
-
 	inline Manifold ( const tag::Parametric &,
 	       const Manifold &, const Function::Equality &, const Function::Equality & );
-	
 	inline Manifold ( const tag::Parametric &, const Manifold &,
 	       const Function::Equality &, const Function::Equality &, const Function::Equality & );
 
@@ -917,7 +916,7 @@ class Manifold::Implicit : public Manifold::Core
 	// measure of the entire manifold, here produces run-time error
 	double measure ( ) const;  // virtual from Manifold::Core
 
-	class OneEquation; class TwoEquations;
+	class OneEquation;  class TwoEquations;  class ThreeEquationsOrMore;
 	
 };  // end of class Manifold::Implicit
 
@@ -988,21 +987,79 @@ class Manifold::Implicit::TwoEquations : public Manifold::Implicit
 //-----------------------------------------------------------------------------------------
 
 
+class Manifold::Implicit::ThreeEquationsOrMore : public Manifold::Implicit
+
+// a submanifold of a Manifold::Euclid defined by three or more equations
+
+{	public :
+
+	// Manifold surrounding_space  in Manifold::Implicit
+	std::vector < Function > level_function, grad_lev_func;
+	
+	inline ThreeEquationsOrMore ( const Manifold & s, const Function & f );
+	inline ThreeEquationsOrMore ( const Manifold & s, const Function & f1, const Function & f2 );
+	inline ThreeEquationsOrMore
+	( const Manifold & s, const Function & f1, const Function & f2, const Function & f3 );
+
+	// void interpolate (different overloaded versions) defined by Manifold::Implicit
+	
+	// Function build_coord_func ( const tag::lagrange &, const tag::OfDegree &, size_t d )
+	//   defined by Manifold::Implicit (execution forbidden)
+	
+	// Function get_coord_func ( ) const  defined by Manifold::Implicit
+
+	// void set_coords ( const Function co )  defined by Manifold::Implicit
+
+	void project ( Cell::Positive::Vertex * ) const;
+	// virtual from Manifold::Core, through Manifold::Implicit
+
+	// double measure ( ) const  virtual from Manifold::Core
+	// defined by Manifold::Implicit, execution forbidden
+
+};  // end of class Manifold::Implicit::ThreeEquationsOrMore
+
+//-----------------------------------------------------------------------------------------
+
+
 inline Manifold::Manifold ( const tag::Implicit &, const Manifold & m, const Function & f )
 
 :	Manifold ( tag::non_existent )  // temporarily empty manifold
 
 {	// if m is Manifold::Euclid, we want a Manifold::Implicit::OneEquation
 	// if m is Manifold::Implicit::OneEquation, we want a Manifold::Implicit::TwoEquations
-	Manifold::Euclid * m_euclid = dynamic_cast<Manifold::Euclid*> ( m.core );
+	// if m is Manifold::Implicit::TwoEquations, we want a Manifold::Implicit::ThreeEquationsOrMore
+	// if m is Manifold::Implicit::ThreeEquationsOrMore, we want a Manifold::Implicit::ThreeEquationsOrMore
+
+	Manifold::Euclid * m_euclid = dynamic_cast < Manifold::Euclid* > ( m .core );
 	if ( m_euclid )
-		this->core = new Manifold::Implicit::OneEquation ( m, f );
-	else
-	{	Manifold::Implicit::OneEquation * m_one_eq =
-			dynamic_cast<Manifold::Implicit::OneEquation*> ( m.core );
-		assert ( m_one_eq );
-		this->core = new Manifold::Implicit::TwoEquations ( m, f );  }
-	Manifold::working = *this;                                                }
+	{	this->core = new Manifold::Implicit::OneEquation ( m, f );
+		Manifold::working = *this;
+		return;                                                    }
+
+	Manifold::Implicit::OneEquation * m_one_eq =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m .core );
+	if ( m_one_eq )
+	{	this->core = new Manifold::Implicit::TwoEquations ( m, f );
+		Manifold::working = *this;
+		return;                                                     }
+	
+	Manifold::Implicit::TwoEquations * m_two_eq =
+		dynamic_cast < Manifold::Implicit::TwoEquations* > ( m .core );
+	if ( m_two_eq )
+	{	this->core = new Manifold::Implicit::ThreeEquationsOrMore ( m, f );
+		Manifold::working = *this;
+		return;                                                             }
+	
+	Manifold::Implicit::ThreeEquationsOrMore * m_three_eq =
+		dynamic_cast < Manifold::Implicit::ThreeEquationsOrMore* > ( m .core );
+	if ( m_three_eq )
+	{	this->core = new Manifold::Implicit::ThreeEquationsOrMore ( m, f );
+		Manifold::working = *this;
+		return;                                                             }
+	
+	assert ( false );
+	
+}  // end of  Manifold constructor
 	
 
 inline Manifold::Manifold
@@ -1010,10 +1067,50 @@ inline Manifold::Manifold
 
 :	Manifold ( tag::non_existent )  // temporarily empty manifold
 
-{	tag::Util::assert_cast < Manifold::Core*, Manifold::Euclid* > ( m.core );
-	this->core = new Manifold::Implicit::TwoEquations ( m, f1, f2 );
-	Manifold::working = *this;                                                }
+{	// if m is Manifold::Euclid, we want a Manifold::Implicit::TwoEquations
+	// if m is Manifold::Implicit::{OneEquation,TwoEquations,ThreeEquationsOrMore},
+	//      we want a Manifold::Implicit::TwoEquations
+
+	Manifold::Euclid * m_euclid = dynamic_cast < Manifold::Euclid* > ( m .core );
+	if ( m_euclid )
+	{	this->core = new Manifold::Implicit::TwoEquations ( m, f1, f2 );
+		Manifold::working = *this;
+		return;                                                          }
+
+	Manifold::Implicit::OneEquation * m_one_eq =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m .core );
+	if ( m_one_eq )
+	{	this->core = new Manifold::Implicit::ThreeEquationsOrMore ( m, f1, f2 );
+		Manifold::working = *this;
+		return;                                                                  }
 	
+	Manifold::Implicit::TwoEquations * m_two_eq =
+		dynamic_cast < Manifold::Implicit::TwoEquations* > ( m .core );
+	if ( m_two_eq )
+	{	this->core = new Manifold::Implicit::ThreeEquationsOrMore ( m, f1, f2 );
+		Manifold::working = *this;
+		return;                                                                  }
+	
+	Manifold::Implicit::ThreeEquationsOrMore * m_three_eq =
+		dynamic_cast < Manifold::Implicit::ThreeEquationsOrMore* > ( m .core );
+	if ( m_three_eq )
+	{	this->core = new Manifold::Implicit::ThreeEquationsOrMore ( m, f1, f2 );
+		Manifold::working = *this;
+		return;                                                                  }
+	
+	assert ( false );
+	
+}  // end of  Manifold constructor
+		
+
+inline Manifold::Manifold ( const tag::Implicit &, const Manifold & m,
+                            const Function & f1, const Function & f2, const Function & f3 )
+
+:	Manifold ( tag::non_existent )  // temporarily empty manifold
+
+{	this->core = new Manifold::Implicit::ThreeEquationsOrMore ( m, f1, f2, f3 );
+	Manifold::working = *this;                                                   }
+		
 
 inline Manifold::Implicit::OneEquation::OneEquation
 ( const Manifold & m, const Function & f )
@@ -1023,13 +1120,13 @@ inline Manifold::Implicit::OneEquation::OneEquation
 
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+		< Manifold::Core*, Manifold::Euclid* > ( m .core );
 	Function coord = m_euclid->coord_func;
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
-	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f.deriv(coord[i]);
-		grad->components.emplace_back ( f.deriv(coord[i]) );
-	this->grad_lev_func = Function ( tag::whose_core_is, grad );                   }
+	for ( size_t i = 0; i < n; i++ )  // grad->components [i] = f .deriv ( coord [i] );
+		grad->components .emplace_back ( f .deriv ( coord [i] ) );
+	this->grad_lev_func = Function ( tag::whose_core_is, grad );                        }
 
 
 inline Manifold::Implicit::TwoEquations::TwoEquations
@@ -1041,16 +1138,16 @@ inline Manifold::Implicit::TwoEquations::TwoEquations
 	grad_lev_func_2 ( 0. )  // temporarily zero gradient
 
 {	Manifold::Implicit::OneEquation * m_one_eq = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Implicit::OneEquation * > ( m.core );
+		< Manifold::Core*, Manifold::Implicit::OneEquation * > ( m .core );
 	this->surrounding_space = m_one_eq->surrounding_space;
 	this->level_function_1 = m_one_eq->level_function;
 	this->grad_lev_func_1 = m_one_eq->grad_lev_func;
-	Function coord = this->surrounding_space.coordinates();
+	Function coord = this->surrounding_space .coordinates();
 	size_t n = coord .nb_of_components();
 	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
 	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f .deriv ( coord [i] );
 		grad->components .emplace_back ( f .deriv ( coord [i] ) );
-	this->grad_lev_func_2 = Function ( tag::whose_core_is, grad );                   }
+	this->grad_lev_func_2 = Function ( tag::whose_core_is, grad );                    }
 
 
 inline Manifold::Implicit::TwoEquations::TwoEquations
@@ -1063,7 +1160,7 @@ inline Manifold::Implicit::TwoEquations::TwoEquations
 
 {	this->surrounding_space = m;
 	Manifold::Euclid * m_euclid = tag::Util::assert_cast
-		< Manifold::Core*, Manifold::Euclid* > ( m.core );
+		< Manifold::Core*, Manifold::Euclid* > ( m .core );
 	Function coord = m_euclid->coord_func;
 	size_t n = coord .nb_of_components();
 	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
@@ -1073,7 +1170,123 @@ inline Manifold::Implicit::TwoEquations::TwoEquations
 	grad = new Function::Aggregate ( tag::reserve_size, n );
 	for ( size_t i = 0; i < n; i++ ) // grad->components [i] = f2 .deriv ( coord [i] );
 		grad->components .emplace_back ( f2 .deriv ( coord [i] ) );
-	this->grad_lev_func_2 = Function ( tag::whose_core_is, grad );                 }
+	this->grad_lev_func_2 = Function ( tag::whose_core_is, grad );                      }
+
+
+inline Manifold::Implicit::ThreeEquationsOrMore::ThreeEquationsOrMore
+( const Manifold & m, const Function & f )
+
+// level_function and grad_lev_function initialized by default as empty vectors
+
+{	Manifold::Implicit::TwoEquations * m_two_eq = dynamic_cast
+		< Manifold::Implicit::TwoEquations* > ( m .core );
+	if ( m_two_eq )
+	{	this->surrounding_space = m_two_eq->surrounding_space;
+		this->level_function .push_back ( m_two_eq->level_function_1 );
+		this->level_function .push_back ( m_two_eq->level_function_2 );
+		this->grad_lev_func .push_back ( m_two_eq->grad_lev_func_1 );
+		this->grad_lev_func .push_back ( m_two_eq->grad_lev_func_2 );    }
+	else
+	{	Manifold::Implicit::ThreeEquationsOrMore * m_three_eq = tag::Util::assert_cast
+			< Manifold::Core*, Manifold::Implicit::ThreeEquationsOrMore* > ( m .core );
+		this->surrounding_space = m_three_eq->surrounding_space;
+		this->level_function = m_three_eq->level_function;
+		this->grad_lev_func = m_three_eq->grad_lev_func;                                }
+	this->level_function .push_back ( f );
+	Function coord = this->surrounding_space .coordinates();
+	size_t n = coord .nb_of_components();
+	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
+	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f .deriv ( coord [i] );
+		grad->components .emplace_back ( f .deriv ( coord [i] ) );
+	// this->grad_lev_func .emplace_back ( std::piecewise_construct,
+	//                                     std::forward_as_tuple ( tag::whose_core_is ),
+	//                                     std::forward_as_tuple ( grad )               );
+	this->grad_lev_func .push_back ( Function ( tag::whose_core_is, grad ) );           }
+
+
+inline Manifold::Implicit::ThreeEquationsOrMore::ThreeEquationsOrMore
+( const Manifold & m, const Function & f1, const Function & f2 )
+
+// level_function and grad_lev_function initialized by default as empty vectors
+
+{	Manifold::Implicit::OneEquation * m_one_eq = dynamic_cast
+		< Manifold::Implicit::OneEquation* > ( m .core );
+	Manifold::Implicit::TwoEquations * m_two_eq = dynamic_cast
+		< Manifold::Implicit::TwoEquations* > ( m .core );
+	if ( m_one_eq )
+	{	this->surrounding_space = m_one_eq->surrounding_space;
+		this->level_function .push_back ( m_one_eq->level_function );
+		this->grad_lev_func .push_back ( m_one_eq->grad_lev_func );   }
+	else if ( m_two_eq )
+	{	this->surrounding_space = m_two_eq->surrounding_space;
+		this->level_function .push_back ( m_two_eq->level_function_1 );
+		this->level_function .push_back ( m_two_eq->level_function_2 );
+		this->grad_lev_func .push_back ( m_two_eq->grad_lev_func_1 );
+		this->grad_lev_func .push_back ( m_two_eq->grad_lev_func_2 );    }
+	else
+	{	Manifold::Implicit::ThreeEquationsOrMore * m_three_eq = tag::Util::assert_cast
+			< Manifold::Core*, Manifold::Implicit::ThreeEquationsOrMore* > ( m .core );
+		this->surrounding_space = m_three_eq->surrounding_space;
+		this->level_function = m_three_eq->level_function;
+		this->grad_lev_func = m_three_eq->grad_lev_func;                                }
+	this->level_function .push_back ( f1 );
+	this->level_function .push_back ( f2 );
+	Function coord = this->surrounding_space .coordinates();
+	size_t n = coord .nb_of_components();
+	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
+	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f1 .deriv ( coord [i] );
+		grad->components .emplace_back ( f1 .deriv ( coord [i] ) );
+	this->grad_lev_func .push_back ( Function ( tag::whose_core_is, grad ) );
+	grad = new Function::Aggregate ( tag::reserve_size, n );
+	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f2 .deriv ( coord [i] );
+		grad->components .emplace_back ( f2 .deriv ( coord [i] ) );
+	this->grad_lev_func .push_back ( Function ( tag::whose_core_is, grad ) );           }
+
+
+inline Manifold::Implicit::ThreeEquationsOrMore::ThreeEquationsOrMore
+( const Manifold & m, const Function & f1, const Function & f2, const Function & f3 )
+
+// level_function and grad_lev_function initialized by default as empty vectors
+
+{	Manifold::Euclid * m_euclid = dynamic_cast < Manifold::Euclid* > ( m .core );
+	Manifold::Implicit::OneEquation * m_one_eq = dynamic_cast
+		< Manifold::Implicit::OneEquation* > ( m .core );
+	Manifold::Implicit::TwoEquations * m_two_eq = dynamic_cast
+		< Manifold::Implicit::TwoEquations* > ( m .core );
+	if ( m_euclid ) this->surrounding_space = m;
+	else if ( m_one_eq )
+	{	this->surrounding_space = m_one_eq->surrounding_space;
+		this->level_function .push_back ( m_one_eq->level_function );
+		this->grad_lev_func .push_back ( m_one_eq->grad_lev_func );   }
+	else if ( m_two_eq )
+	{	this->surrounding_space = m_two_eq->surrounding_space;
+		this->level_function .push_back ( m_two_eq->level_function_1 );
+		this->level_function .push_back ( m_two_eq->level_function_2 );
+		this->grad_lev_func .push_back ( m_two_eq->grad_lev_func_1 );
+		this->grad_lev_func .push_back ( m_two_eq->grad_lev_func_2 );    }
+	else
+	{	Manifold::Implicit::ThreeEquationsOrMore * m_three_eq = tag::Util::assert_cast
+			< Manifold::Core*, Manifold::Implicit::ThreeEquationsOrMore* > ( m .core );
+		this->surrounding_space = m_three_eq->surrounding_space;
+		this->level_function = m_three_eq->level_function;
+		this->grad_lev_func = m_three_eq->grad_lev_func;                                }
+	this->level_function .push_back ( f1 );
+	this->level_function .push_back ( f2 );
+	this->level_function .push_back ( f3 );
+	Function coord = this->surrounding_space .coordinates();
+	size_t n = coord .nb_of_components();
+	Function::Aggregate * grad = new Function::Aggregate ( tag::reserve_size, n );
+	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f1 .deriv ( coord [i] );
+		grad->components .emplace_back ( f1 .deriv ( coord [i] ) );
+	this->grad_lev_func .push_back ( Function ( tag::whose_core_is, grad ) );
+	grad = new Function::Aggregate ( tag::reserve_size, n );
+	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f2 .deriv ( coord [i] );
+		grad->components .emplace_back ( f2 .deriv ( coord [i] ) );
+	this->grad_lev_func .push_back ( Function ( tag::whose_core_is, grad ) );
+	grad = new Function::Aggregate ( tag::reserve_size, n );
+	for ( size_t i = 0; i < n; i++ ) // grad->components[i] = f3 .deriv ( coord [i] );
+		grad->components .emplace_back ( f3 .deriv ( coord [i] ) );
+	this->grad_lev_func .push_back ( Function ( tag::whose_core_is, grad ) );           }
 
 //-----------------------------------------------------------------------------------------
 

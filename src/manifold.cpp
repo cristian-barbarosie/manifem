@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.02.17
+// manifold.cpp 2022.02.19
 
 //   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
@@ -874,8 +874,6 @@ void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) 
 
 // just a few steps of Newton's method for under-determined systems of equations
 
-// we could inline this, as interpolate_implicit_two, to gain speed	
-	
 {	const Function & coord = this->get_coord_func();
 	size_t n = coord .nb_of_components();
 	const Function & lev_func_1 = this->level_function_1;
@@ -912,6 +910,69 @@ void Manifold::Implicit::TwoEquations::project ( Cell::Positive::Vertex * P_c ) 
 		coord (P) = coord_at_P;                                                }                }
 
 
+void Manifold::Implicit::ThreeEquationsOrMore::project ( Cell::Positive::Vertex * P_c ) const
+
+// just a few steps of conjugate gradient method
+
+{	const Function & coord = this->get_coord_func();
+	const size_t geom_dim = coord .nb_of_components();
+	const size_t nb_constr = this->level_function .size();
+	assert ( this->grad_lev_func .size() == nb_constr );
+	std::vector < Function > ::const_iterator it;
+	#ifndef NDEBUG
+	for ( it = this->level_function .begin(); it != this->level_function .end(); it++ )
+	{	const Function & lev_func = *it;
+		assert ( lev_func .nb_of_components() == 1 );  }
+	for ( it = this->grad_lev_func .begin(); it != this->grad_lev_func .end(); it++ )
+	{	const Function & grad = *it;
+		assert ( grad .nb_of_components() == geom_dim );  }
+	#endif  //  DEBUG
+	
+	const Cell P ( tag::whose_core_is, P_c, tag::previously_existing, tag::surely_not_null );
+	// do we really need a temporary wrapper for P_c ? !!
+
+	std::vector < double > coord_at_P = coord (P);
+	assert ( coord_at_P .size() == geom_dim );
+	std::vector < double > constr ( nb_constr ), grad ( geom_dim ), direc ( geom_dim );
+	tag::Util::Tensor < double > grad_constr ( nb_constr, geom_dim );
+
+	// first step in conjugate gradient method :
+	{  // just a block of code for hiding names
+	size_t i = 0;
+	for ( it = this->level_function .begin(); it != this->level_function .end(); it++ )
+	{	assert ( i < nb_constr );
+		constr [i] = (*it) (P);  i++;  }
+	assert ( i == nb_constr );
+	i = 0;
+	for ( it = this->grad_lev_func .begin(); it != this->grad_lev_func .end(); it++ )
+	{	assert ( i < nb_constr );
+		for ( size_t j = 0; j < geom_dim; j++ )
+			grad_constr ( i, j ) = (*it) [j] (P);  }
+	assert ( i == nb_constr );
+	}  // just a block of code for hiding names
+	tag::Util::conjugate_gradient ( coord_at_P, constr, grad_constr, grad, direc, true );
+	// last argument true means "first step"
+	coord (P) = coord_at_P;
+	
+	for ( short int k = 0; k < Manifold::Implicit::steps_for_Newton; k++ )
+	{	{  // just a block of code for hiding names
+		size_t i = 0;
+		for ( it = this->level_function .begin(); it != this->level_function .end(); it++ )
+		{	assert ( i < nb_constr );
+			constr [i] = (*it) (P);  i++;  }
+		assert ( i == nb_constr );
+		i = 0;
+		for ( it = this->grad_lev_func .begin(); it != this->grad_lev_func .end(); it++ )
+		{	assert ( i < nb_constr );
+			for ( size_t j = 0; j < geom_dim; j++ )
+				grad_constr ( i, j ) = (*it) [j] (P);  }
+		assert ( i == nb_constr );
+		}  // just a block of code for hiding names
+		tag::Util::conjugate_gradient ( coord_at_P, constr, grad_constr, grad, direc, false );
+		// last argument false means "not first step"
+		coord (P) = coord_at_P;                                                                 }  }
+
+
 void Manifold::Parametric::project ( Cell::Positive::Vertex * P_c ) const
 
 {	std::map< Function, Function >::const_iterator it;
@@ -927,4 +988,64 @@ void Manifold::Quotient::project ( Cell::Positive::Vertex * P_c ) const  { }
 
 //-----------------------------------------------------------------------------------------
 
+
+void tag::Util::conjugate_gradient   // Polak Ribiere              // static
+( std::vector < double > & x, const std::vector < double > constr,
+	const tag::Util::Tensor < double > & grad_constr, std::vector < double > & grad,
+	std::vector < double > & direc, bool first_step                                 )
+
+// performs one step for minimizing a sum of squares of m constraints, in n variables
+
+// x is the current point, will be changed
+
+// 'constr' has the values of each constraint at point x
+// 'grad_constr' has the gradients of each individual constraint at point x
+
+// grad  receives the gradient of the sum of squares at previous step
+// and also returns the gradient of the sum of squares at x
+	
+// uses previous direction 'direc' and returns the new direction in the same vector
+// if 'first step', do not use information about previous direction
+
+// norm of 'grad' or of 'direc' can be used as stopping criterion
+	
+{	size_t n = x .size();
+	assert ( direc .size() == n );
+	assert ( grad .size() == n );
+	size_t m = constr .size();
+	assert ( grad_constr .dimensions == std::list < size_t > ( { m, n } ) );
+
+	std::vector < double > new_grad ( n, 0. );
+	assert ( new_grad .size() == n );
+	tag::Util::Tensor < double > grad_grad ( n, n );
+	for ( size_t i = 0; i <	n; i++ )
+	for ( size_t k = 0; k <	m; k++ )
+	{	new_grad [i] += constr [k] * grad_constr ( k, i );
+		for ( size_t j = 0; j <	n; j++ )
+			grad_grad ( i, j ) += grad_constr ( k, i ) * grad_constr ( k, j );  }
+	
+	if ( first_step ) direc = new_grad;
+	else
+	{	double up = 0., down = 0.;
+		for ( size_t i = 0; i < n; i++ )
+		{	up += new_grad [i] * ( new_grad [i] - grad [i] );
+			down += grad [i] * grad [i];                      }
+		double alpha = up / down;
+		for ( size_t i = 0; i < n; i++ ) direc [i] *= alpha;
+		for ( size_t i = 0; i < n; i++ ) direc [i] += new_grad [i];  }
+
+	double down = 0.;
+	for ( size_t i = 0; i < n; i++ )
+	for ( size_t j = 0; j < n; j++ )
+		down += grad_grad ( i, j ) * direc [i] * direc [j];
+	
+	for ( size_t i = 0; i < n; i++ )
+	for ( size_t j = 0; j < n; j++ )
+		x [i] -= new_grad [j] * direc [j] * direc [i] / down;
+	
+	grad .swap ( new_grad );
+
+}  // end of  conjugate_gradient
+
+//---------------------------------------------------------------------------------------------------//
 
