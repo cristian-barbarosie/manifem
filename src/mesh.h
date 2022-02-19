@@ -5687,7 +5687,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 
 	// 'cells' inherited from Mesh::Fuzzy
 
-	// in 'singular' we keep pair of adjacent cells
+	// in 'singular' we keep pairs of adjacent cells
 	// the common face of such a pair is a singular face
 	// that is, a face where the mesh touches itself
 	std::vector < std::pair < Cell, Cell > > singular;
