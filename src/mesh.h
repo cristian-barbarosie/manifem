@@ -1235,6 +1235,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 		                    tag::use_existing_vertices, tag::return_map_between,
 	                      tag::cells_of_dim, dim, m                           );  }
 
+	// we are still in class Mesh
+
 	Mesh fold ( const tag::Identify &, const Mesh & msh1, const tag::With &, const Mesh & msh2,
 	            const tag::Identify &, const Mesh & msh3, const tag::With &, const Mesh & msh4,
 	            const tag::BuildNewVertices &                                                  );
@@ -1318,6 +1320,8 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	{	return this->fold ( tag::identify, msh1, tag::with, msh2,
 		                    tag::identify, msh3, tag::with, msh4,
 		                    tag::identify, msh5, tag::with, msh6, tag::use_existing_vertices );  }
+
+	// we are still in class Mesh
 
 	// 'unfold' does the opposite : takes a mesh and unfolds it
 	// defined in global.cpp
@@ -4990,8 +4994,6 @@ class Mesh::Connected::HighDim : public Mesh::NotZeroDim
 	// add_to_my_cells ( Cell::Core *, size_t )  defined by Cell::Core, returns garbage
 	// remove_from_my_cells defined by Cell::Core, does nothing
 
-	inline Mesh::Iterator iterator ( const tag::OverCellsOfDim &, const size_t d );
-	
 	#ifndef NDEBUG
 	// attribute  name  inherited from Mesh::Core
 	// std::string get_name()  defined by Mesh::Core
@@ -5101,8 +5103,6 @@ class Mesh::MultiplyConnected::HighDim : public Mesh::NotZeroDim
 	// add_to_my_cells ( Cell::Core *, size_t )  defined by Cell::Core, returns garbage
 	// remove_from_my_cells defined by Cell::Core, does nothing
 
-	inline Mesh::Iterator iterator ( const tag::OverCellsOfDim &, const size_t d );
-	
 	#ifndef NDEBUG
 	// attribute  name  inherited from Mesh::Core
 	// std::string get_name()  defined by Mesh::Core
@@ -5661,6 +5661,9 @@ class Mesh::STSI : public Mesh::Fuzzy
 // mainly used for iterators over connected meshes
 // also used for progressive mesh generation
 
+// when this class is ready for use, uncomment two lines in
+// inline Cell::Cell ( const tag::WhoseBoundaryIs &, Mesh & msh )
+
 {	public :
 	
 	// size_t nb_of_wrappers  inherited from tag::Util::Core ifdef COLLECT_CM
@@ -5726,8 +5729,6 @@ class Mesh::STSI : public Mesh::Fuzzy
 
 	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
 
-	inline Mesh::Iterator iterator ( const tag::OverCellsOfDim &, const size_t d );
-	
 	#ifndef NDEBUG
 	// attribute  name  inherited from Mesh::Core
 	// std::string get_name()  defined by Mesh::Core
@@ -6194,9 +6195,9 @@ inline Cell::Cell ( const tag::WhoseBoundaryIs &, Mesh & msh )
 				 tag::freshly_created                                         )
 #ifndef NDEBUG
 {	assert ( msh .is_positive() );
-	assert ( msh .dim() >= 1 );
-	Mesh::STSI * msh_stsi = dynamic_cast < Mesh::STSI* > ( msh .core );
-	assert ( msh_stsi == nullptr );                                     }
+	assert ( msh .dim() >= 1 );    }
+	// Mesh::STSI * msh_stsi = dynamic_cast < Mesh::STSI* > ( msh .core );
+	// assert ( msh_stsi == nullptr );                                     }
 #else
 {	}
 #endif

@@ -1017,7 +1017,7 @@ void tag::Util::conjugate_gradient   // Polak Ribiere              // static
 	assert ( direc .size() == n );
 	assert ( grad .size() == n );
 	size_t m = constr .size();
-	assert ( grad_constr .dimensions == std::list < size_t > ( { m, n } ) );
+	assert ( grad_constr .dimensions == std::vector < size_t > ( { m, n } ) );
 
 	std::vector < double > new_grad ( n, 0. );
 	assert ( new_grad .size() == n );
