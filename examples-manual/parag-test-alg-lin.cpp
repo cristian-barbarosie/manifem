@@ -367,13 +367,14 @@ void simple_gradient
 
 //---------------------------------------------------------------------------------------------------//
 
-int main ()
+int main1 ()  // gradientes conjugados
 
-{	Tensor < double > points ( 4, 3 );
-	points (0,0) =  1.;   points (0,1) = 0.;    points (0,2) = 0.;
-	points (1,0) =  0.5;  points (1,1) = 0.86;  points (1,2) = 0.;
-	points (2,0) =  0.5;  points (2,1) = 0.3;   points (2,2) = 0.6;
-	points (3,0) = -0.6;  points (3,1) = 0.3;   points (3,2) = 0.5;
+{	Tensor < double > points ( 3, 2 );
+	points (0,0) =  1.;   points (0,1) = 0.;
+	points (1,0) =  0.5;  points (1,1) = 0.7;
+	points (2,0) = -0.5;  points (2,1) = 0.85;
+
+	std::cout << "gradientes conjugados" << std::endl;
 
 	std::list < size_t > dims = points .dimensions;
 	assert ( dims .size() == 2 );
@@ -383,7 +384,7 @@ int main ()
 	it ++;  assert ( it != dims .end() );
 	size_t geom_dim = *it;
 
-	std::vector < double > grad ( geom_dim ), direc ( geom_dim ), x ( geom_dim, 0.2 );
+	std::vector < double > grad ( geom_dim ), direc ( geom_dim ), x { 0.2, 0.1 };
 	
 	std::vector < double > constr ( n_points );
 	for ( size_t i = 0; i < n_points; i++ )
@@ -433,67 +434,127 @@ int main ()
 		conjugate_gradient ( x, constr, grad_constr, grad, direc, false );                }
 		// last argument false means "not first step"
 
+	return 0;
 }
 
+//------------------------------------------------------------------------------------------------------//
 
 
-void main1 ()
+int main2 ()  // impor distancias iguais
 
-{	Tensor < double > A (3,3);
-	A (0,0) = 1.;  A (1,0) =  0.5;  A (0,1) = 0.5;  A (1,1) = 1.;
-	A (0,2) = 3.;  A (1,2) = -0.2;  A (2,0) = 0.;   A (2,1) = 0.;  A (2,2) = 2.;
+{	Tensor < double > points (3,2);
+	points (0,0) =  1. ;  points (0,1) =  0.;
+	points (1,0) =  0.5;  points (1,1) =  0.7;
+	points (2,0) = -0.5;  points (2,1) =  0.85;
 
-	std::vector < double > b {0.,1.,2.}, x {0.,0.,0.};
+	std::vector < double > x {0.2,0.1};
 
-	size_t n = x .size();
-	size_t m = b .size();
-	assert ( A .dimensions == std::list < size_t > ( { m, n } ) );
+	std::cout << "impor distancias iguais" << std::endl;
 
-	std::vector < double > resid (m);
-	for ( size_t i = 0; i < m; i++ )
-	{	resid [i] = -b [i];
-		for ( size_t j = 0; j < n; j++ )
-			resid [i] += A ( i, j ) * x [j];  }
+	std::list < size_t > ::iterator it = points .dimensions .begin();
+	assert ( it != points .dimensions .end() );
+	size_t nb_points = *it;
+	it++;  assert ( it != points .dimensions .end() );
+	size_t geom_dim = *it;
+	assert ( geom_dim == x .size() );
+	it++;  assert ( it == points .dimensions .end() );
 
-	std::vector < double > grad (n), direc (n);
+	for ( size_t i = 0; i < geom_dim; i++ ) std::cout << " " << x [i];
+	std::cout << " --> ";
+	for ( size_t j = 0; j < nb_points; j++ )
+	{	double dist2 = 0.;
+		for ( size_t i = 0; i < geom_dim; i++ )
+			dist2 += ( points (j,i) -x [i] ) * ( points (j,i) -x [i] );
+		std::cout << " " << dist2;                                    }
+	std::cout << std::endl;
+
+	for ( size_t iter = 0; iter < 4 * nb_points; iter++ )
+	{	double dist_min = 100., dist_max = 0.;
+		size_t j_min = nb_points, j_max = nb_points;
+		for ( size_t j = 0; j < nb_points; j++ )
+		{	double dist2 = 0.;
+			for ( size_t i = 0; i < geom_dim; i++ )
+				dist2 += ( points (j,i) -x [i] ) * ( points (j,i) -x [i] );
+			if ( dist2 < dist_min )
+			{	dist_min = dist2;
+				j_min = j;         }
+			if ( dist2 > dist_max )
+			{	dist_max = dist2;
+				j_max = j;         }                                         }
+		assert ( j_min < nb_points );
+		assert ( j_max < nb_points );
+		std::vector < double > BA ( geom_dim, 0. ), PM ( geom_dim, 0. );
+		for ( size_t i = 0; i < geom_dim; i++ )
+		{	BA [i] = points ( j_max, i ) - points ( j_min, i );
+			PM [i] = ( points ( j_max, i ) + points ( j_min, i ) ) / 2. - x [i];  }
+		double up = 0., down = 0.;
+		for ( size_t i = 0; i < geom_dim; i++ )
+		{	up += PM [i] * BA [i];
+			down += BA [i] * BA [i];  }
+		double coef = up / down;
+		for ( size_t i = 0; i < geom_dim; i++ )
+			x [i] += coef * BA [i];
+		for ( size_t i = 0; i < geom_dim; i++ ) std::cout << " " << x [i];
+		std::cout << " --> ";
+		for ( size_t j = 0; j < nb_points; j++ )
+		{	double dist2 = 0.;
+			for ( size_t i = 0; i < geom_dim; i++ )
+				dist2 += ( points (j,i) -x [i] ) * ( points (j,i) -x [i] );
+			std::cout << " " << dist2;                                    }
+		std::cout << std::endl;                                                   }
 	
-	for ( size_t i = 0; i < n; i++ )
-		std::cout << " " << x [i];
-	std::cout << std::endl;
-	conjugate_gradient ( x, resid, A, grad, direc, true );
-	// last argument true means "first step"
+	return 0;
+}
 
-	for ( size_t iter = 0; iter < 20; iter++ )
-	{	for ( size_t i = 0; i < n; i++ )
-			std::cout << " " << x [i];
-		std::cout << std::endl;
-		// we need to compute again the values of the constraints (resid)
-		// no need to update gradients, they are constant
-		double norm = 0.;
-		for ( size_t i = 0; i < m; i++ )
-		{	resid [i] = -b [i];
-			for ( size_t j = 0; j < n; j++ )
-				resid [i] += A ( i, j ) * x [j];
-			double tmp = std::abs ( resid [i] );
-			if ( tmp > norm ) norm = tmp;        }
-		if ( norm < 1.e-7 ) break;
-		conjugate_gradient ( x, resid, A, grad, direc, false );  }
-		// last argument false means "not first step"
+//------------------------------------------------------------------------------------------------------//
 
-	for ( size_t i = 0; i < n; i++ )
-		std::cout << " " << x [i];
-	std::cout << std::endl;
 
-	std::cout << "---------------------------" << std::endl;
-	for ( size_t i = 0; i < m; i++ )
-		std::cout << " " << b [i];
-	std::cout << std::endl;
+int main ()  // baricentros com pesos
 
-	for ( size_t i = 0; i < m; i++ )
-	{	double tmp = 0;
-		for ( size_t j = 0; j < n; j++ )
-			tmp += A (i,j) * x [j];
-		std::cout << " " << tmp;         }
+{	Tensor < double > points (3,2);
+	points (0,0) =  1. ;  points (0,1) =  0.;
+	points (1,0) =  0.5;  points (1,1) =  0.6;
+	points (2,0) = -0.5;  points (2,1) =  0.85;
+
+	std::cout << "baricentros com pesos" << std::endl;
+
+	std::vector < double > x {0.2,0.1};
+
+	std::list < size_t > ::iterator it = points .dimensions .begin();
+	assert ( it != points .dimensions .end() );
+	size_t nb_points = *it;
+	it++;  assert ( it != points .dimensions .end() );
+	size_t geom_dim = *it;
+	assert ( geom_dim == x .size() );
+	it++;  assert ( it == points .dimensions .end() );
+
+	for ( size_t i = 0; i < geom_dim; i++ ) std::cout << " " << x [i];
+	std::cout << " --> ";
+	for ( size_t j = 0; j < nb_points; j++ )
+	{	double dist2 = 0.;
+		for ( size_t i = 0; i < geom_dim; i++ )
+			dist2 += ( points (j,i) -x [i] ) * ( points (j,i) -x [i] );
+		std::cout << " " << dist2;                                    }
 	std::cout << std::endl;
 
+	for ( size_t iter = 0; iter < 4 * nb_points; iter++ )
+	{	std::vector < double > delta ( nb_points, 0. );
+		for ( size_t j = 0; j < nb_points; j++ )
+		{	double dist2 = 0.;
+			for ( size_t i = 0; i < geom_dim; i++ )
+				dist2 += ( points (j,i) -x [i] ) * ( points (j,i) -x [i] );
+			for ( size_t i = 0; i < geom_dim; i++ )
+				delta [i] += ( dist2 - 1. ) * ( points (j,i) -x [i] );     } 
+		for ( size_t i = 0; i < geom_dim; i++ )
+			x [i] += 0.5 * delta [i];
+		for ( size_t i = 0; i < geom_dim; i++ ) std::cout << " " << x [i];
+		std::cout << " --> ";
+		for ( size_t j = 0; j < nb_points; j++ )
+		{	double dist2 = 0.;
+			for ( size_t i = 0; i < geom_dim; i++ )
+				dist2 += ( points (j,i) -x [i] ) * ( points (j,i) -x [i] );
+			std::cout << " " << dist2;                                    }
+		std::cout << std::endl;                                                   }
+	
+	return 0;
 }

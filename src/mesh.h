@@ -1,5 +1,5 @@
 
-// mesh.h  2022.02.19
+// mesh.h  2022.02.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -224,143 +224,125 @@ namespace tag {  // see paragraph 11.3 in the manual
 template <typename T>
 class tag::Util::Tensor
 
+// indices begin at 0
+// constructors fill space with 0.
+
 {	// data:
 	public:
 	std::vector < T > elements;
-	std::list < size_t > dimensions, cumulative_dims;
+	std::vector < size_t > dimensions, cumulative_dims;
 	size_t total_dim;
 	
 	// constructors:
 	inline Tensor ( ) { };
-	inline Tensor ( const std::list < size_t > dims )
-	{	dimensions = dims;
-		allocate_space (); };
-	inline Tensor (const std::list < char > dims)
-	{	dimensions = str2list ( dims );
-		allocate_space ();             };
-	inline Tensor ( const char dims[] )
-	{	dimensions = str2list ( dims );
-		allocate_space ();             };
+	inline Tensor ( const std::vector < size_t > dims )
+	{	this->dimensions = dims;
+		this->allocate_space (); };
 	inline Tensor ( size_t i, size_t j,
-	         size_t k, size_t l )
-	{	dimensions .push_back (i);
-		dimensions .push_back (j);
-		dimensions .push_back (k);
-		dimensions .push_back (l);
-		allocate_space ();        };
+	                size_t k, size_t l )
+	{	this->dimensions .push_back (i);
+		this->dimensions .push_back (j);
+		this->dimensions .push_back (k);
+		this->dimensions .push_back (l);
+		this->allocate_space ();        };
 	inline Tensor ( size_t i, size_t j, size_t k )
-	{	dimensions .push_back (i);
-		dimensions .push_back (j);
-		dimensions .push_back (k);
-		allocate_space ();        };
+	{	this->dimensions .push_back (i);
+		this->dimensions .push_back (j);
+		this->dimensions .push_back (k);
+		this->allocate_space ();        };
 	inline Tensor ( size_t i, size_t j )
-	{	dimensions .push_back (i);
-		dimensions .push_back (j);
-		allocate_space ();         };
+	{	this->dimensions .push_back (i);
+		this->dimensions .push_back (j);
+		this->allocate_space ();         };
 	inline Tensor ( size_t i )
-	{	dimensions .push_back (i);
-		allocate_space ();        };
+	{	this->dimensions .push_back (i);
+		this->allocate_space ();        };
 	inline ~Tensor () { };
 
 	// methods:
-	inline std::list < size_t > str2list ( const std::list < char > lc )
-	{	const size_t izero = size_t ('0');
-		std::list < char > ::iterator i;
-		for ( i = lc .begin(); i != lc .end(); i++)
-		{	assert ( *i >= '0' );
-			assert ( *i <= '9' ); }
-		std::list < size_t > li;
-		for ( i = lc.begin(); i != lc .end(); i++)
-			li .push_back ( size_t (*i) - izero );
-		return li;                                   }
-	inline std::list < size_t > str2list ( const char lc[] )
-	{	const size_t izero = size_t ('0');
-		for ( size_t i=0 ; i < std::strlen (lc); i++)
-		{	assert ( lc[i] >= '0' );
-			assert ( lc[i] <= '9' ); }
-		std::list < size_t > li;
-		for ( size_t i=0; i < std::strlen (lc); i++ )
-			li .push_back ( size_t ( lc[i] ) - izero );
-		return li;                                 }
 	inline void allocate_space ()
-	{	total_dim = 1;
-		std::list < size_t > ::iterator k;
-		for ( k = dimensions .begin(); k != dimensions .end(); k++)
-		{	cumulative_dims .push_back ( total_dim );
-			total_dim *= *k;                         }
-		// elements .reserve ( total_dim );
-		elements .insert ( elements .end(), total_dim, 0.0 );
-		assert ( elements .size() == total_dim );                    };
-	inline size_t pointer ( std::list < size_t > index ) const
-	{	assert ( index .size() == dimensions .size() );
-		size_t pointer = 0;
-		std::list < size_t > ::const_iterator i, d, cd;
-		for ( i = index .begin(), d = dimensions .begin(),
-		      cd =cumulative_dims.begin();
-		      i != index.end(); i++, d++, cd++)
-		{	assert ( *i < *d );
-			pointer += (*i) * (*cd); }
-		return pointer;                                   }
-	inline T& operator() ( std::list < size_t > index )
-	{ return ( elements [ pointer ( index ) ] );  }
-	inline const T& operator() ( std::list < size_t > index ) const
-	{ return ( elements [ pointer ( index ) ] );  }
-	inline T& operator[] ( const char index[] )
-	{ return operator() ( str2list ( index ) );  }
-	inline const T& operator() ( const char index[] ) const
-	{ return operator() ( str2list ( index ) );  }
+	{	this->total_dim = 1;
+		std::vector < size_t > ::iterator k;
+		for ( k = this->dimensions .begin(); k != this->dimensions .end(); k++)
+		{	this->cumulative_dims .push_back ( total_dim );
+			this->total_dim *= *k;                         }
+		// this->elements .reserve ( total_dim );
+		this->elements .insert ( this->elements .end(), total_dim, 0.0 );
+		assert ( this->elements .size() == this->total_dim );                    };
+	inline size_t pointer ( std::vector < size_t > index ) const
+	{	assert ( index .size() == this->dimensions .size() );
+		size_t point = 0;
+		std::vector < size_t > ::const_iterator i, d, cd;
+		for ( i = index .begin(), d = this->dimensions .begin(),
+		      cd = this->cumulative_dims .begin();
+		      i != index.end(); i++, d++, cd++                  )
+		{	assert ( d != this->dimensions .end() );
+			assert ( cd != this->cumulative_dims .end() );
+			assert ( *i < *d );
+			point += (*i) * (*cd); }
+		return point;                                              }
+	inline T& operator() ( std::vector < size_t > index )
+	{ return ( this->elements [ this->pointer ( index ) ] );  }
+	inline const T& operator() ( std::vector < size_t > index ) const
+	{ return ( this->elements [ this->pointer ( index ) ] );  }
 	inline T& operator() ( size_t i, size_t j,
-	               size_t k, size_t l )
-	{	assert ( dimensions .size() == 4 );
-		std::list < size_t > index;
+	                       size_t k, size_t l )
+	{	assert ( this->dimensions .size() == 4 );
+		std::vector < size_t > index;
+		index .reserve (4);
 		index .push_back (i);
 		index .push_back (j);
 		index .push_back (k);
 		index .push_back (l);
-		return operator() ( index );        }
+		return this->operator() ( index );        }
 	inline const T& operator()( size_t i, size_t j,
-	                     size_t k, size_t l ) const
-	{	assert ( dimensions .size() == 4 );
-		std::list < size_t > index;
+	                            size_t k, size_t l ) const
+	{	assert ( this->dimensions .size() == 4 );
+		std::vector < size_t > index;
+		index .reserve (4);
 		index .push_back (i);
 		index .push_back (j);
 		index .push_back (k);
 		index .push_back (l);
-		return operator() ( index );        }
+		return this->operator() ( index );        }
 	inline T& operator() ( size_t i, size_t j, size_t k )
-	{	assert ( dimensions .size() == 3 );
-		std::list < size_t > index;
+	{	assert ( this->dimensions .size() == 3 );
+		std::vector < size_t > index;
+		index .reserve (3);
 		index .push_back (i);
 		index .push_back (j);
 		index .push_back (k);
-		return operator() ( index );        }
+		return this->operator() ( index );        }
 	inline const T& operator() ( size_t i, size_t j, size_t k ) const
-	{	assert ( dimensions .size() == 3 );
-		std::list < size_t > index;
+	{	assert ( this->dimensions .size() == 3 );
+		std::vector < size_t > index;
+		index .reserve (3);
 		index .push_back (i);
 		index .push_back (j);
 		index .push_back (k);
-		return operator() ( index );        }
+		return this->operator() ( index );        }
 	inline T& operator() ( size_t i, size_t j )
-	{	assert ( dimensions .size() == 2 );
-		std::list < size_t > index;
+	{	assert ( this->dimensions .size() == 2 );
+		std::vector < size_t > index;
+		index .reserve (2);
 		index .push_back (i);
 		index .push_back (j);
-		return operator() ( index );        }
+		return this->operator() ( index );        }
 	inline const T& operator() ( size_t i, size_t j ) const
-	{	assert ( dimensions .size() == 2 );
-		std::list < size_t > index;
+	{	assert ( this->dimensions .size() == 2 );
+		std::vector < size_t > index;
+		index .reserve (2);
 		index .push_back (i);
 		index .push_back (j);
-		return operator() ( index );        }
+		return this->operator() ( index );        }
 	inline const T& operator() ( size_t i ) const
-	{	assert ( dimensions .size() == 1 );
-		std::list < size_t > index ( 1, i );
-		return operator() ( index );       }
+	{	assert ( this->dimensions .size() == 1 );
+		std::vector < size_t > index ( 1, i );
+		return operator() ( index );              }
 	inline T& operator[] ( size_t i )
-	{	assert ( dimensions .size() == 1 );
-	  std::list < size_t > index ( 1, i );
-		return operator() ( index );       }
+	{	assert ( this->dimensions .size() == 1 );
+	  std::vector < size_t > index ( 1, i );
+		return this->operator() ( index );        }
 
 };  // end of  class Tensor
 

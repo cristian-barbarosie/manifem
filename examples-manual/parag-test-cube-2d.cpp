@@ -1,4 +1,8 @@
 
+// example presented in paragraph 7.12 of the manual
+// http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
+// a cube repeated in two directions of the space
+
 #include "maniFEM.h"
 
 using namespace maniFEM;
@@ -20,17 +24,23 @@ int main ()
 	const double r2 = 0.2;
 	Manifold sphere = RR3 .implicit ( x*x + y*y + z*z == r2 );
 
-	Cell AA ( tag::vertex );  x (AA) = -0.5;  y (AA) = -0.5;  z (AA) = -0.5;
-	Cell BB ( tag::vertex );  x (BB) = -0.5;  y (BB) =  0.5;  z (BB) = -0.5;
-	Cell CC ( tag::vertex );  x (CC) =  0.5;  y (CC) =  0.5;  z (CC) = -0.5;
-	Cell DD ( tag::vertex );  x (DD) =  0.5;  y (DD) = -0.5;  z (DD) = -0.5;
-	Cell EE ( tag::vertex );  x (EE) = -0.5;  y (EE) = -0.5;  z (EE) =  0.5;
-	Cell FF ( tag::vertex );  x (FF) = -0.5;  y (FF) =  0.5;  z (FF) =  0.5;
-	Cell GG ( tag::vertex );  x (GG) =  0.5;  y (GG) =  0.5;  z (GG) =  0.5;
-	Cell HH ( tag::vertex );  x (HH) =  0.5;  y (HH) = -0.5;  z (HH) =  0.5;
-	sphere .project (AA);  sphere .project (BB);  sphere .project (CC);  sphere .project (DD);  
-	sphere .project (EE);  sphere .project (FF);  sphere .project (GG);  sphere .project (HH);  
+	Manifold points_AA_GG = sphere .implicit ( x == y, x == z );
+	Cell AA ( tag::vertex, tag::of_coords, { -0.5, -0.5, -0.5 }, tag::project );
+	Cell GG ( tag::vertex, tag::of_coords, {  0.5,  0.5,  0.5 }, tag::project );
 
+	Manifold points_BB_HH = sphere .implicit ( x + y == 0., x == z );
+	Cell BB ( tag::vertex, tag::of_coords, { -0.5,  0.5, -0.5 }, tag::project );
+	Cell HH ( tag::vertex, tag::of_coords, {  0.5, -0.5,  0.5 }, tag::project );
+
+	Manifold points_CC_EE = sphere .implicit ( x == y, x + z == 0. );
+	Cell CC ( tag::vertex, tag::of_coords, {  0.5,  0.5, -0.5 }, tag::project );
+	Cell EE ( tag::vertex, tag::of_coords, { -0.5, -0.5,  0.5 }, tag::project );
+
+	Manifold points_DD_FF = sphere .implicit ( x + y == 0, y == z );
+	Cell DD ( tag::vertex, tag::of_coords, {  0.5, -0.5, -0.5 }, tag::project );
+	Cell FF ( tag::vertex, tag::of_coords, { -0.5,  0.5,  0.5 }, tag::project );
+
+	sphere .set_as_working_manifold();
 	Mesh AABB ( tag::segment, AA .reverse(), BB, tag::divided_in, 15 );
 	Mesh BBCC ( tag::segment, BB .reverse(), CC, tag::divided_in, 15 );
 	Mesh CCDD ( tag::segment, CC .reverse(), DD, tag::divided_in, 15 );
@@ -116,13 +126,13 @@ int main ()
 
 	std::cout << "built 3D torus with round hole, total " << torus .number_of ( tag::cells_of_max_dim )
 	          << " cubes, now unfolding" << std::endl;
-	Mesh torus_unfolded = torus .unfold ( tag::over_region, x*x + 2*y*y + 3*z*z < 10 );
+	Mesh torus_unfolded = torus .unfold ( tag::over_region, x*x + 2*y*y + 3*z*z < 10, 5. * z + x < 0.4 );
 
 	std::cout << "built unfolded mesh with " << torus_unfolded .number_of ( tag::cells_of_max_dim )
 	          << " cubes, now exporting" << std::endl;
-	torus_unfolded .export_to_file ( tag::msh, "torus_of_cubes.msh");
+	torus_unfolded .export_to_file ( tag::msh, "torus-of-cubes.msh");
 	
-	std::cout << "produced file torus_of_cubes.msh" << std::endl;
+	std::cout << "produced file torus-of-cubes.msh" << std::endl;
 
 }  // end of main
 

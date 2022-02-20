@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.02.19
+// manifold.cpp 2022.02.20
 
 //   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
@@ -947,7 +947,8 @@ void Manifold::Implicit::ThreeEquationsOrMore::project ( Cell::Positive::Vertex 
 	for ( it = this->grad_lev_func .begin(); it != this->grad_lev_func .end(); it++ )
 	{	assert ( i < nb_constr );
 		for ( size_t j = 0; j < geom_dim; j++ )
-			grad_constr ( i, j ) = (*it) [j] (P);  }
+			grad_constr ( i, j ) = (*it) [j] (P);
+		i++;                                    }
 	assert ( i == nb_constr );
 	}  // just a block of code for hiding names
 	tag::Util::conjugate_gradient ( coord_at_P, constr, grad_constr, grad, direc, true );
@@ -965,7 +966,8 @@ void Manifold::Implicit::ThreeEquationsOrMore::project ( Cell::Positive::Vertex 
 		for ( it = this->grad_lev_func .begin(); it != this->grad_lev_func .end(); it++ )
 		{	assert ( i < nb_constr );
 			for ( size_t j = 0; j < geom_dim; j++ )
-				grad_constr ( i, j ) = (*it) [j] (P);  }
+				grad_constr ( i, j ) = (*it) [j] (P);
+			i++;                                    }
 		assert ( i == nb_constr );
 		}  // just a block of code for hiding names
 		tag::Util::conjugate_gradient ( coord_at_P, constr, grad_constr, grad, direc, false );
@@ -1008,6 +1010,8 @@ void tag::Util::conjugate_gradient   // Polak Ribiere              // static
 // if 'first step', do not use information about previous direction
 
 // norm of 'grad' or of 'direc' can be used as stopping criterion
+
+// it should be possible to avoid divisions by quantities going to zero !
 	
 {	size_t n = x .size();
 	assert ( direc .size() == n );
@@ -1038,6 +1042,9 @@ void tag::Util::conjugate_gradient   // Polak Ribiere              // static
 	for ( size_t i = 0; i < n; i++ )
 	for ( size_t j = 0; j < n; j++ )
 		down += grad_grad ( i, j ) * direc [i] * direc [j];
+
+	// down is a small quantity (going to zero when the algorithm converges)
+	// we should not divide by small quantities
 	
 	for ( size_t i = 0; i < n; i++ )
 	for ( size_t j = 0; j < n; j++ )
