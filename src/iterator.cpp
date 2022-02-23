@@ -1,9 +1,9 @@
 
-// iterator.cpp 2022.02.11
+// iterator.cpp 2022.02.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -28,8 +28,10 @@ using namespace maniFEM;
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 	  < Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -39,8 +41,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -50,8 +54,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -61,8 +67,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -71,8 +79,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base then tip (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 	  < Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -82,8 +92,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base then tip (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -93,8 +105,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -104,8 +118,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ForcePositive &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -115,9 +131,11 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (positive) then tip (negative)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -128,9 +146,11 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (positive) then tip (negative)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -141,9 +161,11 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (negative) then base (positive)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -154,9 +176,11 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (negative) then base (positive)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -169,7 +193,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -178,7 +202,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -187,7 +211,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -196,7 +220,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -204,7 +228,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -213,7 +237,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -222,7 +246,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -231,7 +255,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -240,7 +264,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -249,7 +273,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -258,7 +282,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -267,7 +291,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dimensional meshes have no segments." << std::endl;
 	exit ( 1 );                                                            }
 
@@ -277,8 +301,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::AsTheyAre &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -289,8 +315,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -301,8 +329,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -313,8 +343,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &          )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -325,8 +357,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base then tip (both positive)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -337,8 +371,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base then tip (both positive)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -349,8 +385,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -361,8 +399,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
@@ -373,65 +413,75 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive &                 )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (positive) then tip (negative)
 // do not bother whether reverse cells exist or not
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::NormalOrder::ReverseEachCell::AssumeCellsExist ( seg );   }
+	            ::NormalOrder::ReverseEachCell::AssumeCellsExist ( seg );   }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (positive) then tip (negative)
 // do not bother whether reverse cells exist or not
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::NormalOrder::ReverseEachCell::AssumeCellsExist ( seg );    }
+	            ::NormalOrder::ReverseEachCell::AssumeCellsExist ( seg );    }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (negative) then base (positive)
 // do not bother whether reverse cells exist or not
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
+	            ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (negative) then base (positive)
 // do not bother whether reverse cells exist or not
+
 {	assert ( d == 0 );
 	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
+	            ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
 
 //--------------------------------------------------------------------------------------------//
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -441,8 +491,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -452,8 +504,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -463,8 +517,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -473,8 +529,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base then tip (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -484,8 +542,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -495,8 +555,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -506,8 +568,10 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -517,9 +581,11 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (positive) then tip (negative)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
@@ -530,40 +596,46 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first base (positive) then tip (negative)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::NormalOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
+	            ::NormalOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (negative) then base (positive)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
+	            ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
 
 
 Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 // a positive zero-dimensional mesh is the boundary of a positive segment	
 // iterate over the two vertices, first tip (negative) then base (positive)
 // do not bother whether reverse cells exist or not
+
 {	assert ( this->cell_enclosed );
 	Cell::PositiveSegment * seg = tag::Util::assert_cast
 		< Cell::Positive*, Cell::PositiveSegment* > ( this->cell_enclosed );
 	return new Mesh::Iterator::Over::TwoVerticesOfSeg
-	             ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
+	            ::ReverseOrder::ReverseEachCell::AssumeCellsExist ( seg );  }
 
 //--------------------------------------------------------------------------------------------//
 //--------------------------------------------------------------------------------------------//
@@ -573,7 +645,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -582,7 +654,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -591,7 +663,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -601,7 +673,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::RequireOrder &,
   const tag::ThisMeshIsPositive &                                                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -611,7 +683,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::RequireOrder &,
   const tag::ThisMeshIsPositive &                                                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -620,7 +692,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -629,7 +701,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -639,7 +711,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -649,7 +721,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -658,7 +730,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -667,7 +739,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -676,7 +748,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -685,7 +757,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -694,7 +766,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &,  const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -703,7 +775,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -713,7 +785,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -723,7 +795,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -732,7 +804,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -741,7 +813,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -750,7 +822,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -759,7 +831,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -768,7 +840,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &,  const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -777,7 +849,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -787,7 +859,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -797,7 +869,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -809,7 +881,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -819,7 +891,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -829,7 +901,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -839,7 +911,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -849,7 +921,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -859,7 +931,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -869,7 +941,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -879,7 +951,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -889,7 +961,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -899,7 +971,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -909,7 +981,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -919,7 +991,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -929,7 +1001,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &               )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -939,7 +1011,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -949,7 +1021,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -959,7 +1031,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -969,7 +1041,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -979,7 +1051,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -989,7 +1061,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -999,7 +1071,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1009,7 +1081,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1019,7 +1091,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1029,7 +1101,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1039,7 +1111,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1051,7 +1123,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1061,7 +1133,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1071,7 +1143,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1081,7 +1153,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1091,7 +1163,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1101,7 +1173,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1111,7 +1183,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1121,7 +1193,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1131,7 +1203,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1141,7 +1213,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1151,7 +1223,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1161,7 +1233,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1171,7 +1243,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &               )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1181,7 +1253,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1191,7 +1263,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1201,7 +1273,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1211,7 +1283,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1221,7 +1293,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1231,7 +1303,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1241,7 +1313,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1251,7 +1323,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1261,7 +1333,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1271,7 +1343,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1281,7 +1353,7 @@ Mesh::Iterator::Core * Mesh::ZeroDim::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a zero-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1343,7 +1415,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverVertices &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 	exit ( 1 );                                                                                }
 
@@ -1352,7 +1424,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 	exit ( 1 );                                                                                }
 
@@ -1361,7 +1433,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 	exit ( 1 );                                                                                }
 
@@ -1370,7 +1442,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &                       )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 	exit ( 1 );                                                                                }
 
@@ -1464,6 +1536,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::AsTheyAre &, const tag::ThisMeshIsPositive & )
+
 {	if ( d == 0 )
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder ( this );
 	if ( d == 1 )
@@ -1476,6 +1549,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 {	if ( d == 0 )
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder ( this );
 	if ( d == 1 )
@@ -1488,6 +1562,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &           )
+
 {	if ( d == 0 )
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder ( this );
 	if ( d == 1 )
@@ -1500,6 +1575,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &      )
+
 {	if ( d == 0 )
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder ( this );
 	if ( d == 1 )
@@ -1512,6 +1588,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder ( this );
 	if ( d == 1 )
@@ -1524,6 +1601,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder ( this );
 	if ( d == 1 )
@@ -1536,6 +1614,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder ( this );
 	if ( d == 1 )
@@ -1548,6 +1627,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &          )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 		return new Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder ( this );
 	if ( d == 1 )
@@ -1560,9 +1640,10 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive &                    )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 	{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-							<< __extension__ __PRETTY_FUNCTION__ << ": ";
+		          << __extension__ __PRETTY_FUNCTION__ << ": ";
 		std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 		exit ( 1 );                                                                                }
 	if ( d == 1 )
@@ -1576,9 +1657,10 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 	{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-							<< __extension__ __PRETTY_FUNCTION__ << ": ";
+		          << __extension__ __PRETTY_FUNCTION__ << ": ";
 		std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 		exit ( 1 );                                                                                }
 	if ( d == 1 )
@@ -1592,9 +1674,10 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 	{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-							<< __extension__ __PRETTY_FUNCTION__ << ": ";
+		          << __extension__ __PRETTY_FUNCTION__ << ": ";
 		std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 		exit ( 1 );                                                                                }
 	if ( d == 1 )
@@ -1608,9 +1691,10 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive & )
+
 {	if ( d == 0 )  // in one-dimensional meshes, vertices are positive anyway
 	{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-							<< __extension__ __PRETTY_FUNCTION__ << ": ";
+		          << __extension__ __PRETTY_FUNCTION__ << ": ";
 		std::cout << "It makes no sense to require reversed vertices for a 1D mesh." << std::endl;
 		exit ( 1 );                                                                                }
 	if ( d == 1 )
@@ -1710,7 +1794,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverVertices &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1719,7 +1803,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1728,7 +1812,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1738,7 +1822,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::RequireOrder &,
   const tag::ThisMeshIsPositive &                                                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1748,7 +1832,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::RequireOrder &,
   const tag::ThisMeshIsPositive &                                                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1757,7 +1841,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1766,7 +1850,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::AsTheyAre &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1776,7 +1860,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1786,7 +1870,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1795,7 +1879,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1804,7 +1888,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1813,7 +1897,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1822,7 +1906,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1831,7 +1915,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ForcePositive &,  const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1840,7 +1924,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1850,7 +1934,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1860,7 +1944,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1869,7 +1953,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1878,7 +1962,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ThisMeshIsPositive &                  )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1887,7 +1971,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1896,7 +1980,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1905,7 +1989,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ReverseEachCell &,  const tag::BuildCellsIfNec &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1914,7 +1998,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::Around &, Cell::Core *, const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1924,7 +2008,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1934,7 +2018,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::Around &, Cell::Core *, const tag::ReverseOrderIfAny &,
   const tag::ThisMeshIsPositive &                                                      )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1946,7 +2030,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1956,7 +2040,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1966,7 +2050,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1976,7 +2060,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1986,7 +2070,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -1996,7 +2080,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2006,7 +2090,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2016,7 +2100,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2026,7 +2110,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2036,7 +2120,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2046,7 +2130,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2056,7 +2140,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2066,7 +2150,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &               )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2076,7 +2160,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2086,7 +2170,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2096,7 +2180,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2106,7 +2190,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2116,7 +2200,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2126,7 +2210,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2136,7 +2220,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2146,7 +2230,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2156,7 +2240,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2166,7 +2250,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2176,7 +2260,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2188,7 +2272,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2198,7 +2282,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2208,7 +2292,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2218,7 +2302,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2228,7 +2312,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2238,7 +2322,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2248,7 +2332,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2258,7 +2342,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &     )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2268,7 +2352,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2278,7 +2362,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2288,7 +2372,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2298,7 +2382,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2308,7 +2392,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &               )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2318,7 +2402,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2328,7 +2412,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2338,7 +2422,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2348,7 +2432,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2358,7 +2442,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2368,7 +2452,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2378,7 +2462,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2388,7 +2472,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2398,7 +2482,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2408,7 +2492,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2418,7 +2502,7 @@ Mesh::Iterator::Core * Mesh::Connected::OneDim::iterator  // virtual from Mesh::
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core *,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot iterate around a cell in a one-dimensional mesh." << std::endl;
 	exit ( 1 );                                                                           }
 
@@ -2437,7 +2521,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2446,7 +2530,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2471,7 +2555,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2480,7 +2564,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2498,7 +2582,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &,
   const tag::DoNotBuildCells &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require reversed vertices for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                                   }
 
@@ -2507,7 +2591,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "This makes no sense for two different reasons." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2516,7 +2600,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "This makes no sense for two different reasons." << std::endl;
 	exit ( 1 );                                                                 }
 
@@ -2525,7 +2609,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverVertices &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &                       )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require reversed vertices for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                                   }
 
@@ -2541,7 +2625,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2550,7 +2634,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2563,6 +2647,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 
 Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
+
 {	if ( this->get_dim_plus_one() == 2 )
 		return new Mesh::Iterator::Over::CellsOfFuzzyMesh::ForcePositive
 			( this, tag::cells_of_dim, 1 );
@@ -2576,7 +2661,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2585,7 +2670,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2615,7 +2700,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2624,7 +2709,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverSegments &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2652,7 +2737,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2661,7 +2746,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &          )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2676,6 +2761,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d,
   const tag::ForcePositive &, const tag::ThisMeshIsPositive & )
+
 {	assert ( this->get_dim_plus_one() > d );
 	if ( this->get_dim_plus_one() == d+1 )
 		return new Mesh::Iterator::Over::CellsOfFuzzyMesh::ForcePositive
@@ -2688,7 +2774,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2697,7 +2783,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &              )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2705,6 +2791,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfDim &, const size_t d, const tag::ForcePositive &,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &          )
+
 {	assert ( this->get_dim_plus_one() > d );
 	if ( this->get_dim_plus_one() == d+1 )
 		return new Mesh::Iterator::Over::CellsOfFuzzyMesh::ForcePositive
@@ -2728,7 +2815,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2738,7 +2825,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2768,7 +2855,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2777,7 +2864,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::AsTheyAre &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2803,7 +2890,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2812,7 +2899,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ForcePositive &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive & )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2839,7 +2926,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to require order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -2848,7 +2935,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 ( const tag::OverCellsOfMaxDim &, const tag::ReverseEachCell &, const tag::DoNotBuildCells &,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "It makes no sense to reverse order for a fuzzy mesh." << std::endl;
 	exit ( 1 );                                                                        }
 
@@ -3239,12 +3326,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( c->get_dim() + 3 == this->get_dim_plus_one() );  // co-dimension == 2
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
+		            ::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-        ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3260,12 +3347,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( c->get_dim() + 3 == this->get_dim_plus_one() );  // co-dimension == 2
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
+		            ::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-		    ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
 		  tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3279,12 +3366,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
+		            ::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-		     ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
       tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
  
 
@@ -3298,12 +3385,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
+		            ::OverVertices::NormalOrder::AssumeCellsExist::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-		     ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
       tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
  
 
@@ -3317,12 +3404,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
+		            ::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-			::OverSegments::ReverseOrder::AsTheyAre ( this,
+		            ::OverSegments::ReverseOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3336,12 +3423,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
+		            ::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-			::OverSegments::ReverseOrder::AsTheyAre ( this,
+		            ::OverSegments::ReverseOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3357,12 +3444,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( c->get_dim() + 3 == this->get_dim_plus_one() );  // co-dimension == 2
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
+		            ::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-        ::OverSegments::ReverseOrder::AsTheyAre ( this,
+		            ::OverSegments::ReverseOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3378,12 +3465,12 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( c->get_dim() + 3 == this->get_dim_plus_one() );  // co-dimension == 2
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
+		            ::OverVertices::ReverseOrder::AssumeCellsExist::AsTheyAre ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-        ::OverSegments::ReverseOrder::AsTheyAre ( this,
+		            ::OverSegments::ReverseOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3399,13 +3486,13 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( c->get_dim() + 3 == this->get_dim_plus_one() );  // co-dimension == 2
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::BuildReverseCells::ForcePositive ( this,
+		            ::OverVertices::NormalOrder::BuildReverseCells::ForcePositive ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
 		//    ::OverSegments::NormalOrder::ForcePositive ( this,
-        ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3421,13 +3508,13 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( c->get_dim() + 3 == this->get_dim_plus_one() );  // co-dimension == 2
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive ( this,
+		            ::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
 		//    ::OverSegments::NormalOrder::ForcePositive ( this,
-        ::OverSegments::NormalOrder::AsTheyAre ( this,
+		           ::OverSegments::NormalOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3441,13 +3528,13 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::BuildReverseCells::ForcePositive ( this,
+		            ::OverVertices::NormalOrder::BuildReverseCells::ForcePositive ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
 		//    ::OverSegments::NormalOrder::ForcePositive ( this,
-        ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3461,13 +3548,13 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive ( this,
+		            ::OverVertices::NormalOrder::AssumeCellsExist::ForcePositive ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
 		//    ::OverSegments::NormalOrder::ForcePositive ( this,
-        ::OverSegments::NormalOrder::AsTheyAre ( this,
+		            ::OverSegments::NormalOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3481,13 +3568,13 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::ReverseOrder::BuildReverseCells::ForcePositive ( this,
+		         ::OverVertices::ReverseOrder::BuildReverseCells::ForcePositive ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
 		//    ::OverSegments::ReverseOrder::ForcePositive ( this,
-        ::OverSegments::ReverseOrder::AsTheyAre ( this,
+		            ::OverSegments::ReverseOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3501,13 +3588,13 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
 	assert ( d < this->get_dim_plus_one() );
 	if ( d == c->get_dim() + 1 )
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
-         ::OverVertices::ReverseOrder::AssumeCellsExist::ForcePositive ( this,
+		            ::OverVertices::ReverseOrder::AssumeCellsExist::ForcePositive ( this,
 			tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );
 	else
 	{	assert ( d == c->get_dim() + 2 );
 		return new Mesh::Iterator::Around::OneCell::OfCodimTwo
 		//    ::OverSegments::ReverseOrder::ForcePositive ( this,
-        ::OverSegments::ReverseOrder::AsTheyAre ( this,
+		            ::OverSegments::ReverseOrder::AsTheyAre ( this,
         tag::Util::assert_cast < Cell::Core * const, Cell::Positive * const> ( c ) );  }  }
 
 
@@ -3516,7 +3603,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3526,7 +3613,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &         )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3536,7 +3623,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                            }
 
@@ -3546,7 +3633,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3556,7 +3643,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3566,7 +3653,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3576,7 +3663,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                 )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                            }
 
@@ -3586,7 +3673,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &                )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3596,7 +3683,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3606,7 +3693,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3618,7 +3705,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3628,7 +3715,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3638,7 +3725,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3648,7 +3735,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3658,7 +3745,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3668,7 +3755,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3678,7 +3765,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3688,7 +3775,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                            }
 
@@ -3698,7 +3785,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                            }
 
@@ -3708,7 +3795,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3718,7 +3805,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3728,7 +3815,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                              }
 
@@ -3738,7 +3825,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3748,7 +3835,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3758,7 +3845,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                              }
 
@@ -3768,7 +3855,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3778,7 +3865,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                            }
 
@@ -3788,7 +3875,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ThisMeshIsPositive &                                   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3798,7 +3885,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3808,7 +3895,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::RequireOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                            }
 
@@ -3818,7 +3905,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3828,7 +3915,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrder &, const tag::ThisMeshIsPositive &        )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3838,7 +3925,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::BuildCellsIfNec &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                              }
 
@@ -3848,7 +3935,7 @@ Mesh::Iterator::Core * Mesh::Fuzzy::iterator  // virtual from Mesh::Core
   const tag::DoNotBuildCells &, const tag::Around &, Cell::Core * c,
   const tag::ReverseOrderIfAny &, const tag::ThisMeshIsPositive &   )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "not yet implemented" << std::endl;
 	exit ( 1 );                                             }
 
@@ -3863,7 +3950,7 @@ void Mesh::Iterator::Over::TwoVerticesOfSeg::reset ( ) // virtual from Mesh::Ite
 void Mesh::Iterator::Over::TwoVerticesOfSeg::reset ( const tag::StartAt &, Cell::Core * cll )
 // virtual from Mesh::Iterator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot reset an iterator this way." << std::endl;
 	exit ( 1 );                                                      }
 
@@ -3876,9 +3963,12 @@ bool Mesh::Iterator::Over::TwoVerticesOfSeg::in_range ( )
 // virtual from Mesh::Iterator::Core
 {	return this->passage < 2;   }
 
+
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg::NormalOrder::AsTheyAre::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3890,8 +3980,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg::NormalOrder::AsTheyAre::deref ( )
 
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg::ReverseOrder::AsTheyAre::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3903,8 +3995,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg::ReverseOrder::AsTheyAre::deref ( )
 
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg::NormalOrder::ForcePositive::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first base then tip (both positive)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3914,8 +4008,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg::NormalOrder::ForcePositive::deref (
 
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg::ReverseOrder::ForcePositive::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first tip then base (both positive)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3926,8 +4022,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg::ReverseOrder::ForcePositive::deref 
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg
                ::NormalOrder::ReverseEachCell::AssumeCellsExist::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3938,8 +4036,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg
                ::NormalOrder::ReverseEachCell::BuildCells::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3950,8 +4050,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg
                ::ReverseOrder::ReverseEachCell::AssumeCellsExist::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first tip (positive) then base (negative)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3962,8 +4064,10 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg
 
 Cell Mesh::Iterator::Over::TwoVerticesOfSeg
                ::ReverseOrder::ReverseEachCell::BuildCells::deref ( )
+
 // virtual from Mesh::Iterator::Core
 // iterate over the two vertices, first base (negative) then tip (positive)
+
 {	assert ( this->seg_p );
 	assert ( this->passage < 2 );
 	if ( this->passage == 0 )
@@ -3978,6 +4082,7 @@ Cell Mesh::Iterator::Over::TwoVerticesOfSeg
 
 void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	if ( this->msh->nb_of_segs == 0 )
 	{	this->current_vertex = nullptr;  return;  }
@@ -4002,6 +4107,7 @@ void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset ( )
 
 void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder::reset ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	if ( this->msh->nb_of_segs == 0 )
 	{	this->current_vertex = nullptr;  return;  }
@@ -4023,6 +4129,7 @@ void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder::reset ( 
 
 void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 ( const tag::StartAt &, Cell::Core * ver )  // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	assert ( this->msh->nb_of_segs > 0 );
 	assert ( ver );
@@ -4046,6 +4153,7 @@ void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 
 void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder::reset
 ( const tag::StartAt &, Cell::Core * ver )  // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	assert ( this->msh->nb_of_segs > 0 );
 	assert ( ver );
@@ -4070,12 +4178,14 @@ void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder::reset
 
 Cell Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	return Cell ( tag::whose_core_is, this->current_vertex,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
 void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::advance ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	assert ( this->current_vertex );
 	if ( this->current_vertex == this->last_vertex )              
@@ -4094,6 +4204,7 @@ void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::advance (
 
 void Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::ReverseOrder::advance ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	assert ( this->current_vertex );
 	if ( this->current_vertex == this->last_vertex )              
@@ -4118,6 +4229,7 @@ bool Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::in_range ( )
 
 void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::reset ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	if ( this->msh->nb_of_segs == 0 )
 	{ this->current_segment = nullptr;  return;  }
@@ -4134,6 +4246,7 @@ void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::reset ( )
 
 void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::reset ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );
 	if ( this->msh->nb_of_segs == 0 )
 	{ this->current_segment = nullptr;  return;  }
@@ -4150,6 +4263,7 @@ void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::reset ( 
 
 void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::reset
 ( const tag::StartAt &, Cell::Core * seg )  // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );  assert ( this->msh->nb_of_segs > 0 );
 	assert ( seg );  assert ( seg->get_dim() == 1 );
 	this->current_segment = seg;
@@ -4162,6 +4276,7 @@ void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::reset
 
 void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::reset
 ( const tag::StartAt &, Cell::Core * seg )  // virtual from Mesh::Iterator::Core
+
 {	assert ( this->msh );  assert ( this->msh->nb_of_segs > 0 );
 	assert ( seg );  assert ( seg->get_dim() == 1 );
 	this->current_segment = seg;
@@ -4174,24 +4289,28 @@ void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::reset
 
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::AsTheyAre::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	return Cell ( tag::whose_core_is, this->current_segment,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::AsTheyAre::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	return Cell ( tag::whose_core_is, this->current_segment,
                 tag::previously_existing, tag::surely_not_null );  }
 
 
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::ForcePositive::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	return this->current_segment->get_positive();  }
 
 
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::ForcePositive::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	return this->current_segment->get_positive();  }
 
@@ -4199,6 +4318,7 @@ Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::ForcePos
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 	NormalOrder::ReverseEachCell::AssumeCellsExist::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	assert ( this->current_segment->reverse_attr .exists() );
 	return this->current_segment->reverse_attr;               }
@@ -4207,6 +4327,7 @@ Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 	NormalOrder::ReverseEachCell::BuildCells::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	if ( not this->current_segment->reverse_attr .exists() )
 		//	this->current_segment->reverse_attr =
@@ -4222,6 +4343,7 @@ Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 	ReverseOrder::ReverseEachCell::AssumeCellsExist::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	assert ( this->current_segment->reverse_attr .exists() );
 	return this->current_segment->reverse_attr;              }
@@ -4230,6 +4352,7 @@ Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 	ReverseOrder::ReverseEachCell::BuildCells::deref ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	if ( not this->current_segment->reverse_attr .exists() )
 		//	this->current_segment->reverse_attr =
@@ -4244,6 +4367,7 @@ Cell Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::
 
 void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::advance ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	Cell::Core * ver = this->current_segment->tip() .core;
 	assert ( ver );  assert ( ver->is_positive() );
@@ -4257,6 +4381,7 @@ void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::NormalOrder::advance (
 
 void Mesh::Iterator::Over::SegmentsOfConnectedOneDimMesh::ReverseOrder::advance ( )
 // virtual from Mesh::Iterator::Core
+
 {	assert ( this->current_segment );
 	Cell::Core * ver = this->current_segment->base() .core;
 	assert ( ver );  assert ( not ver->is_positive() );
@@ -4282,7 +4407,7 @@ void Mesh::Iterator::Over::CellsOfFuzzyMesh::reset ( ) // virtual from Mesh::Ite
 void Mesh::Iterator::Over::CellsOfFuzzyMesh::reset ( const tag::StartAt &, Cell::Core * cll )
 // virtual from Mesh::Iterator::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Cannot reset an iterator this way." << std::endl;
 	exit ( 1 );                                                      }
 
@@ -4736,9 +4861,11 @@ Cell Mesh::Iterator::Around::OneCell::OfCodimTwo::OverVertices::
 
 Cell Mesh::Iterator::Around::OneCell
          ::OfCodimTwo::WorkAround2D::NormalOrder::BuildReverseCells::deref ( )
+
 // virtual from Mesh::Iterator::Core,
 // defined by Mesh::Iterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::
 // ::BuildReverseCells::AsTheyAre, here overriden to return the reversed base of the segment
+
 {	Cell seg = Mesh::Iterator::Around::OneCell::OfCodimTwo
 		::OverVertices::NormalOrder::BuildReverseCells::AsTheyAre::deref();
 	return seg.base().reverse();                                          }
@@ -4746,9 +4873,11 @@ Cell Mesh::Iterator::Around::OneCell
 
 Cell Mesh::Iterator::Around::OneCell
          ::OfCodimTwo::WorkAround2D::ReverseOrder::BuildReverseCells::deref ( )
+
 // virtual from Mesh::Iterator::Core,
 // defined by Mesh::Iterator::Around::OneCell::OfCodimTwo::OverVertices::NormalOrder::
 // ::BuildReverseCells::AsTheyAre, here overriden to return the reversed base of the segment
+
 {	Cell seg = Mesh::Iterator::Around::OneCell::OfCodimTwo
 		::OverVertices::ReverseOrder::BuildReverseCells::AsTheyAre::deref();
 	return seg.base().reverse();                                          }

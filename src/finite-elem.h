@@ -1,5 +1,5 @@
 
-// finite-elem.h 2022.01.07
+// finite-elem.h 2022.02.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -43,8 +43,8 @@ namespace tag {
 	struct gauss { };  static const gauss Gauss;
 	struct WithMaster { };  static const WithMaster with_master;
 	enum gauss_quadrature { seg_2, seg_3, seg_4, seg_5, seg_6,
-                          tri_3, tri_3_Oden, tri_4, tri_4_Oden, tri_6,
-                          quad_4, quad_9                              };
+	                        tri_3, tri_3_Oden, tri_4, tri_4_Oden, tri_6,
+	                        quad_4, quad_9                              };
 	struct FromFiniteElementWithMaster { };
 	static const FromFiniteElementWithMaster from_finite_element_with_master;
 	struct FromFiniteElement { };  static const FromFiniteElement from_finite_element;
@@ -233,9 +233,9 @@ class FiniteElement
 	// constructor
 
 	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
 	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
@@ -244,7 +244,7 @@ class FiniteElement
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
 	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
 	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
@@ -253,13 +253,13 @@ class FiniteElement
 	inline FiniteElement ( const tag::WithMaster &, const tag::Quadrangle &,
 	         const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & );
 	inline FiniteElement ( const tag::Triangle &,  // no master, stand-alone
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Quadrangle &,  // no master, stand-alone
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Rectangle &,  // no master, stand-alone
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::Square &,  // no master, stand-alone
-                         const tag::lagrange &, const tag::OfDegree &, size_t deg );
+	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 
 	// destructor
 	
@@ -279,7 +279,7 @@ class FiniteElement
 	// FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
 	inline void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & );
 	inline void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-                        const tag::Winding &                                     );
+	                      const tag::Winding &                                     );
 
 	inline double integrate ( const Function & );
 	inline std::vector < double > integrate
@@ -288,7 +288,7 @@ class FiniteElement
 	inline std::vector < double > integrate
 	( const tag::PreComputed &, const tag::Replace &, const Function &,
 	                            const tag::By &,      const Function &,
-                              const tag::Replace &, const Function &,
+	                            const tag::Replace &, const Function &,
 	                            const tag::By &,      const Function & );
 
 	inline void pre_compute
@@ -356,7 +356,7 @@ class Integrator::HandCoded : public Integrator::Core
 	// the integrals we intend to compute later (after docking on a cell)
 	//  pre_compute  is virtual from Integrator::Core
 	void pre_compute ( const std::vector < Function > & bf,
-                     const std::vector < Function > & res );
+	                   const std::vector < Function > & res );
 
 	// HandCoded integrators merely retrieve previously computed arithmetic expressions
 	// and replace values of coordinates of vertices of the docked_on cell
@@ -413,10 +413,10 @@ class FiniteElement::Core
 	// we forbid execution here and later override
 	virtual void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & );
 	virtual void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-                         const tag::Winding &                                     );
+	                       const tag::Winding &                                     );
 	
 	virtual void pre_compute ( const std::vector < Function > & bf,
-                             const std::vector < Function > & res ) = 0;
+	                           const std::vector < Function > & res ) = 0;
 
 	virtual Cell::Numbering & build_global_numbering ( ) = 0;
 	
@@ -436,7 +436,7 @@ inline Function FiniteElement::basis_function ( const Cell cll )
 {	std::map < Cell::Core *, Function > :: iterator it =
 		this->core->base_fun_1 .find ( cll .core );
 	assert ( it != this->core->base_fun_1 .end() );
-  return it->second;                                   }
+	return it->second;                                   }
 	
 inline Function FiniteElement::basis_function ( const Cell c1, const Cell c2 )
 {	std::map < Cell::Core *, std::map < Cell::Core *, Function > >
@@ -445,7 +445,7 @@ inline Function FiniteElement::basis_function ( const Cell c1, const Cell c2 )
 	std::map < Cell::Core *, Function > :: iterator itt =
 		it->second .find ( c2 .core );
 	assert ( itt != it->second .end() );
-  return itt->second;                                               }
+	return itt->second;                                               }
 
 
 inline void FiniteElement::dock_on ( const Cell & cll )
@@ -536,7 +536,7 @@ class FiniteElement::WithMaster : public FiniteElement::Core
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core, here execution forbidden
 	void pre_compute ( const std::vector < Function > & bf,
@@ -624,7 +624,7 @@ class FiniteElement::WithMaster::Segment : public FiniteElement::WithMaster
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -675,7 +675,7 @@ class FiniteElement::WithMaster::Triangle : public FiniteElement::WithMaster
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -729,7 +729,7 @@ class FiniteElement::WithMaster::Triangle::P1 : public FiniteElement::WithMaster
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -781,7 +781,7 @@ class FiniteElement::WithMaster::Triangle::P2::Straight : public FiniteElement::
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -837,7 +837,7 @@ class FiniteElement::WithMaster::Triangle::P2::Straight::Incremental
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -888,7 +888,7 @@ class FiniteElement::WithMaster::Triangle::P2::Curved : public FiniteElement::Wi
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -939,7 +939,7 @@ class FiniteElement::WithMaster::Quadrangle : public FiniteElement::WithMaster
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -993,7 +993,7 @@ class FiniteElement::WithMaster::Quadrangle::Q1 : public FiniteElement::WithMast
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -1047,7 +1047,7 @@ class FiniteElement::WithMaster::Quadrangle::Q2::Straight
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -1104,7 +1104,7 @@ class FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -1156,7 +1156,7 @@ class FiniteElement::WithMaster::Quadrangle::Q2::Curved
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute virtual from FiniteElement::Core,
 	// defined by FiniteElement::WithMaster, execution forbidden
@@ -1420,7 +1420,7 @@ class FiniteElement::StandAlone : public FiniteElement::Core
 	// virtual from FiniteElement::Core, execution forbidden, later overridden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	// pre_compute  stays pure virtual from FiniteElement::Core
 
@@ -1476,7 +1476,7 @@ class FiniteElement::StandAlone::TypeOne : public FiniteElement::StandAlone
 	// virtual from FiniteElement::Core, execution forbidden, later overridden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	void pre_compute ( const std::vector < Function > & bf,
@@ -1541,7 +1541,7 @@ class FiniteElement::StandAlone::TypeOne::Triangle : public FiniteElement::Stand
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
@@ -1605,7 +1605,7 @@ class FiniteElement::StandAlone::TypeOne::Quadrangle : public FiniteElement::Sta
 	// virtual from FiniteElement::Core, execution forbidden, later overridden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne
@@ -1666,7 +1666,7 @@ class FiniteElement::StandAlone::TypeOne::Parallelogram
 	// virtual from FiniteElement::Core, execution forbidden
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell & )
 	// void dock_on ( const Cell & cll, const tag::FirstVertex &, const Cell &,
-  //                const tag::Winding &                                     )
+	//                const tag::Winding &                                     )
 
 	//  pre_compute  virtual from FiniteElement::Core
 	// defined by FiniteElement::StandAlone::TypeOne

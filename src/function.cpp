@@ -1,9 +1,9 @@
 
-// function.cpp 2021.12.08
+// function.cpp 2022.02.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -56,7 +56,7 @@ size_t Function::Aggregate::nb_of_components ( ) const
 
 size_t Function::Immersion::nb_of_components ( ) const
 // virtual from Function::Core, through Function::Vector
-{ assert ( false );
+{	assert ( false );
 	// we return zero just to avoid compilation errors
 	return 0;           }
 
@@ -120,7 +120,7 @@ double Function::Constant::get_value_on_cell
 { return this->value;  }
 
 void Function::Sum::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Sum::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -144,7 +144,7 @@ double Function::Sum::get_value_on_cell
 	return sum;                                                           }
 
 void Function::Product::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Product::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -168,7 +168,7 @@ double Function::Product::get_value_on_cell
 	return prod;                                                            }
 	
 void Function::Power::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Power::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -184,7 +184,7 @@ double Function::Power::get_value_on_cell
 	return std::pow ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ), this->exponent );  }
 	
 void Function::Sqrt::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Sqrt::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -200,7 +200,7 @@ double Function::Sqrt::get_value_on_cell
 	return std::sqrt ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ) );  }
 	
 void Function::Sin::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Sin::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -216,7 +216,7 @@ double Function::Sin::get_value_on_cell
 	return std::sin ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ) );  }
 	
 void Function::Cos::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Cos::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -232,7 +232,7 @@ double Function::Cos::get_value_on_cell
 	return std::cos ( base_scalar->get_value_on_cell ( cll, tag::winding, exp ) );  }
 	
 void Function::Step::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::Step::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -276,13 +276,13 @@ std::vector < double > Function::Aggregate::get_value_on_cell ( Cell::Core * cll
 std::vector < double > Function::Aggregate::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
 // virtual from Function::Vector
-{ assert ( false );
+{	assert ( false );
 	// we return an empty vector just to avoid compilation errors
 	return std::vector < double > ();   }
 
 void Function::CoupledWithField::Scalar::set_value ( double v )
 // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::CoupledWithField::Scalar::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -296,44 +296,44 @@ double Function::CoupledWithField::Scalar::get_value_on_cell
 // { return this->field->on_cell ( cll ) .reference();  }
 
 void Function::Diffeomorphism::OneDim::set_value ( double v )
-{ assert ( false );  }  // virtual from Function::Scalar
+{	assert ( false );  }  // virtual from Function::Scalar
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell ( Cell::Core * cll ) const
-{ assert ( false );   // virtual from Function::Scalar
+{	assert ( false );   // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
 	return 0;          }
 	
 double Function::Diffeomorphism::OneDim::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
-{ assert ( false );    // virtual from Function::Scalar
+{	assert ( false );    // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
 	return 0;         }
 	
 void Function::MereSymbol::set_value ( double v ) // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::MereSymbol::get_value_on_cell ( Cell::Core * cll ) const
-{ assert ( false );   // virtual from Function::Scalar
+{	assert ( false );   // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
 	return 0;          }
 	
 double Function::MereSymbol::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
-{ assert ( false );    // virtual from Function::Scalar
+{	assert ( false );    // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
 	return 0;         }
 	
 void Function::DelayedDerivative::set_value ( double v ) // virtual from Function::Scalar
-{ assert ( false );  }
+{	assert ( false );  }
 
 double Function::DelayedDerivative::get_value_on_cell ( Cell::Core * cll ) const
-{ assert ( false );   // virtual from Function::Scalar
+{	assert ( false );   // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
 	return 0;          }
 	
 double Function::DelayedDerivative::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
-{ assert ( false );    // virtual from Function::Scalar
+{	assert ( false );    // virtual from Function::Scalar
 	// we return zero just to avoid compilation errors
 	return 0;         }
 	
@@ -348,18 +348,18 @@ std::vector < double > Function::CoupledWithField::Vector::get_value_on_cell
 // { return this->field->on_cell ( cll ) .reference();  }
 	
 std::vector < double > Function::Immersion::get_value_on_cell ( Cell::Core * cll ) const
-{ assert ( false );    // virtual from Function::Vector
+{	assert ( false );    // virtual from Function::Vector
 	// we return an empty vector just to avoid compilation errors
 	return std::vector < double > ();   }
 
 std::vector < double > Function::Immersion::get_value_on_cell
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
-{ assert ( false );   // virtual from Function::Vector
+{	assert ( false );   // virtual from Function::Vector
 	// we return an empty vector just to avoid compilation errors
 	return std::vector < double > ();  }
 
 void Function::Composition::set_value ( double v )  // virtual from Function::Scalar
-{ assert ( false );   }
+{	assert ( false );   }
 
 double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
 // virtual from Function::Scalar
@@ -370,7 +370,7 @@ double Function::Composition::get_value_on_cell ( Cell::Core * cll ) const
 
 double Function::Composition::get_value_on_cell  // virtual from Function::Scalar
 ( Cell::Core * cll, const tag::Winding &, const Function::Action & exp ) const
-{ assert ( false );
+{	assert ( false );
 	// we return zero just to avoid compilation errors
 	return 0;          }
 	
@@ -549,7 +549,7 @@ double Function::DelayedDerivative::set_value_on_cell
 std::vector < double > Function::Aggregate::set_value_on_cell
 ( Cell::Core * cll, const std::vector < double > & x )  // virtual from Function::Vector
 // there should be a faster way !!
-{ size_t n = this->nb_of_components();
+{	size_t n = this->nb_of_components();
 	assert ( n == x.size() );
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * comp_scalar = tag::Util::assert_cast
@@ -559,11 +559,11 @@ std::vector < double > Function::Aggregate::set_value_on_cell
 
 double Function::CoupledWithField::Scalar::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
-{ return this->field->on_cell(cll) = x;  }
+{	return this->field->on_cell(cll) = x;  }
 
 double Function::Diffeomorphism::OneDim::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
-{ assert ( false );
+{	assert ( false );
 	// we return zero just to avoid compilation errors
 	return 0;           }
 
@@ -573,25 +573,25 @@ std::vector < double > Function::CoupledWithField::Vector::set_value_on_cell
 
 std::vector < double > Function::Immersion::set_value_on_cell
 ( Cell::Core * cll, const std::vector < double > & x )  // virtual from Function::Vector
-{ assert ( false );
+{	assert ( false );
 	// we return an empty vector just to avoid compilation errors
 	return std::vector < double > ();  }
 
 double Function::Composition::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Vector
-{ assert ( false );
+{	assert ( false );
 	// we return zero just to avoid compilation errors
 	return 0;           }
 
 double Function::Scalar::MultiValued::set_value_on_cell
 ( Cell::Core * cll, const double & x )  // virtual from Function::Scalar
-{ assert ( false );
+{	assert ( false );
 	// we return zero just to avoid compilation errors
 	return 0;           }
 
 std::vector < double > Function::Vector::MultiValued::set_value_on_cell
 ( Cell::Core * cll, const std::vector < double > & x )  // virtual from Function::Scalar
-{ assert ( false );  // we return a void vector just to avoid compilation errors
+{	assert ( false );  // we return a void vector just to avoid compilation errors
 	return std::vector < double > ();   }
 
 //-----------------------------------------------------------------------------------------//
@@ -665,13 +665,13 @@ std::string Function::Composition::repr ( const Function::From & from ) const
 {	return this->base .core->repr ( Function::from_product ) + "º";  }
 
 std::string Function::Diffeomorphism::OneDim::repr ( const Function::From & from ) const
-{ assert ( false );  }
+{	assert ( false );  }
 
 std::string Function::Scalar::MultiValued::repr ( const Function::From & from ) const
 {	return "multi" + this->base .core->repr ( Function::from_function );  }
 
 std::string Function::Vector::MultiValued::repr ( const Function::From & from ) const
-{ assert ( false );  }
+{	assert ( false );  }
 
 #endif // DEBUG
 
@@ -718,7 +718,7 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 	assert ( dynamic_cast < Function::Scalar* > ( g .core ) );
 
 	// if any one of them is zero or one :
-  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
+	Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
 	if ( f_const )
 	{	if ( f_const->value == 0. ) return f;
 		if ( f_const->value == 1. ) return g;
@@ -744,7 +744,7 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 				else result->factors .push_front ( fact );                   }
 			if ( constant_not_yet_used ) result->factors .push_front ( f );
 			return Function ( tag::whose_core_is, result );                               }  }
-  Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g .core );
+	Function::Constant * g_const = dynamic_cast < Function::Constant * > ( g .core );
 	if ( g_const )
 	{	if ( g_const->value == 0. ) return g;
 		if ( g_const->value == 1. ) return f;
@@ -775,8 +775,8 @@ Function maniFEM::operator* ( const Function & f, const Function & g )
 	if ( f_const and g_const ) return Function ( f_const->value * g_const->value );
 	
 	// if one of them is a product, or both :
-  Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
-  Function::Product * g_prod = dynamic_cast < Function::Product * > ( g .core );
+	Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
+	Function::Product * g_prod = dynamic_cast < Function::Product * > ( g .core );
 
 	Function::Product * result = new Function::Product;  // empty product
 	if ( g_prod )  // g is a product
@@ -803,7 +803,7 @@ Function maniFEM::power ( const Function & f, double e )
 	if ( e == 1. ) return f;
 	if ( e == 2. ) return f*f;
 	
-  Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
+	Function::Constant * f_const = dynamic_cast < Function::Constant * > ( f .core );
 	if ( f_const )
 	{	if ( f_const->value == 0. ) return Function ( 0. );
 		if ( f_const->value == 1. ) return Function ( 1. );
@@ -814,10 +814,10 @@ Function maniFEM::power ( const Function & f, double e )
 	// for instance, if we replace power(x*x,0.5) by power(x,0.5)*power(x,0.5)
 	// we will get in trouble if x is negative
 	
-  // Function::Power * f_pow = dynamic_cast < Function::Power * > ( f .core );
+	// Function::Power * f_pow = dynamic_cast < Function::Power * > ( f .core );
 	// if ( f_pow ) return power ( f_pow->base, f_pow->exponent * e );
 
-  // Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
+	// Function::Product * f_prod = dynamic_cast < Function::Product * > ( f .core );
 	// if ( f_prod )  // f is a product
 	// { Function::Product * result = new Function::Product;  // empty product
 	// 	std::forward_list<Function>::iterator it;
@@ -852,7 +852,7 @@ Function Function::Sum::deriv ( Function x )  //  virtual from Function::Core
 
 Function Function::Product::deriv ( Function x )  //  virtual from Function::Core
 {	Function result = 0.;
-  std::forward_list<Function>::const_iterator it1, it2;
+	std::forward_list<Function>::const_iterator it1, it2;
 	size_t c1, c2;
 	for ( it1 = this->factors .begin(), c1 = 0;
         it1 != this->factors .end(); it1++, c1++ )
@@ -898,22 +898,22 @@ Function Function::DelayedDerivative::deriv ( Function x )  //  virtual from Fun
 										  ( Function ( tag::whose_core_is, this ), x )       );  }
 
 Function Function::Vector::deriv ( Function x )  //  virtual from Function::Core
-{ assert ( false ); 
+{	assert ( false ); 
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
 Function Function::Diffeomorphism::OneDim::deriv ( Function x )
-{ assert ( false );  //  virtual from Function::Core
+{	assert ( false );  //  virtual from Function::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
 Function Function::Scalar::MultiValued::deriv ( Function x )
-{ assert ( false );  //  virtual from Function::Core
+{	assert ( false );  //  virtual from Function::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
 Function Function::Vector::MultiValued::deriv ( Function x )
-{ assert ( false );  //  virtual from Function::Core
+{	assert ( false );  //  virtual from Function::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );   }
 
@@ -992,7 +992,7 @@ Function::Diffeomorphism::HighDim::HighDim
 	assert ( dynamic_cast < Function::Vector* > ( bgc.core ) );
 	assert ( gc.nb_of_components() == mc.nb_of_components() );
 	assert ( gc.nb_of_components() == bgc.nb_of_components() );
-  assert ( gc.nb_of_components() >= 2 );
+	assert ( gc.nb_of_components() >= 2 );
 	assert ( mc.nb_of_components() == 2 );
 	assert ( gc.nb_of_components() == 2 );  // sorry, no 3d for now ...
 	Function dx_dxi = bgc[0].deriv(mc[0]);
@@ -1070,24 +1070,24 @@ Function Function::Composition::deriv ( Function x )
 
 Function Function::Constant::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core
-{ return Function ( tag::whose_core_is, this );  }
+{	return Function ( tag::whose_core_is, this );  }
 
 Function Function::Sum::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core
-{ if ( this == x.core ) return y;
+{	if ( this == x.core ) return y;
 	std::forward_list<Function>::const_iterator it = this->terms.begin();
 	Function result = 0.;
 	for ( ; it != this->terms.end(); it++ )
 	{ result += it->replace ( x, y );          }
-  return result;                                                                 }
+	return result;                                                         }
 
 Function Function::Product::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core
-{ if ( this == x.core ) return y;
+{	if ( this == x.core ) return y;
 	std::forward_list<Function>::const_iterator it = this->factors.begin();
 	Function result = 1.;
 	for ( ; it != this->factors.end(); it++ ) result *= it->replace ( x, y );
-	return result;                                                                   }
+	return result;                                                            }
 
 Function Function::Power::replace ( const Function & x, const Function & y )
 //  virtual from Function::Core

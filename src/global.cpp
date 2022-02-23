@@ -1,5 +1,5 @@
 
-// global.cpp 2022.02.17
+// global.cpp 2022.02.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -240,8 +240,8 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 				frac_AB /= s;  frac_BC /= s;  frac_CA /= s;
 				S = Cell ( tag::vertex );
 				space.interpolate ( S, frac_AB, P_AB,  frac_AB, Q_AB,
-														   frac_BC, P_BC,  frac_BC, Q_BC,
-														   frac_CA, P_CA,  frac_CA, Q_CA );  }
+				                       frac_BC, P_BC,  frac_BC, Q_BC,
+				                       frac_CA, P_CA,  frac_CA, Q_CA );  }
 			Cell new_seg ( tag::segment, ground_ver.reverse(), S );
 			Cell horizontal_seg ( tag::segment, S.reverse(), previous_ver );
 		  Cell tri_1 ( tag::triangle, previous_seg.reverse(), new_seg, horizontal_seg );
@@ -318,7 +318,7 @@ void build_common                                                   // line 281
 	     shadow_P_BC ( tag::vertex ), shadow_Q_BC ( tag::vertex ),
 	     shadow_P_CA ( tag::vertex ), shadow_Q_CA ( tag::vertex );
 
-  // we keep winding numbers of vertices relative to A
+	// we keep winding numbers of vertices relative to A
 	Manifold::Action winding_B = 0;
 	// C may be singular, so we keep two different winding numbers for it
 	{ // just a block of code for hiding 'it'
@@ -417,8 +417,8 @@ void build_common                                                   // line 281
 				v = coords_q ( P_CA, tag::winding, winding_P_CA );
 				coords_Eu ( shadow_P_CA ) = v;
 				mani_Eu.interpolate ( S, frac_AB, shadow_P_AB,  frac_AB, shadow_Q_AB,
-													       frac_BC, shadow_P_BC,  frac_BC, shadow_Q_BC,
-													       frac_CA, shadow_P_CA,  frac_CA, shadow_Q_CA );  }
+				                         frac_BC, shadow_P_BC,  frac_BC, shadow_Q_BC,
+				                         frac_CA, shadow_P_CA,  frac_CA, shadow_Q_CA );  }
 			Cell new_seg ( tag::segment, ground_ver.reverse(), S );
 			new_seg.winding() = winding_S - winding_ground_ver;
 			Cell horizontal_seg ( tag::segment, S.reverse(), previous_ver );
@@ -933,7 +933,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	{	std::list<Cell>::iterator it = horizon.begin();
 		Cell AB = *it;
 		Cell A = AB.base().reverse();
-	  Cell DA = seg_west;
+		Cell DA = seg_west;
 		Cell D = DA.base().reverse();
 		winding_ver_east += seg_east.winding();
 		Cell ver_east = seg_east.tip();
@@ -977,8 +977,8 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
 			BC.winding() = -winding_B;
 			CD.winding() =  winding_D;
-		  assert ( AB.winding() + BC.winding() + CD.winding() + DA.winding() == 0 );
-		  winding_D = 0;
+			assert ( AB.winding() + BC.winding() + CD.winding() + DA.winding() == 0 );
+			winding_D = 0;
 			if ( cut_rectangles_in_half )
 			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 				BD.winding() = winding_D - winding_B;
@@ -1227,8 +1227,8 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	// to help us move in the right direction, we keep segments rather than vertices
 	assert ( ver_down_south_west == down_west .first_vertex() .reverse() );
 	Cell seg_south_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
-  Cell seg_north_west = down_west .cell_behind ( ver_down_north_west, tag::surely_exists );
-  Cell seg_south_east = down_east .cell_behind ( ver_down_south_east, tag::surely_exists )
+	Cell seg_north_west = down_west .cell_behind ( ver_down_north_west, tag::surely_exists );
+	Cell seg_south_east = down_east .cell_behind ( ver_down_south_east, tag::surely_exists )
 		.reverse ( tag::surely_exists );
 	// the three segments above are horizontal and point towards north
 	
@@ -1431,9 +1431,9 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
 			                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
 			Cell face_north ( tag::square, edge_du_NE .reverse(), edge_WE_down_N .reverse(),
-		                                 edge_ud_NW .reverse(), edge_WE_up_N              );
+			                               edge_ud_NW .reverse(), edge_WE_up_N              );
 			Cell new_cube ( tag::cube, face_up, face_down,
-											face_south, face_north, face_east, face_west );
+			                           face_south, face_north, face_east, face_west );
 			new_cube .add_to_mesh ( *this );
 
 			// propagate 'front'
@@ -1683,7 +1683,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		Cell face_north ( tag::square, edge_du_NE .reverse(), edge_WE_down_N .reverse(),
 	                                 edge_ud_NW .reverse(), edge_WE_up_N              );
 		Cell new_cube ( tag::cube, face_up, face_down,
-										face_south, face_north, face_east, face_west );
+		                           face_south, face_north, face_east, face_west );
 		new_cube .add_to_mesh ( *this );
 
 		// propagate 'front'
@@ -1790,7 +1790,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Cell face_north = north .cell_in_front_of ( edge_ud_NW, tag::surely_exists );
 	Cell face_up = up .cell_in_front_of ( seg2, tag::surely_exists );
 	Cell new_cube ( tag::cube, face_up, face_down,
-									face_south, face_north, face_east, face_west );
+	                           face_south, face_north, face_east, face_west );
 	new_cube .add_to_mesh ( *this );
 
 } // end of Mesh::build with tag::hexahedron
@@ -2087,9 +2087,9 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	// we keep winding numbers of these vertices, tips of the respective segments
 	Cell seg_south_west = down_west .cell_in_front_of ( ver_down_south_west, tag::surely_exists );
 	Manifold::Action spin_south_west = seg_south_west .winding();
-  Cell seg_north_west = down_west .cell_behind ( ver_down_north_west, tag::surely_exists );
+	Cell seg_north_west = down_west .cell_behind ( ver_down_north_west, tag::surely_exists );
 	Manifold::Action spin_north_west = spin_ver_down_north_west;
-  Cell seg_south_east = down_east .cell_behind ( ver_down_south_east, tag::surely_exists )
+	Cell seg_south_east = down_east .cell_behind ( ver_down_south_east, tag::surely_exists )
 	                      .reverse ( tag::surely_exists );
 	Manifold::Action spin_south_east = spin_ver_down_south_east + seg_south_east .winding();
 	// the three segments above are horizontal and point towards north
@@ -2487,7 +2487,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 		Cell face_up ( tag::square, seg2 .reverse(),         edge_EW_up_S .reverse(),
 		                            edge_NS_up_E .reverse(), edge_WE_up_N .reverse() );
 		Cell new_cube ( tag::cube, face_up, face_down,
-										face_south, face_north, face_east, face_west );
+		                           face_south, face_north, face_east, face_west );
 		new_cube .add_to_mesh ( *this );
 
 		// propagate 'front'
@@ -2553,7 +2553,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 			edge_ud_NE .winding() =
 				- edge_WE_up_N .winding() + edge_ud_NW .winding() + edge_WE_down_N .winding();
 			assert ( edge_ud_NE .winding() ==
-							 edge_NS_up_E .winding() - edge_du_SE .winding() - edge_NS_down_E .winding() );
+			         edge_NS_up_E .winding() - edge_du_SE .winding() - edge_NS_down_E .winding() );
 			Cell face_north ( tag::square, edge_ud_NE,            edge_WE_down_N .reverse(),
 			                               edge_ud_NW .reverse(), edge_WE_up_N              );
 			Cell face_east  ( tag::square, edge_NS_up_E,              edge_du_SE .reverse(),
@@ -2717,7 +2717,7 @@ void Mesh::build ( const tag::Hexahedron &, const Mesh & south, const Mesh & nor
 	Cell face_north = north .cell_in_front_of ( edge_ud_NW, tag::surely_exists );
 	Cell face_up = up .cell_in_front_of ( seg2, tag::surely_exists );
 	Cell new_cube ( tag::cube, face_up, face_down,
-									face_south, face_north, face_east, face_west );
+	                           face_south, face_north, face_east, face_west );
 	new_cube .add_to_mesh ( *this );
 
 	#ifndef NDEBUG
@@ -2810,7 +2810,7 @@ void Mesh::export_to_file
 		size_t n = cll .boundary() .number_of ( tag::cells_of_max_dim );
 		if ( n == 4 ) nb_tetra ++;
 		else if ( n == 5 ) nb_prism ++;
-		else  {  assert ( n == 6 );  nb_cub ++;  }                      }
+		else  {  assert ( n == 6 );  nb_cub ++;  }                       }
 	} // just a block for hiding 'it'
 
 	// since there is no request to create specific entities,
@@ -3931,8 +3931,8 @@ Mesh fold_common_no_sides   // hidden in anonymous namespace
 
 
 Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
-									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+                     const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+                     size_t dim, bool keep_map, std::map < Cell, Cell > & m )
 // hidden in anonymous namespace
 
 // take a mesh and fold it around the current working manifold,
@@ -3971,8 +3971,8 @@ Mesh fold_no_sides ( Mesh * that, const tag::BuildNewVertices &,
 
 	
 Mesh fold_no_sides ( Mesh * that, const tag::UseExistingVertices &,
-									const tag::ReturnMapBetween &, const tag::CellsOfDim &,
-									size_t dim, bool keep_map, std::map < Cell, Cell > & m )
+                     const tag::ReturnMapBetween &, const tag::CellsOfDim &,
+                     size_t dim, bool keep_map, std::map < Cell, Cell > & m )
 // hidden in anonymous namespace
 
 // take a mesh and fold it around the current working manifold,
@@ -4901,7 +4901,7 @@ Mesh fold_six_sides       // hidden in anonymous namespace   // line 1942
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
 				::iterator it_V = corresp_ver .find (V);
 			assert ( it_V != corresp_ver .end() );
-			assert ( it_V->second .second == 0 );                                }
+			assert ( it_V->second .second == 0 );                     }
 		if ( V .belongs_to ( side_1 ) )
 		{	assert ( W .belongs_to ( side_6 ) );
 			V46 = W;
@@ -4912,7 +4912,7 @@ Mesh fold_six_sides       // hidden in anonymous namespace   // line 1942
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
 				::iterator it_V = corresp_ver .find (V);
 			assert ( it_V != corresp_ver .end() );
-			assert ( it_V->second .second == 0 );                                }
+			assert ( it_V->second .second == 0 );                     }
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
 			::iterator it_V = corresp_ver .find (V);
 		assert ( it_V != corresp_ver .end() );
@@ -4955,7 +4955,7 @@ Mesh fold_six_sides       // hidden in anonymous namespace   // line 1942
 			assert ( it_V != corresp_ver .end() );
 			assert ( it_V->second .first == new_V13 );
 			assert ( it_V->second .second == g12 );
-			continue;                                                             }
+			continue;                                                   }
 		if ( V .belongs_to ( side_3 ) )
 		{	assert ( W .belongs_to ( side_1 ) );
 			assert ( V == V35 );
@@ -4977,7 +4977,7 @@ Mesh fold_six_sides       // hidden in anonymous namespace   // line 1942
 		      std::forward_as_tuple ( V16 ), std::forward_as_tuple
 		      ( std::pair < Cell, Manifold::Action > { new_V35, g56 } ) );
 			// corresp_ver [ V16 ] = { new_V35, g56 };
-			continue;                                                                     }
+			continue;                                                         }
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
 			::iterator it_V = corresp_ver .find ( V );
 		assert ( it_V != corresp_ver .end() );
@@ -5165,7 +5165,7 @@ Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
 				::iterator it_V = corresp_ver .find (V);
 			assert ( it_V != corresp_ver .end() );
-			assert ( it_V->second .second == 0 );                                }
+			assert ( it_V->second .second == 0 );                    }
 		if ( V .belongs_to ( side_1 ) )
 		{	assert ( W .belongs_to ( side_6 ) );
 			V46 = W;
@@ -5176,7 +5176,7 @@ Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
 			std::map < Cell, std::pair < Cell, Manifold::Action > >
 				::iterator it_V = corresp_ver .find (V);
 			assert ( it_V != corresp_ver .end() );
-			assert ( it_V->second .second == 0 );                                }
+			assert ( it_V->second .second == 0 );                    }
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
 			::iterator it_W = corresp_ver .lower_bound (W);
@@ -5184,7 +5184,7 @@ Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
 		         ( corresp_ver.key_comp()(W,it_W->first) ) );
 		corresp_ver .emplace_hint ( it_W, std::piecewise_construct,
 		    std::forward_as_tuple (W), std::forward_as_tuple
-		    ( std::pair < Cell, Manifold::Action > { V, g34 } ) );  }
+		    ( std::pair < Cell, Manifold::Action > { V, g34 } ) );   }
 		// corresp_ver [W] = { V, g34 };
 	assert ( not it4 .in_range() );
 	assert ( V35 .exists() );  assert ( V46 .exists() );
@@ -5214,7 +5214,7 @@ Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
 			assert ( it_V != corresp_ver .end() );
 			assert ( it_V->second .first == V13 );
 			assert ( it_V->second .second == g12 );
-			continue;                                                             }
+			continue;                                                }
 		if ( V .belongs_to ( side_3 ) )
 		{	assert ( W .belongs_to ( side_1 ) );
 			assert ( V == V35 );
@@ -5236,7 +5236,7 @@ Mesh fold_six_sides    // hidden in anonymous namespace      // line 2214
 		      std::forward_as_tuple ( V16 ), std::forward_as_tuple
 		      ( std::pair < Cell, Manifold::Action > { V35, g56 } ) );
 			// corresp_ver [ V16 ] = { V35, g56 };
-			continue;                                                                     }
+			continue;                                                     }
 		// inspired in item 24 of the book : Scott Meyers, Effective STL
 		std::map < Cell, std::pair < Cell, Manifold::Action > >
 			::iterator it_W = corresp_ver .lower_bound (W);
@@ -6732,7 +6732,7 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 			{	Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
 				if ( fill_mapping )
 				mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
-													( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+				                  ( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
 				itbv .first->second .push_back
 					( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                        }  }  }
 	
@@ -6783,7 +6783,7 @@ inline Mesh unfold_local ( const Mesh & that, const std::vector < tag::Util::Act
 			Cell new_ver ( tag::vertex );  coords_Eu ( new_ver ) = coords_ver;
 			if ( fill_mapping )
 			mapping .insert ( std::pair < Cell, std::pair < Cell, Manifold::Action > >
-												( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
+			                  ( new_ver, std::pair < Cell, Manifold::Action > ( ver, a ) ) );
 			itbv .first->second .push_back
 				( std::pair < Manifold::Action, Cell > ( a, new_ver ) );                        }  }
 	
@@ -6840,7 +6840,7 @@ const
 
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
-	                  const tag::OverRegion &, const Function::Inequality::Set & constraints,
+                    const tag::OverRegion &, const Function::Inequality::Set & constraints,
                     const tag::ReturnMapBetween &, const tag::CellsOfDim &, size_t dim,
                     std::map < Cell, std::pair < Cell, Manifold::Action > > & mapping      )
 const
@@ -6863,7 +6863,7 @@ const
 
 
 Mesh Mesh::unfold ( const std::vector < tag::Util::Action > & aa,
-	                  const tag::OverRegion &, const Function::Inequality::Set & constraints )
+                    const tag::OverRegion &, const Function::Inequality::Set & constraints )
 const
 	
 // take a mesh and unfold it over a given region of the plane

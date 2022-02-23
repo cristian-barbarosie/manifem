@@ -82,5 +82,5 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 Full text of the GNU Lesser General Public License is available 
-in files [COPYING](src/COPYING) and [COPYING.LESSER](src/COPYING.LESSER).
+in files [src/COPYING](src/COPYING) and [src/COPYING.LESSER](src/COPYING.LESSER).
 It can also be found at <https://www.gnu.org/licenses/>.

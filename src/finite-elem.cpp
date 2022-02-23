@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2022.01.07
+// finite-elem.cpp 2022.02.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -35,14 +35,14 @@ using namespace maniFEM;
 Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
                            const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
 
-: Integrator::Core ()
+:	Integrator::Core ()
 
 // J.E. Flaherty, Finite Element Analysis, Lecture Notes : Spring 2000
 // http://manifem.rd.ciencias.ulisboa.pt/flaherty-06.pdf
 	
 // E.B. Becker, G.F. Carey, J.T. Oden, Finite Elements, an introduction, vol 1
 
-{ FiniteElement::WithMaster * fe_core = tag::Util::assert_cast
+{	FiniteElement::WithMaster * fe_core = tag::Util::assert_cast
 		< FiniteElement::Core*, FiniteElement::WithMaster* > ( fe.core );
 	Manifold master_manifold = fe_core->master_manif;
 	switch ( q )
@@ -374,7 +374,7 @@ std::vector < double > Integrator::Gauss::retrieve_precomputed
 
 
 void Integrator::HandCoded::pre_compute ( const std::vector < Function > & bf,
-                                        const std::vector < Function > & v  )
+                                          const std::vector < Function > & v  )
 // virtual from Integrator::Core
 
 // bf is an arbitrary basis function (Function::MereSymbol) in the finite element
@@ -401,7 +401,7 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
 		[0] [ fesa->basis_numbering [ psi .core ] ];
 	for ( size_t k = 0; k < fesa->selector .size(); k++ )
 		res [k] = r [ fesa->selector [k] ];
-	return res;                                                                         }
+	return res;                                                                            }
 	// return Integrator::Result ( fesa->selector,
 	//  	    fesa->result_of_integr [ 0 ] [ fesa->basis_numbering [ psi .core ] ]  )
 
@@ -593,8 +593,7 @@ void FiniteElement::WithMaster::Triangle::P1::dock_on ( const Cell & cll )
 		Function x_c = xP * one_m_xi_m_eta + xQ * xi + xR * eta;
 		Function y_c = yP * one_m_xi_m_eta + yQ * xi + yR * eta;
 
-		this->transf =
-			Function ( tag::diffeomorphism, tag::high_dim, xyz, xi_eta, x_c && y_c );  }
+		this->transf = Function ( tag::diffeomorphism, tag::high_dim, xyz, xi_eta, x_c && y_c );  }
 	
 	else  // geometric dimension >= 3
 		
@@ -608,7 +607,7 @@ void FiniteElement::WithMaster::Triangle::P1::dock_on ( const Cell & cll )
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );            }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );     }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -770,7 +769,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on ( const Cell & c
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);  xQ = x (Q);  xR = x (R);
+			xP = x (P);  xQ = x (Q);  xR = x (R);
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -780,7 +779,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on ( const Cell & c
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
 	       ( P.core, Function ( (1.-2.*xi-2.*eta) * one_m_xi_m_eta,
-                              tag::composed_with, this->transf   ) ) );
+	                            tag::composed_with, this->transf   ) ) );
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
 	       ( Q.core, Function ( (2.*xi-1.) * xi, tag::composed_with, this->transf ) ) );
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -858,7 +857,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);
+			xP = x (P);
 			xQ = x ( Q, tag::winding, winding_Q );
 			xR = x ( R, tag::winding, winding_R );
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
@@ -940,7 +939,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);  xQ = x (Q);  xR = x (R);
+			xP = x (P);  xQ = x (Q);  xR = x (R);
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -1027,7 +1026,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);
+			xP = x (P);
 			xQ = x ( Q, tag::winding, winding_Q );
 			xR = x ( R, tag::winding, winding_R );
 			xyz_c = xyz_c && ( xP * one_m_xi_m_eta + xQ * xi + xR * eta );  }
@@ -1109,7 +1108,7 @@ void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll )
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x(P);  xQ = x(Q);  xR = x(R);  xS = x(S);
+			xP = x(P);  xQ = x(Q);  xR = x(R);  xS = x(S);
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -1199,7 +1198,7 @@ void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll, cons
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);
+			xP = x (P);
 			xQ = x ( Q, tag::winding, winding_Q );
 			xR = x ( R, tag::winding, winding_R );
 			xS = x ( S, tag::winding, winding_S );
@@ -1280,7 +1279,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on ( const Cell &
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);  xQ = x (Q);  xR = x (R);  xS = x (S);
+			xP = x (P);  xQ = x (Q);  xR = x (R);  xS = x (S);
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -1384,7 +1383,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);
+			xP = x (P);
 			xQ = x ( Q, tag::winding, winding_Q );
 			xR = x ( R, tag::winding, winding_R );
 			xS = x ( S, tag::winding, winding_S );
@@ -1480,7 +1479,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on (
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);  xQ = x (Q);  xR = x (R);  xS = x (S);
+			xP = x (P);  xQ = x (Q);  xR = x (R);  xS = x (S);
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
@@ -1584,7 +1583,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on
 
 		for ( size_t d = 1; d < geom_dim; d++ )
 		{	x = xyz [d];
-		  xP = x (P);
+			xP = x (P);
 			xQ = x ( Q, tag::winding, winding_Q );
 			xR = x ( R, tag::winding, winding_R );
 			xS = x ( S, tag::winding, winding_S );
@@ -3756,12 +3755,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -3807,12 +3803,9 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -3849,14 +3842,10 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll 
 
 	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -3908,14 +3897,10 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
 
 	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -3953,14 +3938,10 @@ void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on ( const Cell & c
 
 	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -4017,14 +3998,10 @@ void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on
 
 	// code below can be viewed as a local numbering of vertices P, Q, R, S
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -4068,46 +4045,31 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on ( const Cell & cll )
 		                              this->cas, this->result_of_integr      );
 			this->base_fun_1 .insert
 				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
 		else  // PQ is the right side of the rectangle
 		{	dock_on_hand_rectangle_Q1 ( x(S), y(S), xP, yP, xQ, yQ, x(R), y(R),
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
 	else  // P and Q are on the same horizontal -- yP == yQ
 		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
 		{	dock_on_hand_rectangle_Q1 ( x(R), y(R), x(S), y(S), xP, yP, xQ, yQ,
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
 		else  // PQ is the lower side of the rectangle
 		{	dock_on_hand_rectangle_Q1 ( xP, yP, xQ, yQ, x(R), y(R), x(S), y(S),
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
 	
 }  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 
@@ -4165,51 +4127,35 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 		{	dock_on_hand_rectangle_Q1
 			( xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP,
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
 		else  // PQ is the right side of the rectangle
 		{	dock_on_hand_rectangle_Q1
 			( xyz_S [0], xyz_S [1], xP, yP, xQ, yQ, xyz_R [0], xyz_R [1],
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
 	else  // P and Q are on the same horizontal -- yP == yQ
 		if ( xPmxQ > 0 )  // PQ is the upper side of the rectangle
 		{	dock_on_hand_rectangle_Q1
 			( xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP, xQ, yQ,
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
 		else  // PQ is the lower side of the rectangle
 		{	dock_on_hand_rectangle_Q1
 			( xP, yP, xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  with tag::winding
 
@@ -4304,14 +4250,10 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -4351,48 +4293,32 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 		if ( yPmyQ > 0 )  // PQ is the left side of the square
 		{	dock_on_hand_square_Q1 ( xQ, yQ, x(R), y(R), x(S), y(S), xP, yP,
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
 		else  // PQ is the right side of the square
 		{	dock_on_hand_square_Q1 ( x(S), y(S), xP, yP, xQ, yQ, x(R), y(R),
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
 	else  // P and Q are on the same horizontal -- yP == yQ
 		if ( xPmxQ > 0 )  // PQ is the upper side of the square
 		{	dock_on_hand_square_Q1 ( x(R), y(R), x(S), y(S), xP, yP, xQ, yQ,
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
 		else  // PQ is the lower side of the square
 		{	dock_on_hand_square_Q1 ( xP, yP, xQ, yQ, x(R), y(R), x(S), y(S),
 		                              this->cas, this->result_of_integr      );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
 	
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on
 
@@ -4449,51 +4375,35 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 		{	dock_on_hand_square_Q1
 			( xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP,
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf4 ) );  }
 		else  // PQ is the right side of the square
 		{	dock_on_hand_square_Q1
 			( xyz_S [0], xyz_S [1], xP, yP, xQ, yQ, xyz_R [0], xyz_R [1],
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf4 ) );  }
 	else  // P and Q are on the same horizontal -- yP == yQ
 		if ( xPmxQ > 0 )  // PQ is the upper side of the square
 		{	dock_on_hand_square_Q1
 			( xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1], xP, yP, xQ, yQ,
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf4 ) );  }
 		else  // PQ is the lower side of the square
 		{	dock_on_hand_square_Q1
 			( xP, yP, xQ, yQ, xyz_R [0], xyz_R [1], xyz_S [0], xyz_S [1],
 			  this->cas, this->result_of_integr                          );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-			this->base_fun_1 .insert
-				( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+			this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );  }
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on  with tag::winding
 
@@ -4533,14 +4443,10 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 
@@ -4592,14 +4498,10 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 
 	// code below can be viewed as a local numbering of vertices P, Q, R
 	this->base_fun_1 .clear();
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
-	this->base_fun_1 .insert
-		( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( P .core, this->bf1 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( Q .core, this->bf2 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( R .core, this->bf3 ) );
+	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function > ( S .core, this->bf4 ) );
 	// using Cell::Core::short_int_heap for local numbering of vertices
 	// should be slightly faster
 

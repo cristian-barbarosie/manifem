@@ -126,7 +126,7 @@ int main ()
 
 	std::cout << "built 3D torus with round hole, total " << torus .number_of ( tag::cells_of_max_dim )
 	          << " cubes, now unfolding" << std::endl;
-	Mesh torus_unfolded = torus .unfold ( tag::over_region, x*x + 2*y*y + 3*z*z < 10, 5. * z + x < 0.4 );
+	Mesh torus_unfolded = torus .unfold ( tag::over_region, x*x + 2*y*y + 3*z*z < 10, 5.*z + x < 0.4 );
 
 	std::cout << "built unfolded mesh with " << torus_unfolded .number_of ( tag::cells_of_max_dim )
 	          << " cubes, now exporting" << std::endl;

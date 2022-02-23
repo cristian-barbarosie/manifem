@@ -1,9 +1,9 @@
 
-// function.h 2022.01.26
+// function.h 2022.02.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
-//   Copyright 2019, 2020, 2021, 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
+//   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
@@ -1100,7 +1100,7 @@ class Function::Diffeomorphism::OneDim
 	// they should be composed with 'this' map in the calling code
 
 	// Function det  inherited from Function::Map
-  // positive scalar, dilation coefficient
+	// positive scalar, dilation coefficient
 	// can be used for integration
 	// here, 'det' is equal to the inverse of the only component of 'jacobian'
 	// thus, 'det' is	the derivative of back_geom_coords with respect to master_coords
@@ -1180,7 +1180,7 @@ class Function::Immersion : public Function::Vector, public Function::Map
 	// quite different from Function::Diffeomorphism::***Dim !
 
 	// Function det  inherited from Function::Map
-  // positive scalar, dilation coefficient, can be used for integration
+	// positive scalar, dilation coefficient, can be used for integration
 
 	// if master_coords is 1D then
 	// det = |D Phi| (Phi being back_geom_coords)
@@ -1274,7 +1274,7 @@ class Function::Diffeomorphism::HighDim
 	// then taking the inverse matrix
 
 	// Function det  inherited from Function::Immersion
-  // determinant of the jacobian matrix - not inverted !
+	// determinant of the jacobian matrix - not inverted !
 	// should be positive, so may be used directly for integration
 
 	// components of 'jacobian', as well as 'det', are expressions involving master_cords
@@ -1399,7 +1399,7 @@ class Function::Composition : public Function::Scalar
 
 
 inline Function::Function
-(	const Function & expr, const tag::ComposedWith &, const Function & f_map )
+( const Function & expr, const tag::ComposedWith &, const Function & f_map )
 
 // an 'expr'ession involving master coordinates ( e.g.  1.- xi - eta )
 // composed with a map 'f_map' sending it in the physical space
@@ -1407,7 +1407,7 @@ inline Function::Function
 : Function ( tag::non_existent )
 
 {	assert ( dynamic_cast < Function::Map* > ( f_map .core ) );
-  Function::Constant * expr_c = dynamic_cast < Function::Constant* > ( expr .core );
+	Function::Constant * expr_c = dynamic_cast < Function::Constant* > ( expr .core );
 	if ( expr_c ) this->set_core ( expr .core, tag::previously_non_existent );
 	else this->set_core ( new Function::Composition ( expr, f_map ),
                         tag::previously_non_existent               );                }
@@ -1479,7 +1479,7 @@ class Function::CoupledWithField::Scalar
 //-----------------------------------------------------------------------------------------//
 
 class Function::CoupledWithField::Vector
-: public Function::Aggregate,
+:	public Function::Aggregate,
 	public Function::CoupledWithField
 
 // inheriting from Function::Aggregate means simply that there is a 'components' member
@@ -1495,7 +1495,7 @@ class Function::CoupledWithField::Vector
 		Function::CoupledWithField ( f )
 	{	size_t n = f->nb_of_components();
 		for ( size_t j = 0; j < n; j++ )
-//		this->components [j] = Function ( tag::whose_core_is,
+			// this->components [j] = Function ( tag::whose_core_is,
 			this->components .emplace_back ( tag::whose_core_is,
 				new Function::CoupledWithField::Scalar ( field->component (j) ) );  }
 	
@@ -1576,11 +1576,11 @@ namespace tag  {  struct Threshold { };  static const Threshold threshold;  }
 
 inline Function abs ( const Function & f )
 {	return Function ( tag::whose_core_is, new Function::Step
-      ( -f, tag::iff, f, tag::less_than, 0., f, tag::otherwise ) );  }
+	      ( -f, tag::iff, f, tag::less_than, 0., f, tag::otherwise ) );  }
 
 inline Function sign_of ( const Function & f )
 {	return Function ( tag::whose_core_is, new Function::Step
-      ( Function (-1.), tag::iff, f, tag::less_than, 0., Function(1.), tag::otherwise ) );  }
+	      ( Function (-1.), tag::iff, f, tag::less_than, 0., Function(1.), tag::otherwise ) );  }
 
 inline Function smooth_abs ( const Function & f, const tag::Threshold &, double d )
 // a smooth (C1) approximation of the absolute value
@@ -1589,7 +1589,7 @@ inline Function smooth_abs ( const Function & f, const tag::Threshold &, double 
 {	assert ( d > 0. );
 	return Function ( tag::whose_core_is, new Function::Step
 	      ( -f, tag::iff, f, tag::less_than, -d,
-          ( f*f + d*d ) / (2.*d), tag::if_less_than, d, f, tag::otherwise ) );  }
+	        ( f*f + d*d ) / (2.*d), tag::if_less_than, d, f, tag::otherwise ) );  }
 //	Function abs_f = sign_of ( f ) * f;
 //	return abs_f * abs_f / ( d + abs_f );  }
 
@@ -1608,7 +1608,7 @@ inline Function smooth_min
   const tag::Threshold &, double d                                                )
 // a smooth (C1) approximation of the minimum between four functions
 {	return smooth_min ( smooth_min ( f, g, tag::threshold, d ),
-                      smooth_min ( h, i, tag::threshold, d ), tag::threshold, d );  }
+	                    smooth_min ( h, i, tag::threshold, d ), tag::threshold, d );  }
 
 inline Function smooth_min
 ( const Function & f, const Function & g, const Function & h, const Function & i,
@@ -1622,7 +1622,7 @@ inline Function smooth_min
   const Function & j, const Function & k, const tag::Threshold &, double d        )
 // a smooth (C1) approximation of the minimum between six functions
 {	return smooth_min ( smooth_min ( f, g, tag::threshold, d ),
-											smooth_min ( h, i, tag::threshold, d ),
+	                    smooth_min ( h, i, tag::threshold, d ),
 	                    smooth_min ( j, k, tag::threshold, d ), tag::threshold, d );  }
 
 inline Function smooth_max
@@ -1883,10 +1883,10 @@ inline Function::Action operator-=
 		std::map < Function::ActionGenerator, short int > ::iterator itt =
 			a .index_map .lower_bound (g);
 		if ( ( itt == a .index_map .end() ) or
-	       ( a .index_map .key_comp() ( g, itt->first ) ) )
+		     ( a .index_map .key_comp() ( g, itt->first ) ) )
 			// new action
 			a .index_map .emplace_hint ( itt, std::piecewise_construct,
-	      std::forward_as_tuple (g), std::forward_as_tuple ( -it->second ) ); 
+			     std::forward_as_tuple (g), std::forward_as_tuple ( -it->second ) ); 
 		else  // action already there
 		{	itt->second -= it->second;  // could be zero
 			if ( itt->second == 0 ) a .index_map .erase ( itt );  }               }
@@ -1928,7 +1928,7 @@ class Cell::Winding  // inutil ?
 
 	inline Winding ( const Cell & c )
 	:	cll { c.core }
-	{ assert ( this->cll );  }
+	{	assert ( this->cll );  }
 	
 	inline Function::Action operator=
 	( const Function::Action & a );  // defined in manifold.h
@@ -2074,7 +2074,7 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	//   defined by Function::Scalar::MultiValued, execution forbidden
 
 	Function::Jump jump ( );
-  // virtual, defined by Function::Core, execution forbidden, here overridden
+	// virtual, defined by Function::Core, execution forbidden, here overridden
 	
 	// the return value of 'analyse_linear_expression' should be double
 	// however, we use std::vector < double > instead
@@ -2229,7 +2229,7 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 		std::vector < double > beta_scalar ( n_act, 0. );
 		for ( size_t j = 0; j < n_comp; j++ )
 		{	for ( size_t i = 0; i < n_act; i++ ) beta_scalar [i] = be [i][j];
-//		this->components [j] = Function ( tag::whose_core_is,
+			// this->components [j] = Function ( tag::whose_core_is,
 			this->components.emplace_back ( tag::whose_core_is,
 			  new Function::Scalar::MultiValued::JumpIsSum
 	                    ( tag::associated_with, f[j], ac, beta_scalar ) );  }  }
@@ -2262,7 +2262,7 @@ class Function::Vector::MultiValued::JumpIsSum : public Function::Vector::MultiV
 	//   defined by Function::Vector::MultiValued
 
 	Function::Jump jump ( );
-  // virtual, defined by Function::Core, here overridden
+	// virtual, defined by Function::Core, here overridden
 	
 	inline static std::vector < double > analyse_linear_expression
 	( Function expression, Function base );
@@ -2360,7 +2360,7 @@ class Function::Jump
 
 {	public :
 
-  std::vector < Function::ActionGenerator > actions;
+	std::vector < Function::ActionGenerator > actions;
 	
 	std::vector < double > ju;
 	
@@ -2498,7 +2498,7 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 	if ( expr_sum )
 	{	std::forward_list < Function > tl = expr_sum->terms;
 		for ( std::forward_list < Function > ::const_iterator
-					it = tl .begin(); it != tl .end(); it++           )
+		      it = tl .begin(); it != tl .end(); it++           )
 		{	Function term = *it;
 			// often, 'term' will be a product
 			Function::Product * term_prod = dynamic_cast < Function::Product* > ( term.core );
@@ -2659,7 +2659,7 @@ class Function::TakenOnCell
 
 {	public :
 
-  Function::Core * f;
+	Function::Core * f;
 	// Function::TakenOnCell should only be used as temporary objects
 	// they should be immediately converted to a (reference to a) double or vector<double>
 	// so an ordinary pointer is OK here
@@ -2746,7 +2746,7 @@ class Function::TakenOnWindingCell
 
 {	public :
 
-  Function::Core * f;
+	Function::Core * f;
 	const Function::Action & winding;
 	
 	// Function::TakenOnWindingCell should only be used as temporary objects

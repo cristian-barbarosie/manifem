@@ -1,12 +1,12 @@
 
-// manifold.cpp 2022.02.20
+// manifold.cpp 2022.02.23
+
+//   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   Copyright 2019 -- 2022 Cristian Barbarosie cristian.barbarosie@gmail.com
 
 //   http://manifem.rd.ciencias.ulisboa.pt/
 //   https://github.com/cristian-barbarosie/manifem
-
-//   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
 //   ManiFEM is free software: you can redistribute it and/or modify it
 //   under the terms of the GNU Lesser General Public License as published
@@ -115,21 +115,21 @@ void Manifold::Quotient::set_coords ( const Function co )  // virtual from Manif
 
 double Manifold::Euclid::measure ( ) const  // virtual from Manifold::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Euclidian manifolds have infinite measure" << std::endl;
 	exit ( 1 );                                                            }
 
 
 double Manifold::Implicit::measure ( ) const  // virtual from Manifold::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "computing the measure of implicit manifolds is not implemented " << std::endl;
 	exit ( 1 );                                                                                  }
 
 
 double Manifold::Parametric::measure ( ) const  // virtual from Manifold::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "computing the measure of parametric manifolds is not implemented " << std::endl;
 	exit ( 1 );                                                                                    }
 
@@ -173,7 +173,7 @@ double Manifold::Quotient::measure ( ) const  // virtual from Manifold::Core
 		exit ( 1 );                                                                     }
 
 	std::cout << __FILE__ << ":" <<__LINE__ << ": "
-						<< __extension__ __PRETTY_FUNCTION__ << ": ";
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "computing the measure of parametric manifolds is not implemented " << std::endl;
 	exit ( 1 );
 
@@ -187,10 +187,10 @@ double Manifold::default_inner_prod  // static
 (	const Cell & P, const std::vector<double> & v,
 	const std::vector<double> & w, const Function & )
 
-{	size_t dim = v.size();
-	assert ( dim == w.size() );
+{	size_t dim = v .size();
+	assert ( dim == w .size() );
 	double res = 0.;
-	for ( size_t i = 0; i < v.size(); i++ )  res += v[i]*w[i];
+	for ( size_t i = 0; i < v .size(); i++ )  res += v[i]*w[i];
 	return res;                                                  }
 
 
@@ -199,12 +199,12 @@ double Manifold::zoom_inner_prod  // static
 (	const Cell & P, const std::vector<double> & v,
 	const std::vector<double> & w, const Function & metric )
 
-{	size_t dim = v.size();
-	assert ( dim == w.size() );
-	assert ( metric.nb_of_components() == 1 );
+{	size_t dim = v .size();
+	assert ( dim == w .size() );
+	assert ( metric .nb_of_components() == 1 );
 	// std::cout << "zoom (" << metric(P) <<") ";
 	double res = 0.;
-	for ( size_t i = 0; i < v.size(); i++ )  res += v[i]*w[i];
+	for ( size_t i = 0; i < v .size(); i++ )  res += v[i]*w[i];
 	return res * metric(P);                                     }
 
 
@@ -213,9 +213,9 @@ double Manifold::matrix_inner_prod  // static
 (	const Cell & P, const std::vector<double> & v,
 	const std::vector<double> & w, const Function & metric )
 
-{	size_t dim = v.size();
-	assert ( dim == w.size() );
-	assert ( metric.nb_of_components() == dim*dim );
+{	size_t dim = v .size();
+	assert ( dim == w .size() );
+	assert ( metric .nb_of_components() == dim*dim );
 	double res = 0.;
 	for ( size_t i = 0; i < dim; i++ )
 	for ( size_t j = 0; j < dim; j++ )
@@ -231,7 +231,7 @@ void Manifold::Euclid::pretty_interpolate
 ( const Cell & P, double s, const Cell & A, double t, const Cell & B ) const
 
 {	Function coord = this->get_coord_func();
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 		coord[i](P) = s * coord[i](A) + t * coord[i](B);  }	
 
@@ -248,14 +248,14 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 {	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B )   );
 		return;                                            } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
@@ -276,14 +276,14 @@ void Manifold::Euclid::interpolate
 	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B, tag::winding, exp_AB ) );
 		return;                                                                } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
@@ -302,15 +302,15 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 {	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B ) +
 			     u * coord_scalar->get_value_on_cell ( C )  );
 		return;                                                        } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
@@ -334,15 +334,15 @@ void Manifold::Euclid::interpolate
 	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B, tag::winding, exp_AB ) +
 			     u * coord_scalar->get_value_on_cell ( C, tag::winding, exp_AC )  );
 		return;                                                        } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
@@ -359,7 +359,7 @@ void Manifold::Euclid::pretty_interpolate
                   double u, const Cell & C, double v, const Cell & D ) const
 
 {	Function coord = this->get_coord_func();
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 		coord[i](P) = s * coord[i](A) + t * coord[i](B) +
 		              u * coord[i](C) + v * coord[i](D);   }
@@ -378,8 +378,8 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 {	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B ) +
 			     u * coord_scalar->get_value_on_cell ( C ) +
@@ -387,7 +387,7 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 		return;                                                        } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
@@ -414,8 +414,8 @@ void Manifold::Euclid::interpolate
 	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B, tag::winding, exp_AB ) +
 			     u * coord_scalar->get_value_on_cell ( C, tag::winding, exp_AC ) +
@@ -423,7 +423,7 @@ void Manifold::Euclid::interpolate
 		return;                                                        } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
@@ -442,7 +442,7 @@ void Manifold::Euclid::pretty_interpolate
                   double w, const Cell & E, double z, const Cell & F ) const
 
 {	Function coord = this->get_coord_func();
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 		coord[i](P) = s * coord[i](A) + t * coord[i](B) +
 		              u * coord[i](C) + v * coord[i](D) +
@@ -463,8 +463,8 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 {	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B ) +
 			     u * coord_scalar->get_value_on_cell ( C ) +
@@ -474,14 +474,14 @@ void Manifold::Euclid::interpolate ( Cell::Positive::Vertex * P,
 		return;                                             } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
 			( P, s * coord_i->get_value_on_cell ( A ) +
 			     t * coord_i->get_value_on_cell ( B ) +
-				   u * coord_i->get_value_on_cell ( C ) +
+			     u * coord_i->get_value_on_cell ( C ) +
 			     v * coord_i->get_value_on_cell ( D ) +
 			     w * coord_i->get_value_on_cell ( E ) +
 			     z * coord_i->get_value_on_cell ( F )   );                              }       }
@@ -507,8 +507,8 @@ void Manifold::Euclid::interpolate
 	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
-	  coord_scalar->set_value_on_cell
+	{	assert ( coord .nb_of_components() == 1 );
+		coord_scalar->set_value_on_cell
 			( P, s * coord_scalar->get_value_on_cell ( A ) +
 			     t * coord_scalar->get_value_on_cell ( B ) +
 			     u * coord_scalar->get_value_on_cell ( C ) +
@@ -518,14 +518,14 @@ void Manifold::Euclid::interpolate
 		return;                                             } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
 			< Function::Core*, Function::Scalar* > ( coord_vector->component(i).core );
 		coord_i->set_value_on_cell
 			( P, s * coord_i->get_value_on_cell ( A ) +
 			     t * coord_i->get_value_on_cell ( B ) +
-				   u * coord_i->get_value_on_cell ( C ) +
+			     u * coord_i->get_value_on_cell ( C ) +
 			     v * coord_i->get_value_on_cell ( D ) +
 			     w * coord_i->get_value_on_cell ( E ) +
 			     z * coord_i->get_value_on_cell ( F )   );                              }     }
@@ -537,7 +537,7 @@ void Manifold::Euclid::pretty_interpolate ( const Cell & P,
 	const std::vector < double > & coefs, const std::vector < Cell > & points ) const
 
 {	Function coord = this->get_coord_func();
-	size_t n = coord.nb_of_components();
+	size_t n = coord .nb_of_components();
 	size_t m = points.size();  // == coefs.size()
 	for ( size_t i = 0; i < n; i++ )
 	{	double v = 0.;
@@ -557,7 +557,7 @@ const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex
 {	Function coord = this->get_coord_func();
 	Function::Scalar * coord_scalar = dynamic_cast < Function::Scalar * > ( coord.core );
 	if ( coord_scalar )
-	{	assert ( coord.nb_of_components() == 1 );
+	{	assert ( coord .nb_of_components() == 1 );
 		double v = 0.;
 		size_t m = points.size();
 		assert ( m == coefs.size() );
@@ -567,7 +567,7 @@ const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex
 		return;                                            } 
 	Function::Vector * coord_vector = tag::Util::assert_cast
 		< Function::Core*, Function::Vector* > ( coord.core );
-	size_t n = coord.nb_of_components(), m = points.size();
+	size_t n = coord .nb_of_components(), m = points.size();
 	assert ( m == coefs.size() );
 	for ( size_t i = 0; i < n; i++ )
 	{	Function::Scalar * coord_i = tag::Util::assert_cast
@@ -582,7 +582,7 @@ const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const
 
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                          }
 
@@ -599,18 +599,18 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C                                       ) const
 
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B, u, C );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                                      }
 
 
 // P = sA + sB + uC,  s+t+u == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
@@ -619,20 +619,20 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D ) const
 
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B, u, C, v, D );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                                      }
 
 
 // P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action &,
-	  double v, Cell::Positive::Vertex * D,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action &,
+  double v, Cell::Positive::Vertex * D,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
@@ -642,31 +642,31 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
   double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
   double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
 
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                                                  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action &,
-	  double v, Cell::Positive::Vertex * D,
-		const tag::Winding &, const Manifold::Action &,
-	  double w, Cell::Positive::Vertex * E,
-		const tag::Winding &, const Manifold::Action &,
-	  double z, Cell::Positive::Vertex * F,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action &,
+  double v, Cell::Positive::Vertex * D,
+  const tag::Winding &, const Manifold::Action &,
+  double w, Cell::Positive::Vertex * E,
+  const tag::Winding &, const Manifold::Action &,
+  double z, Cell::Positive::Vertex * F,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
-{	this->surrounding_space.core->interpolate ( P, coefs, points );
+{	this->surrounding_space .core->interpolate ( P, coefs, points );
 	// assert surrounding space is Manifold::Euclid  !!
 	this->project ( P );                                            }
 
@@ -674,14 +674,14 @@ void Manifold::Implicit::interpolate ( Cell::Positive::Vertex * P,
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B );
 	this->project ( P );                                          }
 
 
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	const tag::Winding &, const Manifold::Action & exp                    ) const 
+  const tag::Winding &, const Manifold::Action & exp                    ) const 
 {	assert ( false );  }
 
 
@@ -689,17 +689,17 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C                                       ) const
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B, u, C );
 	this->project ( P );                                                      }
 
 
 // P = sA + sB + uC,  s+t+u == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
@@ -707,65 +707,65 @@ void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D ) const
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B, u, C, v, D );
 	this->project ( P );                                                      }
 
 
 // P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action &,
-	  double v, Cell::Positive::Vertex * D,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action &,
+  double v, Cell::Positive::Vertex * D,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
-	double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
-	double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
+  double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
 //  virtual from Manifold::Core
-{	this->surrounding_space.core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );
+{	this->surrounding_space .core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );
 	this->project ( P );                                                                  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action &,
-	  double v, Cell::Positive::Vertex * D,
-		const tag::Winding &, const Manifold::Action &,
-	  double w, Cell::Positive::Vertex * E,
-		const tag::Winding &, const Manifold::Action &,
-	  double z, Cell::Positive::Vertex * F,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action &,
+  double v, Cell::Positive::Vertex * D,
+  const tag::Winding &, const Manifold::Action &,
+  double w, Cell::Positive::Vertex * E,
+  const tag::Winding &, const Manifold::Action &,
+  double z, Cell::Positive::Vertex * F,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Parametric::interpolate ( Cell::Positive::Vertex * P,
-	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
-{	this->surrounding_space.core->interpolate ( P, coefs, points );
+  const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
+{	this->surrounding_space .core->interpolate ( P, coefs, points );
 	this->project ( P );                                            }
 
 
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B ) const
-{	this->base_space.core->interpolate ( P, s, A, t, B );  }
+{	this->base_space .core->interpolate ( P, s, A, t, B );  }
 
 
 // P = sA + sB,  s+t == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	const tag::Winding &, const Manifold::Action & exp                    ) const 
+  const tag::Winding &, const Manifold::Action & exp                         ) const 
 {	assert ( false );  }
 
 
@@ -773,16 +773,16 @@ void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C                                       ) const
-{	this->base_space.core->interpolate ( P, s, A, t, B, u, C );  }
+{	this->base_space .core->interpolate ( P, s, A, t, B, u, C );  }
 
 
 // P = sA + sB + uC + vD,  s+t+u == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
@@ -790,50 +790,50 @@ void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
   double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
   double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D ) const
-{	this->base_space.core->interpolate ( P, s, A, t, B, u, C, v, D );  }
+{	this->base_space .core->interpolate ( P, s, A, t, B, u, C, v, D );  }
 
 
 // P = sA + sB + uC + vD,  s+t+u+v == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action &,
-	  double v, Cell::Positive::Vertex * D,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action &,
+  double v, Cell::Positive::Vertex * D,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
-	double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
-	double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
-	double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
+  double s, Cell::Positive::Vertex * A, double t, Cell::Positive::Vertex * B,
+  double u, Cell::Positive::Vertex * C, double v, Cell::Positive::Vertex * D,
+  double w, Cell::Positive::Vertex * E, double z, Cell::Positive::Vertex * F ) const
 //  virtual from Manifold::Core
-{	this->base_space.core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );  }
+{	this->base_space .core->interpolate ( P, s, A, t, B, u, C, v, D, w, E, z, F );  }
 
 
 // P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
-	  double s, Cell::Positive::Vertex * A,
-	  double t, Cell::Positive::Vertex * B,
-		const tag::Winding &, const Manifold::Action &,
-	  double u, Cell::Positive::Vertex * C,
-		const tag::Winding &, const Manifold::Action &,
-	  double v, Cell::Positive::Vertex * D,
-		const tag::Winding &, const Manifold::Action &,
-	  double w, Cell::Positive::Vertex * E,
-		const tag::Winding &, const Manifold::Action &,
-	  double z, Cell::Positive::Vertex * F,
-		const tag::Winding &, const Manifold::Action & ) const
+  double s, Cell::Positive::Vertex * A,
+  double t, Cell::Positive::Vertex * B,
+  const tag::Winding &, const Manifold::Action &,
+  double u, Cell::Positive::Vertex * C,
+  const tag::Winding &, const Manifold::Action &,
+  double v, Cell::Positive::Vertex * D,
+  const tag::Winding &, const Manifold::Action &,
+  double w, Cell::Positive::Vertex * E,
+  const tag::Winding &, const Manifold::Action &,
+  double z, Cell::Positive::Vertex * F,
+  const tag::Winding &, const Manifold::Action & ) const
 {	assert ( false );  }
 
 
 // P = sum c_k P_k,  sum c_k == 1     virtual from Manifold::Core
 void Manifold::Quotient::interpolate ( Cell::Positive::Vertex * P,
 	const std::vector < double > & coefs, const std::vector < Cell::Positive::Vertex * > & points ) const
-{	this->base_space.core->interpolate ( P, coefs, points );   }
+{	this->base_space .core->interpolate ( P, coefs, points );   }
 
 //-----------------------------------------------------------------------------------------
 
