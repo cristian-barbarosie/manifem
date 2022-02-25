@@ -45,10 +45,10 @@ int main ()
 	Manifold circle_manif = RR2 .implicit ( x*x + y*y == 1. );
 
 	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
-	Mesh circle ( tag::progressive, tag::start_at, A, tag::desired_length, 0.1 );
+	Mesh circle ( tag::frontal, tag::start_at, A, tag::desired_length, 0.1 );
 
 	RR2 .set_as_working_manifold();
-	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.1 );
+	Mesh disk ( tag::frontal, tag::boundary, circle, tag::desired_length, 0.1 );
 
 	// we solve the elliptic equation
 	//   - lapl u + 8 (x^2+y^2) / (1+x^2+y^2)^2 u = 4 / (1+x^2+y^2)^2

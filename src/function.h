@@ -1,5 +1,5 @@
 
-// function.h 2022.02.21
+// function.h 2022.02.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1574,9 +1574,46 @@ inline Function Function::deriv ( const Function & x ) const  // derivative with
 
 namespace tag  {  struct Threshold { };  static const Threshold threshold;  }
 
-inline Function abs ( const Function & f )
+inline Function max ( const Function & f, const Function & g )
 {	return Function ( tag::whose_core_is, new Function::Step
-	      ( -f, tag::iff, f, tag::less_than, 0., f, tag::otherwise ) );  }
+	      ( g, tag::iff, f-g, tag::less_than, 0., f, tag::otherwise ) );  }
+
+inline Function min ( const Function & f, const Function & g )
+{	return Function ( tag::whose_core_is, new Function::Step
+	      ( f, tag::iff, f-g, tag::less_than, 0., g, tag::otherwise ) );  }
+
+inline Function max ( const Function & f, const Function & g, const Function & h )
+{	return max ( f, max ( g, h ) );  }
+
+inline Function min ( const Function & f, const Function & g, const Function & h )
+{	return min ( f, min ( g, h ) );  }
+
+inline Function max ( const Function & f, const Function & g, const Function & h, const Function & i )
+{	return max ( max ( f, g ), max ( h, i ) );  }
+
+inline Function min ( const Function & f, const Function & g, const Function & h, const Function & i )
+{	return min ( min ( f, g ), min ( h, i ) );  }
+
+inline Function max
+( const Function & f, const Function & g, const Function & h, const Function & i, const Function & j )
+{	return max ( max ( f, g ), max ( h, i ), j );  }
+
+inline Function min
+( const Function & f, const Function & g, const Function & h, const Function & i, const Function & j )
+{	return min ( min ( f, g ), min ( h, i ), j );  }
+
+inline Function max
+( const Function & f, const Function & g, const Function & h,
+  const Function & i, const Function & j, const Function & k )
+{	return max ( max ( f, g ), max ( h, i ), max ( j, k ) );  }
+
+inline Function min
+( const Function & f, const Function & g, const Function & h,
+  const Function & i, const Function & j, const Function & k )
+{	return min ( min ( f, g ), min ( h, i ), min ( j, k ) );  }
+
+inline Function abs ( const Function & f )
+{	return max ( f, -f );  }
 
 inline Function sign_of ( const Function & f )
 {	return Function ( tag::whose_core_is, new Function::Step

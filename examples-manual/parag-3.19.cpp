@@ -27,24 +27,24 @@ int main ()
 	Cell start_2 ( tag::vertex );
 	x ( start_2 ) = 1.;  y ( start_2 ) = 0.;  z ( start_2 ) = 0.5 - rc;
 	intersection .project ( start_2 );
-	Mesh circle_2 ( tag::progressive, tag::start_at, start_2, tag::towards, { 0., 1., 0. },
-	                tag::desired_length, seg_size                                          );
+	Mesh circle_2 ( tag::frontal, tag::start_at, start_2, tag::towards, { 0., 1., 0. },
+	                tag::desired_length, seg_size                                      );
 
 	Cell start_3 ( tag::vertex );
 	x ( start_3 ) = -1.;  y ( start_3 ) = 0.;  z ( start_3 ) = 0.5 - rc;
 	intersection .project ( start_3 );
-	Mesh circle_3 ( tag::progressive, tag::start_at, start_3, tag::towards, { 0., 1., 0. },
-	                tag::desired_length, seg_size                                          );
+	Mesh circle_3 ( tag::frontal, tag::start_at, start_3, tag::towards, { 0., 1., 0. },
+	                tag::desired_length, seg_size                                      );
 
 	Mesh two_circles ( tag::join, circle_2 .reverse(), circle_3 );
 	cylinder .set_as_working_manifold();
-	Mesh cyl ( tag::progressive, tag::boundary, two_circles, tag::start_at, start_2,
-	           tag::towards, { -1., 0., 0. }, tag::desired_length, seg_size         );
+	Mesh cyl ( tag::frontal, tag::boundary, two_circles, tag::start_at, start_2,
+	           tag::towards, { -1., 0., 0. }, tag::desired_length, seg_size     );
 
 	RR3 .implicit ( x*x + y*y + z*z == rs*rs );
-	Mesh sph ( tag::progressive, tag::boundary, two_circles .reverse(),
+	Mesh sph ( tag::frontal, tag::boundary, two_circles .reverse(),
 	           tag::start_at, start_2, tag::towards, { 0., 0., -1. },
-	           tag::desired_length, seg_size                           );
+	           tag::desired_length, seg_size                         );
 
 	Mesh all ( tag::join, cyl, sph );
 	all .export_to_file ( tag::msh, "sphere-tunnel.msh");

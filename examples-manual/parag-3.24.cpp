@@ -23,19 +23,19 @@ int main ( )
 	Manifold circle = parab_surf .implicit ( x*x + y*y == 1. );
 	Cell P ( tag::vertex );  x (P) = 1.;  y (P) = 0.;  z (P) = 0.;
 	circle .project ( P );
-	Mesh outer ( tag::progressive, tag::start_at, P, tag::desired_length, d,
-							 tag::orientation, tag::random                              );
+	Mesh outer ( tag::frontal, tag::start_at, P, tag::desired_length, d,
+							 tag::orientation, tag::random                          );
 
 	double y0 = 0.37;
 	Manifold ellipse = parab_surf .implicit ( x*x + (y-y0)*(y-y0) + 0.3*x*y == 0.25 );
-	Mesh inner ( tag::progressive, tag::desired_length, d, tag::orientation, tag::random );
+	Mesh inner ( tag::frontal, tag::desired_length, d, tag::orientation, tag::random );
 
 	Mesh circles ( tag::join, outer, inner );
 
 	parab_surf .set_as_working_manifold();
-	Mesh disk ( tag::progressive, tag::boundary, circles,
+	Mesh disk ( tag::frontal, tag::boundary, circles,
               tag::start_at, P, tag::towards, { -1., 0., 0. },
-              tag::desired_length, d                           );
+              tag::desired_length, d                          );
 
 	disk .export_to_file ( tag::msh, "disk.msh");
 	RR3 .set_as_working_manifold();

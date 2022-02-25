@@ -1832,10 +1832,10 @@ inline void Cell::project ( const tag::Onto &, const Manifold m ) const
 //-------------------------------------------------------------------------------------------------
 
 
-inline Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+inline Mesh::Mesh ( const tag::Frontal &, const tag::EntireManifold &, Manifold manif,
                     const tag::Orientation &, const tag::OrientationChoice & oc,
-                    const tag::DesiredLength &, const Function & length                   )
-:	Mesh ( tag::progressive, tag::entire_manifold, manif,
+                    const tag::DesiredLength &, const Function & length               )
+:	Mesh ( tag::frontal, tag::entire_manifold, manif,
 	       tag::desired_length, length, tag::orientation, oc )
 {	}
 

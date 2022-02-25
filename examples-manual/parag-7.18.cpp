@@ -35,23 +35,23 @@ int main ( )
 
 	const double r2 = (1.-0.75*coef)*(1.-0.75*coef) + 0.43*0.43*coef*coef;
 	RR2 .implicit ( (x-1.)*(x-1.) + y*y == r2 );
-	Mesh AF ( tag::progressive, tag::start_at, AA, tag::stop_at, FF,
-	          tag::desired_length, d, tag::shortest_path            );
+	Mesh AF ( tag::frontal, tag::start_at, AA, tag::stop_at, FF,
+	          tag::desired_length, d, tag::shortest_path        );
 	RR2 .implicit ( (x-0.5)*(x-0.5) + (y+0.86)*(y+0.86) == r2 );
-	Mesh FE ( tag::progressive, tag::start_at, FF, tag::stop_at, EE,
-	          tag::desired_length, d, tag::shortest_path            );
+	Mesh FE ( tag::frontal, tag::start_at, FF, tag::stop_at, EE,
+	          tag::desired_length, d, tag::shortest_path        );
 	RR2 .implicit ( (x+0.5)*(x+0.5) + (y+0.86)*(y+0.86) == r2 );
-	Mesh ED ( tag::progressive, tag::start_at, EE, tag::stop_at, DD,
-	          tag::desired_length, d, tag::shortest_path            );
+	Mesh ED ( tag::frontal, tag::start_at, EE, tag::stop_at, DD,
+	          tag::desired_length, d, tag::shortest_path        );
 	RR2 .implicit ( (x+1.)*(x+1.) + y*y == r2 );
-	Mesh DC ( tag::progressive, tag::start_at, DD, tag::stop_at, CC,
-	          tag::desired_length, d, tag::shortest_path            );
+	Mesh DC ( tag::frontal, tag::start_at, DD, tag::stop_at, CC,
+	          tag::desired_length, d, tag::shortest_path        );
 	RR2 .implicit ( (x+0.5)*(x+0.5) + (y-0.86)*(y-0.86) == r2 );
-	Mesh CB ( tag::progressive, tag::start_at, CC, tag::stop_at, BB,
-	          tag::desired_length, d, tag::shortest_path            );
+	Mesh CB ( tag::frontal, tag::start_at, CC, tag::stop_at, BB,
+	          tag::desired_length, d, tag::shortest_path        );
 	RR2 .implicit ( (x-0.5)*(x-0.5) + (y-0.86)*(y-0.86) == r2 );
-	Mesh BA ( tag::progressive, tag::start_at, BB, tag::stop_at, AA,
-	          tag::desired_length, d, tag::shortest_path            );
+	Mesh BA ( tag::frontal, tag::start_at, BB, tag::stop_at, AA,
+	          tag::desired_length, d, tag::shortest_path        );
 
 	Cell A ( tag::vertex );  x (A) =  1. ;  y (A) =  0.  ;
 	Cell B ( tag::vertex );  x (B) =  0.5;  y (B) =  0.86;
@@ -61,23 +61,23 @@ int main ( )
 	Cell F ( tag::vertex );  x (F) =  0.5;  y (F) = -0.86;
 
 	RR2 .implicit ( 2.*x + y/0.86 == 2. );
-	Mesh AB ( tag::progressive, tag::start_at, A, tag::stop_at, B,
-						tag::desired_length, d, tag::shortest_path          );
+	Mesh AB ( tag::frontal, tag::start_at, A, tag::stop_at, B,
+						tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( y == 0.86 );
-	Mesh BC ( tag::progressive, tag::start_at, B, tag::stop_at, C,
-						tag::desired_length, d, tag::shortest_path          );
+	Mesh BC ( tag::frontal, tag::start_at, B, tag::stop_at, C,
+						tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( 2.*x - y/0.86 == -2. );
-	Mesh CD ( tag::progressive, tag::start_at, C, tag::stop_at, D,
-						tag::desired_length, d, tag::shortest_path          );
+	Mesh CD ( tag::frontal, tag::start_at, C, tag::stop_at, D,
+						tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( 2.*x + y/0.86 == -2. );
-	Mesh DE ( tag::progressive, tag::start_at, D, tag::stop_at, E,
-						tag::desired_length, d, tag::shortest_path          );
+	Mesh DE ( tag::frontal, tag::start_at, D, tag::stop_at, E,
+						tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( y == -0.86 );
-	Mesh EF ( tag::progressive, tag::start_at, E, tag::stop_at, F,
-						tag::desired_length, d, tag::shortest_path          );
+	Mesh EF ( tag::frontal, tag::start_at, E, tag::stop_at, F,
+						tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( 2.*x - y/0.86 == 2. );
-	Mesh FA ( tag::progressive, tag::start_at, F, tag::stop_at, A,
-						tag::desired_length, d, tag::shortest_path          );
+	Mesh FA ( tag::frontal, tag::start_at, F, tag::stop_at, A,
+						tag::desired_length, d, tag::shortest_path      );
 
 	// we must ensure opposite faces have the same number of elements
 	// and the corresponding vertices have the same positions
@@ -145,7 +145,7 @@ int main ( )
 	Mesh bdry ( tag::join, { AB, BC, CD, DE, EF, FA, AF, FE, ED, DC, CB, BA } );
 
 	RR2 .set_as_working_manifold();
-	Mesh hexa ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
+	Mesh hexa ( tag::frontal, tag::boundary, bdry, tag::desired_length, d );
 
 	Mesh torus = hexa .fold ( tag::identify, CD, tag::with, FA .reverse(),
 	                          tag::identify, BC, tag::with, EF .reverse(),

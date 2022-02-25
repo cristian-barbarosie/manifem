@@ -20,10 +20,10 @@ int main ( )
 	RR2 .implicit ( x*x + 0.7*y*y == 1. );
 
 	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
-	Mesh curve ( tag::progressive, tag::start_at, A, tag::desired_length, 0.33 );
+	Mesh curve ( tag::frontal, tag::start_at, A, tag::desired_length, 0.33 );
 
 	RR2 .set_as_working_manifold();
-	Mesh ellipse ( tag::progressive, tag::boundary, curve, tag::desired_length, 0.33 );
+	Mesh ellipse ( tag::frontal, tag::boundary, curve, tag::desired_length, 0.33 );
 
 	ellipse .export_to_file ( tag::msh, "ellipse-before.msh");
 

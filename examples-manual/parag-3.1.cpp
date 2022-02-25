@@ -29,7 +29,7 @@ int main ( )
 	Mesh circle ( tag::join, NW, WS, SE, EN );
 	
 	RR2 .set_as_working_manifold();
-	Mesh disk ( tag::progressive, tag::boundary, circle, tag::desired_length, 0.157 );
+	Mesh disk ( tag::frontal, tag::boundary, circle, tag::desired_length, 0.157 );
 
 	disk .draw_ps ("disk.eps");
 	disk .export_to_file ( tag::msh, "disk.msh");

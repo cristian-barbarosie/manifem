@@ -1,5 +1,5 @@
 
-// progressive.cpp 2022.02.04
+// progressive.cpp 2022.02.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2268,7 +2268,7 @@ inline void progressive_construct         // hidden in anonymous namespace  // l
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length )
+Mesh::Mesh ( const tag::Frontal &, const tag::DesiredLength &, const Function & length )
 
 // since no boundary is provided, we assume the user wants the entire working manifold
 // we assume the working manifold is compact
@@ -2292,7 +2292,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+Mesh::Mesh ( const tag::Frontal &, const tag::EntireManifold &, Manifold manif,
              const tag::DesiredLength &, const Function &  length                  )
 
 // we assume 'manif' is a compact manifold
@@ -2321,7 +2321,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
+Mesh::Mesh ( const tag::Frontal &, const tag::DesiredLength &, const Function & length,
              const tag::Orientation &, const tag::OrientationChoice & oc                   )
 
 // since no boundary is provided, we assume the user wants the entire working manifold
@@ -2343,7 +2343,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Functio
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+Mesh::Mesh ( const tag::Frontal &, const tag::EntireManifold &, Manifold manif,
              const tag::DesiredLength &, const Function & length,
              const tag::Orientation &, const tag::OrientationChoice & oc           )
 
@@ -2370,7 +2370,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold man
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+Mesh::Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
              const tag::DesiredLength &, const Function & length              )
 
 // for now, only works for two-dimensional meshes (either in RR2 or in RR3)
@@ -2394,7 +2394,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+Mesh::Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
              const tag::DesiredLength &, const Function & length,
              const tag::Orientation &, const tag::OrientationChoice & oc     )
 
@@ -2421,7 +2421,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+Mesh::Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
              const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> normal,             
              const tag::DesiredLength &, const Function & length             )
@@ -2442,7 +2442,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> tangent,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length                )
@@ -2481,7 +2481,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::Towards &, std::vector<double> tangent,
              const tag::DesiredLength &, const Function & length                )
 
@@ -2518,7 +2518,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::DesiredLength &, const Function & length                )
 
 :	Mesh ( tag::non_existent )
@@ -2552,7 +2552,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::DesiredLength &, const Function & length,
              const tag::Orientation &, const tag::OrientationChoice & oc        )
 
@@ -2582,7 +2582,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length                )
 
@@ -2608,7 +2608,7 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length,
              const tag::Orientation &, const tag::OrientationChoice & oc        )
@@ -2633,10 +2633,10 @@ Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
 //-------------------------------------------------------------------------------------------------
 
 
-Mesh::Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
              const tag::StopAt &, const Cell & stop,
              const tag::DesiredLength &, const Function & length,
-             const tag::ShortestPath &                                          )
+             const tag::ShortestPath &                                       )
 
 : Mesh ( tag::whose_core_is,
          new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),

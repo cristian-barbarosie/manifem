@@ -27,12 +27,12 @@ int main ( )
 	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, n );
 
 	Manifold circle = RR2 .implicit ( x*x + y*y == 1. );
-	Mesh inner ( tag::progressive, tag::entire_manifold, circle, tag::desired_length, d );
+	Mesh inner ( tag::frontal, tag::entire_manifold, circle, tag::desired_length, d );
 
 	Mesh bdry ( tag::join, AB, BC, CD, DA, inner .reverse() );
 
 	RR2 .set_as_working_manifold();
-	Mesh square ( tag::progressive, tag::boundary, bdry, tag::desired_length, d );
+	Mesh square ( tag::frontal, tag::boundary, bdry, tag::desired_length, d );
 
 	Mesh torus = square .fold ( tag::identify, AB, tag::with, CD.reverse(),
 	                            tag::identify, BC, tag::with, DA.reverse(),

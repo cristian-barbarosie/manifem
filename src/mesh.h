@@ -1,5 +1,5 @@
 
-// mesh.h  2022.02.23
+// mesh.h  2022.02.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -88,7 +88,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct BuildCellsIfNec { };  static const BuildCellsIfNec build_cells_if_necessary;
 	struct BuildNewVertices { };  static const BuildNewVertices build_new_vertices;
 	struct UseExistingVertices { };  static const UseExistingVertices use_existing_vertices;
-	struct Progressive { };  static const Progressive progressive;
+	struct Frontal { };  static const Frontal frontal;
 	struct StartAt { };  static const StartAt start_at;
 	struct StopAt { };  static const StopAt stop_at;
 	struct Towards { };  static const Towards towards;
@@ -1055,100 +1055,100 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	Mesh ( const tag::Import &, const tag::Msh &, const std::string );  // defined in global.cpp
 
 	// we are still in class Mesh
-	// constructors with tag::Progressive are defined in progressive.cpp
+	// constructors with tag::frontal are defined in progressive.cpp
 	
-	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length );
+	Mesh ( const tag::Frontal &, const tag::DesiredLength &, const Function & length );
 
-	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
-         const tag::DesiredLength &, const Function & length                   );
+	Mesh ( const tag::Frontal &, const tag::EntireManifold &, Manifold manif,
+         const tag::DesiredLength &, const Function & length               );
 
-	Mesh ( const tag::Progressive &, const tag::DesiredLength &, const Function & length,
-	       const tag::Orientation &, const tag::OrientationChoice &                      );
+	Mesh ( const tag::Frontal &, const tag::DesiredLength &, const Function & length,
+	       const tag::Orientation &, const tag::OrientationChoice &                  );
 
-	inline Mesh ( const tag::Progressive &,
+	inline Mesh ( const tag::Frontal &,
 				        const tag::Orientation &, const tag::OrientationChoice & oc,
-	              const tag::DesiredLength &, const Function & length             )
-	:	Mesh::Mesh ( tag::progressive, tag::desired_length, length, tag::orientation, oc )
+	              const tag::DesiredLength &, const Function & length         )
+	:	Mesh::Mesh ( tag::frontal, tag::desired_length, length, tag::orientation, oc )
 	{	}
  
-	Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+	Mesh ( const tag::Frontal &, const tag::EntireManifold &, Manifold manif,
 	       const tag::DesiredLength &, const Function & length,
-	       const tag::Orientation &, const tag::OrientationChoice &              );
+	       const tag::Orientation &, const tag::OrientationChoice &          );
 
-	inline Mesh ( const tag::Progressive &, const tag::EntireManifold &, Manifold manif,
+	inline Mesh ( const tag::Frontal &, const tag::EntireManifold &, Manifold manif,
 	              const tag::Orientation &, const tag::OrientationChoice & oc,
-	              const tag::DesiredLength &, const Function & length                   );
+	              const tag::DesiredLength &, const Function & length               );
 	// defined in manifold.h
 
-	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
-	       const tag::DesiredLength &, const Function & length             );
+	Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
+	       const tag::DesiredLength &, const Function & length         );
 
-	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+	Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
 	       const tag::DesiredLength &, const Function & length,
-				 const tag::Orientation &, const tag::OrientationChoice &        );
+				 const tag::Orientation &, const tag::OrientationChoice &    );
  
-	inline Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+	inline Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
 				        const tag::Orientation &, const tag::OrientationChoice & oc,
-	              const tag::DesiredLength &, const Function & length             )
-	:	Mesh::Mesh ( tag::progressive, tag::boundary, interface,
+	              const tag::DesiredLength &, const Function & length         )
+	:	Mesh::Mesh ( tag::frontal, tag::boundary, interface,
 		             tag::desired_length, length, tag::orientation, oc )
 	{	}
  
-	Mesh ( const tag::Progressive &, const tag::Boundary &, Mesh interface,
+	Mesh ( const tag::Frontal &, const tag::Boundary &, Mesh interface,
 	       const tag::StartAt &, const Cell & start,
 	       const tag::Towards &, std::vector < double > normal,
-	       const tag::DesiredLength &, const Function & length               );
+	       const tag::DesiredLength &, const Function & length         );
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::Towards &, std::vector < double > tangent,
 	       const tag::StopAt &, const Cell & stop,
-	       const tag::DesiredLength &, const Function & length                 );
+	       const tag::DesiredLength &, const Function & length            );
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::Towards &, std::vector < double > tangent,
-	       const tag::DesiredLength &, const Function & length                  );
+	       const tag::DesiredLength &, const Function & length            );
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::StopAt &, const Cell & stop,
-	       const tag::DesiredLength &, const Function & length                  );
+	       const tag::DesiredLength &, const Function & length            );
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
-	       const tag::DesiredLength &, const Function & length                  );
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
+	       const tag::DesiredLength &, const Function & length            );
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::DesiredLength &, const Function & length,
-	       const tag::Orientation &, const tag::OrientationChoice &           );
+	       const tag::Orientation &, const tag::OrientationChoice &       );
 
-	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	inline Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	              const tag::Orientation &, const tag::OrientationChoice & oc,
-	              const tag::DesiredLength &, const Function & length                )
-	:	Mesh ( tag::progressive, tag::start_at, start,
+	              const tag::DesiredLength &, const Function & length            )
+	:	Mesh ( tag::frontal, tag::start_at, start,
 		       tag::desired_length, length, tag::orientation, oc )
 	{	}
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::StopAt &, const Cell & stop,
 	       const tag::DesiredLength &, const Function & length,
-	       const tag::Orientation &, const tag::OrientationChoice &           );
+	       const tag::Orientation &, const tag::OrientationChoice &       );
 
-	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	inline Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	              const tag::StopAt &, const Cell & stop,
 	              const tag::Orientation &, const tag::OrientationChoice & oc,
-	              const tag::DesiredLength &, const Function & length                )
-	:	Mesh ( tag::progressive, tag::start_at, start, tag::stop_at, stop,
-		       tag::desired_length, length, tag::orientation, oc           )
+	              const tag::DesiredLength &, const Function & length            )
+	:	Mesh ( tag::frontal, tag::start_at, start, tag::stop_at, stop,
+		       tag::desired_length, length, tag::orientation, oc        )
 	{	}
 
-	Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::StopAt &, const Cell & stop,
 	       const tag::DesiredLength &, const Function & length,
-	       const tag::ShortestPath &                                          );
+	       const tag::ShortestPath &                                      );
 
-	inline Mesh ( const tag::Progressive &, const tag::StartAt &, const Cell & start,
+	inline Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	              const tag::StopAt &, const Cell & stop, const tag::ShortestPath &,
-	              const tag::DesiredLength &, const Function & length                )
-	:	Mesh ( tag::progressive, tag::start_at, start, tag::stop_at, stop,
-		       tag::desired_length, length, tag::shortest_path            )
+	              const tag::DesiredLength &, const Function & length               )
+	:	Mesh ( tag::frontal, tag::start_at, start, tag::stop_at, stop,
+		       tag::desired_length, length, tag::shortest_path        )
 	{	}
 
 	inline Mesh & operator= ( const Mesh & c );

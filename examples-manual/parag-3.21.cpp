@@ -56,11 +56,11 @@ int main ()
 	Cell OWD ( tag::triangle, OW, WD, OD .reverse() );
 	
 	std::vector < double > tau { 1., 1., 0. };
-	Mesh circle_1 ( tag::progressive, tag::start_at, A, tag::towards, tau,
-	                tag::stop_at, D, tag::desired_length, seg_size         );
+	Mesh circle_1 ( tag::frontal, tag::start_at, A, tag::towards, tau,
+	                tag::stop_at, D, tag::desired_length, seg_size    );
 	tau = { -1., 1., 0. };
-	Mesh circle_2 ( tag::progressive, tag::start_at, B, tag::towards, tau,
-	                tag::stop_at, C, tag::desired_length, seg_size         );
+	Mesh circle_2 ( tag::frontal, tag::start_at, B, tag::towards, tau,
+	                tag::stop_at, C, tag::desired_length, seg_size    );
 
 	Mesh circles ( tag::join, circle_1, circle_2 .reverse() );
 	AV .reverse() .add_to_mesh ( circles );  VB .reverse() .add_to_mesh ( circles );
@@ -68,9 +68,9 @@ int main ()
 
 	cyl_manif .set_as_working_manifold();
 	tau = { 0., 1., 0. };
-	Mesh napkin ( tag::progressive, tag::boundary, circles,
+	Mesh napkin ( tag::frontal, tag::boundary, circles,
 	              tag::start_at, V, tag::towards, tau,
-	              tag::desired_length, seg_size );
+	              tag::desired_length, seg_size        );
 
 	OAV .add_to_mesh ( napkin );  OVB .add_to_mesh ( napkin );
 	OCW .add_to_mesh ( napkin );  OWD .add_to_mesh ( napkin );

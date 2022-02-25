@@ -31,7 +31,7 @@ int main ()
 	Mesh bdry ( tag::join, NW, WS, SE, EN );
 		
 	RR2 .set_as_working_manifold();
-	Mesh diamond ( tag::progressive, tag::boundary, bdry, tag::desired_length, 0.1 );
+	Mesh diamond ( tag::frontal, tag::boundary, bdry, tag::desired_length, 0.1 );
 
 	diamond .draw_ps ("diamond.eps");
 	diamond .export_to_file ( tag::msh, "diamond.msh");

@@ -14,7 +14,7 @@ int main ()
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
 	RR3 .implicit ( x*x + y*y + z*z == 1. );
-	Mesh sphere ( tag::progressive, tag::desired_length, 0.11 );
+	Mesh sphere ( tag::frontal, tag::desired_length, 0.11 );
 
 	// should work just the same with     tag::orientation, tag::inherent
 	// should work with                   tag::orientation, tag::random

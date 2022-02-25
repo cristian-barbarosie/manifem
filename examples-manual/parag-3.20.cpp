@@ -94,15 +94,15 @@ int main ()
 	Cell V ( tag::vertex );  x (V) = 1.;  y (V) = 0.;  z (V) = 1.;
 	cone_manif .implicit ( z == 1. );
 	std::vector < double > tau = { 0., 1., 0. };
-	Mesh big_circle ( tag::progressive, tag::start_at, V, tag::towards, tau,
+	Mesh big_circle ( tag::frontal, tag::start_at, V, tag::towards, tau,
 	                  tag::desired_length, seg_size );
-	Mesh two_circles ( tag::join, small_circle .reverse(), big_circle );
+	Mesh two_circles ( tag::join, small_circle .reverse(), big_circle   );
 
 	cone_manif .set_as_working_manifold();
 	tau = { -1., 0., -1. };
-	Mesh cone_up ( tag::progressive, tag::boundary, two_circles,
+	Mesh cone_up ( tag::frontal, tag::boundary, two_circles,
 	               tag::start_at, V, tag::towards, tau,
-	               tag::desired_length, seg_size );
+	               tag::desired_length, seg_size            );
 
 	Mesh cone ( tag::join, ponta, cone_up );
 	cone .export_to_file ( tag::msh, "cone.msh");
