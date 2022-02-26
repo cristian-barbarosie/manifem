@@ -27,6 +27,7 @@ int main ()
 
 	const double seg_size = 0.1;
 	// Function seg_size = 0.03 + 0.05 * abs ( d2-d1 );
+	// Function seg_size = 0.1 * power ( 0.15 + abs ( d2-d1 ), 0.4 );
 
 	Manifold intersection = RR3 .implicit ( d1 == 0.15, d2 == 0.15 );
 

@@ -714,18 +714,21 @@ inline void redistribute_vertices                 // line 710
 // just make some baricenters
 	
 {	Cell A = stop;
-	for ( size_t i = 0; i < n; i++ )
+	// just in case n is too large, or the curve is too short, we look for 'start'
+	// the statement below is important for closed loops
+	A = msh .cell_behind (A) .base() .reverse();
+	for ( size_t i = 2; i < n; i++ )
 	{	if ( A == start )  {  n = i;  break;  }
-		A = msh .cell_behind (A) .base() .reverse();  }
-	assert ( n > 1 );
+		A = msh .cell_behind ( A, tag::surely_exists ) .base() .reverse();  }
+	assert ( n > 2 );
 	A = stop;
-	Cell B = msh .cell_behind (A) .base() .reverse();
-	Cell C = msh .cell_behind (B) .base() .reverse();
+	Cell B = msh .cell_behind ( A, tag::surely_exists ) .base() .reverse();
+	Cell C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse();
 	for ( size_t i = 2; i < n; i++ )
 	{	Manifold::working .interpolate ( B, 0.3, A, 0.4, B, 0.3, C );
-		if ( C == stop ) break;
+		if ( C == start ) break;
 		A = B;  B = C;
-		C = msh .cell_behind (B) .base() .reverse();                  }    }
+		C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse(); }    }
 
 //-----------------------------------------------------------------------------------------------
 
@@ -1890,7 +1893,7 @@ void progressive_construct ( Mesh & msh,
 				last .add_to_mesh ( msh, tag::do_not_bother );
 				// the meaning of tag::do_not_bother is explained
 				// at the end of paragraph 11.6 in the manual
-				redistribute_vertices ( msh, start, stop, 4 );    // line 710
+				redistribute_vertices ( msh, start, stop, 6 );    // line 710
 				break;                                                                       }  }
 		Cell B ( tag::vertex );
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
