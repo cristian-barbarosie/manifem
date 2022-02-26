@@ -1,5 +1,5 @@
 
-// example presented in paragraph 3.20 of the manual
+// example presented in paragraph 3.23 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // two intersecting tori
 
