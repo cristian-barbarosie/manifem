@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.02.23
+// mesh.cpp 2022.02.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3367,7 +3367,7 @@ inline void add_cell_behind_below_neg_seg  // hidden in anonymous namespace
 ( Cell::Negative::Segment * const seg, Cell::Positive::Segment * const pos_seg,
   Mesh::NotZeroDim * const that                                                )
 
-// just a block of code called from four versions of Mesh::NotZeroDim::add_pos_seg
+// just a block of code called from four versions of Mesh::NotZeroDim::add_neg_seg
 	
 ///////////////////////////////////////////////////////////////////////////////////////////
 	// inspired in item 24 of the book : Scott Meyers, Effective STL                       //
@@ -4132,7 +4132,7 @@ std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 
 std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 ( Cell::Core * cll, const size_t d, const tag::DoNotBother & )
-// virtual from Mesh::Core
+// virtual from Mesh::Core, later overriden by Mesh::STSI
 // tag::do_not_bother makes no difference here, the body is the same as above
 
 // called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
@@ -4149,13 +4149,37 @@ std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 
 std::list<Cell>::iterator Mesh::STSI::add_to_my_cells
 ( Cell::Core * cll, const size_t d )
-// virtual from Mesh::Core, defined by Mesh::Fuzzy, here overriden
+// virtual from Mesh::Core, later overriden by Mesh::STSI
 
 // called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
 
-// add a cell to 'this->cells[d]' list, return iterator into that list
+// add a cell to 'this->cells [d]' list, return iterator into that list
+		
+{	assert ( d == cll->get_dim() );
+	assert ( d < this->get_dim_plus_one() );
+	std::list < Cell > & mcd = this->cells [d];
+	mcd .push_front ( Cell ( tag::whose_core_is, cll,
+	                         tag::previously_existing, tag::surely_not_null ) );
+	return mcd .begin();                                                          }
+
+
+std::list<Cell>::iterator Mesh::STSI::add_to_my_cells
+( Cell::Core * cll, const size_t d, const tag::DoNotBother & )
+// virtual from Mesh::Core
+// tag::do_not_bother makes no difference here, the body is the same as above
+
+// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
+
+// add a cell to 'this->cells [d]' list, return iterator into that list
+
+// to change !!
 	
-{	return Mesh::Fuzzy::add_to_my_cells ( cll, d );  }  // will change
+{	assert ( d == cll->get_dim() );
+	assert ( d < this->get_dim_plus_one() );
+	std::list <Cell> & mcd = this->cells [d];
+	mcd .push_front ( Cell ( tag::whose_core_is, cll,
+	                         tag::previously_existing, tag::surely_not_null ) );
+	return mcd .begin();                                                          }
 
 
 void Mesh::ZeroDim::remove_from_my_cells
@@ -4231,7 +4255,7 @@ void Mesh::Fuzzy::remove_from_my_cells
 
 void Mesh::Fuzzy::remove_from_my_cells
 ( Cell::Core * cll, const size_t d, std::list<Cell>::iterator it, const tag::DoNotBother & )
-// virtual from Cell::Core
+// virtual from Cell::Core, later overriden by Mesh::STSI
 // tag::do_not_bother makes no difference here, the body is the same as above
 
 // called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
@@ -4246,11 +4270,35 @@ void Mesh::Fuzzy::remove_from_my_cells
 
 void Mesh::STSI::remove_from_my_cells
 ( Cell::Core * cll, const size_t d, std::list<Cell>::iterator it )
-// virtual from Cell::Core, overriden here a second time
+// virtual from Cell::Core, later overriden by Mesh::STSI
+
+// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
 
 // remove a cell from 'this->cells [d]' list using the provided iterator
 
-{	Mesh::Fuzzy::remove_from_my_cells ( cll, d, it );  }
+// to change !!
+	
+{	assert ( d == cll->get_dim() );
+	assert ( d < this->get_dim_plus_one() );
+	assert ( it != this->cells [d] .end() );
+	this->cells [d] .erase(it);              }
+
+
+void Mesh::STSI::remove_from_my_cells
+( Cell::Core * cll, const size_t d, std::list<Cell>::iterator it, const tag::DoNotBother & )
+// virtual from Cell::Core
+// tag::do_not_bother makes no difference here, the body is the same as above
+
+// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
+
+// remove a cell from 'this->cells[d]' list using the provided iterator
+
+// to change !!
+
+{	assert ( d == cll->get_dim() );
+	assert ( d < this->get_dim_plus_one() );
+	assert ( it != this->cells [d] .end() );
+	this->cells [d] .erase(it);              }
 
 //-----------------------------------------------------------------------------//
 

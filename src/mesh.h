@@ -1,5 +1,5 @@
+// mesh.h  2022.02.27
 
-// mesh.h  2022.02.26
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -234,29 +234,29 @@ class tag::Util::Tensor
 	size_t total_dim;
 	
 	// constructors:
-	inline Tensor ( ) { };
+	inline Tensor ( ) { }
 	inline Tensor ( const std::vector < size_t > dims )
 	{	this->dimensions = dims;
-		this->allocate_space (); };
+		this->allocate_space (); }
 	inline Tensor ( size_t i, size_t j,
 	                size_t k, size_t l )
 	{	this->dimensions .push_back (i);
 		this->dimensions .push_back (j);
 		this->dimensions .push_back (k);
 		this->dimensions .push_back (l);
-		this->allocate_space ();        };
+		this->allocate_space ();        }
 	inline Tensor ( size_t i, size_t j, size_t k )
 	{	this->dimensions .push_back (i);
 		this->dimensions .push_back (j);
 		this->dimensions .push_back (k);
-		this->allocate_space ();        };
+		this->allocate_space ();        }
 	inline Tensor ( size_t i, size_t j )
 	{	this->dimensions .push_back (i);
 		this->dimensions .push_back (j);
-		this->allocate_space ();         };
+		this->allocate_space ();        }
 	inline Tensor ( size_t i )
 	{	this->dimensions .push_back (i);
-		this->allocate_space ();        };
+		this->allocate_space ();        }
 	inline ~Tensor () { };
 
 	// methods:
@@ -268,7 +268,7 @@ class tag::Util::Tensor
 			this->total_dim *= *k;                         }
 		// this->elements .reserve ( total_dim );
 		this->elements .insert ( this->elements .end(), total_dim, 0.0 );
-		assert ( this->elements .size() == this->total_dim );                    };
+		assert ( this->elements .size() == this->total_dim );                    }
 	inline size_t pointer ( std::vector < size_t > index ) const
 	{	assert ( index .size() == this->dimensions .size() );
 		size_t point = 0;
@@ -497,7 +497,8 @@ class Manifold;  class Function;
 
 class tag::Util::CellIterator  // aka  class Mesh::Iterator
 
-// a thin wrapper around a CellIterator::Core, with most methods delegated to 'core'
+// a thin wrapper around a tag::Util::CellIterator::Core, aka Mesh::Iterator::Core,
+// with most methods delegated to 'core'
 
 // iterates over all cells of a given mesh (cells of given dimension)
 
@@ -514,6 +515,7 @@ class tag::Util::CellIterator  // aka  class Mesh::Iterator
 	class Core;
 	
 	std::unique_ptr < tag::Util::CellIterator::Core > core;
+	// std::unique_ptr < Mesh::Iterator::Core > core;
 
 	inline CellIterator ( const tag::Util::CellIterator & it );
 	// inline CellIterator ( tag::Util::CellIterator && it );
@@ -522,7 +524,7 @@ class tag::Util::CellIterator  // aka  class Mesh::Iterator
 	:	core { c }
 	{	assert ( c );  }
 	
-	inline ~CellIterator ( ) { };
+	inline ~CellIterator ( ) { }
 	
 	inline tag::Util::CellIterator & operator= ( const tag::Util::CellIterator & it );
 	// inline tag::Util::CellIterator & operator= ( tag::Util::CellIterator && it );
@@ -2307,7 +2309,9 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	inline void cut_from_bdry_of ( Cell::Core * cll, const tag::DoNotBother & )
 	{	cll->cut_from_my_bdry ( this, tag::do_not_bother );   }
 	// tag::do_not_bother is useful for a Mesh::Connected::OneDim
-	
+
+	// we are still in  class Cell::Core
+
 	// the four methods below are only relevant for vertices
 	virtual void add_to_seg ( Cell::PositiveSegment * seg ) = 0;
 	virtual void add_to_seg ( Cell::PositiveSegment * seg, const tag::DoNotBother & ) = 0;
@@ -2396,6 +2400,8 @@ class Cell::Positive : public Cell::Core
 		meshes ( sz )
 	{	}
 
+	virtual ~Positive ( ) { }
+
 	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	bool is_positive ( ) const;  // virtual from Cell::Core
@@ -2463,6 +2469,8 @@ class Cell::Negative : public Cell::Core
 	: Cell::Core ( tag::of_dim, d, tag::reverse_of, direct, tag::one_dummy_wrapper )
 	{	}
 
+	virtual ~Negative ( ) { }
+	
 	bool is_positive ( ) const;  // virtual from Cell::Core
 	Cell get_positive ( );  // virtual from Cell::Core
 	// virtual size_t get_dim ( ) const = 0;  // declared in Cell::Core
@@ -2531,6 +2539,8 @@ class Cell::PositiveVertex : public Cell::Positive
 	PositiveVertex ( const Cell::Positive::Vertex && ) = delete;
 	Cell::Positive::Vertex & operator= ( const Cell::Positive::Vertex & ) = delete;
 	Cell::Positive::Vertex & operator= ( const Cell::Positive::Vertex && ) = delete;
+
+	virtual ~PositiveVertex ( ) { }
 
 	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
@@ -2607,6 +2617,8 @@ class Cell::NegativeVertex : public Cell::Negative
 	Cell::Negative::Vertex & operator= ( const Cell::Negative::Vertex & ) = delete;
 	Cell::Negative::Vertex & operator= ( const Cell::Negative::Vertex && ) = delete;
 
+	virtual ~NegativeVertex ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Negative
@@ -2687,6 +2699,8 @@ class Cell::PositiveNotVertex : public Cell::Positive
                              const tag::OneDummyWrapper &              )
 	: Cell::Positive ( tag::of_dim, d, tag::size_meshes, sz, tag::one_dummy_wrapper )
 	{	}
+
+	virtual ~PositiveNotVertex ( ) { }
 	
 	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
@@ -2742,6 +2756,8 @@ class Cell::NegativeNotVertex : public Cell::Negative
 	( const tag::OfDimension &, size_t d,
 	  const tag::ReverseOf &, Cell::Positive * direct_cll_p, const tag::OneDummyWrapper & );
 
+	virtual ~NegativeNotVertex ( ) { }
+	
 	// belongs_to (with tag::low_dim)  defined by Cell::Negative
 	bool belongs_to   // virtual from Cell::Core
 	( Mesh::Core *, const tag::SameDim &, const tag::Oriented & o = tag::oriented ) const;
@@ -2796,6 +2812,8 @@ class Cell::PositiveSegment : public Cell::Positive::NotVertex
 	Cell::Positive::Segment & operator= ( const Cell::Positive::Segment & ) = delete;
 	Cell::Positive::Segment & operator= ( const Cell::Positive::Segment && ) = delete;
 
+	virtual ~PositiveSegment ( ) { }
+	
 	// is_positive  and  get_positive  defined by Cell::Positive
 	size_t get_dim ( ) const; // virtual from Cell::Core
 
@@ -2872,6 +2890,8 @@ class Cell::NegativeSegment : public Cell::Negative::NotVertex
 	NegativeSegment ( const Cell::Negative::Segment && ) = delete;
 	Cell::Negative::Segment & operator= ( const Cell::Negative::Segment & ) = delete;
 	Cell::Negative::Segment & operator= ( const Cell::Negative::Segment && ) = delete;
+
+	virtual ~NegativeSegment ( ) { }
 
 	// is_positive  and  get_positive  defined by Cell::Negative
 	size_t get_dim ( ) const; // virtual from Cell::Core
@@ -2967,6 +2987,8 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 	Cell::Positive::HighDim & operator= ( const Cell::Positive::HighDim & ) = delete;
 	Cell::Positive::HighDim & operator= ( const Cell::Positive::HighDim && ) = delete;
 
+	virtual ~PositiveHighDim ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Positive
@@ -3049,6 +3071,8 @@ class Cell::NegativeHighDim : public Cell::Negative::NotVertex
 	Cell::Negative::HighDim & operator= ( const Cell::Negative::HighDim & ) = delete;
 	Cell::Negative::HighDim & operator= ( const Cell::Negative::HighDim && ) = delete;
 
+	virtual ~NegativeHighDim ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core::DelegateDispose ifdef COLLECT_CM
 	
 	// is_positive  and  get_positive  defined by Cell::Negative
@@ -3143,6 +3167,8 @@ class tag::Util::MeshCore
 	#endif  // MANIFEM_COLLECT_CM
 	{ }
 
+	virtual ~MeshCore ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	virtual size_t get_dim_plus_one ( ) = 0;
@@ -3731,6 +3757,8 @@ class Mesh::ZeroDim : public Mesh::Core
 	               tag::boundary_of, tag::positive_cell, seg_p, tag::one_dummy_wrapper )
 	{ }
 
+	virtual ~ZeroDim ( )  { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
@@ -4311,6 +4339,8 @@ class Mesh::NotZeroDim : public Mesh::Core
                       const tag::OneDummyWrapper &                                      )
 	:	Mesh::Core ( tag::of_dim, d, tag::minus_one, tag::one_dummy_wrapper )  { }
 
+	virtual ~NotZeroDim ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	// size_t get_dim_plus_one ( )  stays pure virtual from Mesh::Core
@@ -4975,6 +5005,8 @@ class Mesh::Connected::HighDim : public Mesh::NotZeroDim
 		const size_t m, const size_t n, const tag::OneDummyWrapper &,
 		const tag::WithTriangles & wt = tag::not_with_triangles            );
 
+	virtual ~HighDim ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
@@ -5030,6 +5062,8 @@ class Mesh::MultiplyConnected::OneDim : public Mesh::NotZeroDim
 	// defined in global.cpp
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
+
+	virtual ~OneDim ( ) { }
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
 
@@ -5079,6 +5113,8 @@ class Mesh::MultiplyConnected::HighDim : public Mesh::NotZeroDim
 	:	Mesh::NotZeroDim ( tag::of_dimension, dim_p1, tag::minus_one, tag::one_dummy_wrapper )
 	{	}
 
+	virtual ~HighDim ( ) { }
+	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
@@ -5660,11 +5696,8 @@ class Mesh::STSI : public Mesh::Fuzzy
 // represents a positive mesh, maybe self-touching, maybe self-intersecting
 // (includes 1D meshes)
 
-// mainly used for iterators over connected meshes
+// mainly used for iterators over connected high-dim meshes
 // also used for progressive mesh generation
-
-// when this class is ready for use, uncomment two lines in
-// inline Cell::Cell ( const tag::WhoseBoundaryIs &, Mesh & msh )
 
 {	public :
 	
@@ -5672,11 +5705,13 @@ class Mesh::STSI : public Mesh::Fuzzy
 
 	// Cell::Positive * cell_enclosed  inherited from Mesh::Core
 
-	// 'cells' inherited from Mesh::Fuzzy
+	// std::vector < std::list < Cell > > cells  inherited from Mesh::Fuzzy
 
 	// in 'singular' we keep pairs of adjacent cells
 	// the common face of such a pair is a singular face
 	// that is, a face where the mesh touches itself
+	// for such a common face,  face->cell_behind_within  should not have key 'this'
+	// (in spite of 'face' belonging to this->cells[d-1])
 	std::vector < std::pair < Cell, Cell > > singular;
 	
 	inline STSI ( const tag::OfDimension &, const size_t dim_p1, const tag::MinusOne &,
@@ -5684,7 +5719,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 	:	Mesh::Fuzzy ( tag::of_dimension, dim_p1, tag::minus_one, tag::one_dummy_wrapper )
 	{	}
 
-	virtual ~STSI ();
+	virtual ~STSI () { }
 
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
@@ -5697,46 +5732,25 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
 
-	void build_rectangle ( const Mesh & south, const Mesh & east,
-		const Mesh & north, const Mesh & west, bool cut_rectangles_in_half );
-	// defined in global.cpp
-	
-	static Mesh reverse ( Mesh::Core * core );
-
 	// private :
 
-	// the four methods below are defined in Cell::Core, here overriden
-	virtual Cell::Core * cell_in_front_of
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists                      ) const override;
-	virtual Cell::Core * cell_in_front_of
-	( const Cell::Core * face_p, const tag::SeenFrom &,
-	  const Cell neighbour, const tag::MayNotExist &   ) const override;
-	virtual Cell::Core * cell_behind
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists                      ) const override;
-	virtual Cell::Core * cell_behind
-	( const Cell::Core * face_p, const tag::SeenFrom &,
-	  const Cell neighbour, const tag::MayNotExist &   ) const override;
-
+	// eliminate four methods below
 	// add a cell to 'this->cells [d]' list, return iterator into that list
 	virtual std::list<Cell>::iterator add_to_my_cells
 	( Cell::Core * const cll, const size_t d ) override;
+	std::list < Cell > ::iterator add_to_my_cells
+	( Cell::Core * const cll, const size_t d, const tag::DoNotBother & ) override;
 	// virtual from Cell::Core, defined by Mesh::Fuzzy, here overriden
-
 	// remove a cell from 'this->cells [d]' list using the provided iterator
 	virtual void remove_from_my_cells
-	( Cell::Core * const, const size_t d, std::list<Cell>::iterator );
+	( Cell::Core * const, const size_t d, std::list<Cell>::iterator ) override;
+	void remove_from_my_cells
+	( Cell::Core * const, const size_t d,
+	  std::list < Cell > ::iterator, const tag::DoNotBother & ) override;
 	// virtual from Cell::Core, defined by Mesh::Fuzzy, here overriden
 
-	// iterators are virtual from Mesh::Core and are defined in iterator.cpp
+	// iterators are virtual from Mesh::Core and are defined by Mesh::Fuzzy
 
-	#ifndef NDEBUG
-	// attribute  name  inherited from Mesh::Core
-	// std::string get_name()  defined by Mesh::Core
-	void print_everything ();  // virtual from Mesh::Core
-	#endif
-	
 }; // end of  class Mesh::STSI
 
 //-----------------------------------------------------------------------------//
@@ -6198,8 +6212,8 @@ inline Cell::Cell ( const tag::WhoseBoundaryIs &, Mesh & msh )
 #ifndef NDEBUG
 {	assert ( msh .is_positive() );
 	assert ( msh .dim() >= 1 );    }
-	// Mesh::STSI * msh_stsi = dynamic_cast < Mesh::STSI* > ( msh .core );
-	// assert ( msh_stsi == nullptr );                                     }
+	Mesh::STSI * msh_stsi = dynamic_cast < Mesh::STSI* > ( msh .core );
+	assert ( msh_stsi == nullptr );                                     }
 #else
 {	}
 #endif
@@ -7007,7 +7021,7 @@ class Cell::Numbering
 
 {	public :
 
-	virtual ~Numbering ( ) { };
+	virtual ~Numbering ( ) { }
 
 	virtual size_t size ( ) = 0;
 
