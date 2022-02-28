@@ -4147,41 +4147,6 @@ std::list<Cell>::iterator Mesh::Fuzzy::add_to_my_cells
 	return mcd .begin();                                                          }
 
 
-std::list<Cell>::iterator Mesh::STSI::add_to_my_cells
-( Cell::Core * cll, const size_t d )
-// virtual from Mesh::Core, later overriden by Mesh::STSI
-
-// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
-
-// add a cell to 'this->cells [d]' list, return iterator into that list
-		
-{	assert ( d == cll->get_dim() );
-	assert ( d < this->get_dim_plus_one() );
-	std::list < Cell > & mcd = this->cells [d];
-	mcd .push_front ( Cell ( tag::whose_core_is, cll,
-	                         tag::previously_existing, tag::surely_not_null ) );
-	return mcd .begin();                                                          }
-
-
-std::list<Cell>::iterator Mesh::STSI::add_to_my_cells
-( Cell::Core * cll, const size_t d, const tag::DoNotBother & )
-// virtual from Mesh::Core
-// tag::do_not_bother makes no difference here, the body is the same as above
-
-// called from add_link_same_dim and add_link (both hidden in anonymous namespace above)
-
-// add a cell to 'this->cells [d]' list, return iterator into that list
-
-// to change !!
-	
-{	assert ( d == cll->get_dim() );
-	assert ( d < this->get_dim_plus_one() );
-	std::list <Cell> & mcd = this->cells [d];
-	mcd .push_front ( Cell ( tag::whose_core_is, cll,
-	                         tag::previously_existing, tag::surely_not_null ) );
-	return mcd .begin();                                                          }
-
-
 void Mesh::ZeroDim::remove_from_my_cells
 ( Cell::Core * cll, const size_t d, std::list<Cell>::iterator )
 // virtual from Mesh::Core, here execution forbidden
@@ -4261,39 +4226,6 @@ void Mesh::Fuzzy::remove_from_my_cells
 // called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
 
 // remove a cell from 'this->cells[d]' list using the provided iterator
-
-{	assert ( d == cll->get_dim() );
-	assert ( d < this->get_dim_plus_one() );
-	assert ( it != this->cells [d] .end() );
-	this->cells [d] .erase(it);              }
-
-
-void Mesh::STSI::remove_from_my_cells
-( Cell::Core * cll, const size_t d, std::list<Cell>::iterator it )
-// virtual from Cell::Core, later overriden by Mesh::STSI
-
-// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
-
-// remove a cell from 'this->cells [d]' list using the provided iterator
-
-// to change !!
-	
-{	assert ( d == cll->get_dim() );
-	assert ( d < this->get_dim_plus_one() );
-	assert ( it != this->cells [d] .end() );
-	this->cells [d] .erase(it);              }
-
-
-void Mesh::STSI::remove_from_my_cells
-( Cell::Core * cll, const size_t d, std::list<Cell>::iterator it, const tag::DoNotBother & )
-// virtual from Cell::Core
-// tag::do_not_bother makes no difference here, the body is the same as above
-
-// called from remove_link_same_dim and remove_link (both hidden in anonymous namespace above)
-
-// remove a cell from 'this->cells[d]' list using the provided iterator
-
-// to change !!
 
 {	assert ( d == cll->get_dim() );
 	assert ( d < this->get_dim_plus_one() );
@@ -5065,6 +4997,258 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry, tag::do_not_bother );
 
 }  // end of Mesh::NotZeroDim::remove_neg_hd_cell with tag::mesh_is_bdry, tag::do_not_bother
+
+
+void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+
+{	assert ( this->get_dim_plus_one() == 2 );
+	assert ( seg->base_attr .exists() );
+	assert ( seg->tip_attr .exists() );
+	// assert that 'seg' does not belong yet to 'this' mesh
+	assert ( seg->meshes_same_dim .find (this) == seg->meshes_same_dim .end() );
+
+	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
+
+	add_cell_behind_below_pos_seg ( seg, this );                                 }
+
+
+void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::add_pos_seg
+( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::remove_pos_seg
+( Cell::Positive::Segment * seg, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+
+{	assert ( this->get_dim_plus_one() == 2 );
+	assert ( seg->base_attr .exists() );
+	assert ( seg->tip_attr .exists() );
+	// assert that 'seg' belongs to 'this' mesh
+	assert ( seg->meshes_same_dim .find (this) != seg->meshes_same_dim .end() );
+
+	assert ( seg->base_attr .core->cell_behind_within .find (this) !=
+	         seg->base_attr .core->cell_behind_within .end()          );
+	seg->base_attr.core->cell_behind_within .erase (this);
+
+	assert ( seg->tip_attr .core->cell_behind_within .find (this) !=
+	         seg->tip_attr .core->cell_behind_within .end()          );
+	seg->tip_attr.core->cell_behind_within .erase (this);
+
+  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
+
+}  // end of Mesh::STSI::remove_pos_seg with tag::mesh_is_not_bdry
+
+
+void Mesh::STSI::remove_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::remove_pos_seg
+( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+
+{	assert ( this->get_dim_plus_one() == 2 );
+	assert ( seg->reverse_attr .exists() );
+	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr .core );
+	// assert that 'pos_seg' does not belong yet to 'this' mesh
+	assert ( pos_seg->meshes_same_dim .find (this) == pos_seg->meshes_same_dim .end() );
+
+	assert ( pos_seg->base_attr .exists() );
+	assert ( pos_seg->tip_attr .exists() );
+	assert ( pos_seg->base_attr .core->reverse_attr .exists() );
+	assert ( pos_seg->tip_attr .core->reverse_attr .exists() );
+
+	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
+
+	add_cell_behind_below_neg_seg ( seg, pos_seg, this );                                  }
+
+	
+void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+	
+void Mesh::STSI::add_neg_seg
+( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+	
+{	assert ( this->get_dim_plus_one() == 2 );
+	assert ( seg->reverse_attr .exists() );
+	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr.core );
+	// assert that 'pos_seg' belongs to 'this' mesh
+	assert ( pos_seg->meshes_same_dim .find (this) != pos_seg->meshes_same_dim .end() );
+
+	assert ( pos_seg->base_attr .exists() );
+	assert ( pos_seg->tip_attr  .exists() );
+	assert ( pos_seg->base_attr .core->reverse_attr .exists() );
+	assert ( pos_seg->tip_attr  .core->reverse_attr .exists() );
+
+	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
+	         pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .end()         );
+	assert
+		( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .erase (this);
+	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
+	         pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .end()         );
+	assert
+		( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .erase (this);
+	
+	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
+
+}  // end of Mesh::STSI::remove_neg_seg with tag::mesh_is_not_bdry
+
+
+void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+	
+	
+void Mesh::STSI::remove_neg_seg
+( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+	
+{	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
+	// assert that 'cll' does not belong yet to 'this' mesh
+	assert ( cll->meshes_same_dim .find (this) == cll->meshes_same_dim .end() );
+
+	make_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
+	
+	add_cell_behind_below_pos_hd ( cll, this );                                }
+
+
+void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::add_pos_hd_cell
+( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+
+{	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
+	// assert that 'cll' belongs to 'this' mesh
+	assert ( cll->meshes_same_dim .find (this) != cll->meshes_same_dim .end() );
+
+	Mesh bdry = cll->boundary_attr;
+	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell::Core * face_p = ( *it ) .core;
+		assert ( face_p->cell_behind_within .find (this) !=
+		         face_p->cell_behind_within .end()         );
+		assert ( face_p->cell_behind_within [this] .core == cll );
+		// optimize map access !!
+		face_p->cell_behind_within .erase(this);                   }
+
+	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
+	
+}  // end of Mesh::STSI::remove_pos_hd_cell with tag::mesh_is_not_bdry	
+ 	
+	
+void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+	
+void Mesh::STSI::remove_pos_hd_cell
+( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+
+{	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
+	assert ( cll->reverse_attr .exists() );
+	Cell::Positive::HighDim * pos_cll = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::HighDim* > ( cll->reverse_attr.core );
+	// assert that 'pos_cll' does not belong yet to 'this' mesh
+	assert ( pos_cll->meshes_same_dim .find (this) == pos_cll->meshes_same_dim .end() );
+
+	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
+	
+	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                    }
+
+
+void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+	
+void Mesh::STSI::add_neg_hd_cell
+( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsNotBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+
+{	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
+	assert ( cll->reverse_attr .exists() );
+	Cell::Positive::HighDim * pos_cll = tag::Util::assert_cast
+		< Cell::Core*, Cell::Positive::HighDim* > ( cll->reverse_attr .core );
+	// assert that 'cll' belongs to 'this' mesh
+	assert ( pos_cll->meshes_same_dim .find (this) != pos_cll->meshes_same_dim .end() );
+
+	Mesh bdry = pos_cll->boundary_attr;
+	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell::Core * face_p = ( *it ) .core;
+		Cell::Core * rev_face = face_p->reverse_attr .core;
+		assert ( rev_face );
+		assert ( rev_face->cell_behind_within [this] .core == cll );
+		rev_face->cell_behind_within .erase (this);                  }
+
+	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
+
+}  // end of Mesh::STSI::remove_neg_hd_cell with tag::mesh_is_not_bdry
+
+	
+void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
+
+void Mesh::STSI::remove_neg_hd_cell
+( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
+// virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+{	assert ( false );  }
+
 
 //-----------------------------------------------------------------------------------------//
 

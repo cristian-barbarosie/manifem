@@ -1,5 +1,5 @@
-// mesh.h  2022.02.27
 
+// mesh.h  2022.02.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3186,7 +3186,7 @@ class tag::Util::MeshCore
 	virtual Cell last_segment ( );
 
 	// the four methods below are only relevant for STSI meshes
-	// so we forbid execution for now and then override them in Mesh::STSI
+	// so we forbid execution here and then override them in Mesh::STSI
 	virtual Cell::Core * cell_in_front_of
 	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
 	  const tag::SurelyExists & se = tag::surely_exists                       ) const;
@@ -4354,6 +4354,7 @@ class Mesh::NotZeroDim : public Mesh::Core
 	// defined by Mesh::Core, execution forbidden
 
 	// the thirty-two methods below are virtual from Mesh::Core
+	// some of them are later overridden by Mesh::STSI
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
 	void add_pos_seg
@@ -5195,13 +5196,11 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 	// are defined by Mesh::Core, execution forbidden
 
 	// cell_in_front_of and cell_behind ( tag::seen_from )
-	// defined by Mesh::Core, execution forbidden
+	// defined by Mesh::Core, execution forbidden, later overridden by Mesh::STSI
 	
 	void build_rectangle ( const Mesh & south, const Mesh & east,  // defined in global.cpp
 		const Mesh & north, const Mesh & west, bool cut_rectangles_in_half );
 		
-	// cell_in_front_of  and  cell_behind  defined by Mesh::Core, execution forbidden
-
 	// thirty-two methods add_*** and remove_***  defined by Mesh::NotZeroDim
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 
@@ -5211,13 +5210,13 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 	std::list < Cell > ::iterator add_to_my_cells ( Cell::Core * const cll, const size_t d );
 	std::list < Cell > ::iterator add_to_my_cells
 	( Cell::Core * const cll, const size_t d, const tag::DoNotBother & );
-	// virtual from Cell::Core, later overriden by Mesh::STSI
+	// virtual from Cell::Core
 	
 	// remove a cell from 'this->cells[d]' list using the provided iterator
 	void remove_from_my_cells ( Cell::Core * const, const size_t d, std::list < Cell > ::iterator );
 	void remove_from_my_cells
 	( Cell::Core * const, const size_t d, std::list < Cell > ::iterator, const tag::DoNotBother & );
-	// virtual from Cell::Core, later overriden by Mesh::STSI
+	// virtual from Cell::Core
 	
 	void closed_loop ( const Cell & ver );
 	void closed_loop ( const Cell & ver, size_t );
@@ -5734,20 +5733,55 @@ class Mesh::STSI : public Mesh::Fuzzy
 
 	// private :
 
-	// eliminate four methods below
-	// add a cell to 'this->cells [d]' list, return iterator into that list
-	virtual std::list<Cell>::iterator add_to_my_cells
-	( Cell::Core * const cll, const size_t d ) override;
-	std::list < Cell > ::iterator add_to_my_cells
-	( Cell::Core * const cll, const size_t d, const tag::DoNotBother & ) override;
-	// virtual from Cell::Core, defined by Mesh::Fuzzy, here overriden
-	// remove a cell from 'this->cells [d]' list using the provided iterator
-	virtual void remove_from_my_cells
-	( Cell::Core * const, const size_t d, std::list<Cell>::iterator ) override;
-	void remove_from_my_cells
-	( Cell::Core * const, const size_t d,
-	  std::list < Cell > ::iterator, const tag::DoNotBother & ) override;
-	// virtual from Cell::Core, defined by Mesh::Fuzzy, here overriden
+	// four methods below are virtual from and defined by Mesh::Core, here overridden
+	virtual Cell::Core * cell_in_front_of
+	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists                       ) const override;
+	virtual Cell::Core * cell_in_front_of
+	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::MayNotExist &                                                ) const override;
+	virtual Cell::Core * cell_behind
+	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists                       ) const override;
+	virtual Cell::Core * cell_behind
+	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::MayNotExist &                                                ) const override;
+	
+	// the twenty-four methods below are virtual from Mesh::Core
+	// defined by Mesh::NotZeroDim, here overridden
+	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
+	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
+	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void add_pos_seg
+	( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
+	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void remove_pos_seg
+	( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
+	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	void add_neg_seg
+	( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
+	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	void remove_neg_seg
+	( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
+	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	void add_pos_hd_cell
+	( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
+	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	void remove_pos_hd_cell
+	( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	void add_neg_hd_cell
+	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
+	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	void remove_neg_hd_cell
+	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
 
 	// iterators are virtual from Mesh::Core and are defined by Mesh::Fuzzy
 
