@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.02.28
+// mesh.cpp 2022.03.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -280,57 +280,57 @@ size_t Cell::Negative::HighDim::get_dim ( ) const  // virtual from Cell::Core
 	return this->reverse_attr .dim();        }
 
 
-size_t Mesh::ZeroDim::get_dim_plus_one ( )  // virtual from Mesh::Core
+size_t Mesh::ZeroDim::get_dim_plus_one ( ) const  // virtual from Mesh::Core
 {	return 1;  }
 
-size_t Mesh::Connected::OneDim::get_dim_plus_one ( )  // virtual from Mesh::Core
+size_t Mesh::Connected::OneDim::get_dim_plus_one ( ) const  // virtual from Mesh::Core
 {	return 2;  }
 
-size_t Mesh::Connected::HighDim::get_dim_plus_one ( )  // virtual from Mesh::Core
+size_t Mesh::Connected::HighDim::get_dim_plus_one ( ) const  // virtual from Mesh::Core
 {	return this->nb_of_cells .size();  }
 
-size_t Mesh::MultiplyConnected::OneDim::get_dim_plus_one ( )  // virtual from Mesh::Core
+size_t Mesh::MultiplyConnected::OneDim::get_dim_plus_one ( ) const  // virtual from Mesh::Core
 {	return 2;  }
 
-size_t Mesh::MultiplyConnected::HighDim::get_dim_plus_one ( )  // virtual from Mesh::Core
+size_t Mesh::MultiplyConnected::HighDim::get_dim_plus_one ( ) const  // virtual from Mesh::Core
 {	return this->nb_of_cells .size();  }
 
-size_t Mesh::Fuzzy::get_dim_plus_one ( )  // virtual from Mesh::Core
+size_t Mesh::Fuzzy::get_dim_plus_one ( ) const  // virtual from Mesh::Core
 {	return this->cells .size();  }
 
 	
-size_t Mesh::ZeroDim::number_of ( const tag::Vertices & )
+size_t Mesh::ZeroDim::number_of ( const tag::Vertices & ) const
 // virtual from Mesh::Core
 {	return 2;  }
 // what if the segment is incomplete ?
 	
-size_t Mesh::ZeroDim::number_of ( const tag::Segments & )
+size_t Mesh::ZeroDim::number_of ( const tag::Segments & ) const
 // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "zero-dimensional meshes have have no segments" << std::endl;
 	exit ( 1 );                                                                                     }
 	
-size_t Mesh::ZeroDim::number_of ( const tag::CellsOfDim &, const size_t d )
+size_t Mesh::ZeroDim::number_of ( const tag::CellsOfDim &, const size_t d ) const
 // virtual from Mesh::Core
 {	assert ( d == 0 );  return 2;  }
 // what if the segment is incomplete ?
 	
-size_t Mesh::ZeroDim::number_of ( const tag::CellsOfMaxDim & )
+size_t Mesh::ZeroDim::number_of ( const tag::CellsOfMaxDim & ) const
 // virtual from Mesh::Core
 {	return 2;  }
 // what if the segment is incomplete ?
 	
-size_t Mesh::Connected::OneDim::number_of ( const tag::Vertices & )
+size_t Mesh::Connected::OneDim::number_of ( const tag::Vertices & ) const
 // virtual from Mesh::Core
 {	if ( this->first_ver .reverse() == this->last_ver )  // closed loop
 		return this->nb_of_segs;
 	return this->nb_of_segs + 1;                          }
 	
-size_t Mesh::Connected::OneDim::number_of ( const tag::Segments & )
+size_t Mesh::Connected::OneDim::number_of ( const tag::Segments & ) const
 // virtual from Mesh::Core
 {	return this->nb_of_segs;  }
 	
-size_t Mesh::Connected::OneDim::number_of ( const tag::CellsOfDim &, const size_t d )
+size_t Mesh::Connected::OneDim::number_of ( const tag::CellsOfDim &, const size_t d ) const
 // virtual from Mesh::Core
 {	if ( d == 1 ) return this->nb_of_segs;
 	assert ( d == 0 );
@@ -338,54 +338,54 @@ size_t Mesh::Connected::OneDim::number_of ( const tag::CellsOfDim &, const size_
 		return this->nb_of_segs;
 	return this->nb_of_segs + 1;              }
 	
-size_t Mesh::Connected::OneDim::number_of ( const tag::CellsOfMaxDim & )
+size_t Mesh::Connected::OneDim::number_of ( const tag::CellsOfMaxDim & ) const
 // virtual from Mesh::Core
 {	return this->nb_of_segs;  }
 	
-size_t Mesh::Connected::HighDim::number_of ( const tag::Vertices & )
+size_t Mesh::Connected::HighDim::number_of ( const tag::Vertices & ) const
 // virtual from Mesh::Core
 {	assert ( this->nb_of_cells .size() > 0 );
 	return this->nb_of_cells [0];             }
 	
-size_t Mesh::Connected::HighDim::number_of ( const tag::Segments & )
+size_t Mesh::Connected::HighDim::number_of ( const tag::Segments & ) const
 // virtual from Mesh::Core
 {	assert ( this->nb_of_cells .size() > 1 );
 	return this->nb_of_cells [1];             }
 	
-size_t Mesh::Connected::HighDim::number_of ( const tag::CellsOfDim &, const size_t d )
+size_t Mesh::Connected::HighDim::number_of ( const tag::CellsOfDim &, const size_t d ) const
 // virtual from Mesh::Core
 {	assert ( d < this->get_dim_plus_one() );
 	assert ( this->nb_of_cells .size() > d );
 	return this->nb_of_cells [d];             }
 	
-size_t Mesh::Connected::HighDim::number_of ( const tag::CellsOfMaxDim & )
+size_t Mesh::Connected::HighDim::number_of ( const tag::CellsOfMaxDim & ) const
 // virtual from Mesh::Core
 {	return this->nb_of_cells .back();             }
 	
-// size_t Mesh::Connected::number_of ( const tag::CellsOfDim &, const size_t d )
+// size_t Mesh::Connected::number_of ( const tag::CellsOfDim &, const size_t d ) const
 // virtual from Mesh::Core
 // {	assert ( d < this->get_dim_plus_one() );
 // 	assert ( this->nb_of_cells .size() > d );
 //	return this->nb_of_cells [d];             }
 	
-size_t Mesh::Fuzzy::number_of ( const tag::Vertices & )
+size_t Mesh::Fuzzy::number_of ( const tag::Vertices & ) const
 // virtual from Mesh::Core
 {	assert ( this->cells .size() > 0 );
 	return this->cells [0] .size();       }
 	
-size_t Mesh::Fuzzy::number_of ( const tag::Segments & )
+size_t Mesh::Fuzzy::number_of ( const tag::Segments & ) const
 // virtual from Mesh::Core
 {	assert ( 1 < this->get_dim_plus_one() );
 	assert ( this->cells .size() > 1 );
 	return this->cells [1] .size();            }
 	
-size_t Mesh::Fuzzy::number_of ( const tag::CellsOfDim &, const size_t d )
+size_t Mesh::Fuzzy::number_of ( const tag::CellsOfDim &, const size_t d ) const
 // virtual from Mesh::Core
 {	assert ( d < this->get_dim_plus_one() );
 	assert ( this->cells .size() > d );
 	return this->cells [d] .size();            }
 	
-size_t Mesh::Fuzzy::number_of ( const tag::CellsOfMaxDim & )
+size_t Mesh::Fuzzy::number_of ( const tag::CellsOfMaxDim & ) const
 // virtual from Mesh::Core
 {	return this->cells .back() .size();  }
 	
@@ -488,120 +488,152 @@ Mesh Cell::Negative::HighDim::boundary ( )  // virtual from Cell::Core
 //-----------------------------------------------------------------------------//
 
 
-// the two methods below are only relevant for STSI meshes
+// the four methods below are only relevant for STSI meshes
 // so we forbid execution in Mesh::Core and then override them in Mesh::STSI
 
-Cell::Core * Mesh::Core::cell_in_front_of  // virtual
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-  const tag::SurelyExists & se                                            ) const
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "cell_in_front as seen_from : use on STSI meshes only" << std::endl;
-	exit ( 1 );                                                                                     }
-
-Cell::Core * Mesh::Core::cell_in_front_of  // virtual
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-  const tag::MayNotExist &                                                ) const
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "cell_in_front as seen_from : use on STSI meshes only" << std::endl;
-	exit ( 1 );                                                                                     }
-
-Cell::Core * Mesh::Core::cell_behind  // virtual
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-  const tag::SurelyExists & se                                            ) const
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "cell_behind as seen_from : use on STSI meshes only" << std::endl;
-	exit ( 1 );                                                                                     }
-
-Cell::Core * Mesh::Core::cell_behind  // virtual
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-  const tag::MayNotExist &                                                ) const
-{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
-	std::cout << "cell_behind as seen_from : use on STSI meshes only" << std::endl;
-	exit ( 1 );                                                                                     }
-
-/*
-// the four methods below are only relevant for STSI meshes
-
-Cell::Core * Mesh::STSI::cell_in_front_of
-// virtual from Mesh::Core, here overriden
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-  const tag::MayNotExist                                                        ) const
-
-{	assert ( this->get_dim_plus_one() == face_p->get_dim() + 2 );
-	Cell::Core * face_rev_p = face_p->reverse_p;
-	assert ( face_rev_p );
-	std::map<Mesh::Core*,Cell::Core*>::const_iterator
-		it = face_rev_p->cell_behind_within.find ( this->core );
-	assert ( it != face_rev_p->cell_behind_within .end() );  //  to finish !
-	Cell::Core * cll_rev_p = it->second;
-	assert ( cll_rev_p );  assert ( cll_rev_p->reverse_p );
-	return cll_rev_p->reverse_p;                                        }  }
-
-}	
-
-Cell::Core * Mesh::STSI::cell_in_front_of
-// virtual from Mesh::Core, here overriden
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-  const tag::SurelyExists & se                                                  ) const
-// 'se' defaults to tag::surely_exists, so method may be called with only one argument
-
-{	assert ( this->get_dim_plus_one() == face_p->get_dim() + 2 );
-	Cell::Core * face_rev_p = face_p->reverse_p;
-	assert ( face_rev_p );
-	std::map < Mesh::Core*, Cell::Core* > ::const_iterator
-		it = face_rev_p->cell_behind_within .find ( this->core );
-	assert ( it != face_rev_p->cell_behind_within .end() );  //  to finish !
-	Cell::Core * cll_rev_p = it->second;
-	assert ( cll_rev_p );  assert ( cll_rev_p->reverse_p );
-	return cll_rev_p->reverse_p;                                        }  }
-
-}	
-
-Cell::Core * Mesh::STSI::cell_behind
-// virtual from Mesh::Core, here overriden
+Cell Mesh::Core::cell_in_front_of  // virtual
 ( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-  const tag::MayNotExist                                        ) const
+  const tag::SurelyExists & se                                 )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "cell_in_front as seen_from : use on STSI meshes only" << std::endl;
+	exit ( 1 );                                                                                     }
+
+Cell Mesh::Core::cell_in_front_of  // virtual
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::MayNotExist &                                     )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "cell_in_front as seen_from : use on STSI meshes only" << std::endl;
+	exit ( 1 );                                                                                     }
+
+Cell Mesh::Core::cell_behind  // virtual
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::SurelyExists & se                                 )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "cell_behind as seen_from : use on STSI meshes only" << std::endl;
+	exit ( 1 );                                                                                     }
+
+Cell Mesh::Core::cell_behind  // virtual
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::MayNotExist &                                     )
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "cell_behind as seen_from : use on STSI meshes only" << std::endl;
+	exit ( 1 );                                                                                     }
+
+
+Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::MayNotExist &                                     )
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_behind ( face .reverse ( tag::surely_exists ),
+		                           tag::seen_from, neighbour, tag::may_not_exist );
+	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->first == neighbour ) return it_s->second;
+	return Cell ( tag::non_existent );
+		
+}  // end of  Mesh::STSI::cell_in_front_of
+
+
+Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::SurelyExists & se                                 )
+// 'se' defaults to tag::surely_exists, so method may be called with only one argument
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_behind ( face .reverse ( tag::surely_exists ),
+		                           tag::seen_from, neighbour, tag::surely_exists );
+	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->first == neighbour ) return it_s->second;
+	assert ( false );
+	return Cell ( tag::non_existent );  // just to avoid compilation errors
+
+}  // end of  Mesh::STSI::cell_in_front_of
+
+
+Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::MayNotExist &                                     )
 	
-{	assert ( this->get_dim_plus_one() == face.dim() + 2 );
-	std::map < Mesh::Core*, Cell::Core* > ::const_iterator
-		it = face .core->cell_behind_within .find ( this->core );
-	if ( it == face .core->cell_behind_within .end() ) return nullptr;
-		// nothing behind us, we are touching the boundary
-	Cell::Core * cll_p = it->second;
-	if ( cll_p ) return cll_p;
-	// now cll_p is null which means face_p is a singular point,
-	// i.e. a touching point or a self-intersection
-	// so its neighbours are stored separately
-	std::vector < std::pair < Cell, Cell > > ::iterator itt = this->singular .begin();
-	for ( itt .reset(); itt .in_range(); itt++ );
-	{	std::pair < Cell, Cell > & p = *itt;
-		Cell c1 & = p .first;
-		Cell c2 & = p .second;
-		Cell face_rev = face .reverse ( tag::surely_exists );
-		if ( face_rev .belongs_to ( c1 .boundary(), tag::oriented ) ) return c2 .core;
-		if ( face_rev .belongs_to ( c2 .boundary(), tag::oriented ) ) return c1 .core;
-		assert ( false );                                                                 }  }
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_in_front_of ( face .reverse ( tag::surely_exists ),
+		                                tag::seen_from, neighbour, tag::may_not_exist );
+	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->second == neighbour ) return it_s->first;
+	return Cell ( tag::non_existent );
+		
+}  // end of  Mesh::STSI::cell_behind
 
 
-Cell::Core * Mesh::STSI::cell_behind
-// virtual from Mesh::Core, here overriden
-( const Cell::Core * face_p, const tag::SeenFrom &, const Cell::Core neighbour,
-  const tag::SurelyExists & se                                                  ) const
+Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+  const tag::SurelyExists & se                                 )
 // 'se' defaults to tag::surely_exists, so method may be called with only one argument
 	
-{	assert ( this->get_dim_plus_one() == face_p->get_dim() + 2 );
-	std::map<Mesh::Core*,Cell::Core*>::const_iterator
-		it = face_p->cell_behind_within .find ( this->core );
-	assert ( it != face_p->cell_behind_within .end() );
-	Cell::Core * cll_p = it->second;
-	if ( cll_p ) return cll_p;
-	// now cll_p == nullptr which means face_p is a singular point,
-	// i.e. a touching point or a self-intersection
-	// so its neighbours are stored separately
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_in_front_of ( face .reverse ( tag::surely_exists ),
+		                                tag::seen_from, neighbour, tag::surely_exists );
+	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->second == neighbour ) return it_s->first;
+	assert ( false );
+	return Cell ( tag::non_existent );  // just to avoid compilation errors
 
-}
-
-*/
+}  // end of  Mesh::STSI::cell_behind
 
 //-----------------------------------------------------------------------------//
 
@@ -3363,11 +3395,138 @@ inline void add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 //////////////////////////////////////////////////////////////////////
 
 
+inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
+( Cell::Positive::Segment * const seg, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::add_pos_seg
+	
+{	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	{  // just a block of code for hiding names
+	Cell sbr = seg->base_attr .reverse ( tag::surely_exists );
+	maptype & cmd = seg->base_attr .core->cell_behind_within;
+	maptype & cmdr = sbr .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( sbr );
+	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+	if ( regular )
+		cmd.emplace_hint ( lb, std::piecewise_construct,
+		      std::forward_as_tuple(that),
+		      std::forward_as_tuple(Cell(tag::whose_core_is,seg,
+		 	                               tag::previously_existing,tag::surely_not_null)) );
+	else
+	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+		if ( must_cut )
+		{	// seg->base already in the mesh, we must cut the mesh
+			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { sbr, { } } );
+			std::vector < std::pair < Cell, Cell > > & sing = it_s->second;
+			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
+			sing .push_back ( { lbr->second, lb->second } );
+			cmd .erase ( lb );
+			cmdr .erase ( lbr );
+			Cell second_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
+			sing .push_back ( { Cell ( tag::non_existent ), second_seg } );                             }
+		else  // already singular
+		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+			         ( ( it_sing != that->singular .end() ) and
+			           ( not that->singular .key_comp()(sbr,it_sing->first) ) )        );
+			std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+			Cell second_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
+			bool not_done = true;
+			for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+			      it_s != sing .end(); it_s++                                              )
+				if ( it_s->first .exists() and not it_s->second .exists() )
+				{	it_s->second = second_seg;  not_done = false;  }
+			if ( not_done )
+				sing .push_back ( { Cell ( tag::non_existent ), second_seg } );                            }  }
+	} {  // just a block of code for hiding names
+	Cell st = seg->tip_attr,
+	     str = st .reverse ( tag::surely_exists );
+	maptype & cmd  = st  .core->cell_behind_within;
+	maptype & cmdr = str .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( st );
+	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(st,it_sing->first) );
+	if ( regular )
+		cmd.emplace_hint ( lb, std::piecewise_construct,
+		      std::forward_as_tuple(that),
+		      std::forward_as_tuple(Cell(tag::whose_core_is,seg,
+		 	                               tag::previously_existing,tag::surely_not_null)) );
+	else
+	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(st,it_sing->first) );
+		if ( must_cut )
+		{	// seg->base already in the mesh, we must cut the mesh
+			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { st, { } } );
+			std::vector < std::pair < Cell, Cell > > & sing = it_s->second;
+			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
+			sing .push_back ( { lb->second, lbr->second } );
+			cmd .erase ( lb );
+			cmdr .erase ( lbr );
+			Cell first_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
+			sing .push_back ( { first_seg, Cell ( tag::non_existent ) } );                             }
+		else  // already singular
+		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+			         ( ( it_sing != that->singular .end() ) and
+			           ( not that->singular .key_comp()(st,it_sing->first) ) )         );
+			std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+			Cell first_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
+			bool not_done = true;
+			for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+			      it_s != sing .end(); it_s++                                              )
+				if ( it_s->second .exists() and not it_s->first .exists() )
+				{	it_s->first = first_seg;  not_done = false;  }
+			if ( not_done )
+				sing .push_back ( { first_seg, Cell ( tag::non_existent ) } );                            }  } 
+	}  // just a block of code for hiding names
+}  // end of  stsi_add_cell_behind_below_pos_seg
+
+
 inline void add_cell_behind_below_neg_seg  // hidden in anonymous namespace
 ( Cell::Negative::Segment * const seg, Cell::Positive::Segment * const pos_seg,
   Mesh::NotZeroDim * const that                                                )
 
 // just a block of code called from four versions of Mesh::NotZeroDim::add_neg_seg
+	
+///////////////////////////////////////////////////////////////////////////////////////////
+	// inspired in item 24 of the book : Scott Meyers, Effective STL                       //
+{	typedef std::map < Mesh::Core *, Cell > maptype;                                       //
+	{  // just a block of code for hiding cmd and lb                                       //
+	maptype & cmd = pos_seg->base_attr.core->reverse_attr.core->cell_behind_within;        //
+	maptype::iterator lb = cmd.lower_bound(that);                                          //
+	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(that,lb->first) ) );                  //
+	cmd.emplace_hint ( lb, std::piecewise_construct,                                       //
+	      std::forward_as_tuple(that),                                                     //
+	      std::forward_as_tuple(Cell(tag::whose_core_is,seg,                               //
+	                                 tag::previously_existing,tag::surely_not_null)) );    //
+	} {  // just a block of code for hiding cmd and lb                                     //
+	maptype & cmd = pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within;         //
+	maptype::iterator lb = cmd.lower_bound(that);                                          //
+	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(that,lb->first) ) );                  //
+	cmd.emplace_hint ( lb, std::piecewise_construct,                                       //
+	      std::forward_as_tuple(that),                                                     //
+	      std::forward_as_tuple(Cell(tag::whose_core_is,seg,                               //
+	                                 tag::previously_existing,tag::surely_not_null)) );  }  }
+/////////  code below is conceptually equivalent to the above  ////////////////////////////
+//pos_seg->base_attr.core->reverse_attr.core->cell_behind_within[that] =   //
+//	Cell ( tag::whose_core_is, seg, tag::previously_existing );            //
+//pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[that] =    //
+//	Cell ( tag::whose_core_is, seg, tag::previously_existing );            //
+/////////////////////////////////////////////////////////////////////////////
+
+
+inline void stsi_add_cell_behind_below_neg_seg  // hidden in anonymous namespace
+( Cell::Negative::Segment * const seg, Cell::Positive::Segment * const pos_seg,
+  Mesh::NotZeroDim * const that                                                )
+
+// just a block of code called from Mesh::STSI::add_neg_seg
 	
 ///////////////////////////////////////////////////////////////////////////////////////////
 	// inspired in item 24 of the book : Scott Meyers, Effective STL                       //
@@ -5010,7 +5169,7 @@ void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsN
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
-	add_cell_behind_below_pos_seg ( seg, this );                                 }
+	stsi_add_cell_behind_below_pos_seg ( seg, this );                                 }
 
 
 void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )

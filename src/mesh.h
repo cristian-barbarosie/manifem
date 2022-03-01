@@ -68,6 +68,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct BuildIfNotExists { };  static const BuildIfNotExists build_if_not_exists;
 	struct SeenFrom { };  static const SeenFrom seen_from;
 	struct Fuzzy { };  static const Fuzzy fuzzy;
+	struct STSI { };  static const STSI stsi;
 	struct MayNotExist { };  static const MayNotExist may_not_exist;
 	struct DoNotBuildCells { };  static const DoNotBuildCells do_not_build_cells;
 	struct DoNotBother { };  static const DoNotBother do_not_bother;
@@ -945,6 +946,9 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 
 	inline Mesh ( const tag::Fuzzy &, const tag::OfDimension &, const size_t dim,
                 const tag::MinusOne &, const tag::IsPositive & ispos = tag::is_positive );
+
+	inline Mesh ( const tag::STSI &, const tag::OfDimension &, const size_t dim,
+                const tag::IsPositive & ispos = tag::is_positive              );
 
 	// we are still in class Mesh
 	
@@ -3171,12 +3175,12 @@ class tag::Util::MeshCore
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	virtual size_t get_dim_plus_one ( ) = 0;
+	virtual size_t get_dim_plus_one ( ) const = 0;
 
-	virtual size_t number_of ( const tag::Vertices & ) = 0;
-	virtual size_t number_of ( const tag::Segments & ) = 0;
-	virtual size_t number_of ( const tag::CellsOfDim &, const size_t d ) = 0;
-	virtual size_t number_of ( const tag::CellsOfMaxDim & ) = 0;
+	virtual size_t number_of ( const tag::Vertices & ) const = 0;
+	virtual size_t number_of ( const tag::Segments & ) const = 0;
+	virtual size_t number_of ( const tag::CellsOfDim &, const size_t d ) const = 0;
+	virtual size_t number_of ( const tag::CellsOfMaxDim & ) const = 0;
 
 	// the four methods below are only relevant for connected one-dimensional meshes
 	// so we forbid execution for now and then override them in Mesh::Connected::OneDim
@@ -3187,18 +3191,18 @@ class tag::Util::MeshCore
 
 	// the four methods below are only relevant for STSI meshes
 	// so we forbid execution here and then override them in Mesh::STSI
-	virtual Cell::Core * cell_in_front_of
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists                       ) const;
-	virtual Cell::Core * cell_in_front_of
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                                ) const;
-	virtual Cell::Core * cell_behind
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists                       ) const;
-	virtual Cell::Core * cell_behind
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                                ) const;
+	virtual Cell cell_in_front_of
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists            );
+	virtual Cell cell_in_front_of
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::MayNotExist &                                     );
+	virtual Cell cell_behind
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists            );
+	virtual Cell cell_behind
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::MayNotExist &                                     );
 
 	virtual void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) = 0;
 	virtual void add_pos_seg
@@ -3761,13 +3765,13 @@ class Mesh::ZeroDim : public Mesh::Core
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
+	size_t get_dim_plus_one ( ) const;  // virtual from Mesh::Core
 
-	size_t number_of ( const tag::Vertices & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::Segments & );
+	size_t number_of ( const tag::Vertices & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::Segments & ) const;
 	// virtual from Mesh::Core, here execution forbidden
-	size_t number_of ( const tag::CellsOfDim &, const size_t d );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfMaxDim & );  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfDim &, const size_t d ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfMaxDim & ) const;  // virtual from Mesh::Core
 
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
@@ -4459,12 +4463,12 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
+	size_t get_dim_plus_one ( ) const;  // virtual from Mesh::Core
 
-	size_t number_of ( const tag::Vertices & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::Segments & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfDim &, const size_t d );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfMaxDim & );  // virtual from Mesh::Core
+	size_t number_of ( const tag::Vertices & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::Segments & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfDim &, const size_t d ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfMaxDim & ) const;  // virtual from Mesh::Core
 
 	Cell first_vertex ( );  // virtual from Mesh::Core, here overridden
 	Cell last_vertex ( );  // virtual from Mesh::Core, here overridden
@@ -5010,12 +5014,12 @@ class Mesh::Connected::HighDim : public Mesh::NotZeroDim
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
+	size_t get_dim_plus_one ( ) const;  // virtual from Mesh::Core
 
-	size_t number_of ( const tag::Vertices & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::Segments & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfDim &, const size_t d );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfMaxDim & );  // virtual from Mesh::Core
+	size_t number_of ( const tag::Vertices & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::Segments & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfDim &, const size_t d ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfMaxDim & ) const;  // virtual from Mesh::Core
 
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
@@ -5066,12 +5070,12 @@ class Mesh::MultiplyConnected::OneDim : public Mesh::NotZeroDim
 
 	virtual ~OneDim ( ) { }
 	
-	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
+	size_t get_dim_plus_one ( ) const;  // virtual from Mesh::Core
 
-	// size_t number_of ( const tag::Vertices & );  // virtual from Mesh::Core
-	// size_t number_of ( const tag::Segments & );  // virtual from Mesh::Core
-	// size_t number_of ( const tag::CellsOfDim &, const size_t d );  // virtual from Mesh::Core
-	// size_t number_of ( const tag::CellsOfMaxDim & );  // virtual from Mesh::Core
+	// size_t number_of ( const tag::Vertices & ) const;  // virtual from Mesh::Core
+	// size_t number_of ( const tag::Segments & ) const;  // virtual from Mesh::Core
+	// size_t number_of ( const tag::CellsOfDim &, const size_t d ) const;  // virtual from Mesh::Core
+	// size_t number_of ( const tag::CellsOfMaxDim & ) const;  // virtual from Mesh::Core
 
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
@@ -5118,12 +5122,12 @@ class Mesh::MultiplyConnected::HighDim : public Mesh::NotZeroDim
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
+	size_t get_dim_plus_one ( ) const;  // virtual from Mesh::Core
 
-	// size_t number_of ( const tag::Vertices & );  // virtual from Mesh::Core
-	// size_t number_of ( const tag::Segments & );  // virtual from Mesh::Core
-	// size_t number_of ( const tag::CellsOfDim &, const size_t d );  // virtual from Mesh::Core
-	// size_t number_of ( const tag::CellsOfMaxDim & );  // virtual from Mesh::Core
+	// size_t number_of ( const tag::Vertices & ) const;  // virtual from Mesh::Core
+	// size_t number_of ( const tag::Segments & ) const;  // virtual from Mesh::Core
+	// size_t number_of ( const tag::CellsOfDim &, const size_t d ) const;  // virtual from Mesh::Core
+	// size_t number_of ( const tag::CellsOfMaxDim & ) const;  // virtual from Mesh::Core
 
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
@@ -5185,12 +5189,12 @@ class Mesh::Fuzzy : public Mesh::NotZeroDim
 	
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
-	size_t get_dim_plus_one ( );  // virtual from Mesh::Core
+	size_t get_dim_plus_one ( ) const;  // virtual from Mesh::Core
 
-	size_t number_of ( const tag::Vertices & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::Segments & );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfDim &, const size_t d );  // virtual from Mesh::Core
-	size_t number_of ( const tag::CellsOfMaxDim & );  // virtual from Mesh::Core
+	size_t number_of ( const tag::Vertices & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::Segments & ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfDim &, const size_t d ) const;  // virtual from Mesh::Core
+	size_t number_of ( const tag::CellsOfMaxDim & ) const;  // virtual from Mesh::Core
 
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
@@ -5711,7 +5715,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// that is, a face where the mesh touches itself
 	// for such a common face,  face->cell_behind_within  should not have key 'this'
 	// (in spite of 'face' belonging to this->cells[d-1])
-	std::vector < std::pair < Cell, Cell > > singular;
+	std::map < Cell, std::vector < std::pair < Cell, Cell > > > singular;
 	
 	inline STSI ( const tag::OfDimension &, const size_t dim_p1, const tag::MinusOne &,
                 const tag::OneDummyWrapper &                                         )
@@ -5723,10 +5727,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// bool dispose_query ( )  defined by tag::Util::Core ifdef COLLECT_CM
 	
 	// size_t get_dim_plus_one ( )  defined in Mesh::Fuzzy
-	// size_t number_of ( const tag::Vertices & )  defined in Mesh::Fuzzy
-	// size_t number_of ( const tag::Segments & )  defined in Mesh::Fuzzy
-	// size_t number_of ( const tag::CellsOfDim &, const size_t d )  defined in Mesh::Fuzzy
-	// size_t number_of ( const tag::CellsOfMaxDim & )  defined in Mesh::Fuzzy
+	// four versions of  size_t number_of  defined in Mesh::Fuzzy
 
 	// first_vertex, last_vertex, first_segment and last_segment
 	// are defined by Mesh::Core, execution forbidden
@@ -5734,54 +5735,75 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// private :
 
 	// four methods below are virtual from and defined by Mesh::Core, here overridden
-	virtual Cell::Core * cell_in_front_of
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists                       ) const override;
-	virtual Cell::Core * cell_in_front_of
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                                ) const override;
-	virtual Cell::Core * cell_behind
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists                       ) const override;
-	virtual Cell::Core * cell_behind
-	( const Cell::Core * face_p, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                                ) const override;
+	virtual Cell cell_in_front_of
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists            ) override;
+	virtual Cell cell_in_front_of
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::MayNotExist &                                     ) override;
+	virtual Cell cell_behind
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists            ) override;
+	virtual Cell cell_behind
+	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
+	  const tag::MayNotExist &                                     ) override;
 	
 	// the twenty-four methods below are virtual from Mesh::Core
 	// defined by Mesh::NotZeroDim, here overridden
+	// methods with tag::mesh_is_bdry are execution forbidden since a boundary should never be STSI
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
-	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
-	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) override;
+	void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & ) override;
 	void add_pos_seg
-	( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & );
-	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & );
+	( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) override;
+	void remove_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsBdry & ) override;
 	void remove_pos_seg
-	( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
-	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & ) override;
+	void add_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & ) override;
 	void add_neg_seg
-	( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & );
-	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & );
+	( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsNotBdry & ) override;
+	void remove_neg_seg ( Cell::Negative::Segment *, const tag::MeshIsBdry & ) override;
 	void remove_neg_seg
-	( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
-	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & ) override;
+	void add_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & ) override;
 	void add_pos_hd_cell
-	( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & );
-	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & );
+	( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry & ) override;
+	void remove_pos_hd_cell ( Cell::Positive::HighDim *, const tag::MeshIsBdry & ) override;
 	void remove_pos_hd_cell
-	( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
-	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & ) override;
+	void add_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & ) override;
 	void add_neg_hd_cell
-	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
-	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & );
-	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & );
+	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry & ) override;
+	void remove_neg_hd_cell ( Cell::Negative::HighDim *, const tag::MeshIsBdry & ) override;
 	void remove_neg_hd_cell
-	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & );
+	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
+
+	// the eight methods below are virtual from Mesh::Core, defined by Mesh::NotZeroDim
+	// thus, some calls act on a STSI mesh as if it were a Fuzzy mesh
+	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
+	// void add_pos_seg
+	// ( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void remove_pos_seg
+	// ( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void add_neg_seg
+	// ( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void remove_neg_seg
+	// ( Cell::Negative::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void add_pos_hd_cell
+	// ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void remove_pos_hd_cell
+	// ( Cell::Positive::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void add_neg_hd_cell
+	// ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
+	// void remove_neg_hd_cell
+	// ( Cell::Negative::HighDim *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )
 
 	// iterators are virtual from Mesh::Core and are defined by Mesh::Fuzzy
 
@@ -5962,6 +5984,15 @@ inline Mesh::Mesh ( const tag::Fuzzy &, const tag::OfDimension &, const size_t d
 	       tag::freshly_created, tag::is_positive                                           )
 {	}
 	
+
+inline Mesh::Mesh ( const tag::STSI &, const tag::OfDimension &, const size_t d,
+                    const tag::IsPositive & ispos                               )
+// by default, ispos = tag::is_positive, so may be called with only three arguments
+:	Mesh ( tag::whose_core_is,
+	 	     new Mesh::STSI ( tag::of_dimension, d+1, tag::minus_one, tag::one_dummy_wrapper ),
+	       tag::freshly_created, tag::is_positive                                            )
+{	}
+
 
 inline Mesh::Mesh ( const tag::DeepCopyOf &, const Mesh & msh )
 :	Mesh ( tag::whose_core_is, msh .core->build_deep_copy(),
@@ -6245,7 +6276,7 @@ inline Cell::Cell ( const tag::WhoseBoundaryIs &, Mesh & msh )
 				 tag::freshly_created                                         )
 #ifndef NDEBUG
 {	assert ( msh .is_positive() );
-	assert ( msh .dim() >= 1 );    }
+	assert ( msh .dim() >= 1 );
 	Mesh::STSI * msh_stsi = dynamic_cast < Mesh::STSI* > ( msh .core );
 	assert ( msh_stsi == nullptr );                                     }
 #else
@@ -6410,9 +6441,10 @@ inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::MayNotExist & )
 // return the cell towards which 'face' is looking
 // recall that the faces of a cell are looking outwards
 
-{	Cell face_rev = face .reverse ( tag::may_not_exist );
+{	assert ( face .exists() );
+	Cell face_rev = face .reverse ( tag::may_not_exist );
 	if ( not face_rev .exists() ) return Cell ( tag::non_existent );
-	else return this->cell_behind ( face_rev, tag::may_not_exist );  }
+	return this->cell_behind ( face_rev, tag::may_not_exist );  }
 	
 
 inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::SurelyExists & se ) const
@@ -6422,7 +6454,8 @@ inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::SurelyExists & 
 // return the cell towards which 'face' is looking
 // recall that the faces of a cell are looking outwards
 
-{	Cell face_rev = face .reverse ( tag::surely_exists );
+{	assert ( face .exists() );
+	Cell face_rev = face .reverse ( tag::surely_exists );
 	return this->cell_behind ( face_rev, tag::surely_exists );      }
 	
 
@@ -6431,7 +6464,8 @@ inline Cell Mesh::cell_behind
 
 // return the cell to which 'face' belongs, non-existent if we are facing the boundary
 
-{	assert ( this->dim() == face .dim() + 1 );
+{	assert ( face .exists() );
+	assert ( this->dim() == face .dim() + 1 );
 	if ( this->is_positive() )
 	{	std::map < Mesh::Core*, Cell > ::const_iterator
 			it = face .core->cell_behind_within .find ( this->core );
@@ -6458,7 +6492,8 @@ inline Cell Mesh::cell_behind ( const Cell face, const tag::SurelyExists & se ) 
 
 // return the cell to which 'face' belongs
 
-{	assert ( this->dim() == face .dim() + 1 );
+{	assert ( face .exists() );
+	assert ( this->dim() == face .dim() + 1 );
 	if ( this->is_positive() )
 	{	std::map < Mesh::Core*, Cell > ::const_iterator
 			it = face .core->cell_behind_within .find ( this->core );
@@ -6474,6 +6509,76 @@ inline Cell Mesh::cell_behind ( const Cell face, const tag::SurelyExists & se ) 
 		Cell cll_rev = it->second;
 		assert ( cll_rev .exists() );
 		return cll_rev .reverse ( tag::surely_exists );                  }  }
+
+
+inline Cell Mesh::cell_in_front_of
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::MayNotExist & ) const
+
+// return the cell towards which 'face' is looking
+// recall that the faces of a cell are looking outwards
+// this function is interesting only for STSI meshes
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	assert ( this->is_positive() );
+	Cell face_rev = face .reverse ( tag::may_not_exist );
+	if ( not face_rev .exists() ) return Cell ( tag::non_existent );
+	Cell res = this->cell_behind ( face_rev, tag::may_not_exist );
+	if ( res .exists() ) return res;
+	// either the cell does not exist or we are at a singular point
+	return this->core->cell_in_front_of ( face, tag::seen_from, neighbour, tag::may_not_exist );  }
+	
+
+inline Cell Mesh::cell_in_front_of
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::SurelyExists & se ) const
+
+// 'se' defaults to tag::surely_exists, so method may be called with only one argument
+
+// return the cell towards which 'face' is looking
+// recall that the faces of a cell are looking outwards
+// this function is interesting only for STSI meshes
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	assert ( this->is_positive() );
+	Cell face_rev = face .reverse ( tag::surely_exists );
+	Cell res = this->cell_behind ( face_rev, tag::may_not_exist );
+	if ( res .exists() ) return res;
+	// either the cell does not exist or we are at a singular point
+	return this->core->cell_in_front_of ( face, tag::seen_from, neighbour, tag::surely_exists );  }
+	
+
+inline Cell Mesh::cell_behind
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::MayNotExist & ) const
+
+// return the cell to which 'face' belongs, non-existent if we are facing the boundary
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	assert ( this->dim() == face .dim() + 1 );
+	assert ( this->is_positive() );
+	Cell res = this->cell_behind ( face, tag::may_not_exist );
+	if ( res .exists() ) return res;
+	// either the cell does not exist or we are at a singular point
+	return this->core->cell_behind ( face, tag::seen_from, neighbour, tag::may_not_exist );  }
+
+
+inline Cell Mesh::cell_behind
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::SurelyExists & se ) const
+
+// 'se' defaults to tag::surely_exists, so method may be called with only one argument
+
+// return the cell to which 'face' belongs
+// this function is interesting only for STSI meshes
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	assert ( this->dim() == face .dim() + 1 );
+	assert ( this->is_positive() );
+	Cell res = this->cell_behind ( face, tag::may_not_exist );
+	if ( res .exists() ) return res;
+	// either the cell does not exist or we are at a singular point
+	return this->core->cell_behind ( face, tag::seen_from, neighbour, tag::surely_exists );  }
 
 
 #ifndef NDEBUG
