@@ -1,7 +1,7 @@
 
 // example presented in paragraph 3.2 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// builds a circle then fills the disk, all progressive
+// builds a circle then fills the disk, all frontal
 
 #include "maniFEM.h"
 using namespace maniFEM;

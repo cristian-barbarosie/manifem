@@ -1,7 +1,7 @@
 
 // example presented in paragraph 3.9 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// a "bumpy" hemisphere meshed progressively
+// a "bumpy" hemisphere meshed by frontal method
 
 #include "maniFEM.h"
 #include "math.h"

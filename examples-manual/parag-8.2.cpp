@@ -71,22 +71,22 @@ int main ()
 	Manifold intersection = cylinder .implicit ( x*x + y*y + z*z == rs*rs );
 	Cell start1 ( tag::vertex );  x ( start1 ) = 1.;  y ( start1 ) = 0.;  z ( start1 ) = 0.5 - rc;
 	intersection .project ( start1 );
-	Mesh circle_1 ( tag::progressive, tag::start_at, start1, tag::towards, { 0., 1., 0. },
+	Mesh circle_1 ( tag::frontal, tag::start_at, start1, tag::towards, { 0., 1., 0. },
 	                tag::desired_length, seg_size                                          );
 
 	Cell start2 ( tag::vertex );  x ( start2 ) = -1.;  y ( start2 ) = 0.;  z ( start2 ) = 0.5 - rc;
 	intersection .project ( start2 );
-	Mesh circle_2 ( tag::progressive, tag::start_at, start2, tag::towards, { 0., 1., 0. },
+	Mesh circle_2 ( tag::frontal, tag::start_at, start2, tag::towards, { 0., 1., 0. },
                   tag::desired_length, seg_size                                          );
 
 	Mesh two_circles ( tag::join, circle_1 .reverse(), circle_2 );
 	cylinder .set_as_working_manifold();
-	Mesh cyl ( tag::progressive, tag::boundary, two_circles, tag::start_at, start1,
+	Mesh cyl ( tag::frontal, tag::boundary, two_circles, tag::start_at, start1,
 						 tag::towards, { -1., 0., 0. }, tag::desired_length, seg_size         );
 
 	Mesh two_circles_rev ( tag::join, circle_1, circle_2 .reverse() );
 	RR3 .implicit ( x*x + y*y + z*z == rs*rs );
-	Mesh sph ( tag::progressive, tag::boundary, two_circles_rev, tag::start_at, start1,
+	Mesh sph ( tag::frontal, tag::boundary, two_circles_rev, tag::start_at, start1,
              tag::towards, { 0., 0., -1. }, tag::desired_length, seg_size             );
 
 	Mesh all ( tag::join, cyl, sph );

@@ -1,7 +1,7 @@
 
 // example presented in paragraph 3.6 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// meshes a sphere progressively
+// meshes a sphere by frontal method
 
 #include "maniFEM.h"
 
