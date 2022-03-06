@@ -1,5 +1,5 @@
 
-// mesh.h  2022.02.28
+// mesh.h  2022.03.05
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -4478,7 +4478,9 @@ class Mesh::Connected::OneDim : public Mesh::NotZeroDim
 	// cell_in_front_of and cell_behind ( tag::seen_from )
 	// defined by Mesh::Core, execution forbidden
 
-	// thirty-two methods add_*** and remove_***  defined by Mesh::NotZeroDim
+	// thirty-two methods add_pos_seg, remove_pos_seg, add_neg_seg, remove_neg_seg,
+	// add_pos_hd_cell, remove_pos_hd_cell, add_neg_hd_cell, remove_neg_hd_cell
+	// (four versions of each) defined by Mesh::NotZeroDim
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 
 	// Mesh::Core * build_deep_copy ( )  defined by Mesh::NotZeroDim, execution forbidden for now
@@ -5715,7 +5717,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// that is, a face where the mesh touches itself
 	// for such a common face,  face->cell_behind_within  should not have key 'this'
 	// (in spite of 'face' belonging to this->cells[d-1])
-	std::map < Cell, std::vector < std::pair < Cell, Cell > > > singular;
+	std::map < Cell, std::list < std::pair < Cell, Cell > > > singular;
 	
 	inline STSI ( const tag::OfDimension &, const size_t dim_p1, const tag::MinusOne &,
                 const tag::OneDummyWrapper &                                         )
@@ -5786,7 +5788,7 @@ class Mesh::STSI : public Mesh::Fuzzy
 	( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & ) override;
 
 	// the eight methods below are virtual from Mesh::Core, defined by Mesh::NotZeroDim
-	// thus, some calls act on a STSI mesh as if it were a Fuzzy mesh
+	// thus, calls with tag::do_not_bother act on a STSI mesh as if it were a Fuzzy mesh
 	// called from Cell::****tive::***::add_to_mesh and Cell::****tive::***::remove_from_mesh
 	// void add_pos_seg
 	// ( Cell::Positive::Segment *, const tag::MeshIsNotBdry &, const tag::DoNotBother & )

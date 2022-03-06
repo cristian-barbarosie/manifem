@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.03.01
+// mesh.cpp 2022.03.06
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -535,12 +535,12 @@ Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 	if ( not face .is_positive() )
 		return this->cell_behind ( face .reverse ( tag::surely_exists ),
 		                           tag::seen_from, neighbour, tag::may_not_exist );
-	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
 	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
 		return Cell ( tag::non_existent );
-	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
-	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 				it_s != sing .end(); it_s ++                                             )
 		if ( it_s->first == neighbour ) return it_s->second;
 	return Cell ( tag::non_existent );
@@ -564,12 +564,12 @@ Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 	if ( not face .is_positive() )
 		return this->cell_behind ( face .reverse ( tag::surely_exists ),
 		                           tag::seen_from, neighbour, tag::surely_exists );
-	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
 	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
 		return Cell ( tag::non_existent );
-	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
-	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 				it_s != sing .end(); it_s ++                                             )
 		if ( it_s->first == neighbour ) return it_s->second;
 	assert ( false );
@@ -593,12 +593,12 @@ Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 	if ( not face .is_positive() )
 		return this->cell_in_front_of ( face .reverse ( tag::surely_exists ),
 		                                tag::seen_from, neighbour, tag::may_not_exist );
-	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
 	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
 		return Cell ( tag::non_existent );
-	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
-	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 				it_s != sing .end(); it_s ++                                             )
 		if ( it_s->second == neighbour ) return it_s->first;
 	return Cell ( tag::non_existent );
@@ -622,12 +622,12 @@ Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 	if ( not face .is_positive() )
 		return this->cell_in_front_of ( face .reverse ( tag::surely_exists ),
 		                                tag::seen_from, neighbour, tag::surely_exists );
-	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
 	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
 		return Cell ( tag::non_existent );
-	std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
-	for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 				it_s != sing .end(); it_s ++                                             )
 		if ( it_s->second == neighbour ) return it_s->first;
 	assert ( false );
@@ -915,7 +915,7 @@ inline void add_cell_behind_above ( Cell::Positive::NotVertex * cll, Cell::Core 
 			assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(msh,lb->first) ) );      //
 			cmd.emplace_hint ( lb, std::piecewise_construct,                          //
 			      std::forward_as_tuple(msh),                                         //
-			      std::forward_as_tuple(Cell(tag::whose_core_is,cll,                 //
+			      std::forward_as_tuple(Cell(tag::whose_core_is,cll,                  //
 			                                 tag::previously_existing,                //
 			                                 tag::surely_not_null      )) );       }  //
 /////////  code below is conceptually equivalent to the above  ///////////////////
@@ -1706,7 +1706,7 @@ inline void make_deep_connections_1d  // hidden in anonymous namespace
 inline void make_deep_connections_1d  // hidden in anonymous namespace
 ( Cell::Positive::Segment * const seg, Mesh::Core * const msh, const tag::MeshIsBdry & )
 
-// make far connections when adding a positive cell
+// make far connections when adding a positive segment
 // see paragraph 11.9 in the manual
 	
 {	assert ( msh->get_dim_plus_one() == 2 );
@@ -1741,7 +1741,7 @@ inline void make_deep_connections_1d  // hidden in anonymous namespace
 ( Cell::Positive::Segment * const seg, Mesh::Core * const msh,
   const tag::MeshIsBdry &, const tag::DoNotBother &           )
 
-// make far connections when adding a positive cell
+// make far connections when adding a positive segment
 // see paragraph 11.9 in the manual
 	
 // tag::do_not_bother is only relevant for Mesh::Connected::***Dim
@@ -1778,7 +1778,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * const o_seg, Cell::Positive::Segment * const seg,
   Mesh::Core * const msh, const tag::MeshIsNotBdry &             )
 
-// make far connections when adding a negative cell
+// make far connections when adding a negative segment
 // see paragraph 11.9 in the manual
 	
 {	assert ( seg != o_seg );
@@ -1808,7 +1808,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * const o_seg, Cell::Positive::Segment * const seg, Mesh::Core * const msh,
   const tag::MeshIsNotBdry &, const tag::DoNotBother &                                  )
 
-// make far connections when adding a negative cell
+// make far connections when adding a negative segment
 // see paragraph 11.9 in the manual
 	
 // tag::do_not_bother is only relevant for Mesh::Connected::***Dim
@@ -1840,7 +1840,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * o_seg, Cell::Positive::Segment * seg,
   Mesh::Core * msh, const tag::MeshIsBdry &          )
 
-// make far connections when adding a negative cell
+// make far connections when adding a negative segment
 // see paragraph 11.9 in the manual
 	
 {	assert ( seg != o_seg );
@@ -1877,7 +1877,7 @@ inline void make_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * o_seg, Cell::Positive::Segment * seg, Mesh::Core * msh,
   const tag::MeshIsBdry &, const tag::DoNotBother &                   )
 
-// make far connections when adding a negative cell
+// make far connections when adding a negative segment
 // see paragraph 11.9 in the manual
 	
 // tag::do_not_bother is only relevant for Mesh::Connected::***Dim
@@ -2831,7 +2831,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * const o_seg, Cell::Positive::Segment * const seg,
   Mesh::Core * const msh, const tag::MeshIsNotBdry &               )
 
-// break far connections when removing a negative cell
+// break far connections when removing a negative segment
 // see paragraph 11.9 in the manual
 	
 {	assert ( seg != o_seg );
@@ -2861,7 +2861,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * const o_seg, Cell::Positive::Segment * const seg, Mesh::Core * const msh,
   const tag::MeshIsNotBdry &, const tag::DoNotBother &                                  )
 
-// break far connections when removing a negative cell
+// break far connections when removing a negative segment
 // see paragraph 11.9 in the manual
 	
 // tag::do_not_bother is only relevant for Mesh::Connected::***Dim
@@ -2893,7 +2893,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * o_seg, Cell::Positive::Segment * seg,
   Mesh::Core * msh, const tag::MeshIsBdry &          )
 
-// break far connections when removing a negative cell
+// break far connections when removing a negative segment
 // see paragraph 11.9 in the manual
 	
 {	assert ( seg != o_seg );
@@ -2929,7 +2929,7 @@ inline void break_deep_connections_1d_rev  // hidden in anonymous namespace
 ( Cell::Core * o_seg, Cell::Positive::Segment * seg, Mesh::Core * msh,
   const tag::MeshIsBdry &, const tag::DoNotBother &                   )
 
-// break far connections when removing a negative cell
+// break far connections when removing a negative segment
 // see paragraph 11.9 in the manual
 	
 // tag::do_not_bother is only relevant for Mesh::Connected::***Dim
@@ -3401,7 +3401,7 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 // just a block of code called from Mesh::STSI::add_pos_seg
 	
 {	typedef std::map < Mesh::Core *, Cell > maptype;
-	typedef std::map < Cell, std::vector < std::pair < Cell, Cell > > > singmaptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	{  // just a block of code for hiding names
 	Cell sbr = seg->base_attr .reverse ( tag::surely_exists );
 	maptype & cmd = seg->base_attr .core->cell_behind_within;
@@ -3411,8 +3411,9 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 	singmaptype ::iterator it_sing  = that->singular .lower_bound ( sbr );
 	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
 		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+
 	if ( regular )
-		cmd.emplace_hint ( lb, std::piecewise_construct,
+		cmd .emplace_hint ( lb, std::piecewise_construct,
 		      std::forward_as_tuple(that),
 		      std::forward_as_tuple(Cell(tag::whose_core_is,seg,
 		 	                               tag::previously_existing,tag::surely_not_null)) );
@@ -3422,7 +3423,7 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 		if ( must_cut )
 		{	// seg->base already in the mesh, we must cut the mesh
 			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { sbr, { } } );
-			std::vector < std::pair < Cell, Cell > > & sing = it_s->second;
+			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
 			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
 			sing .push_back ( { lbr->second, lb->second } );
 			cmd .erase ( lb );
@@ -3434,15 +3435,16 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
 			         ( ( it_sing != that->singular .end() ) and
 			           ( not that->singular .key_comp()(sbr,it_sing->first) ) )        );
-			std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 			Cell second_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
 			bool not_done = true;
-			for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+			for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 			      it_s != sing .end(); it_s++                                              )
 				if ( it_s->first .exists() and not it_s->second .exists() )
 				{	it_s->second = second_seg;  not_done = false;  }
 			if ( not_done )
 				sing .push_back ( { Cell ( tag::non_existent ), second_seg } );                            }  }
+
 	} {  // just a block of code for hiding names
 	Cell st = seg->tip_attr,
 	     str = st .reverse ( tag::surely_exists );
@@ -3453,6 +3455,7 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 	singmaptype ::iterator it_sing  = that->singular .lower_bound ( st );
 	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
 		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(st,it_sing->first) );
+
 	if ( regular )
 		cmd.emplace_hint ( lb, std::piecewise_construct,
 		      std::forward_as_tuple(that),
@@ -3464,7 +3467,7 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 		if ( must_cut )
 		{	// seg->base already in the mesh, we must cut the mesh
 			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { st, { } } );
-			std::vector < std::pair < Cell, Cell > > & sing = it_s->second;
+			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
 			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
 			sing .push_back ( { lb->second, lbr->second } );
 			cmd .erase ( lb );
@@ -3476,17 +3479,183 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
 			         ( ( it_sing != that->singular .end() ) and
 			           ( not that->singular .key_comp()(st,it_sing->first) ) )         );
-			std::vector < std::pair < Cell, Cell > > & sing = it_sing->second;
+			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 			Cell first_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
 			bool not_done = true;
-			for ( std::vector < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+			for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 			      it_s != sing .end(); it_s++                                              )
 				if ( it_s->second .exists() and not it_s->first .exists() )
 				{	it_s->first = first_seg;  not_done = false;  }
 			if ( not_done )
 				sing .push_back ( { first_seg, Cell ( tag::non_existent ) } );                            }  } 
 	}  // just a block of code for hiding names
+
 }  // end of  stsi_add_cell_behind_below_pos_seg
+
+
+inline void stsi_remove_cell_behind_below_pos_seg  // hidden in anonymous namespace
+( Cell::Positive::Segment * const seg, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::add_pos_seg
+	
+{	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+
+	{  // just a block of code for hiding names
+	Cell sbr = seg->base_attr .reverse ( tag::surely_exists );
+	maptype & cmd = seg->base_attr .core->cell_behind_within;
+	maptype & cmdr = sbr .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( sbr );
+	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+
+	if ( regular ) cmd .erase ( lb );
+
+	else  // singular
+	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
+						 ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+		  ( ( it_sing != that->singular .end() ) and that->singular .key_comp()(sbr,it_sing->first) ) );
+		// seg->base belongs multiple times to the mesh -- how many times ?
+		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
+		#ifndef NDEBUG
+		bool found = false;
+		#endif
+		std::list < std::pair < Cell, Cell > > ::iterator it_v, it_kept;
+		for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+			if ( it_v->second .core == seg )
+			#ifndef NDEBUG
+			{	assert ( not found );  it_kept = it_v;  found = true;  }
+			#else
+			{	it_kept = it_v;  break;  }
+			#endif
+		assert ( found );
+
+		// if the 'first' segment exists, we remove the second
+		if ( it_kept->first .exists() )
+		{	// a loose end will appear, let's try to tie it to another loose end
+			#ifndef NDEBUG
+			found = false;
+			#else
+			bool found = false;
+			#endif
+			std::list < std::pair < Cell, Cell > > ::iterator it_other;
+			for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+				if ( not it_v->first .exists() )
+				#ifndef NDEBUG
+				{	assert ( not found );  it_other = it_v;  found = true;  }
+				#else
+				{	it_other = it_v;  found = true;  break;  }
+				#endif
+				
+			if ( found )  // yes, let's marry them
+			{	it_other->first = it_kept->first;
+				sing .erase ( it_kept );          }
+			else  // too bad, stays loose
+				it_kept->second = Cell ( tag::non_existent );                 }
+
+		else  // no 'first' segment, just erase the pair
+			sing .erase ( it_kept );
+				
+		if ( sing .size() == 1 )  // now 'sbr' is a regular vertex
+		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
+			assert ( it_unique != sing .end() );
+			assert ( it_unique->first .exists() );
+			assert ( it_unique->second .exists() );
+			std::map < Mesh::Core *, Cell > & sbr_cbw = sbr .core->cell_behind_within;
+			lb = sbr_cbw .lower_bound ( that );
+			assert ( ( lb == sbr_cbw .end() ) or ( sbr_cbw .key_comp() ( that, lb->first ) ) );
+			sbr_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
+			std::map < Mesh::Core *, Cell > & sb_cbw = seg->base_attr .core->cell_behind_within;
+			lb = sb_cbw .lower_bound ( that );
+			assert ( ( lb == sb_cbw .end() ) or ( sb_cbw .key_comp() ( that, lb->first ) ) );
+			sb_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
+			that->singular .erase ( it_sing );                                                   }  }
+			
+	} {  // just a block of code for hiding names
+	Cell str = seg->tip() .reverse ( tag::surely_exists );
+	maptype & cmd  = seg->tip() .core->cell_behind_within;
+	maptype & cmdr = str .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( seg->tip() );
+	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or
+		  that->singular .key_comp()(seg->tip(),it_sing->first)                         );
+
+	if ( regular ) cmd .erase ( lb );
+
+	else  // singular
+	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
+		         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+		         ( ( it_sing != that->singular .end() ) and
+		           that->singular .key_comp() ( seg->tip(), it_sing->first ) )     );
+		// seg->tip belongs multiple times to the mesh -- how many times ?
+		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
+		#ifndef NDEBUG
+		bool found = false;
+		#endif
+		std::list < std::pair < Cell, Cell > > ::iterator it_v, it_kept;
+		for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+			if ( it_v->first .core == seg )
+			#ifndef NDEBUG
+			{	assert ( not found );  it_kept = it_v;  found = true;  }
+			#else
+			{	it_kept = it_v;  break;  }
+			#endif
+		assert ( found );
+
+		// if the 'second' segment exists, we remove the first
+		if ( it_kept->second .exists() )
+		{	// a loose end will appear, let's try to tie it to another loose end
+			#ifndef NDEBUG
+			found = false;
+			#else
+			bool found = false;
+			#endif
+			std::list < std::pair < Cell, Cell > > ::iterator it_other;
+			for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+				if ( not it_v->second .exists() )
+				#ifndef NDEBUG
+				{	assert ( not found );  it_other = it_v;  found = true;  }
+				#else
+				{	it_other = it_v;  found = true;  break;  }
+				#endif
+				
+			if ( found )  // yes, let's marry them
+			{	it_other->second = it_kept->second;
+				sing .erase ( it_kept );            }
+			else  // too bad, stays loose
+				it_kept->first = Cell ( tag::non_existent );                  }
+
+		else  // no 'second' segment, just erase the pair
+			sing .erase ( it_kept );
+				
+		if ( sing .size() == 1 )  // now 'seg.tip()' is a regular vertex
+		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
+			assert ( it_unique != sing .end() );
+			assert ( it_unique->first .exists() );
+			assert ( it_unique->second .exists() );
+			std::map < Mesh::Core *, Cell > & st_cbw = seg->tip() .core->cell_behind_within;
+			lb = st_cbw .lower_bound ( that );
+			assert ( ( lb == st_cbw .end() ) or ( st_cbw .key_comp() ( that, lb->first ) ) );
+			st_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
+			std::map < Mesh::Core *, Cell > & str_cbw = str .core->cell_behind_within;
+			lb = str_cbw .lower_bound ( that );
+			assert ( ( lb == str_cbw .end() ) or ( str_cbw .key_comp() ( that, lb->first ) ) );
+			str_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
+			that->singular .erase ( it_sing );                                                   }  }
+			
+	}  // just a block of code for hiding names
+
+}  // end of  stsi_remove_cell_behind_below_pos_seg
 
 
 inline void add_cell_behind_below_neg_seg  // hidden in anonymous namespace
@@ -4740,7 +4909,7 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
 	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr.core );
+		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr .core );
 	// assert that 'pos_seg' belongs to 'this' mesh
 	assert ( pos_seg->meshes_same_dim .find (this) != pos_seg->meshes_same_dim .end() );
 
@@ -4751,13 +4920,11 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 
 	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 	
 	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
@@ -4771,7 +4938,7 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
 	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr.core );
+		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr .core );
 	// assert that 'pos_seg' belongs to 'this' mesh
 	assert ( pos_seg->meshes_same_dim .find (this) != pos_seg->meshes_same_dim .end() );
 
@@ -4782,13 +4949,11 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 
 	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 	
 	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry, tag::do_not_bother );
@@ -4802,7 +4967,7 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
 	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
-		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr.core );
+		< Cell::Core*, Cell::Positive::Segment* > ( seg->reverse_attr .core );
 	// assert that 'pos_seg' belongs to 'this' mesh
 	assert ( pos_seg->meshes_same_dim .find (this) != pos_seg->meshes_same_dim .end() );
 	
@@ -4813,13 +4978,11 @@ void Mesh::NotZeroDim::remove_neg_seg ( Cell::Negative::Segment * seg, const tag
 
 	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 
 	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry );
@@ -4844,13 +5007,11 @@ void Mesh::NotZeroDim::remove_neg_seg  // virtual from Mesh::Core
 
 	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
 	         pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
+	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
 	pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .erase (this);
 
 	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_bdry, tag::do_not_bother );
@@ -4922,7 +5083,7 @@ void Mesh::NotZeroDim::remove_pos_hd_cell  // virtual from Mesh::Core
 		         face_p->cell_behind_within .end()         );
 		assert ( face_p->cell_behind_within [this] .core == cll );
 		// optimize map access !!
-		face_p->cell_behind_within .erase(this);                   }
+		face_p->cell_behind_within .erase (this);                  }
 
 	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
 	
@@ -5151,7 +5312,7 @@ void Mesh::NotZeroDim::remove_neg_hd_cell  // virtual from Mesh::Core
 		Cell::Core * rev_face = face_p->reverse_attr .core;
 		assert ( rev_face );
 		assert ( rev_face->cell_behind_within [this] .core == cll );
-		rev_face->cell_behind_within .erase (this);              }
+		rev_face->cell_behind_within .erase (this);                 }
 
 	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_bdry, tag::do_not_bother );
 
@@ -5169,18 +5330,18 @@ void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsN
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
-	stsi_add_cell_behind_below_pos_seg ( seg, this );                                 }
+	stsi_add_cell_behind_below_pos_seg ( seg, this );                             }
 
 
 void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::add_pos_seg
 ( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::remove_pos_seg
@@ -5193,33 +5354,27 @@ void Mesh::STSI::remove_pos_seg
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim .find (this) != seg->meshes_same_dim .end() );
 
-	assert ( seg->base_attr .core->cell_behind_within .find (this) !=
-	         seg->base_attr .core->cell_behind_within .end()          );
-	seg->base_attr.core->cell_behind_within .erase (this);
-
-	assert ( seg->tip_attr .core->cell_behind_within .find (this) !=
-	         seg->tip_attr .core->cell_behind_within .end()          );
-	seg->tip_attr.core->cell_behind_within .erase (this);
-
-  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
-
-}  // end of Mesh::STSI::remove_pos_seg with tag::mesh_is_not_bdry
+	stsi_remove_cell_behind_below_pos_seg ( seg, this );
+	
+  break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );                }
 
 
 void Mesh::STSI::remove_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::remove_pos_seg
 ( Cell::Positive::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 
+// change !! code below is from Mesh::NotZeroDim
+	
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
 	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
@@ -5239,17 +5394,19 @@ void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsN
 	
 void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 	
 void Mesh::STSI::add_neg_seg
 ( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+	
+// change !! code below is from Mesh::NotZeroDim
 	
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
@@ -5281,17 +5438,19 @@ void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::Mesh
 
 void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 	
 	
 void Mesh::STSI::remove_neg_seg
 ( Cell::Negative::Segment *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
+	
+// change !! code below is from Mesh::NotZeroDim
 	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' does not belong yet to 'this' mesh
@@ -5304,18 +5463,20 @@ void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::Mes
 
 void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::add_pos_hd_cell
 ( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 
+// change !! code below is from Mesh::NotZeroDim
+	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( cll->meshes_same_dim .find (this) != cll->meshes_same_dim .end() );
@@ -5338,13 +5499,13 @@ void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::
 	
 void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 	
 void Mesh::STSI::remove_pos_hd_cell
 ( Cell::Positive::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsNotBdry & )
@@ -5364,18 +5525,20 @@ void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::Mes
 
 void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 	
 void Mesh::STSI::add_neg_hd_cell
 ( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 
+// change !! code below is from Mesh::NotZeroDim
+	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	assert ( cll->reverse_attr .exists() );
 	Cell::Positive::HighDim * pos_cll = tag::Util::assert_cast
@@ -5400,13 +5563,13 @@ void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::
 	
 void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 void Mesh::STSI::remove_neg_hd_cell
 ( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-{	assert ( false );  }
+{	assert ( false );  }  // a boundary should never be a Mesh::STSI
 
 
 //-----------------------------------------------------------------------------------------//
