@@ -3395,22 +3395,21 @@ inline void add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 //////////////////////////////////////////////////////////////////////
 
 
-inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
-( Cell::Positive::Segment * const seg, Mesh::STSI * const that )
+inline void stsi_add_cell_behind_neg_face  // hidden in anonymous namespace
+( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
 
-// just a block of code called from Mesh::STSI::add_pos_seg
+// just a block of code called from Mesh::STSI::add_pos_segdd_neg_seg
 	
 {	typedef std::map < Mesh::Core *, Cell > maptype;
 	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
-	{  // just a block of code for hiding names
-	Cell sbr = seg->base_attr .reverse ( tag::surely_exists );
-	maptype & cmd = seg->base_attr .core->cell_behind_within;
-	maptype & cmdr = sbr .core->cell_behind_within;
+	Cell pos_face = face .reverse ( tag::surely_exists );
+	maptype & cmd = face .core->cell_behind_within;
+	maptype & cmdr = pos_face .core->cell_behind_within;
 	maptype::iterator lb  = cmd  .lower_bound ( that );
 	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( sbr );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( pos_face );
 	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
 
 	if ( regular )
 		cmd .emplace_hint ( lb, std::piecewise_construct,
@@ -3419,10 +3418,10 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 		 	                               tag::previously_existing,tag::surely_not_null)) );
 	else
 	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
 		if ( must_cut )
 		{	// seg->base already in the mesh, we must cut the mesh
-			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { sbr, { } } );
+			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { pos_face, { } } );
 			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
 			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
 			sing .push_back ( { lbr->second, lb->second } );
@@ -3434,7 +3433,7 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
 			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
 			         ( ( it_sing != that->singular .end() ) and
-			           ( not that->singular .key_comp()(sbr,it_sing->first) ) )        );
+			           ( not that->singular .key_comp()(pos_face,it_sing->first) ) )   );
 			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 			Cell second_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
 			bool not_done = true;
@@ -3445,16 +3444,24 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 			if ( not_done )
 				sing .push_back ( { Cell ( tag::non_existent ), second_seg } );                            }  }
 
-	} {  // just a block of code for hiding names
-	Cell st = seg->tip_attr,
-	     str = st .reverse ( tag::surely_exists );
-	maptype & cmd  = st  .core->cell_behind_within;
-	maptype & cmdr = str .core->cell_behind_within;
+}  // end of  stsi_add_cell_behind_neg_face
+
+
+inline void stsi_add_cell_behind_pos_face  // hidden in anonymous namespace
+( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::add_pos_seg, add_neg_seg
+	
+{	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	Cell neg_face = face .reverse ( tag::surely_exists );
+	maptype & cmd  = face .core->cell_behind_within;
+	maptype & cmdr = neg_face .core->cell_behind_within;
 	maptype::iterator lb  = cmd  .lower_bound ( that );
 	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( st );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( face );
 	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(st,it_sing->first) );
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(face,it_sing->first) );
 
 	if ( regular )
 		cmd.emplace_hint ( lb, std::piecewise_construct,
@@ -3463,10 +3470,10 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 		 	                               tag::previously_existing,tag::surely_not_null)) );
 	else
 	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(st,it_sing->first) );
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(face,it_sing->first) );
 		if ( must_cut )
 		{	// seg->base already in the mesh, we must cut the mesh
-			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { st, { } } );
+			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { face, { } } );
 			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
 			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
 			sing .push_back ( { lb->second, lbr->second } );
@@ -3478,7 +3485,7 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
 			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
 			         ( ( it_sing != that->singular .end() ) and
-			           ( not that->singular .key_comp()(st,it_sing->first) ) )         );
+			           ( not that->singular .key_comp()(face,it_sing->first) ) )         );
 			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 			Cell first_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
 			bool not_done = true;
@@ -3488,35 +3495,33 @@ inline void stsi_add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 				{	it_s->first = first_seg;  not_done = false;  }
 			if ( not_done )
 				sing .push_back ( { first_seg, Cell ( tag::non_existent ) } );                            }  } 
-	}  // just a block of code for hiding names
 
-}  // end of  stsi_add_cell_behind_below_pos_seg
+}  // end of  stsi_add_cell_behind_pos_face
 
 
-inline void stsi_remove_cell_behind_below_pos_seg  // hidden in anonymous namespace
-( Cell::Positive::Segment * const seg, Mesh::STSI * const that )
+inline void stsi_remove_cell_behind_neg_face  // hidden in anonymous namespace
+( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
 
-// just a block of code called from Mesh::STSI::add_pos_seg
+// just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
 	
 {	typedef std::map < Mesh::Core *, Cell > maptype;
 	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 
-	{  // just a block of code for hiding names
-	Cell sbr = seg->base_attr .reverse ( tag::surely_exists );
-	maptype & cmd = seg->base_attr .core->cell_behind_within;
-	maptype & cmdr = sbr .core->cell_behind_within;
+	Cell pos_face = face .reverse ( tag::surely_exists );
+	maptype & cmd = face .core->cell_behind_within;
+	maptype & cmdr = pos_face .core->cell_behind_within;
 	maptype::iterator lb  = cmd  .lower_bound ( that );
 	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( sbr );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( pos_face );
 	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(sbr,it_sing->first) );
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
 
 	if ( regular ) cmd .erase ( lb );
 
 	else  // singular
 	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
 						 ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
-		  ( ( it_sing != that->singular .end() ) and that->singular .key_comp()(sbr,it_sing->first) ) );
+		  ( ( it_sing != that->singular .end() ) and that->singular .key_comp()(pos_face,it_sing->first) ) );
 		// seg->base belongs multiple times to the mesh -- how many times ?
 		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
@@ -3559,33 +3564,43 @@ inline void stsi_remove_cell_behind_below_pos_seg  // hidden in anonymous namesp
 		else  // no 'first' segment, just erase the pair
 			sing .erase ( it_kept );
 				
-		if ( sing .size() == 1 )  // now 'sbr' is a regular vertex
+		if ( sing .size() == 1 )  // now 'pos_face' is a regular vertex
 		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
 			assert ( it_unique != sing .end() );
 			assert ( it_unique->first .exists() );
 			assert ( it_unique->second .exists() );
-			std::map < Mesh::Core *, Cell > & sbr_cbw = sbr .core->cell_behind_within;
-			lb = sbr_cbw .lower_bound ( that );
-			assert ( ( lb == sbr_cbw .end() ) or ( sbr_cbw .key_comp() ( that, lb->first ) ) );
-			sbr_cbw .emplace_hint ( lb, std::piecewise_construct,
+			std::map < Mesh::Core *, Cell > & pos_face_cbw = pos_face .core->cell_behind_within;
+			lb = pos_face_cbw .lower_bound ( that );
+			assert ( ( lb == pos_face_cbw .end() ) or ( pos_face_cbw .key_comp() ( that, lb->first ) ) );
+			pos_face_cbw .emplace_hint ( lb, std::piecewise_construct,
 				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
-			std::map < Mesh::Core *, Cell > & sb_cbw = seg->base_attr .core->cell_behind_within;
-			lb = sb_cbw .lower_bound ( that );
-			assert ( ( lb == sb_cbw .end() ) or ( sb_cbw .key_comp() ( that, lb->first ) ) );
-			sb_cbw .emplace_hint ( lb, std::piecewise_construct,
+			std::map < Mesh::Core *, Cell > & face_cbw = face .core->cell_behind_within;
+			lb = face_cbw .lower_bound ( that );
+			assert ( ( lb == face_cbw .end() ) or ( face_cbw .key_comp() ( that, lb->first ) ) );
+			face_cbw .emplace_hint ( lb, std::piecewise_construct,
 				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
 			that->singular .erase ( it_sing );                                                   }  }
 			
-	} {  // just a block of code for hiding names
-	Cell str = seg->tip() .reverse ( tag::surely_exists );
-	maptype & cmd  = seg->tip() .core->cell_behind_within;
-	maptype & cmdr = str .core->cell_behind_within;
+}  // end of  stsi_add_cell_behind_pos_face
+
+
+inline void stsi_remove_cell_behind_pos_face  // hidden in anonymous namespace
+( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
+	
+{	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+
+	Cell neg_face = face .reverse ( tag::surely_exists );
+	maptype & cmd  = face .core->cell_behind_within;
+	maptype & cmdr = neg_face .core->cell_behind_within;
 	maptype::iterator lb  = cmd  .lower_bound ( that );
 	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( seg->tip() );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( face );
 	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
 		( ( it_sing == that->singular .end() ) or
-		  that->singular .key_comp()(seg->tip(),it_sing->first)                         );
+		  that->singular .key_comp()(face,it_sing->first)                         );
 
 	if ( regular ) cmd .erase ( lb );
 
@@ -3593,7 +3608,7 @@ inline void stsi_remove_cell_behind_below_pos_seg  // hidden in anonymous namesp
 	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
 		         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
 		         ( ( it_sing != that->singular .end() ) and
-		           that->singular .key_comp() ( seg->tip(), it_sing->first ) )     );
+		           that->singular .key_comp() ( face, it_sing->first ) )     );
 		// seg->tip belongs multiple times to the mesh -- how many times ?
 		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
@@ -3641,20 +3656,18 @@ inline void stsi_remove_cell_behind_below_pos_seg  // hidden in anonymous namesp
 			assert ( it_unique != sing .end() );
 			assert ( it_unique->first .exists() );
 			assert ( it_unique->second .exists() );
-			std::map < Mesh::Core *, Cell > & st_cbw = seg->tip() .core->cell_behind_within;
-			lb = st_cbw .lower_bound ( that );
-			assert ( ( lb == st_cbw .end() ) or ( st_cbw .key_comp() ( that, lb->first ) ) );
-			st_cbw .emplace_hint ( lb, std::piecewise_construct,
+			std::map < Mesh::Core *, Cell > & face_cbw = face .core->cell_behind_within;
+			lb = face_cbw .lower_bound ( that );
+			assert ( ( lb == face_cbw .end() ) or ( face_cbw .key_comp() ( that, lb->first ) ) );
+			face_cbw .emplace_hint ( lb, std::piecewise_construct,
 				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
-			std::map < Mesh::Core *, Cell > & str_cbw = str .core->cell_behind_within;
-			lb = str_cbw .lower_bound ( that );
-			assert ( ( lb == str_cbw .end() ) or ( str_cbw .key_comp() ( that, lb->first ) ) );
-			str_cbw .emplace_hint ( lb, std::piecewise_construct,
+			std::map < Mesh::Core *, Cell > & neg_face_cbw = neg_face .core->cell_behind_within;
+			lb = neg_face_cbw .lower_bound ( that );
+			assert ( ( lb == neg_face_cbw .end() ) or ( neg_face_cbw .key_comp() ( that, lb->first ) ) );
+			neg_face_cbw .emplace_hint ( lb, std::piecewise_construct,
 				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
 			that->singular .erase ( it_sing );                                                   }  }
 			
-	}  // just a block of code for hiding names
-
 }  // end of  stsi_remove_cell_behind_below_pos_seg
 
 
@@ -5330,7 +5343,8 @@ void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsN
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
-	stsi_add_cell_behind_below_pos_seg ( seg, this );                             }
+	stsi_add_cell_behind_neg_face ( seg, seg->base_attr, this );
+	stsi_add_cell_behind_pos_face ( seg, seg->tip_attr, this );                  }
 
 
 void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
@@ -5354,7 +5368,8 @@ void Mesh::STSI::remove_pos_seg
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim .find (this) != seg->meshes_same_dim .end() );
 
-	stsi_remove_cell_behind_below_pos_seg ( seg, this );
+	stsi_remove_cell_behind_neg_face ( seg, seg->base_attr, this );
+	stsi_remove_cell_behind_pos_face ( seg, seg->tip_attr, this );
 	
   break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );                }
 
@@ -5372,8 +5387,6 @@ void Mesh::STSI::remove_pos_seg
 
 void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
-
-// change !! code below is from Mesh::NotZeroDim
 	
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
@@ -5389,7 +5402,10 @@ void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsN
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
 
-	add_cell_behind_below_neg_seg ( seg, pos_seg, this );                                  }
+	stsi_add_cell_behind_neg_face
+		( seg, pos_seg->tip_attr .reverse ( tag::surely_exists ), this );
+	stsi_add_cell_behind_pos_face
+		( seg, pos_seg->base_attr .reverse ( tag::surely_exists ), this );                  }
 
 	
 void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
@@ -5406,8 +5422,6 @@ void Mesh::STSI::add_neg_seg
 void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 	
-// change !! code below is from Mesh::NotZeroDim
-	
 {	assert ( this->get_dim_plus_one() == 2 );
 	assert ( seg->reverse_attr .exists() );
 	Cell::Positive::Segment * pos_seg = tag::Util::assert_cast
@@ -5420,16 +5434,10 @@ void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::Mesh
 	assert ( pos_seg->base_attr .core->reverse_attr .exists() );
 	assert ( pos_seg->tip_attr  .core->reverse_attr .exists() );
 
-	assert ( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
-	         pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->base_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
-	pos_seg->base_attr .core->reverse_attr .core->cell_behind_within .erase (this);
-	assert ( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .find (this) !=
-	         pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .end()         );
-	assert
-		( pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within [this] .core == seg );
-	pos_seg->tip_attr .core->reverse_attr .core->cell_behind_within .erase (this);
+	stsi_remove_cell_behind_neg_face
+		( seg, pos_seg->tip_attr .reverse ( tag::surely_exists ), this );
+	stsi_remove_cell_behind_pos_face
+		( seg, pos_seg->base_attr .reverse ( tag::surely_exists ), this );
 	
 	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
 
