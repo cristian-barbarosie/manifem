@@ -1164,6 +1164,288 @@ void Cell::Positive::NotVertex::compute_sign
 	else  {  assert ( sign == -1 );  cp = 0;  cn = 1;  }                }
 
 //-----------------------------------------------------------------------------//
+
+
+void Cell::Negative::stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::add_pos_seg, add_neg_seg
+// 'this' face is negative; cell 'cll' may me positive or negative
+	
+{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	Cell pos_face = face .reverse ( tag::surely_exists );
+	maptype & cmd = face .core->cell_behind_within;
+	maptype & cmdr = pos_face .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( pos_face );
+	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
+
+	if ( regular )
+		cmd .emplace_hint ( lb, std::piecewise_construct,
+		      std::forward_as_tuple(that),
+		      std::forward_as_tuple(Cell(tag::whose_core_is,cll,
+		 	                               tag::previously_existing,tag::surely_not_null)) );
+	else
+	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
+		if ( must_cut )
+		{	// 'face' already in the mesh, we must cut the mesh
+			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { pos_face, { } } );
+			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
+			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
+			sing .push_back ( { lbr->second, lb->second } );
+			cmd .erase ( lb );
+			cmdr .erase ( lbr );
+			Cell second_cll ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+			sing .push_back ( { Cell ( tag::non_existent ), second_cll } );                             }
+		else  // already singular
+		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+			         ( ( it_sing != that->singular .end() ) and
+			           ( not that->singular .key_comp()(pos_face,it_sing->first) ) )   );
+			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+			Cell second_cll ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+			bool not_done = true;
+			for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+			      it_s != sing .end(); it_s++                                              )
+				if ( it_s->first .exists() and not it_s->second .exists() )
+				{	it_s->second = second_cll;  not_done = false;  }
+			if ( not_done )
+				sing .push_back ( { Cell ( tag::non_existent ), second_cll } );                            }  }
+
+}  // end of  Cell:Negative::stsi_add_cell_behind
+
+
+void Cell::Positive::stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::add_pos_seg, add_neg_seg
+// 'this' face is positive; cell 'cll' may me positive or negative
+	
+{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	Cell neg_face = face .reverse ( tag::surely_exists );
+	maptype & cmd  = face .core->cell_behind_within;
+	maptype & cmdr = neg_face .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( face );
+	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(face,it_sing->first) );
+
+	if ( regular )
+		cmd.emplace_hint ( lb, std::piecewise_construct,
+		      std::forward_as_tuple(that),
+		      std::forward_as_tuple(Cell(tag::whose_core_is,cll,
+		 	                               tag::previously_existing,tag::surely_not_null)) );
+	else
+	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(face,it_sing->first) );
+		if ( must_cut )
+		{	// 'face' already in the mesh, we must cut the mesh
+			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { face, { } } );
+			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
+			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
+			sing .push_back ( { lb->second, lbr->second } );
+			cmd .erase ( lb );
+			cmdr .erase ( lbr );
+			Cell first_cll ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+			sing .push_back ( { first_cll, Cell ( tag::non_existent ) } );                             }
+		else  // already singular
+		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
+			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+			         ( ( it_sing != that->singular .end() ) and
+			           ( not that->singular .key_comp()(face,it_sing->first) ) )         );
+			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+			Cell first_cll ( tag::whose_core_is, cll, tag::previously_existing, tag::surely_not_null );
+			bool not_done = true;
+			for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+			      it_s != sing .end(); it_s++                                              )
+				if ( it_s->second .exists() and not it_s->first .exists() )
+				{	it_s->first = first_cll;  not_done = false;  }
+			if ( not_done )
+				sing .push_back ( { first_cll, Cell ( tag::non_existent ) } );                            }  } 
+
+}  // end of  Cell::Positive::stsi_add_cell_behind
+
+
+void Cell::Negative::stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
+// 'this' face is negative; cell 'cll' may me positive or negative
+	
+{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+
+	Cell pos_face = face .reverse ( tag::surely_exists );
+	maptype & cmd = face .core->cell_behind_within;
+	maptype & cmdr = pos_face .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( pos_face );
+	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
+
+	if ( regular ) cmd .erase ( lb );
+
+	else  // singular
+	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
+						 ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+		  ( ( it_sing != that->singular .end() ) and that->singular .key_comp()(pos_face,it_sing->first) ) );
+		// 'face' belongs multiple times to the mesh -- how many times ?
+		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
+		#ifndef NDEBUG
+		bool found = false;
+		#endif
+		std::list < std::pair < Cell, Cell > > ::iterator it_v, it_kept;
+		for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+			if ( it_v->second .core == cll )
+			#ifndef NDEBUG
+			{	assert ( not found );  it_kept = it_v;  found = true;  }
+			#else
+			{	it_kept = it_v;  break;  }
+			#endif
+		assert ( found );
+
+		// if the 'first' cel exists, we remove the second
+		if ( it_kept->first .exists() )
+		{	// a loose end will appear, let's try to tie it to another loose end
+			#ifndef NDEBUG
+			found = false;
+			#else
+			bool found = false;
+			#endif
+			std::list < std::pair < Cell, Cell > > ::iterator it_other;
+			for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+				if ( not it_v->first .exists() )
+				#ifndef NDEBUG
+				{	assert ( not found );  it_other = it_v;  found = true;  }
+				#else
+				{	it_other = it_v;  found = true;  break;  }
+				#endif
+				
+			if ( found )  // yes, let's marry them
+			{	it_other->first = it_kept->first;
+				sing .erase ( it_kept );          }
+			else  // too bad, stays loose
+				it_kept->second = Cell ( tag::non_existent );                 }
+
+		else  // no 'first' cell, just erase the pair
+			sing .erase ( it_kept );
+				
+		if ( sing .size() == 1 )  // now 'pos_face' is a regular vertex
+		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
+			assert ( it_unique != sing .end() );
+			assert ( it_unique->first .exists() );
+			assert ( it_unique->second .exists() );
+			std::map < Mesh::Core *, Cell > & pos_face_cbw = pos_face .core->cell_behind_within;
+			lb = pos_face_cbw .lower_bound ( that );
+			assert ( ( lb == pos_face_cbw .end() ) or ( pos_face_cbw .key_comp() ( that, lb->first ) ) );
+			pos_face_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
+			std::map < Mesh::Core *, Cell > & face_cbw = face .core->cell_behind_within;
+			lb = face_cbw .lower_bound ( that );
+			assert ( ( lb == face_cbw .end() ) or ( face_cbw .key_comp() ( that, lb->first ) ) );
+			face_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
+			that->singular .erase ( it_sing );                                                   }  }
+			
+}  // end of  Cell::Negative::stsi_add_cell_behind
+
+
+void Cell::Positive::stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
+// just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
+// 'this' face is positive; cell 'cll' may me positive or negative
+	
+{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+	typedef std::map < Mesh::Core *, Cell > maptype;
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+
+	Cell neg_face = face .reverse ( tag::surely_exists );
+	maptype & cmd  = face .core->cell_behind_within;
+	maptype & cmdr = neg_face .core->cell_behind_within;
+	maptype::iterator lb  = cmd  .lower_bound ( that );
+	maptype::iterator lbr = cmdr .lower_bound ( that );
+	singmaptype ::iterator it_sing  = that->singular .lower_bound ( face );
+	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
+		( ( it_sing == that->singular .end() ) or
+		  that->singular .key_comp()(face,it_sing->first)                         );
+
+	if ( regular ) cmd .erase ( lb );
+
+	else  // singular
+	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
+		         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
+		         ( ( it_sing != that->singular .end() ) and
+		           that->singular .key_comp() ( face, it_sing->first ) )     );
+		// 'face' belongs multiple times to the mesh -- how many times ?
+		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
+		#ifndef NDEBUG
+		bool found = false;
+		#endif
+		std::list < std::pair < Cell, Cell > > ::iterator it_v, it_kept;
+		for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+			if ( it_v->first .core == cll )
+			#ifndef NDEBUG
+			{	assert ( not found );  it_kept = it_v;  found = true;  }
+			#else
+			{	it_kept = it_v;  break;  }
+			#endif
+		assert ( found );
+
+		// if the 'second' cell exists, we remove the first
+		if ( it_kept->second .exists() )
+		{	// a loose end will appear, let's try to tie it to another loose end
+			#ifndef NDEBUG
+			found = false;
+			#else
+			bool found = false;
+			#endif
+			std::list < std::pair < Cell, Cell > > ::iterator it_other;
+			for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
+				if ( not it_v->second .exists() )
+				#ifndef NDEBUG
+				{	assert ( not found );  it_other = it_v;  found = true;  }
+				#else
+				{	it_other = it_v;  found = true;  break;  }
+				#endif
+				
+			if ( found )  // yes, let's marry them
+			{	it_other->second = it_kept->second;
+				sing .erase ( it_kept );            }
+			else  // too bad, stays loose
+				it_kept->first = Cell ( tag::non_existent );                  }
+
+		else  // no 'second' cell, just erase the pair
+			sing .erase ( it_kept );
+				
+		if ( sing .size() == 1 )  // now 'face' is a regular face
+		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
+			assert ( it_unique != sing .end() );
+			assert ( it_unique->first .exists() );
+			assert ( it_unique->second .exists() );
+			std::map < Mesh::Core *, Cell > & face_cbw = face .core->cell_behind_within;
+			lb = face_cbw .lower_bound ( that );
+			assert ( ( lb == face_cbw .end() ) or ( face_cbw .key_comp() ( that, lb->first ) ) );
+			face_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
+			std::map < Mesh::Core *, Cell > & neg_face_cbw = neg_face .core->cell_behind_within;
+			lb = neg_face_cbw .lower_bound ( that );
+			assert ( ( lb == neg_face_cbw .end() ) or ( neg_face_cbw .key_comp() ( that, lb->first ) ) );
+			neg_face_cbw .emplace_hint ( lb, std::piecewise_construct,
+				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
+			that->singular .erase ( it_sing );                                                   }  }
+			
+}  // end of  Cell::Positive::stsi_remove_cell_behind
+
+//-----------------------------------------------------------------------------//
 	
 
 namespace {  // anonymous namespace, mimics static linkage
@@ -3393,282 +3675,6 @@ inline void add_cell_behind_below_pos_seg  // hidden in anonymous namespace
 //seg->tip_attr.core->cell_behind_within[that] =                    //
 //	Cell ( tag::whose_core_is, seg, tag::previously_existing );     //
 //////////////////////////////////////////////////////////////////////
-
-
-inline void stsi_add_cell_behind_neg_face  // hidden in anonymous namespace
-( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
-
-// just a block of code called from Mesh::STSI::add_pos_segdd_neg_seg
-	
-{	typedef std::map < Mesh::Core *, Cell > maptype;
-	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
-	Cell pos_face = face .reverse ( tag::surely_exists );
-	maptype & cmd = face .core->cell_behind_within;
-	maptype & cmdr = pos_face .core->cell_behind_within;
-	maptype::iterator lb  = cmd  .lower_bound ( that );
-	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( pos_face );
-	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
-
-	if ( regular )
-		cmd .emplace_hint ( lb, std::piecewise_construct,
-		      std::forward_as_tuple(that),
-		      std::forward_as_tuple(Cell(tag::whose_core_is,seg,
-		 	                               tag::previously_existing,tag::surely_not_null)) );
-	else
-	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
-		if ( must_cut )
-		{	// seg->base already in the mesh, we must cut the mesh
-			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { pos_face, { } } );
-			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
-			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
-			sing .push_back ( { lbr->second, lb->second } );
-			cmd .erase ( lb );
-			cmdr .erase ( lbr );
-			Cell second_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
-			sing .push_back ( { Cell ( tag::non_existent ), second_seg } );                             }
-		else  // already singular
-		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
-			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
-			         ( ( it_sing != that->singular .end() ) and
-			           ( not that->singular .key_comp()(pos_face,it_sing->first) ) )   );
-			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
-			Cell second_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
-			bool not_done = true;
-			for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
-			      it_s != sing .end(); it_s++                                              )
-				if ( it_s->first .exists() and not it_s->second .exists() )
-				{	it_s->second = second_seg;  not_done = false;  }
-			if ( not_done )
-				sing .push_back ( { Cell ( tag::non_existent ), second_seg } );                            }  }
-
-}  // end of  stsi_add_cell_behind_neg_face
-
-
-inline void stsi_add_cell_behind_pos_face  // hidden in anonymous namespace
-( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
-
-// just a block of code called from Mesh::STSI::add_pos_seg, add_neg_seg
-	
-{	typedef std::map < Mesh::Core *, Cell > maptype;
-	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
-	Cell neg_face = face .reverse ( tag::surely_exists );
-	maptype & cmd  = face .core->cell_behind_within;
-	maptype & cmdr = neg_face .core->cell_behind_within;
-	maptype::iterator lb  = cmd  .lower_bound ( that );
-	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( face );
-	bool regular = ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(face,it_sing->first) );
-
-	if ( regular )
-		cmd.emplace_hint ( lb, std::piecewise_construct,
-		      std::forward_as_tuple(that),
-		      std::forward_as_tuple(Cell(tag::whose_core_is,seg,
-		 	                               tag::previously_existing,tag::surely_not_null)) );
-	else
-	{	bool must_cut = ( ( lb != cmd.end() ) and ( not cmd.key_comp()(that,lb->first) ) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(face,it_sing->first) );
-		if ( must_cut )
-		{	// seg->base already in the mesh, we must cut the mesh
-			singmaptype ::iterator it_s = that->singular .insert ( it_sing, { face, { } } );
-			std::list < std::pair < Cell, Cell > > & sing = it_s->second;
-			assert ( ( lbr != cmdr.end() ) and ( not cmdr.key_comp()(that,lbr->first) ) );
-			sing .push_back ( { lb->second, lbr->second } );
-			cmd .erase ( lb );
-			cmdr .erase ( lbr );
-			Cell first_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
-			sing .push_back ( { first_seg, Cell ( tag::non_existent ) } );                             }
-		else  // already singular
-		{	assert ( ( ( lb == cmd.end() ) or cmd.key_comp()(that,lb->first) ) and
-			         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
-			         ( ( it_sing != that->singular .end() ) and
-			           ( not that->singular .key_comp()(face,it_sing->first) ) )         );
-			std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
-			Cell first_seg ( tag::whose_core_is, seg, tag::previously_existing, tag::surely_not_null );
-			bool not_done = true;
-			for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
-			      it_s != sing .end(); it_s++                                              )
-				if ( it_s->second .exists() and not it_s->first .exists() )
-				{	it_s->first = first_seg;  not_done = false;  }
-			if ( not_done )
-				sing .push_back ( { first_seg, Cell ( tag::non_existent ) } );                            }  } 
-
-}  // end of  stsi_add_cell_behind_pos_face
-
-
-inline void stsi_remove_cell_behind_neg_face  // hidden in anonymous namespace
-( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
-
-// just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
-	
-{	typedef std::map < Mesh::Core *, Cell > maptype;
-	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
-
-	Cell pos_face = face .reverse ( tag::surely_exists );
-	maptype & cmd = face .core->cell_behind_within;
-	maptype & cmdr = pos_face .core->cell_behind_within;
-	maptype::iterator lb  = cmd  .lower_bound ( that );
-	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( pos_face );
-	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or that->singular .key_comp()(pos_face,it_sing->first) );
-
-	if ( regular ) cmd .erase ( lb );
-
-	else  // singular
-	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
-						 ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
-		  ( ( it_sing != that->singular .end() ) and that->singular .key_comp()(pos_face,it_sing->first) ) );
-		// seg->base belongs multiple times to the mesh -- how many times ?
-		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
-		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
-		#ifndef NDEBUG
-		bool found = false;
-		#endif
-		std::list < std::pair < Cell, Cell > > ::iterator it_v, it_kept;
-		for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
-			if ( it_v->second .core == seg )
-			#ifndef NDEBUG
-			{	assert ( not found );  it_kept = it_v;  found = true;  }
-			#else
-			{	it_kept = it_v;  break;  }
-			#endif
-		assert ( found );
-
-		// if the 'first' segment exists, we remove the second
-		if ( it_kept->first .exists() )
-		{	// a loose end will appear, let's try to tie it to another loose end
-			#ifndef NDEBUG
-			found = false;
-			#else
-			bool found = false;
-			#endif
-			std::list < std::pair < Cell, Cell > > ::iterator it_other;
-			for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
-				if ( not it_v->first .exists() )
-				#ifndef NDEBUG
-				{	assert ( not found );  it_other = it_v;  found = true;  }
-				#else
-				{	it_other = it_v;  found = true;  break;  }
-				#endif
-				
-			if ( found )  // yes, let's marry them
-			{	it_other->first = it_kept->first;
-				sing .erase ( it_kept );          }
-			else  // too bad, stays loose
-				it_kept->second = Cell ( tag::non_existent );                 }
-
-		else  // no 'first' segment, just erase the pair
-			sing .erase ( it_kept );
-				
-		if ( sing .size() == 1 )  // now 'pos_face' is a regular vertex
-		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
-			assert ( it_unique != sing .end() );
-			assert ( it_unique->first .exists() );
-			assert ( it_unique->second .exists() );
-			std::map < Mesh::Core *, Cell > & pos_face_cbw = pos_face .core->cell_behind_within;
-			lb = pos_face_cbw .lower_bound ( that );
-			assert ( ( lb == pos_face_cbw .end() ) or ( pos_face_cbw .key_comp() ( that, lb->first ) ) );
-			pos_face_cbw .emplace_hint ( lb, std::piecewise_construct,
-				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
-			std::map < Mesh::Core *, Cell > & face_cbw = face .core->cell_behind_within;
-			lb = face_cbw .lower_bound ( that );
-			assert ( ( lb == face_cbw .end() ) or ( face_cbw .key_comp() ( that, lb->first ) ) );
-			face_cbw .emplace_hint ( lb, std::piecewise_construct,
-				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
-			that->singular .erase ( it_sing );                                                   }  }
-			
-}  // end of  stsi_add_cell_behind_pos_face
-
-
-inline void stsi_remove_cell_behind_pos_face  // hidden in anonymous namespace
-( Cell::Core * const seg, Cell face, Mesh::STSI * const that )
-
-// just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
-	
-{	typedef std::map < Mesh::Core *, Cell > maptype;
-	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
-
-	Cell neg_face = face .reverse ( tag::surely_exists );
-	maptype & cmd  = face .core->cell_behind_within;
-	maptype & cmdr = neg_face .core->cell_behind_within;
-	maptype::iterator lb  = cmd  .lower_bound ( that );
-	maptype::iterator lbr = cmdr .lower_bound ( that );
-	singmaptype ::iterator it_sing  = that->singular .lower_bound ( face );
-	bool regular = ( ( lb != cmd.end() ) and not cmd.key_comp()(that,lb->first) ) and
-		( ( it_sing == that->singular .end() ) or
-		  that->singular .key_comp()(face,it_sing->first)                         );
-
-	if ( regular ) cmd .erase ( lb );
-
-	else  // singular
-	{	assert ( ( ( lb  == cmd .end() ) or cmd .key_comp()(that,lb->first)  ) and
-		         ( ( lbr == cmdr.end() ) or cmdr.key_comp()(that,lbr->first) ) and
-		         ( ( it_sing != that->singular .end() ) and
-		           that->singular .key_comp() ( face, it_sing->first ) )     );
-		// seg->tip belongs multiple times to the mesh -- how many times ?
-		std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
-		assert ( sing .size() >= 2 );   // otherwise this wouldn't be a singularity
-		#ifndef NDEBUG
-		bool found = false;
-		#endif
-		std::list < std::pair < Cell, Cell > > ::iterator it_v, it_kept;
-		for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
-			if ( it_v->first .core == seg )
-			#ifndef NDEBUG
-			{	assert ( not found );  it_kept = it_v;  found = true;  }
-			#else
-			{	it_kept = it_v;  break;  }
-			#endif
-		assert ( found );
-
-		// if the 'second' segment exists, we remove the first
-		if ( it_kept->second .exists() )
-		{	// a loose end will appear, let's try to tie it to another loose end
-			#ifndef NDEBUG
-			found = false;
-			#else
-			bool found = false;
-			#endif
-			std::list < std::pair < Cell, Cell > > ::iterator it_other;
-			for ( it_v = sing .begin(); it_v != sing .end(); it_v ++ )
-				if ( not it_v->second .exists() )
-				#ifndef NDEBUG
-				{	assert ( not found );  it_other = it_v;  found = true;  }
-				#else
-				{	it_other = it_v;  found = true;  break;  }
-				#endif
-				
-			if ( found )  // yes, let's marry them
-			{	it_other->second = it_kept->second;
-				sing .erase ( it_kept );            }
-			else  // too bad, stays loose
-				it_kept->first = Cell ( tag::non_existent );                  }
-
-		else  // no 'second' segment, just erase the pair
-			sing .erase ( it_kept );
-				
-		if ( sing .size() == 1 )  // now 'seg.tip()' is a regular vertex
-		{	std::list < std::pair < Cell, Cell > > ::iterator it_unique = sing .begin();
-			assert ( it_unique != sing .end() );
-			assert ( it_unique->first .exists() );
-			assert ( it_unique->second .exists() );
-			std::map < Mesh::Core *, Cell > & face_cbw = face .core->cell_behind_within;
-			lb = face_cbw .lower_bound ( that );
-			assert ( ( lb == face_cbw .end() ) or ( face_cbw .key_comp() ( that, lb->first ) ) );
-			face_cbw .emplace_hint ( lb, std::piecewise_construct,
-				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->first ) );
-			std::map < Mesh::Core *, Cell > & neg_face_cbw = neg_face .core->cell_behind_within;
-			lb = neg_face_cbw .lower_bound ( that );
-			assert ( ( lb == neg_face_cbw .end() ) or ( neg_face_cbw .key_comp() ( that, lb->first ) ) );
-			neg_face_cbw .emplace_hint ( lb, std::piecewise_construct,
-				std::forward_as_tuple ( that ), std::forward_as_tuple ( it_unique->second ) );
-			that->singular .erase ( it_sing );                                                   }  }
-			
-}  // end of  stsi_remove_cell_behind_below_pos_seg
 
 
 inline void add_cell_behind_below_neg_seg  // hidden in anonymous namespace
