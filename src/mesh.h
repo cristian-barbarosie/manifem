@@ -1,5 +1,5 @@
 
-// mesh.h  2022.03.05
+// mesh.h  2022.03.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -93,6 +93,9 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct StartAt { };  static const StartAt start_at;
 	struct StopAt { };  static const StopAt stop_at;
 	struct Towards { };  static const Towards towards;
+	struct To { };  static const To to;
+	struct Link { };  static const Link link;
+	struct LinkTo { };  static const LinkTo link_to;
 	struct OfCoordinates { };  static const OfCoordinates of_coords, of_coordinates;
 	struct Boundary { };  static const Boundary boundary;
 	struct BoundaryOf { };  static const BoundaryOf boundary_of;
@@ -2342,6 +2345,10 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	// so we suggest to use those (see above)
 
 	virtual void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry ) = 0;
+
+	// for interacting with STSI meshes :
+	virtual void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that ) = 0;
+	virtual void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that ) = 0;
 		
 	#ifndef NDEBUG
 	virtual std::string get_name ( ) = 0;
@@ -2431,7 +2438,11 @@ class Cell::Positive : public Cell::Core
 	
 	// compute_sign  stays pure virtual from Cell::Core
 	
-	#ifndef NDEBUG
+	// for interacting with STSI meshes (virtual from Cell::Core) :
+	void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
+	void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
+
+#ifndef NDEBUG
 	std::string get_name ( );  // virtual from Cell::Core
 	// void print_everything ( );  stays pure virtual from Cell::Core
 	#endif
@@ -2503,6 +2514,10 @@ class Cell::Negative : public Cell::Core
 
 	// method below is virtual from Cell::Core, here execution forbidden
 	void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry );
+
+	// for interacting with STSI meshes (virtual from Cell::Core) :
+	void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
+	void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
 
 	#ifndef NDEBUG
 	std::string get_name ( );  // virtual from Cell::Core
@@ -2588,6 +2603,10 @@ class Cell::PositiveVertex : public Cell::Positive
 	// method below is virtual from Cell::Core
 	void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry );
 	
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
 	void print_everything ( );  // virtual from Cell::Core
@@ -2661,6 +2680,10 @@ class Cell::NegativeVertex : public Cell::Negative
 	// glue_on_my_bdry  and  cut_from_my_bdry  defined by Cell:Negative
 	// compute_sign  defined by Cell::Negative, execution forbidden
 	
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Negative
 	void print_everything ( );  // virtual from Cell::Core
@@ -2728,6 +2751,10 @@ class Cell::PositiveNotVertex : public Cell::Positive
 	// method below is virtual from Cell::Core
 	void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry );
 		
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
 	// void print_everything ( )  stays pure virtual from Cell::Core
@@ -2776,6 +2803,10 @@ class Cell::NegativeNotVertex : public Cell::Negative
 	// add_to_mesh, remove_from_mesh, add_to_bdry, remove_from_bdry stay pure virtual from Cell::Core
 	// compute_sign  defined by Cell::Negative, execution forbidden
 	
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
 	// void print_everything ( )  stays pure virtual from Cell::Core
@@ -2860,6 +2891,10 @@ class Cell::PositiveSegment : public Cell::Positive::NotVertex
 
 	// compute_sign  defined by Cell::Positive::NotVertex
 
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
 	void print_everything ( );  // virtual from Cell::Core
@@ -2930,6 +2965,10 @@ class Cell::NegativeSegment : public Cell::Negative::NotVertex
 
 	// glue_on_my_bdry and cut_from_my_bdry  defined by Cell:Negative
 	// compute_sign  defined by Cell::Negative, execution forbidden
+
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Negative
@@ -3036,6 +3075,10 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 
 	// compute_sign  defined by Cell::Positive::NotVertex
 	
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
 	void print_everything ( );  // virtual from Cell::Core
@@ -3111,6 +3154,10 @@ class Cell::NegativeHighDim : public Cell::Negative::NotVertex
 
 	// glue_on_my_bdry  and  cut_from_my_bdry  defined by Cell:Negative
 	// compute_sign  defined by Cell::Negative, execution forbidden
+
+	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
+	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Negative

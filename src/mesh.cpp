@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.03.06
+// mesh.cpp 2022.03.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1166,12 +1166,13 @@ void Cell::Positive::NotVertex::compute_sign
 //-----------------------------------------------------------------------------//
 
 
-void Cell::Negative::stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+void Cell::Negative::stsi_add_cell_behind           // virtual from Cell::Core
+( Cell::Core * const cll, Mesh::STSI * const that )
 
 // just a block of code called from Mesh::STSI::add_pos_seg, add_neg_seg
 // 'this' face is negative; cell 'cll' may me positive or negative
 	
-{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+{	Cell face ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
 	typedef std::map < Mesh::Core *, Cell > maptype;
 	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	Cell pos_face = face .reverse ( tag::surely_exists );
@@ -1219,12 +1220,13 @@ void Cell::Negative::stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI *
 }  // end of  Cell:Negative::stsi_add_cell_behind
 
 
-void Cell::Positive::stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+void Cell::Positive::stsi_add_cell_behind           // virtual from Cell::Core
+( Cell::Core * const cll, Mesh::STSI * const that )
 
 // just a block of code called from Mesh::STSI::add_pos_seg, add_neg_seg
 // 'this' face is positive; cell 'cll' may me positive or negative
 	
-{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+{	Cell face ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
 	typedef std::map < Mesh::Core *, Cell > maptype;
 	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 	Cell neg_face = face .reverse ( tag::surely_exists );
@@ -1272,12 +1274,13 @@ void Cell::Positive::stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI *
 }  // end of  Cell::Positive::stsi_add_cell_behind
 
 
-void Cell::Negative::stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+void Cell::Negative::stsi_remove_cell_behind        // virtual from Cell::Core
+( Cell::Core * const cll, Mesh::STSI * const that )
 
 // just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
 // 'this' face is negative; cell 'cll' may me positive or negative
 	
-{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+{	Cell face ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
 	typedef std::map < Mesh::Core *, Cell > maptype;
 	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 
@@ -1358,12 +1361,13 @@ void Cell::Negative::stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STS
 }  // end of  Cell::Negative::stsi_add_cell_behind
 
 
-void Cell::Positive::stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+void Cell::Positive::stsi_remove_cell_behind        // virtual from Cell::Core
+( Cell::Core * const cll, Mesh::STSI * const that )
 
 // just a block of code called from Mesh::STSI::remove_pos_seg, remove_neg_seg
 // 'this' face is positive; cell 'cll' may me positive or negative
 	
-{	Cell face ( tag::whose_core_is, this, tag::previously_existent, tag::surely_not_null );
+{	Cell face ( tag::whose_core_is, this, tag::previously_existing, tag::surely_not_null );
 	typedef std::map < Mesh::Core *, Cell > maptype;
 	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
 
@@ -3710,39 +3714,6 @@ inline void add_cell_behind_below_neg_seg  // hidden in anonymous namespace
 /////////////////////////////////////////////////////////////////////////////
 
 
-inline void stsi_add_cell_behind_below_neg_seg  // hidden in anonymous namespace
-( Cell::Negative::Segment * const seg, Cell::Positive::Segment * const pos_seg,
-  Mesh::NotZeroDim * const that                                                )
-
-// just a block of code called from Mesh::STSI::add_neg_seg
-	
-///////////////////////////////////////////////////////////////////////////////////////////
-	// inspired in item 24 of the book : Scott Meyers, Effective STL                       //
-{	typedef std::map < Mesh::Core *, Cell > maptype;                                       //
-	{  // just a block of code for hiding cmd and lb                                       //
-	maptype & cmd = pos_seg->base_attr.core->reverse_attr.core->cell_behind_within;        //
-	maptype::iterator lb = cmd.lower_bound(that);                                          //
-	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(that,lb->first) ) );                  //
-	cmd.emplace_hint ( lb, std::piecewise_construct,                                       //
-	      std::forward_as_tuple(that),                                                     //
-	      std::forward_as_tuple(Cell(tag::whose_core_is,seg,                               //
-	                                 tag::previously_existing,tag::surely_not_null)) );    //
-	} {  // just a block of code for hiding cmd and lb                                     //
-	maptype & cmd = pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within;         //
-	maptype::iterator lb = cmd.lower_bound(that);                                          //
-	assert ( ( lb == cmd.end() ) or ( cmd.key_comp()(that,lb->first) ) );                  //
-	cmd.emplace_hint ( lb, std::piecewise_construct,                                       //
-	      std::forward_as_tuple(that),                                                     //
-	      std::forward_as_tuple(Cell(tag::whose_core_is,seg,                               //
-	                                 tag::previously_existing,tag::surely_not_null)) );  }  }
-/////////  code below is conceptually equivalent to the above  ////////////////////////////
-//pos_seg->base_attr.core->reverse_attr.core->cell_behind_within[that] =   //
-//	Cell ( tag::whose_core_is, seg, tag::previously_existing );            //
-//pos_seg->tip_attr.core->reverse_attr.core->cell_behind_within[that] =    //
-//	Cell ( tag::whose_core_is, seg, tag::previously_existing );            //
-/////////////////////////////////////////////////////////////////////////////
-
-
 inline void add_cell_behind_below_pos_hd  // hidden in anonymous namespace
 ( Cell::Positive::HighDim * const cll, Mesh::NotZeroDim * const that )
 
@@ -5349,8 +5320,8 @@ void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsN
 
 	make_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );
 
-	stsi_add_cell_behind_neg_face ( seg, seg->base_attr, this );
-	stsi_add_cell_behind_pos_face ( seg, seg->tip_attr, this );                  }
+	seg->base_attr .core->stsi_add_cell_behind ( seg, this );
+	seg->tip_attr  .core->stsi_add_cell_behind ( seg, this );                    }
 
 
 void Mesh::STSI::add_pos_seg ( Cell::Positive::Segment * seg, const tag::MeshIsBdry & )
@@ -5374,8 +5345,8 @@ void Mesh::STSI::remove_pos_seg
 	// assert that 'seg' belongs to 'this' mesh
 	assert ( seg->meshes_same_dim .find (this) != seg->meshes_same_dim .end() );
 
-	stsi_remove_cell_behind_neg_face ( seg, seg->base_attr, this );
-	stsi_remove_cell_behind_pos_face ( seg, seg->tip_attr, this );
+	seg->base_attr .core->stsi_remove_cell_behind ( seg, this );
+	seg->tip_attr  .core->stsi_remove_cell_behind ( seg, this );
 	
   break_deep_connections_1d ( seg, this, tag::mesh_is_not_bdry );                }
 
@@ -5408,10 +5379,8 @@ void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsN
 
 	make_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
 
-	stsi_add_cell_behind_neg_face
-		( seg, pos_seg->tip_attr .reverse ( tag::surely_exists ), this );
-	stsi_add_cell_behind_pos_face
-		( seg, pos_seg->base_attr .reverse ( tag::surely_exists ), this );                  }
+	pos_seg->tip_attr  .core->reverse_attr .core->stsi_add_cell_behind ( seg, this );
+	pos_seg->base_attr .core->reverse_attr .core->stsi_add_cell_behind ( seg, this );       }
 
 	
 void Mesh::STSI::add_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
@@ -5440,14 +5409,10 @@ void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::Mesh
 	assert ( pos_seg->base_attr .core->reverse_attr .exists() );
 	assert ( pos_seg->tip_attr  .core->reverse_attr .exists() );
 
-	stsi_remove_cell_behind_neg_face
-		( seg, pos_seg->tip_attr .reverse ( tag::surely_exists ), this );
-	stsi_remove_cell_behind_pos_face
-		( seg, pos_seg->base_attr .reverse ( tag::surely_exists ), this );
-	
-	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );
+	pos_seg->tip_attr  .core->reverse_attr .core->stsi_remove_cell_behind ( seg, this );
+	pos_seg->base_attr .core->reverse_attr .core->stsi_remove_cell_behind ( seg, this );
 
-}  // end of Mesh::STSI::remove_neg_seg with tag::mesh_is_not_bdry
+	break_deep_connections_1d_rev ( seg, pos_seg, this, tag::mesh_is_not_bdry );           }
 
 
 void Mesh::STSI::remove_neg_seg ( Cell::Negative::Segment * seg, const tag::MeshIsBdry & )
@@ -5464,15 +5429,22 @@ void Mesh::STSI::remove_neg_seg
 void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 	
-// change !! code below is from Mesh::NotZeroDim
-	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' does not belong yet to 'this' mesh
 	assert ( cll->meshes_same_dim .find (this) == cll->meshes_same_dim .end() );
 
 	make_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
 	
-	add_cell_behind_below_pos_hd ( cll, this );                                }
+	Mesh bdry = cll->boundary_attr;
+	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell::Core * face_p = (*it) .core;
+		face_p->stsi_add_cell_behind ( cll, this );  }                                     }
+
+// in the above, we get a Cell wrapper 'face' then we only use its core
+// it would be nice to have an iterator providing only the core,
+// thus sparing the computer the burden of building then destroying a wrapper we don't need
 
 
 void Mesh::STSI::add_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
@@ -5489,8 +5461,6 @@ void Mesh::STSI::add_pos_hd_cell
 void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 
-// change !! code below is from Mesh::NotZeroDim
-	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	// assert that 'cll' belongs to 'this' mesh
 	assert ( cll->meshes_same_dim .find (this) != cll->meshes_same_dim .end() );
@@ -5499,16 +5469,14 @@ void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
-	{	Cell::Core * face_p = ( *it ) .core;
-		assert ( face_p->cell_behind_within .find (this) !=
-		         face_p->cell_behind_within .end()         );
-		assert ( face_p->cell_behind_within [this] .core == cll );
-		// optimize map access !!
-		face_p->cell_behind_within .erase(this);                   }
+	{	Cell::Core * face_p = (*it) .core;
+		face_p->stsi_remove_cell_behind ( cll, this );  }
 
-	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );
-	
-}  // end of Mesh::STSI::remove_pos_hd_cell with tag::mesh_is_not_bdry	
+	// in the above, we get a Cell wrapper 'face' then we only use its core
+	// it would be nice to have an iterator providing only the core,
+	// thus sparing the computer the burden of building then destroying a wrapper we don't need
+
+	break_deep_connections_hd ( cll, this, tag::mesh_is_not_bdry );                         }
  	
 	
 void Mesh::STSI::remove_pos_hd_cell ( Cell::Positive::HighDim * cll, const tag::MeshIsBdry & )
@@ -5534,7 +5502,17 @@ void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::Mes
 
 	make_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
 	
-	add_cell_behind_below_neg_hd ( cll, pos_cll, this );                                    }
+	Mesh bdry = pos_cll->boundary_attr;
+	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
+	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell::Core * face_p = (*it) .core;
+		Cell::Core * rev_face = face_p->reverse_attr.core;
+		rev_face->stsi_add_cell_behind ( cll, this );       }                               }
+
+	// in the above, we get a Cell wrapper 'face' then we only use its core
+	// it would be nice to have an iterator providing only the core,
+	// thus sparing the computer the burden of building then destroying a wrapper we don't need
 
 
 void Mesh::STSI::add_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
@@ -5551,8 +5529,6 @@ void Mesh::STSI::add_neg_hd_cell
 void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsNotBdry & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 
-// change !! code below is from Mesh::NotZeroDim
-	
 {	assert ( this->get_dim_plus_one() == cll->get_dim() + 1 );
 	assert ( cll->reverse_attr .exists() );
 	Cell::Positive::HighDim * pos_cll = tag::Util::assert_cast
@@ -5564,15 +5540,15 @@ void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::
 	assert ( bdry .core->get_dim_plus_one() + 1 == this->get_dim_plus_one() );
 	Mesh::Iterator it = bdry .iterator ( tag::over_cells_of_max_dim, tag::as_they_are );
 	for ( it .reset(); it .in_range(); it++ )
-	{	Cell::Core * face_p = ( *it ) .core;
-		Cell::Core * rev_face = face_p->reverse_attr .core;
-		assert ( rev_face );
-		assert ( rev_face->cell_behind_within [this] .core == cll );
-		rev_face->cell_behind_within .erase (this);                  }
+	{	Cell::Core * face_p = (*it) .core;
+		Cell::Core * rev_face = face_p->reverse_attr.core;
+		rev_face->stsi_remove_cell_behind ( cll, this );    }
 
-	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );
+	// in the above, we get a Cell wrapper 'face' then we only use its core
+	// it would be nice to have an iterator providing only the core,
+	// thus sparing the computer the burden of building then destroying a wrapper we don't need
 
-}  // end of Mesh::STSI::remove_neg_hd_cell with tag::mesh_is_not_bdry
+	break_deep_connections_hd_rev ( cll, pos_cll, this, tag::mesh_is_not_bdry );             }
 
 	
 void Mesh::STSI::remove_neg_hd_cell ( Cell::Negative::HighDim * cll, const tag::MeshIsBdry & )
@@ -5584,7 +5560,6 @@ void Mesh::STSI::remove_neg_hd_cell
 ( Cell::Negative::HighDim *, const tag::MeshIsBdry &, const tag::DoNotBother & )
 // virtual from Mesh::Core, defined by Mesh::NotZeroDim, here overridden
 {	assert ( false );  }  // a boundary should never be a Mesh::STSI
-
 
 //-----------------------------------------------------------------------------------------//
 
