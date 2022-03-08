@@ -9,8 +9,6 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
-	Mesh chain ( tag::stsi, tag::of_dim, 1 );
-
 	Cell O ( tag::vertex, tag::of_coords, { 0., 0. } );
 	Cell A ( tag::vertex, tag::of_coords, { 1., 0. } );
 	Cell B ( tag::vertex, tag::of_coords, { 1., 1. } );
@@ -28,18 +26,19 @@ int main ()
 	Cell EF ( tag::segment, E .reverse(), F );
 	Cell FO ( tag::segment, F .reverse(), O );
 
-	EF .add_to_mesh ( chain );
-	FO .add_to_mesh ( chain );
+	Mesh chain ( tag::stsi, tag::of_dim, 1 );
+
 	OA .add_to_mesh ( chain );
 	AB .add_to_mesh ( chain );
 	BC .add_to_mesh ( chain );
 	CO .add_to_mesh ( chain );
-	OD .add_to_mesh ( chain );
-	DE .add_to_mesh ( chain );
+	OD .reverse() .add_to_mesh ( chain );
+	DE .reverse() .add_to_mesh ( chain );
+	FO .reverse() .add_to_mesh ( chain );
 
 	assert ( chain .cell_in_front_of ( A, tag::surely_exists ) == AB );
 	assert ( chain .cell_in_front_of ( B, tag::surely_exists ) == BC );
-	assert ( chain .cell_in_front_of ( O, tag::seen_from, FO, tag::surely_exists ) == OA );
-	assert ( chain .cell_in_front_of ( O, tag::seen_from, CO, tag::surely_exists ) == OD );
+	assert ( chain .cell_in_front_of ( O, tag::seen_from, CO, tag::surely_exists ) == OA );
+	assert ( chain .cell_behind ( O, tag::seen_from, OD, tag::surely_exists ) == FO );
 	
 }

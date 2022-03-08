@@ -521,8 +521,122 @@ Cell Mesh::Core::cell_behind  // virtual
 
 
 Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::MayNotExist & )
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_behind ( face .reverse ( tag::surely_exists ),
+		                           tag::seen_from, neighbour, tag::may_not_exist );
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->first == neighbour ) return it_s->second;
+	return Cell ( tag::non_existent );
+		
+}  // end of  Mesh::STSI::cell_in_front_of
+
+
+Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::SurelyExists & se )
+// 'se' defaults to tag::surely_exists, so method may be called with only three arguments
+
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_behind ( face .reverse ( tag::surely_exists ),
+		                           tag::seen_from, neighbour, tag::surely_exists );
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->first == neighbour ) return it_s->second;
+	assert ( false );
+	return Cell ( tag::non_existent );  // just to avoid compilation errors
+
+}  // end of  Mesh::STSI::cell_in_front_of
+
+
+Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::MayNotExist & )
+	
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_in_front_of ( face .reverse ( tag::surely_exists ),
+		                                tag::seen_from, neighbour, tag::may_not_exist );
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->second == neighbour ) return it_s->first;
+	return Cell ( tag::non_existent );
+		
+}  // end of  Mesh::STSI::cell_behind
+
+
+Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
+( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::SurelyExists & se )
+// 'se' defaults to tag::surely_exists, so method may be called with only three arguments
+	
+{	assert ( face .exists() );
+	assert ( neighbour .exists() );
+	#ifndef NDEBUG
+	std::map < Mesh::Core *, Cell > ::iterator lb =
+		face .core->cell_behind_within .lower_bound ( this );
+	assert ( ( lb == face .core->cell_behind_within .end() ) or
+	         face .core->cell_behind_within .key_comp()(this,lb->first) );
+	#endif
+	if ( not face .is_positive() )
+		return this->cell_in_front_of ( face .reverse ( tag::surely_exists ),
+		                                tag::seen_from, neighbour, tag::surely_exists );
+	typedef std::map < Cell, std::list < std::pair < Cell, Cell > > > singmaptype;
+	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
+	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
+		return Cell ( tag::non_existent );
+
+	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
+	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
+				it_s != sing .end(); it_s ++                                             )
+		if ( it_s->second == neighbour ) return it_s->first;
+
+	assert ( false );
+	return Cell ( tag::non_existent );  // just to avoid compilation errors
+
+}  // end of  Mesh::STSI::cell_behind
+
+
+Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 ( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-  const tag::MayNotExist &                                     )
+  const tag::SurelySingular &, const tag::MayNotExist &        )
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -550,8 +664,8 @@ Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 
 Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 ( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-  const tag::SurelyExists & se                                 )
-// 'se' defaults to tag::surely_exists, so method may be called with only one argument
+  const tag::SurelySingular &, const tag::SurelyExists & se    )
+// 'se' defaults to tag::surely_exists, so method may be called with only four arguments
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -580,7 +694,7 @@ Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 
 Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 ( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-  const tag::MayNotExist &                                     )
+  const tag::SurelySingular &, const tag::MayNotExist &        )
 	
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -608,8 +722,8 @@ Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 
 Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 ( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-  const tag::SurelyExists & se                                 )
-// 'se' defaults to tag::surely_exists, so method may be called with only one argument
+  const tag::SurelySingular &, const tag::SurelyExists & se    )
+// 'se' defaults to tag::surely_exists, so method may be called with only four arguments
 	
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -626,16 +740,19 @@ Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 	singmaptype ::iterator it_sing  = this->singular .lower_bound ( face );
 	if ( ( it_sing == this->singular .end() ) or this->singular .key_comp()(face,it_sing->first) )
 		return Cell ( tag::non_existent );
+
 	std::list < std::pair < Cell, Cell > > & sing = it_sing->second;
 	for ( std::list < std::pair < Cell, Cell > > ::iterator it_s = sing .begin();
 				it_s != sing .end(); it_s ++                                             )
 		if ( it_s->second == neighbour ) return it_s->first;
+
 	assert ( false );
 	return Cell ( tag::non_existent );  // just to avoid compilation errors
 
 }  // end of  Mesh::STSI::cell_behind
 
-//-----------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
+
 
 namespace { // anonymous namespace, mimics static linkage
 

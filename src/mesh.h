@@ -752,6 +752,7 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline Winding winding ( ) const;  // defined in manifold.h
 		
 	#ifndef NDEBUG
+	inline string name ( );
 	inline void print_everything ( );
 	#endif
 
@@ -6631,9 +6632,11 @@ inline Cell Mesh::cell_behind
 
 
 #ifndef NDEBUG
+
 inline void Mesh::print_everything ( )
 {	if ( not is_positive() ) std::cout << "(negative Mesh) ";
 	core->print_everything ();                                }
+
 #endif
 
 //-----------------------------------------------------------------------------//
