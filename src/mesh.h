@@ -1,5 +1,5 @@
 
-// mesh.h  2022.03.08
+// mesh.h  2022.03.09
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -26,7 +26,7 @@
 #define MANIFEM_MESH_H
 
 #include <iostream>
-#include <cstring>
+#include <string>
 
 #include <vector>
 #include <list>
@@ -73,6 +73,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 	struct DoNotBuildCells { };  static const DoNotBuildCells do_not_build_cells;
 	struct DoNotBother { };  static const DoNotBother do_not_bother;
 	struct SurelyExists { };  static const SurelyExists surely_exists;
+	struct SurelySingular { };  static const SurelySingular surely_singular;
 	struct CellsSurelyExist { };  static const CellsSurelyExist cells_surely_exist;
 	struct ExactlyOne { };  static const ExactlyOne exactly_one;
 	struct OfDimension { };  static const OfDimension of_dim;
@@ -752,7 +753,7 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	inline Winding winding ( ) const;  // defined in manifold.h
 		
 	#ifndef NDEBUG
-	inline string name ( );
+	inline std::string name ( );
 	inline void print_everything ( );
 	#endif
 
@@ -1452,33 +1453,27 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	// we are still in class Mesh
 	
 	inline Cell cell_in_front_of
-	( const Cell face, const tag::SurelyExists & se = tag::surely_exists ) const;
-
+	( const Cell & face, const tag::SurelyExists & se = tag::surely_exists ) const;
 	inline Cell cell_behind
-	( const Cell face, const tag::SurelyExists & se = tag::surely_exists ) const;
-
-	inline Cell cell_in_front_of ( const Cell face, const tag::MayNotExist & ) const;
-
-	inline Cell cell_behind ( const Cell face, const tag::MayNotExist & ) const;
+	( const Cell & face, const tag::SurelyExists & se = tag::surely_exists ) const;
+	inline Cell cell_in_front_of ( const Cell & face, const tag::MayNotExist & ) const;
+	inline Cell cell_behind ( const Cell & face, const tag::MayNotExist & ) const;
 
 	// we are still in class Mesh
-	// the eight methods below are only relevant for STSI meshes
+	// the four methods below are only relevant for STSI meshes
 
 	inline Cell cell_in_front_of
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists              ) const;
-
+	( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists                ) const;
 	inline Cell cell_in_front_of
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                       ) const;
-
+	( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	  const tag::MayNotExist &                                         ) const;
 	inline Cell cell_behind
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists              ) const;
-
+	( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	  const tag::SurelyExists & se = tag::surely_exists                ) const;
 	inline Cell cell_behind
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                       ) const;
+	( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	  const tag::MayNotExist &                                         ) const;
 
 	inline void closed_loop ( const Cell & ver );
 	// for connected one-dim meshes, set both first_ver and last_ver to 'ver'
@@ -2348,8 +2343,17 @@ class tag::Util::CellCore : public tag::Util::Core::Inactive
 	virtual void compute_sign ( short int & cp, short int & cn, Mesh::Core * const cell_bdry ) = 0;
 
 	// for interacting with STSI meshes :
-	virtual void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that ) = 0;
-	virtual void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that ) = 0;
+	virtual void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * that ) = 0;
+	virtual void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * that ) = 0;
+	virtual Cell stsi_find_cell_behind_me
+	( const Cell & face, const tag::Within &, Mesh::STSI * const msh,
+	  const tag::SeenFrom &, const Cell & neighbour,
+	  const tag::SurelySingular &, const tag::MayNotExist & ) const = 0;
+	virtual Cell stsi_find_cell_in_front_of_me
+	( const Cell & face, const tag::Within &, Mesh::STSI * const msh,
+		const tag::SeenFrom &, const Cell & neighbour,
+	  const tag::SurelySingular &, const tag::MayNotExist & ) const = 0;
+	// defined by Cell::Positive and by Cell::Negative
 		
 	#ifndef NDEBUG
 	virtual std::string get_name ( ) = 0;
@@ -2442,6 +2446,12 @@ class Cell::Positive : public Cell::Core
 	// for interacting with STSI meshes (virtual from Cell::Core) :
 	void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
 	void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
+	Cell stsi_find_cell_behind_me ( const Cell & face, const tag::Within &, Mesh::STSI * const msh,
+	                                const tag::SeenFrom &, const Cell & neighbour,
+	                                const tag::SurelySingular &, const tag::MayNotExist & ) const;
+	Cell stsi_find_cell_in_front_of_me ( const Cell & face, const tag::Within &, Mesh::STSI * const msh,
+	                                     const tag::SeenFrom &, const Cell & neighbour,
+	                                     const tag::SurelySingular &, const tag::MayNotExist & ) const;
 
 #ifndef NDEBUG
 	std::string get_name ( );  // virtual from Cell::Core
@@ -2519,6 +2529,12 @@ class Cell::Negative : public Cell::Core
 	// for interacting with STSI meshes (virtual from Cell::Core) :
 	void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
 	void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that );
+	Cell stsi_find_cell_behind_me ( const Cell & face, const tag::Within &, Mesh::STSI * const msh,
+	                                const tag::SeenFrom &, const Cell & neighbour,
+	                                const tag::SurelySingular &, const tag::MayNotExist & ) const;
+	Cell stsi_find_cell_in_front_of_me ( const Cell & face, const tag::Within &, Mesh::STSI * const msh,
+	                                     const tag::SeenFrom &, const Cell & neighbour,
+	                                     const tag::SurelySingular &, const tag::MayNotExist & ) const;
 
 	#ifndef NDEBUG
 	std::string get_name ( );  // virtual from Cell::Core
@@ -2607,6 +2623,8 @@ class Cell::PositiveVertex : public Cell::Positive
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
@@ -2684,6 +2702,8 @@ class Cell::NegativeVertex : public Cell::Negative
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Negative
@@ -2755,6 +2775,8 @@ class Cell::PositiveNotVertex : public Cell::Positive
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
@@ -2807,6 +2829,8 @@ class Cell::NegativeNotVertex : public Cell::Negative
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
@@ -2895,6 +2919,8 @@ class Cell::PositiveSegment : public Cell::Positive::NotVertex
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
@@ -2970,6 +2996,8 @@ class Cell::NegativeSegment : public Cell::Negative::NotVertex
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Negative
@@ -3079,6 +3107,8 @@ class Cell::PositiveHighDim : public Cell::Positive::NotVertex
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Positive) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Positive
@@ -3159,6 +3189,8 @@ class Cell::NegativeHighDim : public Cell::Negative::NotVertex
 	// for interacting with STSI meshes (virtual from Cell::Core, defined by Cell::Negative) :
 	// void stsi_add_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
 	// void stsi_remove_cell_behind ( Cell::Core * const cll, Mesh::STSI * const that )
+	// Cell stsi_find_cell_in_front_of_me ( ... )
+	// Cell stsi_find_cell_behind_me  ( ... )
 
 	#ifndef NDEBUG
 	// std::string get_name ( )  defined by Cell::Negative
@@ -3239,18 +3271,14 @@ class tag::Util::MeshCore
 
 	// the four methods below are only relevant for STSI meshes
 	// so we forbid execution here and then override them in Mesh::STSI
-	virtual Cell cell_in_front_of
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists            );
-	virtual Cell cell_in_front_of
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                     );
-	virtual Cell cell_behind
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists            );
-	virtual Cell cell_behind
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                     );
+	virtual Cell cell_in_front_of ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                                const tag::SurelySingular &, const tag::SurelyExists &           );
+	virtual Cell cell_in_front_of ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                                const tag::SurelySingular &, const tag::MayNotExist &            );
+	virtual Cell cell_behind ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                           const tag::SurelySingular &, const tag::SurelyExists &           );
+	virtual Cell cell_behind ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                           const tag::SurelySingular &, const tag::MayNotExist &            );
 
 	virtual void add_pos_seg ( Cell::Positive::Segment *, const tag::MeshIsNotBdry & ) = 0;
 	virtual void add_pos_seg
@@ -5785,18 +5813,14 @@ class Mesh::STSI : public Mesh::Fuzzy
 	// private :
 
 	// four methods below are virtual from and defined by Mesh::Core, here overridden
-	virtual Cell cell_in_front_of
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists            ) override;
-	virtual Cell cell_in_front_of
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                     ) override;
-	virtual Cell cell_behind
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::SurelyExists & se = tag::surely_exists            ) override;
-	virtual Cell cell_behind
-	( const Cell face, const tag::SeenFrom &, const Cell neighbour,
-	  const tag::MayNotExist &                                     ) override;
+	Cell cell_in_front_of ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                        const tag::SurelySingular &, const tag::SurelyExists &           ) override;
+	Cell cell_in_front_of ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                        const tag::SurelySingular &, const tag::MayNotExist &            ) override;
+	Cell cell_behind ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+                     const tag::SurelySingular &, const tag::SurelyExists &           ) override;
+	Cell cell_behind ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
+	                   const tag::SurelySingular &, const tag::MayNotExist &            ) override;
 	
 	// the twenty-four methods below are virtual from Mesh::Core
 	// defined by Mesh::NotZeroDim, here overridden
@@ -6486,7 +6510,7 @@ inline bool Cell::belongs_to ( const Mesh & msh ) const
 //-----------------------------------------------------------------------------//
 
 
-inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::MayNotExist & ) const
+inline Cell Mesh::cell_in_front_of ( const Cell & face, const tag::MayNotExist & ) const
 
 // return the cell towards which 'face' is looking
 // recall that the faces of a cell are looking outwards
@@ -6494,10 +6518,10 @@ inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::MayNotExist & )
 {	assert ( face .exists() );
 	Cell face_rev = face .reverse ( tag::may_not_exist );
 	if ( not face_rev .exists() ) return Cell ( tag::non_existent );
-	return this->cell_behind ( face_rev, tag::may_not_exist );  }
+	return this->cell_behind ( face_rev, tag::may_not_exist );       }
 	
 
-inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::SurelyExists & se ) const
+inline Cell Mesh::cell_in_front_of ( const Cell & face, const tag::SurelyExists & se ) const
 
 // 'se' defaults to tag::surely_exists, so method may be called with only one argument
 
@@ -6506,11 +6530,10 @@ inline Cell Mesh::cell_in_front_of ( const Cell face, const tag::SurelyExists & 
 
 {	assert ( face .exists() );
 	Cell face_rev = face .reverse ( tag::surely_exists );
-	return this->cell_behind ( face_rev, tag::surely_exists );      }
+	return this->cell_behind ( face_rev, tag::surely_exists );  }
 	
 
-inline Cell Mesh::cell_behind
-( const Cell face, const tag::MayNotExist & ) const
+inline Cell Mesh::cell_behind ( const Cell & face, const tag::MayNotExist & ) const
 
 // return the cell to which 'face' belongs, non-existent if we are facing the boundary
 
@@ -6533,10 +6556,10 @@ inline Cell Mesh::cell_behind
 			return Cell ( tag::non_existent );  // we are facing the boundary
 		Cell cll_rev = it->second;
 		assert ( cll_rev .exists() );
-		return cll_rev .reverse ( tag::surely_exists );                  }  }
+		return cll_rev .reverse ( tag::surely_exists );                  }                        }
 
 
-inline Cell Mesh::cell_behind ( const Cell face, const tag::SurelyExists & se ) const
+inline Cell Mesh::cell_behind ( const Cell & face, const tag::SurelyExists & se ) const
 
 // 'se' defaults to tag::surely_exists, so method may be called with only one argument
 
@@ -6549,7 +6572,7 @@ inline Cell Mesh::cell_behind ( const Cell face, const tag::SurelyExists & se ) 
 			it = face .core->cell_behind_within .find ( this->core );
 		assert ( it != face .core->cell_behind_within .end() );
 		assert ( it->second .exists() );
-		return it->second;                                        }
+		return it->second;                                         }
 		// face .core->cell_behind_within [ this->core ]
 	else
 	{	Cell face_rev = face .reverse ( tag::surely_exists );
@@ -6562,7 +6585,7 @@ inline Cell Mesh::cell_behind ( const Cell face, const tag::SurelyExists & se ) 
 
 
 inline Cell Mesh::cell_in_front_of
-( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::MayNotExist & ) const
+( const Cell & face, const tag::SeenFrom &, const Cell & neighbour, const tag::MayNotExist & ) const
 
 // return the cell towards which 'face' is looking
 // recall that the faces of a cell are looking outwards
@@ -6570,17 +6593,16 @@ inline Cell Mesh::cell_in_front_of
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
-	assert ( this->is_positive() );
-	Cell face_rev = face .reverse ( tag::may_not_exist );
-	if ( not face_rev .exists() ) return Cell ( tag::non_existent );
-	Cell res = this->cell_behind ( face_rev, tag::may_not_exist );
+	assert ( this->is_positive() );  // no negative STSI meshes
+	Cell res = this->cell_in_front_of ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
 	// either the cell does not exist or we are at a singular point
-	return this->core->cell_in_front_of ( face, tag::seen_from, neighbour, tag::may_not_exist );  }
+	return this->core->cell_in_front_of
+		( face, tag::seen_from, neighbour, tag::surely_singular, tag::may_not_exist );  }
 	
 
 inline Cell Mesh::cell_in_front_of
-( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::SurelyExists & se ) const
+( const Cell & face, const tag::SeenFrom &, const Cell & neighbour, const tag::SurelyExists & se ) const
 
 // 'se' defaults to tag::surely_exists, so method may be called with only one argument
 
@@ -6590,31 +6612,31 @@ inline Cell Mesh::cell_in_front_of
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
-	assert ( this->is_positive() );
-	Cell face_rev = face .reverse ( tag::surely_exists );
-	Cell res = this->cell_behind ( face_rev, tag::may_not_exist );
+	assert ( this->is_positive() );  // no negative STSI meshes
+	Cell res = this->cell_in_front_of ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
 	// either the cell does not exist or we are at a singular point
-	return this->core->cell_in_front_of ( face, tag::seen_from, neighbour, tag::surely_exists );  }
+	return this->core->cell_in_front_of
+		( face, tag::seen_from, neighbour, tag::surely_singular, tag::surely_exists );  }
 	
 
 inline Cell Mesh::cell_behind
-( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::MayNotExist & ) const
+( const Cell & face, const tag::SeenFrom &, const Cell & neighbour, const tag::MayNotExist & ) const
 
 // return the cell to which 'face' belongs, non-existent if we are facing the boundary
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
-	assert ( this->dim() == face .dim() + 1 );
-	assert ( this->is_positive() );
+	assert ( this->is_positive() );  // no negative STSI meshes
 	Cell res = this->cell_behind ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
 	// either the cell does not exist or we are at a singular point
-	return this->core->cell_behind ( face, tag::seen_from, neighbour, tag::may_not_exist );  }
+	return this->core->cell_behind
+		( face, tag::seen_from, neighbour, tag::surely_singular, tag::may_not_exist );  }
 
 
 inline Cell Mesh::cell_behind
-( const Cell face, const tag::SeenFrom &, const Cell neighbour, const tag::SurelyExists & se ) const
+( const Cell & face, const tag::SeenFrom &, const Cell & neighbour, const tag::SurelyExists & se ) const
 
 // 'se' defaults to tag::surely_exists, so method may be called with only one argument
 
@@ -6624,11 +6646,12 @@ inline Cell Mesh::cell_behind
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
 	assert ( this->dim() == face .dim() + 1 );
-	assert ( this->is_positive() );
+	assert ( this->is_positive() );  // no negative STSI meshes
 	Cell res = this->cell_behind ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
 	// either the cell does not exist or we are at a singular point
-	return this->core->cell_behind ( face, tag::seen_from, neighbour, tag::surely_exists );  }
+	return this->core->cell_behind
+		( face, tag::seen_from, neighbour, tag::surely_singular, tag::surely_exists );  }
 
 
 #ifndef NDEBUG
