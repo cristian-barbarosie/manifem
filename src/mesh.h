@@ -1,5 +1,5 @@
 
-// mesh.h  2022.03.09
+// mesh.h  2022.03.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -208,6 +208,7 @@ namespace tag {  // see paragraph 11.3 in the manual
 		#endif
 		static bool return_true ( );
 		static bool return_false ( );
+		class weakIntegrator;
 	};
 	struct MayBeNull { };  static const MayBeNull may_be_null;
 	struct SurelyNotNull { };  static const SurelyNotNull surely_not_null;
@@ -6503,7 +6504,10 @@ inline bool Cell::belongs_to ( const Mesh & msh, const tag::NotOriented & ) cons
 
 inline bool Cell::belongs_to ( const Mesh & msh ) const
 
-{	assert ( this->dim() < msh .dim() );
+{	if ( this->dim() >= msh .dim() )
+	{	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
+		std::cout << "Please provide tag::same_dim." << std::endl;
+		exit ( 1 );                                                                                   }
 	// when the dimensions are equal, we require a more specific call
 	return this->core->belongs_to ( msh .core, tag::cell_has_low_dim, tag::not_oriented );  }
 
@@ -6593,6 +6597,8 @@ inline Cell Mesh::cell_in_front_of
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
+	assert ( neighbour .belongs_to ( *this, tag::same_dim ) );
+	assert ( this->dim() == face .dim() + 1 );
 	assert ( this->is_positive() );  // no negative STSI meshes
 	Cell res = this->cell_in_front_of ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
@@ -6612,6 +6618,8 @@ inline Cell Mesh::cell_in_front_of
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
+	assert ( neighbour .belongs_to ( *this, tag::same_dim ) );
+	assert ( this->dim() == face .dim() + 1 );
 	assert ( this->is_positive() );  // no negative STSI meshes
 	Cell res = this->cell_in_front_of ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
@@ -6627,6 +6635,8 @@ inline Cell Mesh::cell_behind
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
+	assert ( neighbour .belongs_to ( *this, tag::same_dim ) );
+	assert ( this->dim() == face .dim() + 1 );
 	assert ( this->is_positive() );  // no negative STSI meshes
 	Cell res = this->cell_behind ( face, tag::may_not_exist );
 	if ( res .exists() ) return res;
@@ -6645,6 +6655,7 @@ inline Cell Mesh::cell_behind
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
+	assert ( neighbour .belongs_to ( *this, tag::same_dim ) );
 	assert ( this->dim() == face .dim() + 1 );
 	assert ( this->is_positive() );  // no negative STSI meshes
 	Cell res = this->cell_behind ( face, tag::may_not_exist );

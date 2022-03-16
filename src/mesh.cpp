@@ -543,33 +543,34 @@ Cell Cell::Negative::stsi_find_cell_behind_me  // virtual from Cell::Core
 
 //-----------------------------------------------------------------------------------------------------//
 
+
 // methods cell_in_front_of and cell_behind with tag::seen_from are only relevant for STSI meshes
 // so we forbid execution in Mesh::Core and then override them in Mesh::STSI
 
 Cell Mesh::Core::cell_in_front_of  // virtual
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::SurelyExists &       )
+  const tag::SurelySingular &, const tag::SurelyExists &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "cell_in_front as seen_from : use on STSI meshes only" << std::endl;
 	exit ( 1 );                                                                                     }
 
 Cell Mesh::Core::cell_in_front_of  // virtual
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::MayNotExist &        )
+  const tag::SurelySingular &, const tag::MayNotExist &            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "cell_in_front as seen_from : use on STSI meshes only" << std::endl;
 	exit ( 1 );                                                                                     }
 
 Cell Mesh::Core::cell_behind  // virtual
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::SurelyExists &       )
+  const tag::SurelySingular &, const tag::SurelyExists &           )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "cell_behind as seen_from : use on STSI meshes only" << std::endl;
 	exit ( 1 );                                                                                     }
 
 Cell Mesh::Core::cell_behind  // virtual
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::MayNotExist &        )
+  const tag::SurelySingular &, const tag::MayNotExist &            )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "cell_behind as seen_from : use on STSI meshes only" << std::endl;
 	exit ( 1 );                                                                                     }
@@ -577,7 +578,7 @@ Cell Mesh::Core::cell_behind  // virtual
 
 Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::MayNotExist &          )
+  const tag::SurelySingular &, const tag::MayNotExist &            )
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -587,14 +588,14 @@ Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 	std::map < Mesh::Core *, Cell > ::iterator	lb = fr_cbw .lower_bound ( this );
 	assert ( ( lb == fr_cbw .end() ) or fr_cbw .key_comp()(this,lb->first) );
 	#endif
-
+	
 	return face .core->stsi_find_cell_in_front_of_me  // yes, we provide 'face' twice
 		( face, tag::within, this, tag::seen_from, neighbour, tag::surely_singular, tag::may_not_exist );  }
 
 
 Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::SurelyExists &         )
+  const tag::SurelySingular &, const tag::SurelyExists &           )
 
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -617,7 +618,7 @@ Cell Mesh::STSI::cell_in_front_of  // virtual from Mesh::Core, here overriden
 
 Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::MayNotExist &          )
+  const tag::SurelySingular &, const tag::MayNotExist &            )
 	
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -634,7 +635,7 @@ Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 
 Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 ( const Cell & face, const tag::SeenFrom &, const Cell & neighbour,
-  const tag::SurelySingular &, const tag::SurelyExists &         )
+  const tag::SurelySingular &, const tag::SurelyExists &           )
 	
 {	assert ( face .exists() );
 	assert ( neighbour .exists() );
@@ -654,6 +655,7 @@ Cell Mesh::STSI::cell_behind  // virtual from Mesh::Core, here overriden
 	assert( res .exists() );
 	return res;                                                                                         }
 
+//------------------------------------------------------------------------------------------------------//
 //------------------------------------------------------------------------------------------------------//
 
 

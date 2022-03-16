@@ -13,7 +13,7 @@ ManiFEM is just a collection of C++ classes.
 It has no user-friendly interface nor graphic capabilities. 
 The user should have some understanding of programming and of C++. 
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
-Have a look at the [gallery](https://cntr.click/2NAkAS5).	
+Have a look at the [gallery](https://l.linklyhq.com/l/li6L).	
 Similar products (competitors), as well as strong and weak points of maniFEM,
 are listed in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
 at the end of section 1.

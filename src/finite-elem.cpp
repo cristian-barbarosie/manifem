@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2022.02.21
+// finite-elem.cpp 2022.03.12
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -35,7 +35,7 @@ using namespace maniFEM;
 Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
                            const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
 
-:	Integrator::Core ()
+:	Integrator::Core (), finite_element ( fe )
 
 // J.E. Flaherty, Finite Element Analysis, Lecture Notes : Spring 2000
 // http://manifem.rd.ciencias.ulisboa.pt/flaherty-06.pdf
@@ -43,24 +43,24 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 // E.B. Becker, G.F. Carey, J.T. Oden, Finite Elements, an introduction, vol 1
 
 {	FiniteElement::WithMaster * fe_core = tag::Util::assert_cast
-		< FiniteElement::Core*, FiniteElement::WithMaster* > ( fe.core );
+		< FiniteElement::Core*, FiniteElement::WithMaster* > ( fe .core );
 	Manifold master_manifold = fe_core->master_manif;
 	switch ( q )
 	{	case tag::seg_2 :  // Gauss quadrature with two points on a segment
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe .core ) );
 			Function t = master_manifold .coordinates();
 			assert ( t .nb_of_components() == 1 );
 			this->points .reserve (2);  this->weights .reserve (2);
 			const double one_over_sqrt_three = 1. / std::sqrt (3.);
 			Cell Gauss_2_A ( tag::vertex );  t ( Gauss_2_A ) = - one_over_sqrt_three;
 			Cell Gauss_2_B ( tag::vertex );  t ( Gauss_2_B ) =   one_over_sqrt_three;
-			this->points .push_back ( Gauss_2_A );
+			this->points  .push_back ( Gauss_2_A );
 			this->weights .push_back ( 1. );
-			this->points .push_back ( Gauss_2_B );
+			this->points  .push_back ( Gauss_2_B );
 			this->weights .push_back ( 1. );
 			break;                                                                    }
 		case tag::seg_3 :  // Gauss quadrature with three points on a segment
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe .core ) );
 			Function t = master_manifold .coordinates();
 			assert ( t .nb_of_components() == 1 );
 			this->points .reserve (3);  this->weights .reserve (3);
@@ -68,15 +68,15 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			Cell Gauss_3_A ( tag::vertex );  t ( Gauss_3_A ) = - sqrt3over5;
 			Cell Gauss_3_B ( tag::vertex );  t ( Gauss_3_B ) =   0.;
 			Cell Gauss_3_C ( tag::vertex );  t ( Gauss_3_C ) =   sqrt3over5;
-			this->points .push_back ( Gauss_3_A );
+			this->points  .push_back ( Gauss_3_A );
 			this->weights .push_back ( 5./9. );
-			this->points .push_back ( Gauss_3_B );
+			this->points  .push_back ( Gauss_3_B );
 			this->weights .push_back ( 8./9. );
-			this->points .push_back ( Gauss_3_C );
+			this->points  .push_back ( Gauss_3_C );
 			this->weights .push_back ( 5./9. );
 			break;                                                                    }
 		case tag::seg_4 :  // Gauss quadrature with four points on a segment
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe .core ) );
 			Function t = master_manifold .coordinates();
 			assert ( t .nb_of_components() == 1 );
 			this->points .reserve (4);  this->weights .reserve (4);
@@ -84,17 +84,17 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			Cell Gauss_4_B ( tag::vertex );  t ( Gauss_4_B ) = - 0.339981043584856;
 			Cell Gauss_4_C ( tag::vertex );  t ( Gauss_4_C ) =   0.339981043584856;
 			Cell Gauss_4_D ( tag::vertex );  t ( Gauss_4_D ) =   0.861136311594053;
-			this->points .push_back ( Gauss_4_A );
+			this->points  .push_back ( Gauss_4_A );
 			this->weights .push_back ( 0.347854845137454 );
-			this->points .push_back ( Gauss_4_B );
+			this->points  .push_back ( Gauss_4_B );
 			this->weights .push_back ( 0.652145154862546 );
-			this->points .push_back ( Gauss_4_C );
+			this->points  .push_back ( Gauss_4_C );
 			this->weights .push_back ( 0.652145154862546 );
-			this->points .push_back ( Gauss_4_D );
+			this->points  .push_back ( Gauss_4_D );
 			this->weights .push_back ( 0.347854845137454 );
 			break;                                                                    }
 		case tag::seg_5 :  // Gauss quadrature with five points on a segment
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe .core ) );
 			Function t = master_manifold .coordinates();
 			assert ( t .nb_of_components() == 1 );
 			this->points .reserve (5);  this->weights .reserve (5);
@@ -103,19 +103,19 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			Cell Gauss_5_C ( tag::vertex );  t ( Gauss_5_C ) =   0.;
 			Cell Gauss_5_D ( tag::vertex );  t ( Gauss_5_D ) =   0.538469310105683;
 			Cell Gauss_5_E ( tag::vertex );  t ( Gauss_5_E ) =   0.906179845938664;
-			this->points .push_back ( Gauss_5_A );
+			this->points  .push_back ( Gauss_5_A );
 			this->weights .push_back ( 0.236926885056189 );
-			this->points .push_back ( Gauss_5_B );
+			this->points  .push_back ( Gauss_5_B );
 			this->weights .push_back ( 0.478628670499366 );
-			this->points .push_back ( Gauss_5_C );
+			this->points  .push_back ( Gauss_5_C );
 			this->weights .push_back ( 0.568888888888889 );
-			this->points .push_back ( Gauss_5_D );
+			this->points  .push_back ( Gauss_5_D );
 			this->weights .push_back ( 0.478628670499366 );
-			this->points .push_back ( Gauss_5_E );
+			this->points  .push_back ( Gauss_5_E );
 			this->weights .push_back ( 0.236926885056189 );
 			break;                                                                    }
 		case tag::seg_6 :  // Gauss quadrature with six points on a segment
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Segment* > ( fe .core ) );
 			Function t = master_manifold .coordinates();
 			assert ( t .nb_of_components() == 1 );
 			this->points .reserve (6);  this->weights .reserve (6);
@@ -125,21 +125,21 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			Cell Gauss_6_D ( tag::vertex );  t ( Gauss_6_D ) =   0.238619186083197;
 			Cell Gauss_6_E ( tag::vertex );  t ( Gauss_6_E ) =   0.661209386466265;
 			Cell Gauss_6_F ( tag::vertex );  t ( Gauss_6_F ) =   0.932469514203152;
-			this->points .push_back ( Gauss_6_A );
+			this->points  .push_back ( Gauss_6_A );
 			this->weights .push_back ( 0.171324492379170 );
-			this->points .push_back ( Gauss_6_B );
+			this->points  .push_back ( Gauss_6_B );
 			this->weights .push_back ( 0.360761573048139 );
-			this->points .push_back ( Gauss_6_C );
+			this->points  .push_back ( Gauss_6_C );
 			this->weights .push_back ( 0.467913934572691 );
-			this->points .push_back ( Gauss_6_D );
+			this->points  .push_back ( Gauss_6_D );
 			this->weights .push_back ( 0.467913934572691 );
-			this->points .push_back ( Gauss_6_E );
+			this->points  .push_back ( Gauss_6_E );
 			this->weights .push_back ( 0.360761573048139 );
-			this->points .push_back ( Gauss_6_F );
+			this->points  .push_back ( Gauss_6_F );
 			this->weights .push_back ( 0.171324492379170 );
 			break;                                                                    }
 		case tag::tri_3 :  // Gauss quadrature with three points on a triangle
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -153,16 +153,16 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			// in the book of Oden we have the same weights but a different distribution of points
 			// instead of  2/3 1/6 1/6  Oden has  middle of segments 0 0.5 0.5
 			// maybe the points are not unique ?  see below
-			this->points .push_back ( Gauss_3_O );
+			this->points  .push_back ( Gauss_3_O );
 			this->weights .push_back ( Gw_3_O );
-			this->points .push_back ( Gauss_3_A );
+			this->points  .push_back ( Gauss_3_A );
 			this->weights .push_back ( Gw_3_A );
-			this->points .push_back ( Gauss_3_B );
+			this->points  .push_back ( Gauss_3_B );
 			this->weights .push_back ( Gw_3_B );
 			break;                                                                                 }
 		case tag::tri_3_Oden :
 		// Gauss quadrature with three points on a triangle, points presented in the book of Oden
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -173,15 +173,15 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			Cell Gauss_3_B ( tag::vertex );  xi ( Gauss_3_B ) = 0.5;  eta ( Gauss_3_B ) = 0.;
 			// weights
 			double Gw_3_O = 1./6., Gw_3_A = 1./6., Gw_3_B = 1./6.;
-			this->points .push_back ( Gauss_3_O );
+			this->points  .push_back ( Gauss_3_O );
 			this->weights .push_back ( Gw_3_O );
-			this->points .push_back ( Gauss_3_A );
+			this->points  .push_back ( Gauss_3_A );
 			this->weights .push_back ( Gw_3_A );
-			this->points .push_back ( Gauss_3_B );
+			this->points  .push_back ( Gauss_3_B );
 			this->weights .push_back ( Gw_3_B );
 			break;                                                                             }
 		case tag::tri_4 :  // Gauss quadrature with four points on a triangle
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -197,18 +197,18 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			// in the book of Oden we have the same weights but a different distribution of points
 			// instead of  0.2 0.2 0.6  we have  2/15 2/15 11/15
 			// maybe the points are not unique ?  see below
-			this->points .push_back ( Gauss_4_c );
+			this->points  .push_back ( Gauss_4_c );
 			this->weights .push_back ( Gw_4_c );
-			this->points .push_back ( Gauss_4_O );
+			this->points  .push_back ( Gauss_4_O );
 			this->weights .push_back ( Gw_4_O );
-			this->points .push_back ( Gauss_4_A );
+			this->points  .push_back ( Gauss_4_A );
 			this->weights .push_back ( Gw_4_A );
-			this->points .push_back ( Gauss_4_B );
+			this->points  .push_back ( Gauss_4_B );
 			this->weights .push_back ( Gw_4_B );
 			break;                                                                                 }
 		case tag::tri_4_Oden :
 		// Gauss quadrature with four points on a triangle, points presented in the book of Oden
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -221,17 +221,17 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			// weights
 			double Gw_4_c = -27./96.;  // yes, negative weight
 			double Gw_4_O = 25./96., Gw_4_A = 25./96., Gw_4_B = 25./96.;
-			this->points .push_back ( Gauss_4_c );
+			this->points  .push_back ( Gauss_4_c );
 			this->weights .push_back ( Gw_4_c );
-			this->points .push_back ( Gauss_4_O );
+			this->points  .push_back ( Gauss_4_O );
 			this->weights .push_back ( Gw_4_O );
-			this->points .push_back ( Gauss_4_A );
+			this->points  .push_back ( Gauss_4_A );
 			this->weights .push_back ( Gw_4_A );
-			this->points .push_back ( Gauss_4_B );
+			this->points  .push_back ( Gauss_4_B );
 			this->weights .push_back ( Gw_4_B );
 			break;                                                                                }
 		case tag::tri_6 :  // Gauss quadrature with six points on a triangle
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Triangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -254,21 +254,21 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			      Gw_6_B = 0.054975871827661;
 			double Gw_6_OA = 0.1116907948390055, Gw_6_OB = 0.1116907948390055,
 			       Gw_6_AB = 0.1116907948390055;
-			this->points .push_back ( Gauss_6_O );
+			this->points  .push_back ( Gauss_6_O );
 			this->weights .push_back ( Gw_6_O );
-			this->points .push_back ( Gauss_6_A );
+			this->points  .push_back ( Gauss_6_A );
 			this->weights .push_back ( Gw_6_A );
-			this->points .push_back ( Gauss_6_B );
+			this->points  .push_back ( Gauss_6_B );
 			this->weights .push_back ( Gw_6_B );
-			this->points .push_back ( Gauss_6_OA );
+			this->points  .push_back ( Gauss_6_OA );
 			this->weights .push_back ( Gw_6_OA );
-			this->points .push_back ( Gauss_6_OB );
+			this->points  .push_back ( Gauss_6_OB );
 			this->weights .push_back ( Gw_6_OB );
-			this->points .push_back ( Gauss_6_AB );
+			this->points  .push_back ( Gauss_6_AB );
 			this->weights .push_back ( Gw_6_AB );
 			break;                                                                      }
 		case tag::quad_4 :  // Gauss quadrature with four points on a quadrangle
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Quadrangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Quadrangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -282,17 +282,17 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			                                  eta ( Gauss_4_c ) = -sqrt_of_one_third;
 			Cell Gauss_4_d ( tag::vertex );   xi  ( Gauss_4_d ) =  sqrt_of_one_third;
 			                                  eta ( Gauss_4_d ) =  sqrt_of_one_third;
-			this->points .push_back ( Gauss_4_a );
+			this->points  .push_back ( Gauss_4_a );
 			this->weights .push_back ( 1. );
-			this->points .push_back ( Gauss_4_b );
+			this->points  .push_back ( Gauss_4_b );
 			this->weights .push_back ( 1. );
-			this->points .push_back ( Gauss_4_c );
+			this->points  .push_back ( Gauss_4_c );
 			this->weights .push_back ( 1. );
-			this->points .push_back ( Gauss_4_d );
+			this->points  .push_back ( Gauss_4_d );
 			this->weights .push_back ( 1. );
 			break;                                                                    }
 		case tag::quad_9 :  // Gauss quadrature with nine points on a quadrangle
-		{	assert ( dynamic_cast < FiniteElement::WithMaster::Quadrangle* > ( fe.core ) );
+		{	assert ( dynamic_cast < FiniteElement::WithMaster::Quadrangle* > ( fe .core ) );
 			Function xi_eta = master_manifold .coordinates();
 			assert ( xi_eta .nb_of_components() == 2 );
 			Function xi = xi_eta [0], eta = xi_eta [1];
@@ -322,23 +322,23 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 			//  h {0,sqrt3over5}, i {sqrt3over5, sqrt3over5}
 			// weights :
 			//  25./81., 40./81., 25./81., 40./81, 64./81., 40./81, 25./81., 40./81, 25./81.
-			this->points .push_back ( Gauss_9_a );
+			this->points  .push_back ( Gauss_9_a );
 			this->weights .push_back ( 25./81. );
-			this->points .push_back ( Gauss_9_b );
+			this->points  .push_back ( Gauss_9_b );
 			this->weights .push_back ( 40./81. );
-			this->points .push_back ( Gauss_9_c );
+			this->points  .push_back ( Gauss_9_c );
 			this->weights .push_back ( 25./81. );
-			this->points .push_back ( Gauss_9_d );
+			this->points  .push_back ( Gauss_9_d );
 			this->weights .push_back ( 40./81. );
-			this->points .push_back ( Gauss_9_e );
+			this->points  .push_back ( Gauss_9_e );
 			this->weights .push_back ( 64./81. );
-			this->points .push_back ( Gauss_9_f );
+			this->points  .push_back ( Gauss_9_f );
 			this->weights .push_back ( 40./81. );
-			this->points .push_back ( Gauss_9_g );
+			this->points  .push_back ( Gauss_9_g );
 			this->weights .push_back ( 25./81. );
-			this->points .push_back ( Gauss_9_h );
+			this->points  .push_back ( Gauss_9_h );
 			this->weights .push_back ( 40./81. );
-			this->points .push_back ( Gauss_9_i );
+			this->points  .push_back ( Gauss_9_i );
 			this->weights .push_back ( 25./81. );
 			break;                                                                         }
 		default :	assert ( false );
@@ -347,7 +347,7 @@ Integrator::Gauss::Gauss ( const tag::gauss_quadrature & q,
 
 }  // end of  Integrator::Gauss::Gauss
 	
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void Integrator::Gauss::pre_compute ( const std::vector < Function > & bf,
@@ -389,7 +389,7 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
 ( const Function & bf, const Function & psi )  // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone::TypeOne * fesa = tag::Util::assert_cast
-		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->fe .core);
+		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->fe .core );
 	assert ( fesa->dummy_bf .size() >= 1 );
 	assert ( fesa->dummy_bf [0] .core == bf .core );
 	assert ( fesa->result_of_integr .size() == 1 );
@@ -411,7 +411,7 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
   const Function & psi1, const Function & psi2 )  // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone::TypeOne * fesa = tag::Util::assert_cast
-		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->fe .core);
+		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->fe .core );
 	assert ( fesa->dummy_bf .size() >= 2 );
 	assert ( fesa->dummy_bf [0] .core == bf1 .core );
 	assert ( fesa->dummy_bf [1] .core == bf2 .core );
@@ -430,7 +430,7 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
 	//  	    fesa->result_of_integr [ fesa->basis_numbering [ bf1 .core ] ]
 	//                              [ fesa->basis_numbering [ bf2 .core ] ]  )
 	
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
@@ -468,7 +468,7 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 	assert ( it_weight == this->weights .end() );
 	return res;                                                                        }
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 double Integrator::HandCoded::action ( Function f, const FiniteElement & )
 // virtual from Integrator::Core
@@ -477,7 +477,7 @@ double Integrator::HandCoded::action ( Function f, const FiniteElement & )
 
 {	assert ( false );  return 0.;   }
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll )
@@ -516,7 +516,7 @@ void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll )
 	
 }  // end of  FiniteElement::WithMaster::Segment::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll, const tag::Winding & )
 // virtual from FiniteElement::Core
@@ -555,7 +555,7 @@ void FiniteElement::WithMaster::Segment::dock_on ( const Cell & cll, const tag::
 	
 }  // end of  FiniteElement::WithMaster::Segment::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Triangle::P1::dock_on ( const Cell & cll )
@@ -623,7 +623,7 @@ void FiniteElement::WithMaster::Triangle::P1::dock_on ( const Cell & cll )
 	
 }  // end of  FiniteElement::WithMaster::Triangle::P1::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Triangle::P1::dock_on ( const Cell & cll, const tag::Winding & )
@@ -705,7 +705,7 @@ void FiniteElement::WithMaster::Triangle::P1::dock_on ( const Cell & cll, const 
 	
 }  // end of  FiniteElement::WithMaster::Triangle::P1::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on ( const Cell & cll )
@@ -797,7 +797,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on ( const Cell & c
 	
 }  // end of  FiniteElement::WithMaster::Triangle::P2::Straight::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on
@@ -887,7 +887,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::dock_on
 	
 }  // end of  FiniteElement::WithMaster::Triangle::P2::Straight::dock_on  with tag::winding
 
-//--------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
@@ -966,7 +966,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 	
 }  // end of  FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
@@ -1056,7 +1056,7 @@ void FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
 }  // end of  FiniteElement::WithMaster::Triangle::P2::Straight::Incremental::dock_on
    //         with tag::winding
 
-//--------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll )
@@ -1130,7 +1130,7 @@ void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll )
 	
 }  // end of  FiniteElement::WithMaster::Quadrangle::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll, const tag::Winding & )
@@ -1223,7 +1223,7 @@ void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll, cons
 
 }  // end of  FiniteElement::WithMaster::Quadrangle::Q1::dock_on  with tag::winding
 	
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on ( const Cell & cll )
@@ -1316,7 +1316,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on ( const Cell &
 	
 }  // end of  FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on
@@ -1423,7 +1423,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on
 
 }  // end of  FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on  with tag::winding
 	
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on ( const Cell & cll )
@@ -1516,7 +1516,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on (
 	
 }  // end of  FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on
@@ -1624,29 +1624,34 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on
 }  // end of  FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on
    //         with tag::winding
 	
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::Core::dock_on
 ( const Cell & cll, const tag::FirstVertex &, const Cell & P )
+
 // virtual, here execution forbidden
 // later overridden by FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "you don't have to provide first vertex for this kind of finite element"
             << std::endl;
 	exit ( 1 );                                                                                 }
 
+
 void FiniteElement::Core::dock_on
 ( const Cell & cll, const tag::FirstVertex &, const Cell & P, const tag::Winding & )
+
 // virtual, here execution forbidden
 // later overridden by FiniteElement::StandAlone::TypeOne::{Rectangle,Square}
+
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "you don't have to provide first vertex for this kind of finite element"
             << std::endl;
 	exit ( 1 );                                                                                 }
 
 	
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 	
 namespace { // anonymous namespace, mimics static linkage
 
@@ -2322,7 +2327,7 @@ void dock_on_hand_quadrangle_Q1
 	
 }  // end of  dock_on_hand_quadrangle_Q1
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 void dock_on_hand_rectangle_Q1
@@ -2522,7 +2527,7 @@ void dock_on_hand_rectangle_Q1
 	
 }  // end of  dock_on_hand_rectangle_Q1
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 void dock_on_hand_square_Q1
@@ -2711,7 +2716,7 @@ void dock_on_hand_square_Q1
 	
 }  // end of  dock_on_hand_square_Q1
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 	
 void dock_on_hand_tri_P1 ( const double & xP, const double & yP,
@@ -3763,7 +3768,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on ( const Cell & cll )
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Triangle::dock_on  
@@ -3811,7 +3816,7 @@ void FiniteElement::StandAlone::TypeOne::Triangle::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll )
@@ -3851,7 +3856,7 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on ( const Cell & cll 
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on  
@@ -3906,7 +3911,7 @@ void FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Quadrangle::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on ( const Cell & cll )
@@ -3947,7 +3952,7 @@ void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on ( const Cell & c
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on  
@@ -4007,7 +4012,7 @@ void FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Parallelogram::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on ( const Cell & cll )
@@ -4073,7 +4078,7 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on ( const Cell & cll )
 	
 }  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  
@@ -4159,7 +4164,7 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
@@ -4206,7 +4211,7 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on with tag::first_vertex
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on  
@@ -4260,7 +4265,7 @@ void FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
 }  // end of  FiniteElement::StandAlone::TypeOne::Rectangle::dock_on
    //         with tag::winding and tag::first_vertex
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
@@ -4322,7 +4327,7 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on ( const Cell & cll )
 	
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Square::dock_on  
@@ -4407,7 +4412,7 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on  with tag::winding
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Square::dock_on
@@ -4452,7 +4457,7 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on with tag::first_vertex
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::StandAlone::TypeOne::Square::dock_on  
@@ -4508,7 +4513,24 @@ void FiniteElement::StandAlone::TypeOne::Square::dock_on
 }  // end of  FiniteElement::StandAlone::TypeOne::Square::dock_on
    //         with tag::winding and tag::first_vertex
 
-//-----------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
+
+
+void Integrator::Gauss::dock_on ( const Cell & cll )  // virtual from Integrator::Core
+
+{	this->finite_element .dock_on ( cll );  }
+
+	
+void Integrator::HandCoded::dock_on ( const Cell & cll )  // virtual from Integrator::Core
+
+{	std::cout << __FILE__ << ":" <<__LINE__ << ": "
+	          << __extension__ __PRETTY_FUNCTION__ << ": ";
+	std::cout << "hand-coded integrators do not support this operation yet" << std::endl;
+	exit ( 1 );                                                                           }
+
+
+	
+//------------------------------------------------------------------------------------------------------//
 
 
 void FiniteElement::WithMaster::pre_compute  // virtual from FiniteElement::Core
@@ -5361,7 +5383,7 @@ void FiniteElement::StandAlone::TypeOne::pre_compute
 
 }  // end of  FiniteElement::StandAlone::TypeOne::Triangle::pre_compute
 
-//-------------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 Cell::Numbering & FiniteElement::StandAlone::TypeOne::Triangle::build_global_numbering ( )
@@ -5435,7 +5457,7 @@ Cell::Numbering & FiniteElement::WithMaster::Quadrangle::Q2::Curved::build_globa
 	return * this->numbers [1];  }
 
 
-//-------------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 
 #ifndef NDEBUG

@@ -46,10 +46,16 @@ int main ()
 	Function f = x*x + 1/(5+y), g = x*y;
 
 	// and compute its integral on the rectangle, using Gauss quadrature with 9 points :
-	// auto & integ = Integrator::gauss ("Q9");
-	//	Cell::celula_especial = & NW;
-	// cout << "integral of " << f.repr() << " = " << f.integrate ( rect_mesh, integ ) << endl;
-	// cout << "integral of " << g.repr() << " = " << g.integrate ( rect_mesh, integ ) << endl;
+	Integrator integ ( tag::Gauss, tag::quad_9 ), iii = integ;
+
+	Mesh::Iterator it = rect_mesh .iterator ( tag::over_cells, tag::of_max_dim );
+	for ( it .reset(); it .in_range(); it++ )
+	{	integ .dock_on ( *it );
+		// std::cout << integ (f) << std::endl;
+	}
+	
+	// cout << "integral of f " << integ ( f, tag::on, rect_mesh ) << endl;
+	// cout << "integral of g " << integ ( g, tag::on, rect_mesh ) << endl;
 		
 	 cout << "produced file rectangle.msh" << endl;
 

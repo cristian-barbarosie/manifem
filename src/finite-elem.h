@@ -1,5 +1,5 @@
 
-// finite-elem.h 2022.02.21
+// finite-elem.h 2022.03.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -73,26 +73,41 @@ class Integrator
 // a wrapper for Gauss quadrature
 // and perhaps other integration methods (e.g. symbolic integration)
 
+// if 'weak', its constructor does not increase the counter of the respective Integrator::Core,
+// and its destructor does not try to destroy the core (more or less like a weak pointer)
+
 {	public :
 
 	class Core;
-	
+
 	Integrator::Core * core;
+	bool weak;
 
-	// constructor
-
-	inline Integrator ( const tag::NonExistent & )	: core { nullptr }  { }
+	inline Integrator ( const tag::NonExistent & ) : core { nullptr }, weak { false } { }
+	inline Integrator ( const tag::gauss &, const tag::gauss_quadrature & q );
 	inline Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
 	                    const tag::FromFiniteElementWithMaster &, FiniteElement & fe );
 
+	inline ~Integrator ( );
+
+	// copy operations transform a weak Integrator into a strong one
+	// a weak Integrator cannot be moved
+	inline Integrator ( const Integrator & );
+  inline Integrator ( const Integrator && );
+	inline Integrator & operator= ( const Integrator & );
+  inline Integrator & operator= ( const Integrator && );
+
+	inline void conditionally_dispose_core ( );
+
 	// operator() integrates a given function on a given mesh or cell
 	
-	inline double operator() ( const Function & f, const tag::On &, const Cell cll );
-	inline double operator() ( const Function & f, const tag::On &, const Mesh msh );
+	inline double operator() ( const Function & f, const tag::On &, const Cell & cll );
+	inline double operator() ( const Function & f, const tag::On &, const Mesh & msh );
 
 	// there is also an operator() without a domain,
 	// for integrators attached to a finite element,
 	// in the event that the finite element is already docked on a cell
+	inline double operator() ( const Function & f );
 
 	// we assume the function f is already expressed in terms of master coordinates
 	// (it is composed with fe.core->transf)
@@ -109,129 +124,30 @@ class Integrator
 	( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
 	  const tag::IntegralOf &, const std::vector < Function > & res                  );
 
-	class Gauss;  class HandCoded;  class Result;
-	
+	inline void dock_on ( const Cell & cll );
+
+	class Gauss;  class HandCoded;
+
 };  // end of  class Integrator
 
-
 //-----------------------------------------------------------------------------------------//
 
-class Integrator::Core
-
-// a base class for Gauss quadrature
-// and perhaps other integration methods (e.g. symbolic integration)
-
-{	public :
-
-	// constructor
-
-	inline Core ()  { };
-
-	// destructor
-
-	virtual ~Core()  { };
-
-	// operator()
-	
-	virtual double action ( Function f, const FiniteElement & fe ) = 0;
-
-	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for HandCoded integrators
-	virtual void pre_compute ( const std::vector < Function > & bf,
-                             const std::vector < Function > & res ) = 0;
-	virtual std::vector < double > retrieve_precomputed
-	( const Function & bf, const Function & psi ) = 0;
-	virtual std::vector < double > retrieve_precomputed
-	( const Function & bf1, const Function & psi1,
-	  const Function & bf2, const Function & psi2 ) = 0;
-	
-};  // end of  class Integrator::Core
-
-//-----------------------------------------------------------------------------------------//
-
-inline double Integrator::operator()
-( const Function & f, const tag::ThroughDockedFiniteElement &, const FiniteElement & fe )
-
-{	return this->core->action ( f, fe );  }
-
-
-inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
-( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
-  const tag::IntegralOf &, const std::vector < Function > & res   )
-
-// bf is a dummy basis function (Function::MereSymbol) in the finite element
-// we prepare computations for fast evaluation of integrals of expressions listed in 'res'
-
-{	this->core->pre_compute ( { bf }, res );  }
-	
-
-inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
-( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
-  const tag::IntegralOf &, const std::vector < Function > & res                  )
-
-// bf1 and bf2 are dummy basis functions (Function::MereSymbol) in the finite element
-// we prepare computations for fast evaluation of integrals of expressions listed in 'res'
-
-{	this->core->pre_compute ( { bf1, bf2 }, res );  }
-
-//-----------------------------------------------------------------------------------------//
-
-	
-class Integrator::Gauss : public Integrator::Core
-
-{	public :
-
-	std::vector < Cell > points;
-	std::vector < double > weights;
-	
-	// constructor
-
-	inline Gauss ( const tag::gauss_quadrature & q ) : Integrator::Core ()
-	{ switch ( q )
-		{	case tag::tri_3 : std::cout << "tri 3" << std::endl;  break;
-			case tag::tri_4 : std::cout << "tri 4" << std::endl;  break;
-			case tag::tri_6 : std::cout << "tri 6" << std::endl;  break;
-			default: std::cout << "default" << std::endl;                  }
-	}
-
-	Gauss ( const tag::gauss_quadrature & q,
-	        const tag::FromFiniteElementWithMaster &, FiniteElement & fe );
-
-	// operator()
-	
-	double action ( Function f, const FiniteElement & fe );
-	// virtual from Integrator::Core
-	
-	//  pre_compute  and  retrieve_precomputed  are virtual from Integrator::Core,
-	// here execution forbidden
-	void pre_compute ( const std::vector < Function > & bf,
-                     const std::vector < Function > & res );
-	std::vector < double > retrieve_precomputed ( const Function & bf, const Function & psi );
-	std::vector < double > retrieve_precomputed
-	( const Function & bf1, const Function & psi1,
-	  const Function & bf2, const Function & psi2 );
-
-};  // end of  class Integrator::Gauss
-
-
-//-----------------------------------------------------------------------------------------//
-//-----------------------------------------------------------------------------------------//
-
-	
-// Again ...
-// What is a finite element ?
 
 class FiniteElement
 
 // wrapper for different types of finite elements	
 	
+// if 'weak', its constructor does not increase the counter of the respective FiniteElement::Core,
+// and its destructor does not try to destroy the core (more or less like a weak pointer)
+
 {	public :
 
 	class Core;  class WithMaster;  class StandAlone;
 	
 	FiniteElement::Core * core;
+	bool weak;
 
-	// constructor
-
+	inline FiniteElement ( const tag::NonExistent & )	: core { nullptr }, weak { false }  { }
 	inline FiniteElement ( const tag::WithMaster &, const tag::Segment &,
 	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 	inline FiniteElement ( const tag::WithMaster &, const tag::Triangle &,
@@ -261,10 +177,17 @@ class FiniteElement
 	inline FiniteElement ( const tag::Square &,  // no master, stand-alone
 	                       const tag::lagrange &, const tag::OfDegree &, size_t deg );
 
-	// destructor
+	inline ~FiniteElement ( );
 	
-	inline ~FiniteElement ();
-	
+	// copy operations transform a weak FiniteElement into a strong one
+	// a weak FiniteElement cannot be moved
+	inline FiniteElement ( const FiniteElement & );
+  inline FiniteElement ( const FiniteElement && );
+	inline FiniteElement & operator= ( const FiniteElement & );
+  inline FiniteElement & operator= ( const FiniteElement && );
+
+	inline void conditionally_dispose_core ( );
+
 	// get basis functions associated to vertices, to segments, etc
 	inline Function basis_function ( const Cell cll );
 	inline Function basis_function ( const Cell c1, const Cell c2 );
@@ -315,16 +238,116 @@ class FiniteElement
 
 };  // end of  class FiniteElement
 	
+//------------------------------------------------------------------------------------------------------//
+
+
+class Integrator::Core
+
+// a base class for Gauss quadrature
+// and perhaps other integration methods (e.g. symbolic integration)
+
+{	public :
+
+	short unsigned int counter { 0 };
+
+	// constructor
+
+	inline Core ()  { };
+
+	// destructor
+
+	virtual ~Core()  { };
+
+	// operator()
+	
+	virtual double action ( Function f, const FiniteElement & fe ) = 0;
+
+	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for HandCoded integrators
+	virtual void pre_compute ( const std::vector < Function > & bf,
+                             const std::vector < Function > & res ) = 0;
+	virtual std::vector < double > retrieve_precomputed
+	( const Function & bf, const Function & psi ) = 0;
+	virtual std::vector < double > retrieve_precomputed
+	( const Function & bf1, const Function & psi1,
+	  const Function & bf2, const Function & psi2 ) = 0;
+	
+	virtual void dock_on ( const Cell & cll ) = 0;
+
+};  // end of  class Integrator::Core
+
 //-----------------------------------------------------------------------------------------//
 
+inline double Integrator::operator()
+( const Function & f, const tag::ThroughDockedFiniteElement &, const FiniteElement & fe )
 
-inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
-                                const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
-:	core { new Integrator::Gauss ( q, tag::from_finite_element_with_master, fe ) }  { }
+{	return this->core->action ( f, fe );  }
+
+
+inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
+( const tag::ForAGiven &, const tag::BasisFunction &, Function bf,
+  const tag::IntegralOf &, const std::vector < Function > & res   )
+
+// bf is a dummy basis function (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'res'
+
+{	this->core->pre_compute ( { bf }, res );  }
+	
+
+inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
+( const tag::ForGiven &, const tag::BasisFunctions &, Function bf1, Function bf2,
+  const tag::IntegralOf &, const std::vector < Function > & res                  )
+
+// bf1 and bf2 are dummy basis functions (Function::MereSymbol) in the finite element
+// we prepare computations for fast evaluation of integrals of expressions listed in 'res'
+
+{	this->core->pre_compute ( { bf1, bf2 }, res );  }
 
 //-----------------------------------------------------------------------------------------//
 
+	
+class Integrator::Gauss : public Integrator::Core
 
+{	public :
+
+	FiniteElement finite_element;
+	
+	std::vector < Cell > points;
+	std::vector < double > weights;
+	
+	// constructor
+
+	inline Gauss ( const tag::gauss_quadrature & q )
+	: Integrator::Core (), finite_element ( tag::non_existent )
+	{ switch ( q )
+		{	case tag::tri_3 : std::cout << "tri 3" << std::endl;  break;
+			case tag::tri_4 : std::cout << "tri 4" << std::endl;  break;
+			case tag::tri_6 : std::cout << "tri 6" << std::endl;  break;
+			default: std::cout << "default" << std::endl;                  }  }
+
+	Gauss ( const tag::gauss_quadrature & q,
+	        const tag::FromFiniteElementWithMaster &, FiniteElement & fe );
+
+	// operator()
+	
+	double action ( Function f, const FiniteElement & fe );
+	// virtual from Integrator::Core
+	
+	//  pre_compute  and  retrieve_precomputed  are virtual from Integrator::Core,
+	// here execution forbidden
+	void pre_compute ( const std::vector < Function > & bf,
+                     const std::vector < Function > & res );
+	std::vector < double > retrieve_precomputed ( const Function & bf, const Function & psi );
+	std::vector < double > retrieve_precomputed
+	( const Function & bf1, const Function & psi1,
+	  const Function & bf2, const Function & psi2 );
+
+	void dock_on ( const Cell & cll );  // virtual from Integrator::Core
+
+};  // end of  class Integrator::Gauss
+
+//------------------------------------------------------------------------------------------------------//
+
+	
 class Integrator::HandCoded : public Integrator::Core
 
 // arithmetic expressions computed by hand -- long and tedious computations
@@ -345,7 +368,7 @@ class Integrator::HandCoded : public Integrator::Core
 	
 	inline HandCoded ( const tag::FromFiniteElement &, FiniteElement & f )
 	:	fe { f }
-	{	};
+	{	}
 
 	// operator()
 	
@@ -366,6 +389,9 @@ class Integrator::HandCoded : public Integrator::Core
 	( const Function & bf1, const Function & psi1,
 	  const Function & bf2, const Function & psi2 );
 
+	void dock_on ( const Cell & cll );  // virtual from Integrator::Core
+	// here execution forbidden, may change in the future
+
 };  // end of  class Integrator::HandCoded
 
 //-----------------------------------------------------------------------------------------//
@@ -378,6 +404,8 @@ class FiniteElement::Core
 //                             and FiniteElement::StandAlone::Type***::***
 
 {	public :
+
+	short unsigned int counter { 0 };
 
 	Integrator integr;
 
@@ -429,7 +457,108 @@ class FiniteElement::Core
 //-----------------------------------------------------------------------------------------//
 
 
-inline FiniteElement::~FiniteElement ()  {  delete this->core;  }
+inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q,
+                                const tag::FromFiniteElementWithMaster &, FiniteElement & fe )
+
+// this constructor is called from a FiniteElement, through method set_integrator	
+	
+:	core { new Integrator::Gauss ( q, tag::from_finite_element_with_master, fe ) }, weak { false }
+
+{	assert ( this->core->counter == 0 );
+	this->core->counter = 1;             }
+
+
+inline Integrator::Integrator ( const tag::gauss &, const tag::gauss_quadrature & q )
+	
+:	Integrator ( tag::non_existent )
+
+{	FiniteElement fe ( tag::non_existent );
+
+	// we guess from 'q' the type of finite element
+
+	switch ( q )
+	{	case tag::seg_2 :
+		case tag::seg_3 :
+		case tag::seg_4 :
+		case tag::seg_5 :
+		case tag::seg_6 :
+			fe = FiniteElement ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
+			break;
+		case tag::tri_3 :
+		case tag::tri_3_Oden :
+		case tag::tri_4 :
+		case tag::tri_4_Oden :
+		case tag::tri_6 :
+			fe = FiniteElement ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
+			break;
+		case tag::quad_4 :
+		case tag::quad_9 :
+			fe = FiniteElement ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+			break;
+		default : assert ( false );                                                                    }
+
+	this->core = new Integrator::Gauss ( q, tag::from_finite_element_with_master, fe );
+	assert ( this->core->counter == 0 );
+	
+	fe .core->integr = *this;
+	assert ( this->core->counter == 1 );
+	fe .core->integr .weak = true;                                                                       }
+
+// if 'fe .core->integr' weren't weak, 'this->core->counter' should be 2
+
+
+inline void Integrator::conditionally_dispose_core ( )
+
+{	if ( this->core )
+	if ( not this->weak )
+	{	assert ( this->core->counter > 0 );
+		this->core->counter --;
+		if ( this->core->counter == 0 ) delete this->core;  }  }
+
+
+inline Integrator::~Integrator ( )
+
+{	this->conditionally_dispose_core();  }
+
+
+inline Integrator::Integrator ( const Integrator & arg )
+// copying an Integrator makes the copy strong
+	
+:	core { arg .core }, weak { false }
+
+{ this->core->counter ++;  }
+
+	
+inline Integrator::Integrator ( const Integrator && arg )
+// cannot move a weak Integrator
+	
+:	core { arg .core }, weak { false }
+
+{ assert ( not arg .weak );
+	this->core->counter ++;   }
+
+
+inline Integrator & Integrator::operator= ( const Integrator & arg )
+// copying an Integrator makes the copy strong
+
+{	this->conditionally_dispose_core();
+	this->core = arg .core;
+	this->weak = false;
+	this->core->counter ++;
+	return * this;          }
+
+
+inline Integrator & Integrator::operator= ( const Integrator && arg )
+// cannot move a weak Integrator
+
+{	this->conditionally_dispose_core();
+	assert ( not arg .weak );
+	this->core = arg .core;
+	this->weak = false;
+	this->core->counter ++;   
+	return * this;            }
+
+//------------------------------------------------------------------------------------------------------//
 
 
 inline Function FiniteElement::basis_function ( const Cell cll )
@@ -460,6 +589,10 @@ inline void FiniteElement::dock_on ( const Cell & cll, const tag::FirstVertex &,
 inline void FiniteElement::dock_on
 ( const Cell & cll, const tag::FirstVertex &, const Cell & v, const tag::Winding & )
 {	this->core->dock_on ( cll, tag::first_vertex, v, tag::winding );  }
+
+
+inline void Integrator::dock_on ( const Cell & cll )
+{	this->core->dock_on ( cll );  }
 
 
 inline Cell::Numbering & FiniteElement::build_global_numbering ( )
@@ -1175,7 +1308,7 @@ inline FiniteElement::FiniteElement
 ( const tag::WithMaster &, const tag::Segment &,
   const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 1 );
 
@@ -1187,6 +1320,8 @@ inline FiniteElement::FiniteElement
 	// we should take advantage of the memory space already reserved for x and y
 
 	this->core = new FiniteElement::WithMaster::Segment ( RR_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
 	work_manif.set_as_working_manifold();                                                   }
 
@@ -1195,11 +1330,11 @@ inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Triangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 1 );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1208,6 +1343,8 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Triangle::P1 ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
 	work_manif .set_as_working_manifold();                                                      }
 
@@ -1216,11 +1353,11 @@ inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Triangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 2 );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1229,6 +1366,8 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Triangle::P2::Straight ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
 	work_manif .set_as_working_manifold();                                                      }
 
@@ -1238,11 +1377,11 @@ inline FiniteElement::FiniteElement
   const tag::lagrange &, const tag::OfDegree &, size_t deg,
   const tag::Straight &, const tag::IncrementalBasis & )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 2 );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1251,20 +1390,22 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Triangle::P2::Straight::Incremental ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
-	work_manif .set_as_working_manifold();                                                         }
+	work_manif .set_as_working_manifold();                                                           }
 
 
 inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Triangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 2 );
 	assert ( false );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1273,6 +1414,8 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Triangle::P2::Curved ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
 	work_manif .set_as_working_manifold();                                                      }
 
@@ -1281,11 +1424,11 @@ inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Quadrangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 1 );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1294,6 +1437,8 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Quadrangle::Q1 ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
 	work_manif .set_as_working_manifold();                                                      }
 
@@ -1302,11 +1447,11 @@ inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Quadrangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Straight & )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 2 );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1315,8 +1460,10 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Quadrangle::Q2::Straight ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
-	work_manif .set_as_working_manifold();                                                      }
+	work_manif .set_as_working_manifold();                                                        }
 
 
 inline FiniteElement::FiniteElement
@@ -1324,11 +1471,11 @@ inline FiniteElement::FiniteElement
   const tag::lagrange &, const tag::OfDegree &, size_t deg,
   const tag::Straight &, const tag::IncrementalBasis & )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 2 );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1337,20 +1484,22 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
-	work_manif .set_as_working_manifold();                                                         }
+	work_manif .set_as_working_manifold();                                                             }
 
 
 inline FiniteElement::FiniteElement
 (	const tag::WithMaster &, const tag::Quadrangle &,
 	const tag::lagrange &, const tag::OfDegree &, size_t deg, const tag::Curved & )
 	
-:	core { nullptr }
+:	core { nullptr }, weak { false }
 
 {	assert ( deg == 2 );
 	assert ( false );
 
-	// we keep the working manifold and restaure it at the end
+	// we keep the working manifold and restore it at the end
 	Manifold work_manif = Manifold::working;
 	
 	Manifold RR2_master ( tag::Euclid, tag::of_dim, 2 );
@@ -1359,18 +1508,80 @@ inline FiniteElement::FiniteElement
 	// Function xi = xi_eta [0], eta = xi_eta [1];
 
 	this->core = new FiniteElement::WithMaster::Quadrangle::Q2::Curved ( RR2_master );
+	assert ( this->core->counter == 0 );
+	this->core->counter = 1;
 	
 	work_manif .set_as_working_manifold();                                                      }
 
 
+inline void FiniteElement::conditionally_dispose_core ( )
+
+{	if ( this->core )
+	if ( not this->weak )
+	{	assert ( this->core->counter > 0 );
+			this->core->counter --;
+			if ( this->core->counter == 0 ) delete this->core;  }  }
+
+inline FiniteElement::~FiniteElement ( )
+
+{	this->conditionally_dispose_core();  }
+
+
+inline FiniteElement::FiniteElement ( const FiniteElement & arg )
+// copying a FiniteElement makes the copy strong
+
+:	core { arg .core }, weak { false }
+
+{ this->core->counter ++;  }
+
+	
+inline FiniteElement::FiniteElement ( const FiniteElement && arg )
+// cannot move a weak FiniteElement
+	
+:	core { arg .core }, weak { false }
+
+{ assert ( not arg .weak );
+	this->core->counter ++;   }
+
+inline FiniteElement & FiniteElement::operator= ( const FiniteElement & arg )
+// copying a FiniteElement makes the copy strong
+
+{	this->conditionally_dispose_core();
+	this->core = arg .core;
+	this->core->counter ++;
+	this->weak = false;
+	return * this;          }
+
+
+inline FiniteElement & FiniteElement::operator= ( const FiniteElement && arg )
+// cannot move a weak FiniteElement
+
+{	this->conditionally_dispose_core();
+	assert ( not arg .weak );
+	this->core = arg .core;
+	this->weak = false;
+	this->core->counter ++;   
+	return * this;            }
+
+	
 inline Integrator FiniteElement::set_integrator
 ( const tag::gauss &, const tag::gauss_quadrature & q )
 	
 { FiniteElement::WithMaster * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::WithMaster * > ( this->core );
-	this_core->integr .core =
+	Integrator::Gauss * integ =
 		new Integrator::Gauss ( q, tag::from_finite_element_with_master, *this );
-	return this_core->integr;                                                    }
+	this_core->integr .core = integ;
+	assert ( this_core->integr .core->counter == 0 );
+	this_core->integr .core->counter = 1;
+
+  integ->finite_element = *this;
+	// due to the above copy operation, the counter has increased one unit
+	assert ( this_core->counter > 0 );
+	this_core->counter --;
+	integ->finite_element .weak = true;
+	
+	return this_core->integr;                                                       }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -1803,50 +2014,41 @@ class FiniteElement::StandAlone::TypeOne::Square
 inline FiniteElement::FiniteElement  // no master, stand-alone
 ( const tag::Triangle &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { new FiniteElement::StandAlone::TypeOne::Triangle() }, weak { false }
 
-{	assert ( deg == 1 );
-
-	this->core = new FiniteElement::StandAlone::TypeOne::Triangle();  }
+{	assert ( deg == 1 );  }
 
 
 inline FiniteElement::FiniteElement  // no master, stand-alone
 ( const tag::Quadrangle &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { new FiniteElement::StandAlone::TypeOne::Quadrangle() }, weak { false }
 
-{	assert ( deg == 1 );
-
-	this->core = new FiniteElement::StandAlone::TypeOne::Quadrangle();  }
+{	assert ( deg == 1 );  }
 
 
 inline FiniteElement::FiniteElement  // no master, stand-alone
 ( const tag::Rectangle &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { new FiniteElement::StandAlone::TypeOne::Rectangle() }, weak { false }
 
-{	assert ( deg == 1 );
-
-	this->core = new FiniteElement::StandAlone::TypeOne::Rectangle();  }
+{	assert ( deg == 1 );  }
 
 
 inline FiniteElement::FiniteElement  // no master, stand-alone
 ( const tag::Square &, const tag::lagrange &, const tag::OfDegree &, size_t deg )
 	
-:	core { nullptr }
+:	core { new FiniteElement::StandAlone::TypeOne::Square() }, weak { false }
 
-{	assert ( deg == 1 );
-
-	this->core = new FiniteElement::StandAlone::TypeOne::Square();  }
+{	assert ( deg == 1 );  }
 
 
 inline Integrator FiniteElement::set_integrator ( const tag::HandCoded & )
 	
 { FiniteElement::StandAlone::TypeOne * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->core );
-	this_core->integr .core =
-		new Integrator::HandCoded ( tag::from_finite_element, *this );
-	return this_core->integr;                                                         }
+	this_core->integr .core = new Integrator::HandCoded ( tag::from_finite_element, *this );
+	return this_core->integr;                                                                         }
 
 
 }  // end of  namespace maniFEM
