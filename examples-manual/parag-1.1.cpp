@@ -25,6 +25,9 @@ int main ()
 	Cell NE ( tag::vertex );  x(NE) =  1.;  y(NE) =  1.;  z(NE) =  0.;
 	Cell NW ( tag::vertex );  x(NW) = -1.;  y(NW) =  1.;  z(NW) =  1.;
 
+	// alternative syntax for declaring a vertex :
+	// Cell SW ( tag::vertex, tag::of_coords, { -1., 0., 0. } )
+	
 	// we access the coordinates of a point using the () operator :
 	cout << "coordinates of NW : " << x(NW) << " " << y(NW) << " " << z(NW) << endl;
 	
@@ -37,26 +40,22 @@ int main ()
 	// and now the rectangle :
 	Mesh rect_mesh ( tag::rectangle, south, east, north, west );
 	 
-	// We may want to visualize the resulting mesh.
-	// Here is one way to export the mesh in the "msh" format :
+	// we may want to visualize the resulting mesh
+	// here is one way to export the mesh in the "msh" format :
 	rect_mesh.export_to_file ( tag::msh, "rectangle.msh");
-	// rect_mesh.draw_ps ("rectangle.eps");
+
+	// or, directly draw a postscript file :
+	// rect_mesh.draw_ps ("rectangle.eps")
 	
-	// Let's define a symbolic function to integrate
+	// let's define two symbolic functions
 	Function f = x*x + 1/(5+y), g = x*y;
 
-	// and compute its integral on the rectangle, using Gauss quadrature with 9 points :
-	Integrator integ ( tag::Gauss, tag::quad_9 ), iii = integ;
+	// and compute their integral on the rectangle, using Gauss quadrature with 9 points :
+	Integrator integr ( tag::Gauss, tag::quad_9 );
 
-	Mesh::Iterator it = rect_mesh .iterator ( tag::over_cells, tag::of_max_dim );
-	for ( it .reset(); it .in_range(); it++ )
-	{	integ .dock_on ( *it );
-		// std::cout << integ (f) << std::endl;
-	}
-	
-	// cout << "integral of f " << integ ( f, tag::on, rect_mesh ) << endl;
-	// cout << "integral of g " << integ ( g, tag::on, rect_mesh ) << endl;
+	cout << "integral of f " << integr ( f, tag::on, rect_mesh ) << endl;
+	cout << "integral of g " << integr ( g, tag::on, rect_mesh ) << endl;
 		
-	 cout << "produced file rectangle.msh" << endl;
+	cout << "produced file rectangle.msh" << endl;
 
 }  // end of main

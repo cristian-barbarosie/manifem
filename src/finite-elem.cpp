@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2022.03.12
+// finite-elem.cpp 2022.03.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -457,8 +457,8 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 		f = f .replace ( tran->geom_coords [i], tran->back_geom_coords [i] );
 
 	double res = 0.;
-	std::vector < double > ::iterator it_weight = this->weights .begin();
-	for ( std::vector < Cell > ::iterator it_point = this->points .begin();
+	std::vector < double > ::const_iterator it_weight = this->weights .begin();
+	for ( std::vector < Cell > ::const_iterator it_point = this->points .begin();
 	      it_point != this->points .end(); it_point++                      )
 	{	assert ( it_weight != this->weights .end() );
 		Cell Gauss_point = *it_point;
@@ -468,13 +468,48 @@ double Integrator::Gauss::action ( Function f, const FiniteElement & fe )
 	assert ( it_weight == this->weights .end() );
 	return res;                                                                        }
 
-//------------------------------------------------------------------------------------------------------//
 
-double Integrator::HandCoded::action ( Function f, const FiniteElement & )
+double Integrator::Gauss::action ( Function f )
 // virtual from Integrator::Core
 
 // assumes the finite element is already docked on a cell
+// thus, fe_core->transf is well defined
 
+{	return this->action ( f, this->finite_element );  }
+
+
+double Integrator::Gauss::action ( const Function & f, const tag::On &, const Cell & cll )
+// virtual from Integrator::Core
+
+{	this->finite_element .dock_on ( cll );
+	return this->action ( f, this->finite_element );  }
+
+
+double Integrator::Gauss::action ( const Function & f, const tag::On &, const Mesh & msh )
+// virtual from Integrator::Core
+
+{	Mesh::Iterator it = msh .iterator ( tag::over_cells_of_max_dim );
+	double res = 0.;
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell cll = *it;
+		res += this->action ( f, tag::on, cll );  }
+	return res;                                                                            }
+
+
+double Integrator::HandCoded::action ( Function f, const FiniteElement & )
+// virtual from Integrator::Core
+{	assert ( false );  return 0.;   }
+
+double Integrator::HandCoded::action ( Function f )
+// virtual from Integrator::Core
+{	assert ( false );  return 0.;   }
+
+double Integrator::HandCoded::action ( const Function & f, const tag::On &, const Cell & cll )
+// virtual from Integrator::Core
+{	assert ( false );  return 0.;   }
+
+double Integrator::HandCoded::action ( const Function & f, const tag::On &, const Mesh & msh )
+// virtual from Integrator::Core
 {	assert ( false );  return 0.;   }
 
 //------------------------------------------------------------------------------------------------------//
@@ -1112,7 +1147,7 @@ void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll )
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                        }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -1205,7 +1240,7 @@ void FiniteElement::WithMaster::Quadrangle::Q1::dock_on ( const Cell & cll, cons
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                        }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -1283,7 +1318,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on ( const Cell &
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                        }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -1390,7 +1425,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::dock_on
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                        }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -1483,7 +1518,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on (
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                    }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                        }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -1590,7 +1625,7 @@ void FiniteElement::WithMaster::Quadrangle::Q2::Straight::Incremental::dock_on
 			xyz_c = xyz_c && ( ( xP * psi_P + xQ * psi_Q + xR * psi_R + xS * psi_S ) / 4. );  }
 		assert ( xyz_c .nb_of_components() == geom_dim );
 
-		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                       }
+		this->transf = Function ( tag::immersion, xyz, xi_eta, xyz_c );                        }
 
 	this->base_fun_1 .clear();
 	this->base_fun_1 .insert ( std::pair < Cell::Core*, Function >
@@ -1636,7 +1671,7 @@ void FiniteElement::Core::dock_on
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "you don't have to provide first vertex for this kind of finite element"
             << std::endl;
-	exit ( 1 );                                                                                 }
+	exit ( 1 );                                                                                   }
 
 
 void FiniteElement::Core::dock_on
@@ -1648,7 +1683,7 @@ void FiniteElement::Core::dock_on
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": " << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "you don't have to provide first vertex for this kind of finite element"
             << std::endl;
-	exit ( 1 );                                                                                 }
+	exit ( 1 );                                                                                   }
 
 	
 //------------------------------------------------------------------------------------------------------//

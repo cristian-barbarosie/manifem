@@ -101,13 +101,13 @@ class Integrator
 
 	// operator() integrates a given function on a given mesh or cell
 	
-	inline double operator() ( const Function & f, const tag::On &, const Cell & cll );
-	inline double operator() ( const Function & f, const tag::On &, const Mesh & msh );
+	inline double operator() ( const Function & f, const tag::On &, const Cell & cll ) const;
+	inline double operator() ( const Function & f, const tag::On &, const Mesh & msh ) const;
 
 	// there is also an operator() without a domain,
 	// for integrators attached to a finite element,
 	// in the event that the finite element is already docked on a cell
-	inline double operator() ( const Function & f );
+	inline double operator() ( const Function & f ) const;
 
 	// we assume the function f is already expressed in terms of master coordinates
 	// (it is composed with fe.core->transf)
@@ -257,10 +257,11 @@ class Integrator::Core
 	// destructor
 
 	virtual ~Core()  { };
-
-	// operator()
 	
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
+	virtual double action ( Function f ) = 0;
+	virtual double action ( const Function & f, const tag::On &, const Cell & cll ) = 0;
+	virtual double action ( const Function & f, const tag::On &, const Mesh & msh ) = 0;
 
 	// 'pre_compute' and 'retrieve_precomputed' are only meaningful for HandCoded integrators
 	virtual void pre_compute ( const std::vector < Function > & bf,
@@ -277,10 +278,26 @@ class Integrator::Core
 
 //-----------------------------------------------------------------------------------------//
 
+
 inline double Integrator::operator()
 ( const Function & f, const tag::ThroughDockedFiniteElement &, const FiniteElement & fe )
 
 {	return this->core->action ( f, fe );  }
+
+
+inline double Integrator::operator() ( const Function & f ) const
+
+{	return this->core->action ( f );  }
+
+
+inline double Integrator::operator() ( const Function & f, const tag::On &, const Cell & cll ) const
+
+{	return this->core->action ( f, tag::on, cll );  }
+
+
+inline double Integrator::operator() ( const Function & f, const tag::On &, const Mesh & msh ) const
+
+{	return this->core->action ( f, tag::on, msh );  }
 
 
 inline void Integrator::pre_compute  // only meaningful for HandCoded integrators
@@ -327,10 +344,11 @@ class Integrator::Gauss : public Integrator::Core
 	Gauss ( const tag::gauss_quadrature & q,
 	        const tag::FromFiniteElementWithMaster &, FiniteElement & fe );
 
-	// operator()
-	
 	double action ( Function f, const FiniteElement & fe );
-	// virtual from Integrator::Core
+	double action ( Function f );
+	double action ( const Function & f, const tag::On &, const Cell & cll );
+	double action ( const Function & f, const tag::On &, const Mesh & msh );
+  // virtual from Integrator::Core
 	
 	//  pre_compute  and  retrieve_precomputed  are virtual from Integrator::Core,
 	// here execution forbidden
@@ -370,9 +388,10 @@ class Integrator::HandCoded : public Integrator::Core
 	:	fe { f }
 	{	}
 
-	// operator()
-	
 	double action ( Function f, const FiniteElement & fe );
+	double action ( Function f );
+	double action ( const Function & f, const tag::On &, const Cell & cll );
+	double action ( const Function & f, const tag::On &, const Mesh & msh );
 	// virtual from Integrator::Core
 	
 	// this type of integrator benefits from an early declaration of
