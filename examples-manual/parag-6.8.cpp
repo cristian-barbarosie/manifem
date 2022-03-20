@@ -1,7 +1,7 @@
 
 // example presented in paragraph 6.8 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// comparison between Lagrange Q1 and Q2 finite elements, quadrangular, incremental basis
+// comparison between Lagrange Q1 and Q2 finite elements, quadrangular
 // solve the Laplace operator on a square with Dirichlet boundary conditions
 
 #include "maniFEM.h"
@@ -42,8 +42,7 @@ int main ()
 	Function x = xy [0], y = xy [1];
 	Function r2 = x*x + y*y;
 
-	Cell A ( tag::vertex ); //  x (A) = 0.;  y (A) = 0.;
-	xy(A) = { 0., 0. };
+	Cell A ( tag::vertex );  x (A) = 0.;  y (A) = 0.;
 	Cell B ( tag::vertex );  x (B) = 1.;  y (B) = 0.;
 	Cell C ( tag::vertex );  x (C) = 1.;  y (C) = 1.;
 	Cell D ( tag::vertex );  x (D) = 0.;  y (D) = 1.;
@@ -169,8 +168,8 @@ int main ()
 						<< ", error " << std::abs ( integral - exact ) << std::endl;
 
 	// declare the type of finite element
-	FiniteElement fe2 ( tag::with_master, tag::quadrangle, tag::Lagrange,
-	                    tag::of_degree, 2, tag::straight, tag::incremental_basis );
+	FiniteElement fe2 ( tag::with_master, tag::quadrangle,
+	                    tag::Lagrange, tag::of_degree, 2, tag::straight );
 	fe2 .set_integrator ( tag::Gauss, tag::quad_9 );
 
 	{ // just a block of code for hiding 'it' and 'counter'
@@ -287,7 +286,7 @@ int main ()
 		Cell Q = seg .tip();
 		i = numbering [ seg .get_positive() ];
 		double xm = (x(P)+x(Q))/2., ym = (y(P)+y(Q))/2., r2m = xm*xm + ym*ym;
-		impose_value_of_unknown ( matrix_A2, vector_b2, i, r2m/2. - (r2(P)+r2(Q))/4. );  }
+		impose_value_of_unknown ( matrix_A2, vector_b2, i, r2m );             }
 	} // just a block of code 
 	
 	// solve the system of linear equations

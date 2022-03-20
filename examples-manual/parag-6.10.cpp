@@ -1,22 +1,21 @@
 
-// example presented in paragraph 6.5 of the manual
+// example presented in paragraph 6.10 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// automatic numbering of vertices
-
+// fast, hand-coded finite elements
+// solve the Laplace operator with Dirichlet boundary conditions
 
 #include "maniFEM.h"
 #include "math.h"
 
 #include <fstream>
-#include <ctime>
 #include <Eigen/Sparse>
 
 using namespace maniFEM;
 
 	
 void impose_value_of_unknown
-(	Eigen::SparseMatrix <double> & matrix_A, Eigen::VectorXd & vector_b,
-	size_t i, double val                                                 )
+(	Eigen::SparseMatrix < double > & matrix_A, Eigen::VectorXd & vector_b,
+	size_t i, double val                                                   )
 
 // in a system of linear equations, destroy equation 'i' and impose u(i) = val
 // change also column 'i' of the matrix, just to preserve symmetry
@@ -40,28 +39,32 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xy [0], y = xy [1];
 
-	clock_t started_at = clock();
-
 	// declare the type of finite element
-	// FiniteElement fe ( tag::with_master, tag::quadrangle,
-	//                    tag::Lagrange, tag::of_degree, 1, tag::enumerate_cells );
-	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
-	Cell::Numbering & numbering = fe .build_global_numbering ( tag::vertices );
+	FiniteElement fe ( tag::rectangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe .set_integrator ( tag::hand_coded );
 
 	// build a 10x10 square mesh
-	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
-	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
-	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
-	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
+	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
+	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
+	Cell C ( tag::vertex );  x(C) = 1.;   y(C) = 1.;
+	Cell D ( tag::vertex );  x(D) = 0.;   y(D) = 1.;
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
-	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 12 );
 	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
-	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 10 );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 12 );
 	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	std::cout << ABCD .number_of ( tag::vertices ) << " vertices" << std::endl;
-	std::cout << numbering .size() << " numbering" << std::endl;
+	// a different solution for numbering vertices is shown in paragraph 6.4 of the manual
+	// below we use an std::map<Cell,size_t>
+	// one could use instead a Cell::Numbering::Map, see parag-6.3.cpp
+	std::map < Cell, size_t > numbering;
+	{ // just a block of code for hiding 'it' and 'counter'
+	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
+	size_t counter = 0;
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell V = *it;  numbering [V] = counter;  ++counter;  }
+	assert ( counter == numbering .size() );
+	} // just a block of code
 
 	size_t size_matrix = numbering .size();
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
@@ -71,22 +74,16 @@ int main ()
 	// since we will be working with a mesh of squares,
 	// there will be about 9 non-zero elements per column
 	// the diagonal entry plus eight neighbour vertices
-	
-	// unfortunately, in some cases the numbering provided by 'fe' is not contiguous
-	// so we fill the main diagonal with ones
-	// then we put zero for vertices belonging to ABCD
-	for ( size_t i = 0; i < size_matrix; i++ )
-		matrix_A .insert ( i, i ) = 1.;
-	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
-	for ( it .reset(); it .in_range(); it++ )
-	{	Cell P = *it;
-		size_t i = numbering [ P ];
-		matrix_A .coeffRef ( i, i ) = 0.;  }
-	} // just a block of code 
 
-	Eigen::VectorXd vector_b ( size_matrix );
+	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
 	vector_b .setZero();
+
+	// hand-coded integrators require an early declaration of
+	// the integrals we intend to compute later (after docking 'fe' on a cell)
+	Function bf1 ( tag::basis_function, tag::within, fe ),
+	         bf2 ( tag::basis_function, tag::within, fe );
+	integ .pre_compute ( tag::for_given, tag::basis_functions, bf1, bf2,
+	    tag::integral_of, { bf1 .deriv(x) * bf2 .deriv(x) + bf1 .deriv(y) * bf2 .deriv(y) } );
 
 	// run over all square cells composing ABCD
 	{ // just a block of code for hiding 'it'
@@ -101,7 +98,7 @@ int main ()
 		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
 			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
-			// 					<< x(W) << "," << y(W) << ") " << numbering[W] << std::endl;
+			// 					<< x(W) << "," << y(W) << ") " << numbering[W]) << std::endl;
 			Function psiV = fe .basis_function (V),
 			         psiW = fe .basis_function (W),
 			         d_psiV_dx = psiV .deriv (x),
@@ -109,8 +106,11 @@ int main ()
 			         d_psiW_dx = psiW .deriv (x),
 			         d_psiW_dy = psiW .deriv (y);
 			// 'fe' is already docked on 'small_square' so this will be the domain of integration
-			matrix_A .coeffRef ( numbering [V], numbering [W] ) +=
-				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
+			std::vector < double > result = fe .integrate 
+				( tag::pre_computed, tag::replace, bf1, tag::by, psiV, tag::replace, bf2, tag::by, psiW );
+			assert ( result .size() == 1 );
+			matrix_A .coeffRef ( numbering[V], numbering[W] ) += result [0];
+		}  }  // end of for loops over vertices, end of for loop over cells
 	} // just a block of code 
 
 	// impose Dirichlet boundary conditions  u = xy
@@ -155,17 +155,18 @@ int main ()
 //	std::cout << std::endl;
 
 	// solve the system of linear equations
-	Eigen::ConjugateGradient < Eigen::SparseMatrix<double>,
+	Eigen::ConjugateGradient < Eigen::SparseMatrix < double >,
 	                           Eigen::Lower|Eigen::Upper    > cg;
-	cg.compute ( matrix_A );
+	cg .compute ( matrix_A );
 
-	Eigen::VectorXd vector_sol = cg .solve ( vector_b );
+	vector_sol = cg .solve ( vector_b );
 	if ( cg .info() != Eigen::Success )
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
 		
-	ABCD.export_to_file ( tag::msh, "square-Dirichlet.msh", numbering );
-	{ // just a block of code for hiding variables
+	ABCD .export_to_file ( tag::msh, "square-Dirichlet.msh", numbering );
+
+  { // just a block of code for hiding variables
 	std::ofstream solution_file ("square-Dirichlet.msh", std::fstream::app );
 	solution_file << "$NodeData" << std::endl;
 	solution_file << "1" << std::endl;   // one string follows
@@ -175,20 +176,16 @@ int main ()
 	solution_file << "3" << std::endl;   // three integers follow
 	solution_file << "0" << std::endl;   // time step [??]
 	solution_file << "1" << std::endl;  // scalar values of u
-	solution_file << ABCD .number_of ( tag::vertices ) << std::endl;  // number of values listed below
-	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
-	for ( it .reset(); it .in_range(); it++ )
+	solution_file << ABCD.number_of ( tag::vertices ) << std::endl;  // number of values listed below
+	Mesh::Iterator it = ABCD.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering [P];
+		size_t i = numbering[P];
 		solution_file << i + 1 << " " << vector_sol[i] << std::endl;   }
 	} // just a block of code
 
 	std::cout << "produced file square-Dirichlet.msh" << std::endl;
 
-	clock_t finished_at = clock();
-	std::cout << "time taken : "  << ((float)(finished_at-started_at))/CLOCKS_PER_SEC
-            << " seconds" << std::endl;
-	
 	return 0;
 
 }  // end of main

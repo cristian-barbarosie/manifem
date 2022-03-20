@@ -1,7 +1,8 @@
 
 // example presented in paragraph 6.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// triangular Lagrange P1 finite elements, 1D integrals, 
+// quadrilateral Lagrange Q1 finite elements
+// solve the Laplace operator with Dirichlet boundary conditions
 
 #include "maniFEM.h"
 #include "math.h"
@@ -10,11 +11,11 @@
 #include <Eigen/Sparse>
 
 using namespace maniFEM;
-using namespace std;
 
+	
 void impose_value_of_unknown
 (	Eigen::SparseMatrix < double > & matrix_A, Eigen::VectorXd & vector_b,
-	size_t i, double val                                                 )
+	size_t i, double val                                                   )
 
 // in a system of linear equations, destroy equation 'i' and impose u(i) = val
 // change also column 'i' of the matrix, just to preserve symmetry
@@ -39,28 +40,24 @@ int main ()
 	Function x = xy [0], y = xy [1];
 
 	// declare the type of finite element
-	FiniteElement fe ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ = fe .set_integrator ( tag::Gauss, tag::tri_6 );
-	FiniteElement fe_bdry ( tag::with_master, tag::segment, tag::Lagrange, tag::of_degree, 1 );
-	Integrator integ_bdry = fe_bdry .set_integrator ( tag::Gauss, tag::seg_3 );
+	FiniteElement fe ( tag::with_master, tag::quadrangle, tag::Lagrange, tag::of_degree, 1 );
+	Integrator integ = fe .set_integrator ( tag::Gauss, tag::quad_4 );
 
 	// build a 10x10 square mesh
-	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
-	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
-	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
-	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
+	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
+	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
+	Cell C ( tag::vertex );  x(C) = 1.;   y(C) = 1.;
+	Cell D ( tag::vertex );  x(D) = 0.;   y(D) = 1.;
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
-	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
+	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 12 );
 	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
-	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 10 );
-	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA, tag::with_triangles );
+	Mesh DA ( tag::segment, D .reverse(), A, tag::divided_in, 12 );
+	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
 
-	// below we use a Cell::Numbering::Map
-	// which is essentially an  std::map < Cell, size_t >  disguised
-	// in order to keep the presentation simple, we do not show
-	// this different syntax in paragraph 6.3 of the manual
-	// a more efficient numbering is shown in paragraph 6.4 of the manual
-	Cell::Numbering::Map numbering;
+	// a different solution for numbering vertices is shown in paragraph 6.4 of the manual
+	// below we use an std::map<Cell,size_t>
+	// one could use instead a Cell::Numbering::Map, see parag-6.3.cpp
+	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
 	size_t counter = 0;
@@ -69,11 +66,16 @@ int main ()
 	assert ( counter == numbering .size() );
 	} // just a block of code
 
-	size_t size_matrix = ABCD.number_of ( tag::vertices );
-	assert ( size_matrix == numbering .size() );
+	size_t size_matrix = numbering .size();
 	std::cout << "global matrix " << size_matrix << "x" << size_matrix << std::endl;
-	Eigen::SparseMatrix < double > matrix_A ( size_matrix, size_matrix );
-	Eigen::VectorXd vector_b ( size_matrix );
+	Eigen::SparseMatrix <double> matrix_A ( size_matrix, size_matrix );
+	
+	matrix_A .reserve ( Eigen::VectorXi::Constant ( size_matrix, 9 ) );
+	// since we will be working with a mesh of squares,
+	// there will be about 9 non-zero elements per column
+	// the diagonal entry plus eight neighbour vertices
+
+	Eigen::VectorXd vector_b ( size_matrix ), vector_sol ( size_matrix );
 	vector_b .setZero();
 
 	// run over all square cells composing ABCD
@@ -88,6 +90,8 @@ int main ()
 		for ( it1 .reset(); it1 .in_range(); it1++ )
 		for ( it2 .reset(); it2 .in_range(); it2++ )
 		{	Cell V = *it1, W = *it2;  // V may be the same as W, no problem about that
+			// std::cout << "vertices V=(" << x(V) << "," << y(V) << ") " << numbering[V] << ", W=("
+			// 					<< x(W) << "," << y(W) << ") " << numbering[W]) << std::endl;
 			Function psiV = fe .basis_function (V),
 			         psiW = fe .basis_function (W),
 			         d_psiV_dx = psiV .deriv (x),
@@ -99,26 +103,7 @@ int main ()
 				fe .integrate ( d_psiV_dx * d_psiW_dx + d_psiV_dy * d_psiW_dy );  }  }
 	} // just a block of code 
 
-	Function heat_source = y*y;
-	// impose Neumann boundary conditions du/dn = heat_source
-	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = DA .iterator ( tag::over_segments );
-	for ( it .reset(); it .in_range(); it++ )
-	{	Cell seg = *it;
-		fe_bdry .dock_on ( seg );
-		Cell V = seg .base() .reverse();
-		assert ( V .is_positive() );
-		size_t i = numbering [V];
-		Function psiV = fe_bdry .basis_function (V);
-		vector_b [i] += fe_bdry .integrate ( heat_source * psiV );
-		Cell W = seg .tip();
-		assert ( W .is_positive() );
-		size_t j = numbering [W];
-		Function psiW = fe_bdry .basis_function (W);
-		vector_b [j] += fe_bdry .integrate ( heat_source * psiW );   }
-	} // just a block of code 
-	
-	// impose Dirichlet boundary conditions  u = 0
+	// impose Dirichlet boundary conditions  u = xy
 	{ // just a block of code for hiding 'it'
 	Mesh::Iterator it = AB .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
@@ -130,47 +115,67 @@ int main ()
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering [P];
-		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
+		impose_value_of_unknown ( matrix_A, vector_b, i, y(P) );  }
 	} { // just a block of code for hiding 'it'
 	Mesh::Iterator it = CD .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
 		size_t i = numbering [P];
+		impose_value_of_unknown ( matrix_A, vector_b, i, x(P) );  }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = DA .iterator ( tag::over_vertices );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell P = *it;
+		size_t i = numbering [P];
 		impose_value_of_unknown ( matrix_A, vector_b, i, 0. );  }
 	} // just a block of code 
+	
+//	for ( size_t i = 0; i < size_matrix; i++ )
+//	{	std::cout << i << " ";
+//		for ( size_t j = 0; j < size_matrix; j++ )
+//			std::cout << matrix_A.coeffRef (i,j) << " ";
+//		std::cout << std::endl;                           }
+
+//	std::cout << std::endl;
+//	for ( size_t j = 0; j < size_matrix; j++ )
+//		std::cout << vector_b (j) << " ";
+//	std::cout << std::endl;
+//	for ( size_t i = 0; i < size_matrix; i++ )
+//		std::cout << vector_sol (i) << " ";
+//	std::cout << std::endl;
 
 	// solve the system of linear equations
 	Eigen::ConjugateGradient < Eigen::SparseMatrix < double >,
 	                           Eigen::Lower|Eigen::Upper    > cg;
 	cg .compute ( matrix_A );
 
-	Eigen::VectorXd vector_sol = cg .solve ( vector_b );
+	vector_sol = cg .solve ( vector_b );
 	if ( cg .info() != Eigen::Success )
 	{	std::cout << "Eigen solver.solve failed" << std::endl;
 		exit ( 0 );                                            }
 		
-	ABCD .export_to_file ( tag::msh, "square-Neumann.msh", numbering );
-	{ // just a block of code for hiding variables
-	ofstream solution_file ("square-Neumann.msh", fstream::app );
-	solution_file << "$NodeData" << endl;
-	solution_file << "1" << endl;   // one string follows
-	solution_file << "\"temperature\"" << endl;
-	solution_file << "1" << endl;   //  one real follows
-	solution_file << "0.0" << endl;  // time [??]
-	solution_file << "3" << endl;   // three integers follow
-	solution_file << "0" << endl;   // time step [??]
-	solution_file << "1" << endl;  // scalar values of u
-	solution_file << ABCD .number_of ( tag::vertices ) << endl;  // number of values listed below
-	Mesh::Iterator it = ABCD .iterator ( tag::over_vertices );
-	for ( it .reset(); it .in_range(); it++ )
+	ABCD .export_to_file ( tag::msh, "square-Dirichlet.msh", numbering );
+
+  { // just a block of code for hiding variables
+	std::ofstream solution_file ("square-Dirichlet.msh", std::fstream::app );
+	solution_file << "$NodeData" << std::endl;
+	solution_file << "1" << std::endl;   // one string follows
+	solution_file << "\"temperature\"" << std::endl;
+	solution_file << "1" << std::endl;   //  one real follows
+	solution_file << "0.0" << std::endl;  // time [??]
+	solution_file << "3" << std::endl;   // three integers follow
+	solution_file << "0" << std::endl;   // time step [??]
+	solution_file << "1" << std::endl;  // scalar values of u
+	solution_file << ABCD.number_of ( tag::vertices ) << std::endl;  // number of values listed below
+	Mesh::Iterator it = ABCD.iterator ( tag::over_vertices );
+	for ( it.reset(); it.in_range(); it++ )
 	{	Cell P = *it;
-		size_t i = numbering [P];
+		size_t i = numbering[P];
 		solution_file << i + 1 << " " << vector_sol[i] << std::endl;   }
 	} // just a block of code
 
-	std::cout << "produced file square-Neumann.msh" << std::endl;
+	std::cout << "produced file square-Dirichlet.msh" << std::endl;
 
 	return 0;
 
 }  // end of main
-

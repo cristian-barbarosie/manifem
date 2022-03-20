@@ -1,8 +1,8 @@
 
 // example presented in paragraph 6.6 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// comparison between Lagrange P1 and P2 finite elements, triangular, incremental basis
-// solve the Laplace operator on a triangle with Dirichlet boundary conditions
+// comparison between Lagrange P1 and P2 finite elements, triangular
+// solve the Laplace operator on a disk with Dirichlet boundary conditions
 
 #include "maniFEM.h"
 #include "math.h"
@@ -42,25 +42,24 @@ int main ()
 	Function x = xy [0], y = xy [1];
 	Function r2 = x*x + y*y;
 
-	Cell A ( tag::vertex );  x (A) = -1.;  y (A) = 0.;
-	Cell B ( tag::vertex );  x (B) =  1.;  y (B) = 0.;
-	Cell C ( tag::vertex );  x (C) =  0.;  y (C) = 1.7;
+	Manifold circle_manif = RR2 .implicit ( x*x + y*y == 1. );
 
-	Mesh AB ( tag::segment, A. reverse(), B, tag::divided_in, 20 );
-	Mesh BC ( tag::segment, B. reverse(), C, tag::divided_in, 20 );
-	Mesh CA ( tag::segment, C. reverse(), A, tag::divided_in, 20 );
+	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
+	Mesh circle ( tag::frontal, tag::start_at, A, tag::desired_length, 0.1 );
 
-	Mesh ABC ( tag::triangle, AB, BC, CA );
-
-	Mesh bdry ( tag::join, AB, BC, CA );
+	RR2 .set_as_working_manifold();
+	Mesh disk ( tag::frontal, tag::boundary, circle, tag::desired_length, 0.1 );
 
 	// we solve the elliptic equation
-	//   - lapl u = -4
-	// whose exact solution is  x^2+y^2
-	// whose integral is 
+	//   - lapl u + 8 (x^2+y^2) / (1+x^2+y^2)^2 u = 4 / (1+x^2+y^2)^2
+	// whose exact solution is  1 / (1+x^2+y^2)
+	// whose integral is  pi ln 2
 	
-	const double exact = 1.7 / 6. + 1.7 * 1.7 * 1.7 / 6.;
+	const double exact = 4. * std::atan (1.) * std::log (2.);
 	std::cout << "integral, exact " << exact << std::endl;
+
+	Function alpha = 8. * r2 / (1+r2) / (1+r2),
+	         beta  = 4. / (1+r2) / (1+r2);
 
 	// declare the type of finite element
 	FiniteElement fe1 ( tag::with_master, tag::triangle, tag::Lagrange, tag::of_degree, 1 );
@@ -71,7 +70,7 @@ int main ()
 	std::map < Cell, size_t > numbering;
 	{ // just a block of code for hiding 'it' and 'counter'
 	size_t counter = 0;
-	Mesh::Iterator it_ver = ABC .iterator ( tag::over_vertices );
+	Mesh::Iterator it_ver = disk .iterator ( tag::over_vertices );
 	for ( it_ver .reset() ; it_ver .in_range(); it_ver ++ )
 	{	Cell V = *it_ver;  numbering [V] = counter;  ++ counter;  }
 	assert ( counter == numbering .size() );
@@ -89,9 +88,9 @@ int main ()
 	Eigen::VectorXd vector_b1 ( size_matrix );
 	vector_b1 .setZero();
 
-	// run over all triangular cells composing ABC
+	// run over all triangular cells composing disk
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = ABC .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = disk .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe1 .dock_on ( small_tri );
@@ -104,7 +103,7 @@ int main ()
 			Function psi_V = fe1 .basis_function ( V ),
 			         d_psi_V_dx = psi_V .deriv ( x ),
 			         d_psi_V_dy = psi_V .deriv ( y );
-			
+
 			Cell W = V;
 			while ( true )  // V may be the same as W, no problem about that
 			{	Function psi_W = fe1 .basis_function ( W ),
@@ -113,26 +112,27 @@ int main ()
 
 				// 'fe' is already docked on 'small_tri' so this will be the domain of integration
 				matrix_A1 .coeffRef ( numbering[V], numbering[W] ) +=
-					fe1 .integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy );
+					fe1 .integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy ) +
+					fe1 .integrate ( alpha * psi_V * psi_W );
 
 				Cell seg = small_tri .boundary() .cell_in_front_of ( W );
 				W = seg.tip();
 				if ( V == W ) break;
 			}  // end of while
 			
-			vector_b1 ( numbering[V] ) -= 4. * fe1 .integrate ( psi_V );
+			vector_b1 ( numbering[V] ) += fe1 .integrate ( beta * psi_V );
 			
 	}	}  // end of two for loops
 	} // just a block of code 
 
-	// impose Dirichlet boundary conditions  u = x^2 + y^2 = r2
+	// impose Dirichlet boundary conditions  u = 0.5
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = bdry .iterator ( tag::over_vertices );
+	Mesh::Iterator it = circle .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	// perhaps implement an iterator returning a vertex and a segment
 	{	Cell P = *it;
 		size_t i = numbering [P];
-		impose_value_of_unknown ( matrix_A1, vector_b1, i, r2(P) );        }
+		impose_value_of_unknown ( matrix_A1, vector_b1, i, 0.5 );          }
 	} // just a block of code 
 	
 	// solve the system of linear equations
@@ -147,9 +147,9 @@ int main ()
 
 	// now compute the integral of u
 	double integral = 0.;
-	// run over all triangular cells composing ABC
+	// run over all triangular cells composing disk
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = ABC .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = disk .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe1 .dock_on ( small_tri );
@@ -168,12 +168,12 @@ int main ()
 
 	// declare the type of finite element
 	FiniteElement fe2 ( tag::with_master, tag::triangle,
-	                    tag::Lagrange, tag::of_degree, 2, tag::straight, tag::incremental_basis );
+	                    tag::Lagrange, tag::of_degree, 2, tag::straight );
 	fe2 .set_integrator ( tag::Gauss, tag::tri_6 );
 
 	{ // just a block of code for hiding 'it' and 'counter'
 	size_t counter = numbering .size();
-	Mesh::Iterator it_seg = ABC .iterator ( tag::over_segments );
+	Mesh::Iterator it_seg = disk .iterator ( tag::over_segments );  // positive segments
 	for ( it_seg .reset() ; it_seg .in_range(); it_seg ++ )
 	{	Cell seg = *it_seg;  numbering [ seg ] = counter;  ++ counter;  }
 	assert ( counter == numbering .size() );
@@ -193,9 +193,9 @@ int main ()
 	Eigen::VectorXd vector_b2 ( size_matrix );
 	vector_b2 .setZero();
 
-	// run over all triangular cells composing ABC
+	// run over all triangular cells composing disk
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = ABC .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = disk .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe2 .dock_on ( small_tri );
@@ -213,9 +213,8 @@ int main ()
 			         d_psi_seg_V_dx = psi_seg_V .deriv ( x ),
 			         d_psi_seg_V_dy = psi_seg_V .deriv ( y );
 			Cell sV = seg .get_positive();
-			
 			Cell W = V;
-			while ( true )// V may be the same as W, no problem about that
+			while ( true )  // V may be the same as W, no problem about that
 			{	assert ( W == seg .base() .reverse() );
 				Function psi_W = fe2 .basis_function ( W ),
 				         d_psi_W_dx = psi_W .deriv ( x ),
@@ -227,38 +226,40 @@ int main ()
 
 				// 'fe' is already docked on 'small_tri' so this will be the domain of integration
 				matrix_A2 .coeffRef ( numbering[V], numbering[W] ) +=
-					fe2 .integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy );
+					fe2 .integrate ( d_psi_V_dx * d_psi_W_dx + d_psi_V_dy * d_psi_W_dy ) +
+					fe2 .integrate ( alpha * psi_V * psi_W );
 				matrix_A2 .coeffRef ( numbering[V], numbering[sW] ) +=
-					fe2 .integrate ( d_psi_V_dx * d_psi_seg_W_dx + d_psi_V_dy * d_psi_seg_W_dy );
+					fe2 .integrate ( d_psi_V_dx * d_psi_seg_W_dx + d_psi_V_dy * d_psi_seg_W_dy ) +
+					fe2 .integrate ( alpha * psi_V * psi_seg_W );
 				matrix_A2 .coeffRef ( numbering[sV], numbering[W] ) +=
-					fe2 .integrate ( d_psi_seg_V_dx * d_psi_W_dx + d_psi_seg_V_dy * d_psi_W_dy );
+					fe2 .integrate ( d_psi_seg_V_dx * d_psi_W_dx + d_psi_seg_V_dy * d_psi_W_dy ) +
+					fe2 .integrate ( alpha * psi_seg_V * psi_W );
 				matrix_A2 .coeffRef ( numbering[sV], numbering[sW] ) +=
-					fe2 .integrate ( d_psi_seg_V_dx * d_psi_seg_W_dx + d_psi_seg_V_dy * d_psi_seg_W_dy );
+					fe2 .integrate ( d_psi_seg_V_dx * d_psi_seg_W_dx + d_psi_seg_V_dy * d_psi_seg_W_dy ) +
+					fe2 .integrate ( alpha * psi_seg_V * psi_seg_W );
 
 				W = seg.tip();
 				if ( V == W ) break;
 				seg = small_tri .boundary() .cell_in_front_of ( W );
 			}  // end of while
 			
-			vector_b2 ( numbering[V] ) -= 4. * fe2 .integrate ( psi_V );
-			vector_b2 ( numbering[sV] ) -= 4. * fe2 .integrate ( psi_seg_V );
+			vector_b2 ( numbering[V] ) += fe2 .integrate ( beta * psi_V );
+			vector_b2 ( numbering[sV] ) += fe2 .integrate ( beta * psi_seg_V );
 			
 	}	}  // end of two for loops
 	} // just a block of code 
 
-	// impose Dirichlet boundary conditions  u = x^2 + y^2 = r2
+	// impose Dirichlet boundary conditions  u = 0.5
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = bdry .iterator ( tag::over_vertices );
+	Mesh::Iterator it = circle .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	// perhaps implement an iterator returning a vertex and a segment
 	{	Cell P = *it;
 		size_t i = numbering [P];
-		impose_value_of_unknown ( matrix_A2, vector_b2, i, r2(P) );
-		Cell seg = bdry .cell_in_front_of ( P, tag::surely_exists );
-		Cell Q = seg .tip();
+		impose_value_of_unknown ( matrix_A2, vector_b2, i, 0.5 );
+		Cell seg = circle .cell_in_front_of ( P, tag::surely_exists );
 		i = numbering [ seg .get_positive() ];
-		double xm = (x(P)+x(Q))/2., ym = (y(P)+y(Q))/2., r2m = xm*xm + ym*ym;
-		impose_value_of_unknown ( matrix_A2, vector_b2, i, 4. * r2m - 2. * r2(P) - 2. * r2(Q) );  }
+		impose_value_of_unknown ( matrix_A2, vector_b2, i, 0.5 );        }
 	} // just a block of code 
 	
 	// solve the system of linear equations
@@ -271,9 +272,9 @@ int main ()
 
 	// now compute the integral of u
 	integral = 0.;
-	// run over all triangular cells composing ABC
+	// run over all triangular cells composing disk
 	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = ABC .iterator ( tag::over_cells_of_max_dim );
+	Mesh::Iterator it = disk .iterator ( tag::over_cells_of_max_dim );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell small_tri = *it;
 		fe2 .dock_on ( small_tri );

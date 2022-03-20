@@ -139,10 +139,10 @@ int main ( )
 	{	Cell P = *it;
 		x(P) *= 0.8;  y(P) *= 0.8;
 		if ( z(P) > 1.3 )
-		{	x(P) = x(P) / ( 1. + 300. * std::pow ( z(P) - 1.3, 3. ) );
-			y(P) = y(P) / ( 1. + 300. * std::pow ( z(P) - 1.3, 3. ) );
-			z(P) = z(P) * ( 1. + 10. * ( z(P) - 1.3 ) * ( z(P) - 1.3 ) );  }
-		if ( z(P) > 0. ) z(P) *= 0.8;                                       }
+		{	x(P) /= 1. + 300. * std::pow ( z(P) - 1.3, 3. );
+			y(P) /= 1. + 300. * std::pow ( z(P) - 1.3, 3. );
+			z(P) *= 1. + 10. * ( z(P) - 1.3 ) * ( z(P) - 1.3 );  }
+		if ( z(P) > 0. ) z(P) *= 0.8;                              }
 
 	std::list < Mesh > ::iterator it1;
 	for ( it1 = lm .begin(); it1 != lm .end(); it1++ )
