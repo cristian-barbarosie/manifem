@@ -1,5 +1,5 @@
 
-// iterator.h 2022.02.22
+// iterator.h 2022.03.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -3440,109 +3440,11 @@ inline Mesh::Iterator Mesh::iterator
 {	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
                           tag::do_not_build_cells, tag::backwards             );  }
 	
-//-----------------------------------------------------------------------------//
-
-
-inline Mesh::Iterator Mesh::iterator ( const tag::OverCells &, const tag::OfMaxDim & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::AsTheyAre & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::RequireOrder & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::AsTheyAre &, const tag::RequireOrder & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::RequireOrder &, const tag::AsTheyAre & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::require_order );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::Backwards & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::AsTheyAre &, const tag::Backwards & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::Backwards &, const tag::AsTheyAre & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::as_they_are, tag::backwards );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::ForcePositive & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::ForcePositive &, const tag::RequireOrder & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim,
-                          tag::force_positive, tag::require_order );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::RequireOrder &, const tag::ForcePositive & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim,
-                          tag::force_positive, tag::require_order );  }
-
-inline Mesh::Iterator Mesh:: iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::ForcePositive &, const tag::Backwards & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive, tag::backwards );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::Backwards &, const tag::ForcePositive & ) const
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::force_positive, tag::backwards );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &,
-  const tag::ReverseEachCell &, const tag::DoNotBuildCells & ) const
-// do not bother whether reverse cells exist or not	
-{	return this->iterator ( tag::over_cells_of_max_dim,
-                          tag::reverse_each_cell, tag::do_not_build_cells );  }
 	
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::ReverseEachCell &,
-  const tag::DoNotBuildCells &, const tag::RequireOrder &                     ) const
-// do not bother whether reverse cells exist or not	
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
-                          tag::do_not_build_cells, tag::require_order        );  }
-	
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::RequireOrder &,
-  const tag::ReverseEachCell &, const tag::DoNotBuildCells &               ) const
-// do not bother whether reverse cells exist or not	
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
-                          tag::do_not_build_cells, tag::require_order        );  }
-	
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::ReverseEachCell &,
-  const tag::DoNotBuildCells &, const tag::Backwards &                         ) const
-// do not bother whether reverse cells exist or not	
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
-                          tag::do_not_build_cells, tag::backwards             );  }
-
-inline Mesh::Iterator Mesh::iterator
-( const tag::OverCells &, const tag::OfMaxDim &, const tag::Backwards &,
-  const tag::ReverseEachCell &, const tag::DoNotBuildCells &            ) const
-// do not bother whether reverse cells exist or not	
-{	return this->iterator ( tag::over_cells_of_max_dim, tag::reverse_each_cell,
-                          tag::do_not_build_cells, tag::backwards             );  }
-	
-//-----------------------------------------------------------------------------//
+//--------------------------------------------------------------------------------------------------//
 
 //      ITERATORS OVER SEGMENTS AROUND A GIVEN CELL
-//------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------//
 
 
 inline Mesh::Iterator Mesh::iterator
