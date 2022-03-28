@@ -1,5 +1,5 @@
 
-// finite-elem.h 2022.03.16
+// finite-elem.h 2022.03.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -252,11 +252,11 @@ class Integrator::Core
 
 	// constructor
 
-	inline Core ()  { };
+	inline Core ()  { std::cout << "constructor Integrator " << this << std::endl << std::flush; };
 
 	// destructor
 
-	virtual ~Core()  { };
+	virtual ~Core()  { std::cout << "destructor Integrator " << this << std::endl << std::flush; };
 	
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
 	virtual double action ( Function f ) = 0;
@@ -380,12 +380,12 @@ class Integrator::HandCoded : public Integrator::Core
 
 	// this type of integrator is tightly linked to a finite element,
 	// so we include it as an attribute
-	FiniteElement fe;
+	FiniteElement finite_element;
 
 	//constructor
 	
 	inline HandCoded ( const tag::FromFiniteElement &, FiniteElement & f )
-	:	fe { f }
+	:	finite_element { f }
 	{	}
 
 	double action ( Function f, const FiniteElement & fe );
@@ -446,11 +446,11 @@ class FiniteElement::Core
 	
 	// constructor
 
-	inline Core () : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { };
+	inline Core ( ) : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { std::cout << "constructor FiniteElement " << this << std::endl << std::flush; };
 
 	// destructor
 
-	virtual ~Core()  { };
+	virtual ~Core()  { std::cout << "destructor FiniteElement " << this << std::endl << std::flush; };
 	
 	virtual void dock_on ( const Cell & cll ) = 0;
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
@@ -1562,6 +1562,7 @@ inline FiniteElement::FiniteElement ( const FiniteElement && arg )
 { assert ( not arg .weak );
 	this->core->counter ++;   }
 
+
 inline FiniteElement & FiniteElement::operator= ( const FiniteElement & arg )
 // copying a FiniteElement makes the copy strong
 
@@ -1588,15 +1589,15 @@ inline Integrator FiniteElement::set_integrator
 	
 { FiniteElement::WithMaster * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::WithMaster * > ( this->core );
+	std::cout << "line 1592, this_core->counter " << this_core->counter << std::endl << std::flush;
 	Integrator::Gauss * integ =
 		new Integrator::Gauss ( q, tag::from_finite_element_with_master, *this );
 	this_core->integr .core = integ;
-	assert ( this_core->integr .core->counter == 0 );
-	this_core->integr .core->counter = 1;
+	assert ( integ->counter == 0 );
+  integ->counter = 1;
 
-  integ->finite_element = *this;
-	// due to the above copy operation, the counter has increased one unit
-	assert ( this_core->counter > 0 );
+	assert ( this_core->counter > 1 );
+	std::cout << "line 1599, this_core->counter " << this_core->counter << std::endl << std::flush;
 	this_core->counter --;
 	integ->finite_element .weak = true;
 	
@@ -2035,7 +2036,8 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 	
 :	core { new FiniteElement::StandAlone::TypeOne::Triangle() }, weak { false }
 
-{	assert ( deg == 1 );  }
+{	this->core->counter = 1;
+	assert ( deg == 1 );  }
 
 
 inline FiniteElement::FiniteElement  // no master, stand-alone
@@ -2043,7 +2045,8 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 	
 :	core { new FiniteElement::StandAlone::TypeOne::Quadrangle() }, weak { false }
 
-{	assert ( deg == 1 );  }
+{	this->core->counter = 1;
+	assert ( deg == 1 );  }
 
 
 inline FiniteElement::FiniteElement  // no master, stand-alone
@@ -2051,7 +2054,8 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 	
 :	core { new FiniteElement::StandAlone::TypeOne::Rectangle() }, weak { false }
 
-{	assert ( deg == 1 );  }
+{	this->core->counter = 1;
+	assert ( deg == 1 );  }
 
 
 inline FiniteElement::FiniteElement  // no master, stand-alone
@@ -2059,14 +2063,25 @@ inline FiniteElement::FiniteElement  // no master, stand-alone
 	
 :	core { new FiniteElement::StandAlone::TypeOne::Square() }, weak { false }
 
-{	assert ( deg == 1 );  }
+{	this->core->counter = 1;
+	assert ( deg == 1 );  }
 
 
 inline Integrator FiniteElement::set_integrator ( const tag::HandCoded & )
 	
 { FiniteElement::StandAlone::TypeOne * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->core );
-	this_core->integr .core = new Integrator::HandCoded ( tag::from_finite_element, *this );
+	std::cout << "line 2069, this_core->counter " << this_core->counter << std::endl << std::flush;
+	Integrator::HandCoded * integ = new Integrator::HandCoded ( tag::from_finite_element, *this );
+	this_core->integr .core = integ;
+	assert ( integ->counter == 0 );
+  integ->counter = 1;
+
+	assert ( this_core->counter > 1 );
+	std::cout << "line 2073, this_core->counter " << this_core->counter << std::endl << std::flush;
+	this_core->counter --;
+	integ->finite_element .weak = true;
+	
 	return this_core->integr;                                                                         }
 
 

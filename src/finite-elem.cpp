@@ -1,5 +1,5 @@
 
-// finite-elem.cpp 2022.03.16
+// finite-elem.cpp 2022.03.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -382,14 +382,14 @@ void Integrator::HandCoded::pre_compute ( const std::vector < Function > & bf,
 
 // we delegate this analysis to the finite element
 
-{	this->fe .core->pre_compute ( bf, v );  }
+{	this->finite_element .core->pre_compute ( bf, v );  }
 
 
 std::vector < double > Integrator::HandCoded::retrieve_precomputed
 ( const Function & bf, const Function & psi )  // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone::TypeOne * fesa = tag::Util::assert_cast
-		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->fe .core );
+		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->finite_element .core );
 	assert ( fesa->dummy_bf .size() >= 1 );
 	assert ( fesa->dummy_bf [0] .core == bf .core );
 	assert ( fesa->result_of_integr .size() == 1 );
@@ -411,7 +411,7 @@ std::vector < double > Integrator::HandCoded::retrieve_precomputed
   const Function & psi1, const Function & psi2 )  // virtual from Integrator::Core
 
 {	FiniteElement::StandAlone::TypeOne * fesa = tag::Util::assert_cast
-		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->fe .core );
+		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->finite_element .core );
 	assert ( fesa->dummy_bf .size() >= 2 );
 	assert ( fesa->dummy_bf [0] .core == bf1 .core );
 	assert ( fesa->dummy_bf [1] .core == bf2 .core );

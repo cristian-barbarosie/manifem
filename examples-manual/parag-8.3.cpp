@@ -1,5 +1,5 @@
 
-// example presented in paragraph 8.2 of the manual
+// example presented in paragraph 8.3 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
 // exchanging information with gmsh
 

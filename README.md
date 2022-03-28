@@ -1,6 +1,6 @@
 # maniFEM
-ManiFEM is a C++ library for solving partial differential equations
-through the finite element method.
+[ManiFEM](http://manifem.rd.ciencias.ulisboa.pt) is a C++ library
+for solving partial differential equations through the finite element method.
 The name comes from "finite elements on manifolds". 
 ManiFEM was designed with the goal of coping with very general meshes,
 in particular meshes on Riemannian manifolds, even manifolds which cannot be embedded in R^3,
@@ -34,10 +34,9 @@ A changelog is available at the end of the
 To check which version of maniFEM is installed in your computer, see at the beginning
 of the file `maniFEM.h`.
 
-ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com),
-[Sérgio Lopes](mailto:slopes@adm.isel.pt) and
-[Anca-Maria Toader](mailto:anca.maria.toader@gmail.com);
-see its [homepage](http://manifem.rd.ciencias.ulisboa.pt).
+ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com)
+and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com);
+see also the [list of contributors](contributors.md).
 
 To learn maniFEM, you should read the
 [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.03).

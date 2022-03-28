@@ -279,8 +279,8 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 namespace {  // anonymous namespace, mimics static linkage
 
 void build_common                                                   // line 281
-( Mesh msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
-            const Cell & A, const Cell & B, const Cell & C,
+( Mesh & msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
+              const Cell & A, const Cell & B, const Cell & C,
   Cell & seg1, Cell & seg2, Manifold::Action & winding_C_from_A,
   bool not_singular                                             )
 
@@ -756,7 +756,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 				ABD.add_to_mesh (*this);                          }
 			else // with quadrilaterals
 			{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
-				Q.add_to_mesh (*this);                      }
+				Q.add_to_mesh (*this);                      }  // 'this' is the mesh we are building
 			// CD is on the ceiling, we keep it in the 'horizon' list
 			// it will be on the ground when we build the next layer of cells
 			*it = CD.reverse(); // 'it' points into the 'horizon' list
@@ -778,11 +778,11 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
 			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
 			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-			BCD.add_to_mesh (*this);
+			BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
 			ABD.add_to_mesh (*this);                          }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
-			Q.add_to_mesh (*this);                     }
+			Q.add_to_mesh (*this);                     }  // 'this' is the mesh we are building
 		*it = CD.reverse();
 		it_east++;  assert ( it_east.in_range() );
 		it_west++;  assert ( it_west.in_range() );
@@ -794,7 +794,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	std::list<Cell>::iterator it = horizon.begin();
 	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
 	Cell D = NW;
-	for (size_t j=1; j < N_horiz; j++)
+	for ( size_t j = 1; j < N_horiz; j++)
 	{	Cell AB = *it;
 		Cell B = AB.tip();
 		Cell CD = north.cell_behind ( D );
@@ -808,11 +808,12 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 			ABD.add_to_mesh (*this);                           }
 		else // with quadrilaterals
 		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
-			Q.add_to_mesh (*this);                     }
+			Q.add_to_mesh (*this);                     }  // 'this' is the mesh we are building
 		it++;
 		D = C;
 		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
+	assert ( it != horizon.end() );
 	Cell AB = *it;
 	Cell B = AB.tip();
 	Cell BC = east.cell_in_front_of (B);
@@ -827,7 +828,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		ABD.add_to_mesh (*this);                          }
 	else // with quadrilaterals
 	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );
-		Q.add_to_mesh (*this);                     }
+		Q.add_to_mesh (*this);                     }  // 'this' is the mesh we are building
 	it++;  assert ( it == horizon.end() );
 
 } // end of Mesh::build with tag::quadrangle
@@ -835,6 +836,237 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 //------------------------------------------------------------------------------------------------------//
 
 
+namespace {  // anonymous namespace, mimics static linkage
+
+void build_common                  // quadrangle, winding           // line 840
+( Mesh & msh, const Mesh & west, const Mesh & south, const Mesh & east, const Mesh & north,
+              const Cell & NW, const Cell & SW, const Cell & SE, const Cell & NE,
+  Cell & seg1, Cell & seg2, Manifold::Action & winding_D_from_A,
+  short int cut_rectangles, bool not_singular                                               )
+
+// return two segments seg1 and seg2 and also 'winding_D_from_A'
+
+// cut_rectangles :  0 means no cut, 1 and 2 are two ways of cutting
+	
+// NE may be singular
+
+{	Manifold space = Manifold::working;
+	assert ( space.exists() );  // we use the current manifold
+	Manifold::Quotient * mani_q = tag::Util::assert_cast
+		< Manifold::Core*, Manifold::Quotient* > ( space .core );
+	Function coords_q = space .coordinates();
+	Manifold mani_Eu = mani_q->base_space;  // underlying Euclidian manifold
+	Function coords_Eu = mani_Eu .coordinates();
+
+	size_t N_horiz = south .number_of ( tag::segments );
+	assert ( N_horiz == north .number_of ( tag::segments ) );
+	size_t N_vert = east .number_of ( tag::segments );
+	assert ( N_vert == west .number_of ( tag::segments ) );
+
+	// prepare horizon
+	std::list <Cell> horizon;
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = south .iterator ( tag::over_segments, tag::require_order );
+	for ( it.reset(); it .in_range(); it++ )
+	{	Cell seg = *it;  horizon .push_back ( seg );  }
+	} // just a block of code for hiding 'it'
+
+	// we must deal with possible winding segments
+	// we choose that, at each interpolation operation, i.e., for each new vertex,
+	// the new vertex will have winding zero relatively to SW
+	// we must keep track of the windings of ver_south, ver_east, ver_north, ver_west, B, D
+	// (relatively to SW)
+	// we use four shadow vertices for interpolation
+	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
+	Cell shadow_north ( tag::vertex ), shadow_west ( tag::vertex );
+	
+	Manifold::Action winding_NW = 0, winding_SE = 0;
+	// winding_SW is zero by our choice, winding_NE is not needed
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = south .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell seg = *it;  winding_SE += seg .winding();  }
+	} { // just a block of code for hiding 'it'
+	Mesh::Iterator it = west .iterator ( tag::over_segments );
+	for ( it .reset(); it .in_range(); it++ )
+	{	Cell seg = *it;  winding_NW -= seg .winding();  }
+	} // just a block of code for hiding 'it'
+
+	// start mesh generation
+	// sides may be closed loops
+	// have SW, SE, NW and NE been correctly defined ?
+	Cell seg_east = east .cell_in_front_of ( SE, tag::surely_exists );
+	Cell seg_west = west .cell_behind ( SW, tag::surely_exists );
+	Manifold::Action winding_ver_west = 0;  // winding_SW is zero by our choice
+	Manifold::Action winding_ver_east = winding_SE;
+	Manifold::Action winding_B = 0;  // winding_SW is zero by our choice
+	for ( size_t i = 1; i < N_vert; ++i )
+	{	std::list<Cell>::iterator it = horizon .begin();
+		Cell AB = *it;
+		Cell A = AB .base() .reverse();
+		Cell DA = seg_west;
+		Cell D = DA .base() .reverse();
+		winding_ver_east += seg_east .winding();
+		Cell ver_east = seg_east .tip();
+		seg_east = east .cell_in_front_of ( ver_east, tag::surely_exists );
+		winding_ver_west -= seg_west .winding();
+		Cell ver_west = seg_west .base() .reverse();
+		seg_west = west .cell_behind ( ver_west, tag::surely_exists );
+		assert ( ver_west == D );
+		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
+		alpha = alpha*alpha*alpha;
+		std::vector < double > v = coords_q ( ver_east, tag::winding, winding_ver_east );
+		coords_Eu ( shadow_east ) = v;
+		v = coords_q ( ver_west, tag::winding, winding_ver_west );
+		coords_Eu ( shadow_west ) = v;
+		Cell seg_south = south .cell_in_front_of ( SW, tag::surely_exists );
+		Cell seg_north = north .cell_behind ( NW, tag::surely_exists );
+		Manifold::Action winding_ver_south = 0;  // winding_SW is zero by our choice
+		Manifold::Action winding_ver_north = winding_NW;
+		Manifold::Action winding_D = winding_ver_west;
+		for ( size_t j = 1; j < N_horiz; j++ )
+		{	AB = *it;  // 'it' points into the 'horizon' list of segments
+			Cell B = AB .tip();
+			winding_B += AB .winding();
+			winding_ver_south += seg_south .winding();
+			Cell ver_south = seg_south .tip();
+			seg_south = south .cell_in_front_of ( ver_south );
+			winding_ver_north -= seg_north .winding();
+			Cell ver_north = seg_north .base() .reverse();
+			seg_north = north.cell_behind ( ver_north );
+			Cell C ( tag::vertex );  // create a new vertex
+			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
+			beta = beta*beta*beta;
+			double sum = alpha + beta, aa = alpha/sum, bb = beta/sum;
+			v = coords_q ( ver_south, tag::winding, winding_ver_south );
+			coords_Eu ( shadow_south ) = v;
+			v = coords_q ( ver_north, tag::winding, winding_ver_north );
+			coords_Eu ( shadow_north ) = v;
+			mani_Eu .interpolate ( C, bb*(1-frac_N), shadow_south, aa*frac_E,     shadow_east,     
+		                            bb*frac_N,     shadow_north, aa*(1-frac_E), shadow_west );
+			Cell BC ( tag::segment, B .reverse(), C );  // create a new segment
+			Cell CD ( tag::segment, C .reverse(), D );  // create a new segment
+			BC .winding() = -winding_B;
+			CD .winding() =  winding_D;
+			assert ( AB .winding() + BC .winding() + CD .winding() + DA .winding() == 0 );
+			winding_D = 0;
+			switch ( cut_rectangles )
+			{	case 0 :   // with quadrilaterals
+				{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+					Q .add_to_mesh (msh);  // 'msh' is the mesh we are building
+					break;                                     }
+				case 1 :   // triangles
+				{	Cell BD ( tag::segment, B .reverse(), D );  // create a new segment
+					BD .winding() = winding_D - winding_B;
+					assert ( BD .winding() == BC .winding() + CD .winding() );
+					Cell BCD ( tag::triangle, BD .reverse(), BC, CD );  // create a new triangle
+					Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+					BCD .add_to_mesh (msh);  // 'msh' is the mesh we are building
+					ABD .add_to_mesh (msh);
+					break;                                                       }
+				case 2 :   // triangles
+				{	Cell AC ( tag::segment, A .reverse(), C );  // create a new segment
+					AC.winding() = AB .winding() + BC .winding();
+					Cell ABC ( tag::triangle, AB, BC, AC .reverse() );  // create a new triangle
+					Cell ACD ( tag::triangle, AC, CD, DA );  // create a new triangle
+					ABC .add_to_mesh (msh);  // 'msh' is the mesh we are building
+					ACD .add_to_mesh (msh);
+					break;                                                        }
+				default :  assert ( false );                                        }
+			// CD is on the ceiling, we keep it in the 'horizon' list
+			// it will be on the ground when we build the next layer of cells
+			*it = CD .reverse(); // 'it' points into the 'horizon' list
+			it++;
+			D = C;
+			A = B;
+			DA = BC.reverse();
+		} // end of for j
+		// last rectangle of this row, east side already exists
+		AB = *it;
+		Cell B = AB .tip();
+		Cell BC = east .cell_in_front_of ( B, tag::surely_exists );
+		Cell C = BC .tip();
+		Cell CD ( tag::segment, C .reverse(), D );  // create a new segment
+		CD .winding() = - DA .winding() - AB .winding() - BC .winding();
+		assert ( winding_D == 0 );
+		winding_B = winding_ver_west;
+		switch ( cut_rectangles )
+		{	case 0 :   // with quadrilaterals
+			{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+				Q .add_to_mesh (msh);  // 'msh' is the mesh we are building
+				break;                                     }
+			case 1 :   // triangles
+			{	Cell BD ( tag::segment, B .reverse(), D );  // create a new segment
+				BD .winding() = BC .winding() + CD .winding();
+				Cell BCD ( tag::triangle, BD .reverse(), BC, CD );  // create a new triangle
+				Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+				BCD .add_to_mesh (msh);  // 'msh' is the mesh we are building
+				ABD .add_to_mesh (msh);
+				break;                                                       }
+			case 2 :   // triangles
+			{	Cell AC ( tag::segment, A .reverse(), C );  // create a new segment
+				AC.winding() = AB .winding() + BC .winding();
+				Cell ABC ( tag::triangle, AB, BC, AC .reverse() );  // create a new triangle
+				Cell ACD ( tag::triangle, AC, CD, DA );  // create a new triangle
+				ABC .add_to_mesh (msh);  // 'msh' is the mesh we are building
+				ACD .add_to_mesh (msh);
+				break;                                                        }
+			default :  assert ( false );                                        }
+		*it = CD.reverse();
+		it++;  assert ( it == horizon.end() );
+	} // end of for i
+	// last row of rectangles is different, north sides already exist
+	std::list<Cell>::iterator it = horizon .begin();
+	Cell & DA = seg2;
+	DA = west .cell_in_front_of ( NW, tag::surely_exists );
+	Cell D = NW;
+	for ( size_t j = 1; j < N_horiz; j++)
+	{	Cell AB = *it;
+		Cell A = AB .base() .reverse();
+		Cell B = AB .tip();
+		Cell CD = north .cell_behind ( D );
+		Cell C = CD .base() .reverse();
+		Cell BC ( tag::segment, B .reverse(), C );  // create a new segment
+		BC .winding() = - CD .winding() - DA .winding() - AB .winding();
+		switch ( cut_rectangles )
+		{	case 0 :   // with quadrilaterals
+			{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
+				Q .add_to_mesh (msh);  // 'msh' is the mesh we are building
+				break;                                     }
+			case 1 :   // triangles
+			{	Cell BD ( tag::segment, B .reverse(), D );  // create a new segment
+				BD .winding() = BC .winding() + CD .winding();
+				Cell BCD ( tag::triangle, BD .reverse(), BC, CD );  // create a new triangle
+				Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
+				BCD .add_to_mesh (msh);  // 'msh' is the mesh we are building
+				ABD .add_to_mesh (msh);
+				break;                                                       }
+			case 2 :   // triangles
+			{	Cell AC ( tag::segment, A .reverse(), C );  // create a new segment
+				AC.winding() = AB .winding() + BC .winding();
+				Cell ABC ( tag::triangle, AB, BC, AC .reverse() );  // create a new triangle
+				Cell ACD ( tag::triangle, AC, CD, DA );  // create a new triangle
+				ABC .add_to_mesh (msh);  // 'msh' is the mesh we are building
+				ACD .add_to_mesh (msh);
+				break;                                                        }
+			default :  assert ( false );                                        }
+		it++;
+		D = C;
+		DA = BC .reverse();                                                        }
+
+	// last rectangle on last row will be built by the calling code
+
+	assert ( it != horizon .end() );
+	seg1 = *it;
+	it++;  assert ( it == horizon .end() );
+	
+}
+
+}  // end of anonymous namespace
+
+//------------------------------------------------------------------------------------------------------//
+
+	
 void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
                    const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
                    const tag::Winding &                                               )
@@ -886,162 +1118,13 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 	Cell SE = south .common_vertex ( tag::with, east );
 	Cell NE = east  .common_vertex ( tag::with, north );
 	Cell NW = north .common_vertex ( tag::with, west );
-	
-	size_t N_horiz = south .number_of ( tag::segments );
-	assert ( N_horiz == north .number_of ( tag::segments ) );
-	size_t N_vert = east .number_of ( tag::segments );
-	assert ( N_vert == west .number_of ( tag::segments ) );
 
-	// prepare horizon
-	std::list <Cell> horizon;
-	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = south .iterator ( tag::over_segments, tag::require_order );
-	for ( it.reset(); it .in_range(); it++ )
-	{	Cell seg = *it;  horizon .push_back ( seg );  }
-	} // just a block of code for hiding 'it'
+	short int cut_rectangles = 0;
+	if ( cut_rectangles_in_half ) cut_rectangles = 1;
+	build_common ( *this, west, south, east, north,          // line 840
+		NW, SW, SE, NE, seg1, seg2, cut_rectangles, winding_C_from_A, true );
+	// last argument true means "no singularity", perform all checkings
 
-	// we must deal with possible winding segments
-	// we choose that, at each interpolation operation, i.e., for each new vertex,
-	// the new vertex will have winding zero relatively to SW
-	// we must keep track of the windings of ver_south, ver_east, ver_north, ver_west, B, D
-	// (relatively to SW)
-	// we use four shadow vertices for interpolation
-	Cell shadow_south ( tag::vertex ), shadow_east ( tag::vertex );
-	Cell shadow_north ( tag::vertex ), shadow_west ( tag::vertex );
-	
-	Manifold::Action winding_NW = 0, winding_SE = 0;
-	// winding_SW is zero by our choice, winding_NE is not needed
-	{ // just a block of code for hiding 'it'
-	Mesh::Iterator it = south.iterator ( tag::over_segments );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell seg = *it;  winding_SE += seg.winding();  }
-	} { // just a block of code for hiding 'it'
-	Mesh::Iterator it = west.iterator ( tag::over_segments );
-	for ( it.reset(); it.in_range(); it++ )
-	{	Cell seg = *it;  winding_NW -= seg.winding();  }
-	} // just a block of code for hiding 'it'
-
-	// start mesh generation
-	// sides may be closed loops
-	// have SW, SE, NW and NE been correctly defined ?
-	Cell seg_east = east.cell_in_front_of ( SE, tag::surely_exists );
-	Cell seg_west = west.cell_behind ( SW, tag::surely_exists );
-	Manifold::Action winding_ver_west = 0;  // winding_SW is zero by our choice
-	Manifold::Action winding_ver_east = winding_SE;
-	Manifold::Action winding_B = 0;  // winding_SW is zero by our choice
-	for ( size_t i = 1; i < N_vert; ++i )
-	{	std::list<Cell>::iterator it = horizon.begin();
-		Cell AB = *it;
-		Cell A = AB.base().reverse();
-		Cell DA = seg_west;
-		Cell D = DA.base().reverse();
-		winding_ver_east += seg_east.winding();
-		Cell ver_east = seg_east.tip();
-		seg_east = east.cell_in_front_of ( ver_east, tag::surely_exists );
-		winding_ver_west -= seg_west.winding();
-		Cell ver_west = seg_west.base().reverse();
-		seg_west = west.cell_behind ( ver_west, tag::surely_exists );
-		assert ( ver_west == D );
-		double frac_N = double(i) / double(N_vert),  alpha = frac_N * (1-frac_N);
-		alpha = alpha*alpha*alpha;
-		std::vector < double > v = coords_q ( ver_east, tag::winding, winding_ver_east );
-		coords_Eu ( shadow_east ) = v;
-		v = coords_q ( ver_west, tag::winding, winding_ver_west );
-		coords_Eu ( shadow_west ) = v;
-		Cell seg_south = south.cell_in_front_of ( SW, tag::surely_exists );
-		Cell seg_north = north.cell_behind ( NW, tag::surely_exists );
-		Manifold::Action winding_ver_south = 0;  // winding_SW is zero by our choice
-		Manifold::Action winding_ver_north = winding_NW;
-		Manifold::Action winding_D = winding_ver_west;
-		for ( size_t j = 1; j < N_horiz; j++ )
-		{	AB = *it;  // 'it' points into the 'horizon' list of segments
-			Cell B = AB.tip();
-			winding_B += AB.winding();
-			winding_ver_south += seg_south.winding();
-			Cell ver_south = seg_south.tip();
-			seg_south = south.cell_in_front_of ( ver_south );
-			winding_ver_north -= seg_north.winding();
-			Cell ver_north = seg_north.base().reverse();
-			seg_north = north.cell_behind ( ver_north );
-			Cell C ( tag::vertex );  // create a new vertex
-			double frac_E = double(j) / double(N_horiz),  beta = frac_E * (1-frac_E);
-			beta = beta*beta*beta;
-			double sum = alpha + beta, aa = alpha/sum, bb = beta/sum;
-			v = coords_q ( ver_south, tag::winding, winding_ver_south );
-			coords_Eu ( shadow_south ) = v;
-			v = coords_q ( ver_north, tag::winding, winding_ver_north );
-			coords_Eu ( shadow_north ) = v;
-			mani_Eu.interpolate ( C, bb*(1-frac_N), shadow_south, aa*frac_E,     shadow_east,     
-		                           bb*frac_N,     shadow_north, aa*(1-frac_E), shadow_west );
-			Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
-			Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
-			BC.winding() = -winding_B;
-			CD.winding() =  winding_D;
-			assert ( AB.winding() + BC.winding() + CD.winding() + DA.winding() == 0 );
-			winding_D = 0;
-			if ( cut_rectangles_in_half )
-			{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-				BD.winding() = winding_D - winding_B;
-				Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
-				Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-				BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
-				ABD.add_to_mesh (*this);                           }
-			else // with quadrilaterals
-			{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
-				Q.add_to_mesh (*this);                     }
-			// CD is on the ceiling, we keep it in the 'horizon' list
-			// it will be on the ground when we build the next layer of cells
-			*it = CD.reverse(); // 'it' points into the 'horizon' list
-			it++;
-			D = C;
-			DA = BC.reverse();
-		} // end of for j
-		// last rectangle of this row, east side already exists
-		AB = *it;
-		Cell B = AB.tip();
-		Cell BC = east.cell_in_front_of ( B, tag::surely_exists );
-		Cell C = BC.tip();
-		Cell CD ( tag::segment, C.reverse(), D );  // create a new segment
-		CD.winding() = - DA.winding() - AB.winding() - BC.winding();
-		assert ( winding_D == 0 );
-		winding_B = winding_ver_west;
-		if ( cut_rectangles_in_half )
-		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			BD.winding() = - AB.winding() - DA.winding();
-			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
-			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-			BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
-			ABD.add_to_mesh (*this);                            }
-		else // with quadrilaterals
-		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
-			Q.add_to_mesh (*this);                     }
-		*it = CD.reverse();
-		it++;  assert ( it == horizon.end() );
-	} // end of for i
-	// last row of rectangles is different, north sides already exist
-	std::list<Cell>::iterator it = horizon.begin();
-	Cell DA = west.cell_in_front_of ( NW, tag::surely_exists );
-	Cell D = NW;
-	for (size_t j=1; j < N_horiz; j++)
-	{	Cell AB = *it;
-		Cell B = AB.tip();
-		Cell CD = north.cell_behind ( D );
-		Cell C = CD.base().reverse();
-		Cell BC ( tag::segment, B.reverse(), C );  // create a new segment
-		BC.winding() = - CD.winding() - DA.winding() - AB.winding();
-		if ( cut_rectangles_in_half )
-		{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-			BD.winding() = - DA.winding() - AB.winding();
-			Cell BCD ( tag::triangle, BD.reverse(), BC, CD );  // create a new triangle
-			Cell ABD ( tag::triangle, BD, DA, AB );  // create a new triangle
-			BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
-			ABD.add_to_mesh (*this);                          }
-		else // with quadrilaterals
-		{	Cell Q ( tag::rectangle, AB, BC, CD, DA );  // create a new rectangle
-			Q.add_to_mesh (*this);                       }
-		it++;
-		D = C;
-		DA = BC.reverse();                                          }
 	// and the last rectangle of the last row
 	Cell AB = *it;
 	Cell B = AB.tip();
@@ -1055,13 +1138,14 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 		BD.winding() = BC.winding() + CD.winding();
 		Cell BCD ( tag::triangle, BD.reverse(), BC, CD );
 		Cell ABD ( tag::triangle, BD, DA, AB );
-		BCD.add_to_mesh (*this);  // 'this' is the mesh we are building
-		ABD.add_to_mesh (*this);                          }
+		BCD.add_to_mesh (msh);  // 'this' is the mesh we are building
+		ABD.add_to_mesh (msh);                          }
 	else // with quadrilaterals
 	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );
-		Q.add_to_mesh (*this);                     }
+		Q.add_to_mesh (msh);                     }
 	it++;  assert ( it == horizon.end() );
 
+	
 } // end of Mesh::build with tag::quadrangle and tag::winding
 
 //------------------------------------------------------------------------------------------------------//
