@@ -1,5 +1,5 @@
 
-// global.cpp 2022.02.22
+// global.cpp 2022.02.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -278,7 +278,7 @@ void Mesh::build ( const tag::Triangle &, const Mesh & AB, const Mesh & BC, cons
 
 namespace {  // anonymous namespace, mimics static linkage
 
-void build_common                                                   // line 281
+void build_common            // triangle, winding                   // line 281
 ( Mesh & msh, const Mesh & AB, const Mesh & BC, const Mesh & CA,
               const Cell & A, const Cell & B, const Cell & C,
   Cell & seg1, Cell & seg2, Manifold::Action & winding_C_from_A,
@@ -615,8 +615,7 @@ void Mesh::build ( const tag::Triangle &,
 	// last argument false means there is a singularity, skip some checkings
 
 	// build last four triangles
-	// 'build_common' provides two segments (elements of 'ground')
-	// and also 'winding_C_from_A'
+	// 'build_common' provides two segments (elements of 'ground') and also 'winding_C_from_A'
 	// recall that C == O
 	Cell OE = CA .cell_in_front_of ( O );
 	Cell E = OE .tip();
@@ -838,7 +837,7 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 namespace {  // anonymous namespace, mimics static linkage
 
-void build_common                  // quadrangle, winding           // line 840
+void build_common                  // quadrangle, winding           // line 841
 ( Mesh & msh, const Mesh & west, const Mesh & south, const Mesh & east, const Mesh & north,
               const Cell & NW, const Cell & SW, const Cell & SE, const Cell & NE,
   Cell & seg1, Cell & seg2, Manifold::Action & winding_D_from_A,
@@ -1056,9 +1055,15 @@ void build_common                  // quadrangle, winding           // line 840
 
 	// last rectangle on last row will be built by the calling code
 
+	// return values : seg1, seg2, winding_D_from_A
+
+	seg1 = DA;
+	
 	assert ( it != horizon .end() );
-	seg1 = *it;
+	seg2 = *it;   // AB
 	it++;  assert ( it == horizon .end() );
+
+	winding_D_from_A = 0;  // ????
 	
 }
 
@@ -1121,29 +1126,32 @@ void Mesh::build ( const tag::Quadrangle &, const Mesh & south, const Mesh & eas
 
 	short int cut_rectangles = 0;
 	if ( cut_rectangles_in_half ) cut_rectangles = 1;
-	build_common ( *this, west, south, east, north,          // line 840
-		NW, SW, SE, NE, seg1, seg2, cut_rectangles, winding_C_from_A, true );
+	Cell seg1 ( tag::non_existent ), seg2 ( tag::non_existent );
+	Manifold::Action winding_C_from_A;
+	build_common ( *this, west, south, east, north,          // line 841
+		NW, SW, SE, NE, seg1, seg2, winding_C_from_A, cut_rectangles, true );
 	// last argument true means "no singularity", perform all checkings
+	assert ( seg1 .exists() );
+	assert ( seg2 .exists() );
 
 	// and the last rectangle of the last row
-	Cell AB = *it;
-	Cell B = AB.tip();
-	Cell BC = east.cell_in_front_of (B);
-	Cell C = BC.tip();
+	Cell B = seg2 .tip();
+	Cell BC = east .cell_in_front_of (B);
+	Cell C = BC .tip();
 	assert ( C == NE );
-	Cell CD = north.cell_behind ( D );
-	assert ( AB.winding() + BC.winding() + CD.winding() + DA.winding() == 0 );
+	Cell CD = north .cell_in_front_of ( NE );
+	Cell D = CD .tip();
+	assert ( seg2 .winding() + BC .winding() + CD .winding() + seg1 .winding() == 0 );
 	if ( cut_rectangles_in_half )
-	{	Cell BD ( tag::segment, B.reverse(), D );  // create a new segment
-		BD.winding() = BC.winding() + CD.winding();
-		Cell BCD ( tag::triangle, BD.reverse(), BC, CD );
-		Cell ABD ( tag::triangle, BD, DA, AB );
-		BCD.add_to_mesh (msh);  // 'this' is the mesh we are building
-		ABD.add_to_mesh (msh);                          }
+	{	Cell BD ( tag::segment, B .reverse(), D );  // create a new segment
+		BD .winding() = BC .winding() + CD .winding();
+		Cell BCD ( tag::triangle, BD .reverse(), BC, CD );
+		Cell ABD ( tag::triangle, BD, seg1, seg2 );
+		BCD .add_to_mesh ( *this );  // 'this' is the mesh we are building
+		ABD .add_to_mesh ( *this );                         }
 	else // with quadrilaterals
-	{	Cell Q ( tag::rectangle, AB, BC, CD, DA );
-		Q.add_to_mesh (msh);                     }
-	it++;  assert ( it == horizon.end() );
+	{	Cell Q ( tag::rectangle, seg2, BC, CD, seg1 );
+		Q .add_to_mesh ( *this );                       }
 
 	
 } // end of Mesh::build with tag::quadrangle and tag::winding

@@ -1,5 +1,5 @@
 
-// finite-elem.h 2022.03.21
+// finite-elem.h 2022.03.30
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -252,11 +252,11 @@ class Integrator::Core
 
 	// constructor
 
-	inline Core ()  { std::cout << "constructor Integrator " << this << std::endl << std::flush; };
+	inline Core ()  { };
 
 	// destructor
 
-	virtual ~Core()  { std::cout << "destructor Integrator " << this << std::endl << std::flush; };
+	virtual ~Core()  { };
 	
 	virtual double action ( Function f, const FiniteElement & fe ) = 0;
 	virtual double action ( Function f ) = 0;
@@ -446,11 +446,11 @@ class FiniteElement::Core
 	
 	// constructor
 
-	inline Core ( ) : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { std::cout << "constructor FiniteElement " << this << std::endl << std::flush; };
+	inline Core ( ) : integr ( tag::non_existent ), docked_on ( tag::non_existent )  { };
 
 	// destructor
 
-	virtual ~Core()  { std::cout << "destructor FiniteElement " << this << std::endl << std::flush; };
+	virtual ~Core()  { };
 	
 	virtual void dock_on ( const Cell & cll ) = 0;
 	virtual void dock_on ( const Cell & cll, const tag::Winding & ) = 0;
