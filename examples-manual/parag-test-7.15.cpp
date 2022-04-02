@@ -33,7 +33,8 @@ int main ( )
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );  // no winding
 	Mesh BA ( tag::segment, B .reverse(), A, tag::divided_in, 10, tag::winding, rot );
 
-	Mesh sector ( tag::quadrangle, OA, AB, BA, OA .reverse(), tag::winding, tag::singular, O );
+	Mesh sector ( tag::quadrangle, AB, BA, OA .reverse(), OA,
+	              tag::winding, tag::singular, O, tag::with_triangles );
 
 	sector .draw_ps ("sector.eps", tag::unfold, { -rot, 0, rot },
 	                  tag::over_region, -2.1 < x < 2.1, -0.3 < y < 2.1 );

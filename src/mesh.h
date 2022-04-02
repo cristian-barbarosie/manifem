@@ -1,5 +1,5 @@
 
-// mesh.h  2022.03.20
+// mesh.h  2022.04.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1038,16 +1038,72 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	              const tag::WithTriangles &, const tag::Winding &                  )
 	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::with_triangles ) { }
 
-	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
-	              Mesh east, Mesh west, const Mesh & up, const Mesh & down, const tag::Winding & );
-	
+	// same as above, but take into account a cone-like singularity
+	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	                                       const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::Singular &, const Cell & O,
+	              const tag::WithTriangles & wt = tag::not_with_triangles        );
+
+	inline Mesh ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	                                       const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &,
+	              const tag::Singular &, const Cell & O                  );
+
+	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
+	                                          const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::Singular &, const Cell & O,
+	              const tag::WithTriangles & wt = tag::not_with_triangles           )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::singular, O, wt )
+	{ }
+
+	inline Mesh ( const tag::Parallelogram &, const Mesh & south, const Mesh & east,
+	                                          const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &,
+	              const tag::Singular &, const Cell & O                             )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding,
+		       tag::singular, O, tag::with_triangles                   )
+	{ }
+
+	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
+	                                      const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::Singular &, const Cell & O,
+	              const tag::WithTriangles & wt = tag::not_with_triangles       )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding, tag::singular, O, wt )  { }
+
+	inline Mesh ( const tag::Rectangle &, const Mesh & south, const Mesh & east,
+	                                      const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &,
+	              const tag::Singular &, const Cell & O                         )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding,
+		       tag::singular, O, tag::with_triangles                   )
+	{ }
+
+	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
+	                                   const Mesh & north, const Mesh & west,
+	              const tag::Winding &, const tag::Singular &, const Cell & O,
+	              const tag::WithTriangles & wt = tag::not_with_triangles     )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding,
+		       tag::singular, O, wt                                    )
+	{ }
+
+	inline Mesh ( const tag::Square &, const Mesh & south, const Mesh & east,
+	                                   const Mesh & north, const Mesh & west,
+	              const tag::WithTriangles &, const tag::Winding &,
+	              const tag::Singular &, const Cell & O                      )
+	:	Mesh ( tag::quadrangle, south, east, north, west, tag::winding,
+		       tag::singular, O, tag::with_triangles                   )
+	{ }
+
 	inline Mesh
 	( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	  const Cell & NE, const Cell & NW, const size_t m, const size_t n,
-	  const tag::WithTriangles & wt = tag::not_with_triangles           );
+	  const tag::WithTriangles & wt = tag::not_with_triangles          );
 	// builds a rectangular mesh from four vertices
 	// if last argument is 'with_triangles', each rectangular cell will be cut in two triangles
 
+	inline Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
+	              Mesh east, Mesh west, const Mesh & up, const Mesh & down, const tag::Winding & );
+	
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh & );
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh &, const Mesh & );
 	inline Mesh ( const tag::Join &, const Mesh &, const Mesh &, const Mesh &, const Mesh & );
@@ -2276,6 +2332,10 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
 	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
 	             const tag::Winding &                                               );
+	
+	void build ( const tag::Quadrangle &, const Mesh & south, const Mesh & east,
+	             const Mesh & north, const Mesh & west, bool cut_rectangles_in_half,
+	             const tag::Winding &, const tag::Singular &, const Cell & O        );
 	
 	void build ( const tag::Quadrangle &, const Cell & SW, const Cell & SE,
 	             const Cell & NE, const Cell & NW, const size_t m, const size_t n,
@@ -6303,6 +6363,49 @@ inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
 
 {	assert ( wt == tag::with_triangles );
 	this->build ( tag::quadrangle, south, east, north, west, true, tag::winding );  }
+
+
+inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
+                    const Mesh & east, const Mesh & north, const Mesh & west,
+                    const tag::Winding &, const tag::Singular &, const Cell & O,
+                    const tag::WithTriangles & wt                               )
+
+// 'wt' defaults to 'tag::not_with_triangles',
+// so constructor can be called with only six arguments
+
+// the tag::winding provides no specific information,
+// it just warns maniFEM that we are on a quotient manifold
+// and that it must take winding segments into account
+// specific information about winding numbers is included in the four segments
+
+// O is a cone-like singularity
+
+:	Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	this->build ( tag::quadrangle, south, east, north, west,
+                wt != tag::not_with_triangles, tag::winding, tag::singular, O  );  }
+
+
+inline Mesh::Mesh ( const tag::Quadrangle &, const Mesh & south,
+                    const Mesh & east, const Mesh & north, const Mesh & west,
+                    const tag::WithTriangles & wt, const tag::Winding &,
+                    const tag::Singular &, const Cell & O                    )
+
+// the tag::winding provides no specific information,
+// it just warns maniFEM that we are on a quotient manifold
+// and that it must take winding segmtnts into account
+// specific information about winding numbers is included in the four segments
+
+// O is a cone-like singularity
+	
+:	Mesh ( tag::whose_core_is,
+         new Mesh::Fuzzy ( tag::of_dimension, 3, tag::minus_one, tag::one_dummy_wrapper ),
+         tag::freshly_created, tag::is_positive                                           )
+
+{	assert ( wt == tag::with_triangles );
+	this->build ( tag::quadrangle, south, east, north, west, true, tag::winding, tag::singular, O );  }
 
 
 inline Mesh::Mesh ( const tag::Hexahedron &, const Mesh & south, const Mesh & north,
