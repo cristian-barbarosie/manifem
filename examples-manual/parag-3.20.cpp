@@ -95,8 +95,8 @@ int main ()
 	cone_manif .implicit ( z == 1. );
 	std::vector < double > tau = { 0., 1., 0. };
 	Mesh big_circle ( tag::frontal, tag::start_at, V, tag::towards, tau,
-	                  tag::desired_length, seg_size );
-	Mesh two_circles ( tag::join, small_circle .reverse(), big_circle   );
+	                  tag::desired_length, seg_size                     );
+	Mesh two_circles ( tag::join, small_circle .reverse(), big_circle );
 
 	cone_manif .set_as_working_manifold();
 	tau = { -1., 0., -1. };

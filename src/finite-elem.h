@@ -1589,7 +1589,6 @@ inline Integrator FiniteElement::set_integrator
 	
 { FiniteElement::WithMaster * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::WithMaster * > ( this->core );
-	std::cout << "line 1592, this_core->counter " << this_core->counter << std::endl << std::flush;
 	Integrator::Gauss * integ =
 		new Integrator::Gauss ( q, tag::from_finite_element_with_master, *this );
 	this_core->integr .core = integ;
@@ -1597,7 +1596,6 @@ inline Integrator FiniteElement::set_integrator
   integ->counter = 1;
 
 	assert ( this_core->counter > 1 );
-	std::cout << "line 1599, this_core->counter " << this_core->counter << std::endl << std::flush;
 	this_core->counter --;
 	integ->finite_element .weak = true;
 	
