@@ -18,7 +18,7 @@ Similar products (competitors), as well as strong and weak points of maniFEM,
 are listed in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
 at the end of section 1.
 
-In its current version, release 22.03, maniFEM works well for mesh generation,
+In its current version, release 22.04, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
@@ -39,7 +39,7 @@ and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com);
 see also the [list of contributors](contributors.md).
 
 To learn maniFEM, you should read the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.03).
+[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.04).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.
