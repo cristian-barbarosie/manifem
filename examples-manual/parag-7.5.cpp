@@ -32,7 +32,7 @@ int main ( )
 	// two segments are enough to define a rectangle
 	Mesh torus ( tag::rectangle,
                seg_horiz, seg_vert, seg_horiz.reverse(), seg_vert.reverse(),
-	             tag::winding                                                    );
+	             tag::winding                                                 );
 	// the tag::winding provides no specific information,
 	// it just warns maniFEM that we are on a quotient manifold
 	// and that it must take winding segments into account

@@ -2986,7 +2986,7 @@ void Mesh::export_to_file
 	} { // just a block for hiding names : it, x, y
 	Mesh::Iterator it = this->iterator ( tag::over_vertices );
 	Function x = coord [0], y = coord [1];
-	if (coord .nb_of_components() == 2)
+	if ( coord .nb_of_components() == 2 )
 	{	for ( it .reset() ; it .in_range(); it++ )
 		{	Cell p = *it;
 			file_msh << x(p) << " " << y(p) << " " << 0 << std::endl;  }  }

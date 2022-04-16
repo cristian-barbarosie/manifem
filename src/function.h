@@ -1,5 +1,5 @@
 
-// function.h 2022.02.25
+// function.h 2022.04.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -44,6 +44,7 @@ namespace tag
 	struct Immersion { };  static const Immersion immersion;
 	struct BuildJacobian { };  static const BuildJacobian build_jacobian;
 	struct ComposedWith { };  static const ComposedWith composed_with;
+	struct Piecewise { };  static const Piecewise piecewise;
 	struct Iff { };  static const Iff iff;
 	struct PreviouslyNonExistent { };
 	  static const PreviouslyNonExistent previously_non_existent;
@@ -91,6 +92,32 @@ class Function
 	inline Function ( const tag::HasSize &, size_t s );
 
 	inline Function ( double c );
+
+	inline Function ( const tag::Piecewise &,
+	                  const Function & v1, const tag::Iff, const Function & x,
+	                                       const tag::LessThan &, double c,
+	                  const Function & v2, const tag::Otherwise &             );
+
+	inline Function ( const tag::Piecewise &,
+	                  const Function & v1, const tag::Iff, const Function & x,
+	                                       const tag::LessThan &, double c1,
+	                  const Function & v2, const tag::IfLessThan &, double c2,
+	                  const Function & v3, const tag::Otherwise &             );
+
+	inline Function ( const tag::Piecewise &,
+	                  const Function & v1, const tag::Iff, const Function & x,
+	                                       const tag::LessThan &, double c1,
+	                  const Function & v2, const tag::IfLessThan &, double c2,
+	                  const Function & v3, const tag::IfLessThan &, double c3,
+	                  const Function & v4, const tag::Otherwise &             );
+
+	inline Function ( const tag::Piecewise &,
+	                  const Function & v1, const tag::Iff, const Function & x,
+	                                       const tag::LessThan &, double c1,
+	                  const Function & v2, const tag::IfLessThan &, double c2,
+	                  const Function & v3, const tag::IfLessThan &, double c3,
+	                  const Function & v4, const tag::IfLessThan &, double c4,
+	                  const Function & v5, const tag::Otherwise &             );
 
 	inline Function ( const tag::Diffeomorphism &, const tag::OneDim &,
 	                  const Function & geom_coords, const Function & master_coords,
@@ -1572,15 +1599,57 @@ inline Function Function::deriv ( const Function & x ) const  // derivative with
 //-----------------------------------------------------------------------------------------//
 
 
-namespace tag  {  struct Threshold { };  static const Threshold threshold;  }
+inline Function::Function ( const tag::Piecewise &,
+                            const Function & v1, const tag::Iff, const Function & x,
+                                                 const tag::LessThan &, double c,
+                            const Function & v2, const tag::Otherwise &             )
+:	Function ( tag::whose_core_is, new Function::Step
+     ( v1, tag::iff, x, tag::less_than, c, v2, tag::otherwise ) )
+{	}
+
+
+inline Function::Function ( const tag::Piecewise &,
+                            const Function & v1, const tag::Iff, const Function & x,
+                                                 const tag::LessThan &, double c1,
+                            const Function & v2, const tag::IfLessThan &, double c2,
+                            const Function & v3, const tag::Otherwise &             )
+:	Function ( tag::whose_core_is, new Function::Step
+	           ( v1, tag::iff, x, tag::less_than, c1, v2, tag::if_less_than, c2, v3, tag::otherwise ) )
+{	}
+
+
+inline Function::Function ( const tag::Piecewise &,
+                            const Function & v1, const tag::Iff, const Function & x,
+                                                 const tag::LessThan &, double c1,
+                            const Function & v2, const tag::IfLessThan &, double c2,
+                            const Function & v3, const tag::IfLessThan &, double c3,
+                            const Function & v4, const tag::Otherwise &             )
+:	Function ( tag::whose_core_is, new Function::Step
+	           ( v1, tag::iff, x, tag::less_than, c1, v2, tag::if_less_than, c2,
+	             v3, tag::if_less_than, c3, v4, tag::otherwise ) )
+{	}
+
+
+inline Function::Function ( const tag::Piecewise &,
+                            const Function & v1, const tag::Iff, const Function & x,
+                                                 const tag::LessThan &, double c1,
+                            const Function & v2, const tag::IfLessThan &, double c2,
+                            const Function & v3, const tag::IfLessThan &, double c3,
+                            const Function & v4, const tag::IfLessThan &, double c4,
+                            const Function & v5, const tag::Otherwise &             )
+:	Function ( tag::whose_core_is, new Function::Step
+	           ( v1, tag::iff, x, tag::less_than, c1, v2, tag::if_less_than, c2,
+	             v3, tag::if_less_than, c3, v4, tag::if_less_than, c4, v5, tag::otherwise ) )
+{	}
+
+//-----------------------------------------------------------------------------------------//
+
 
 inline Function max ( const Function & f, const Function & g )
-{	return Function ( tag::whose_core_is, new Function::Step
-	      ( g, tag::iff, f-g, tag::less_than, 0., f, tag::otherwise ) );  }
+{	return Function ( tag::piecewise, g, tag::iff, f-g, tag::less_than, 0., f, tag::otherwise );  }
 
 inline Function min ( const Function & f, const Function & g )
-{	return Function ( tag::whose_core_is, new Function::Step
-	      ( f, tag::iff, f-g, tag::less_than, 0., g, tag::otherwise ) );  }
+{	return Function ( tag::piecewise, f, tag::iff, f-g, tag::less_than, 0., g, tag::otherwise );  }
 
 inline Function max ( const Function & f, const Function & g, const Function & h )
 {	return max ( f, max ( g, h ) );  }
@@ -1615,19 +1684,24 @@ inline Function min
 inline Function abs ( const Function & f )
 {	return max ( f, -f );  }
 
-inline Function sign_of ( const Function & f )
-{	return Function ( tag::whose_core_is, new Function::Step
-	      ( Function (-1.), tag::iff, f, tag::less_than, 0., Function(1.), tag::otherwise ) );  }
+inline Function sign ( const Function & f )
+{	return Function ( tag::piecewise,
+	        Function (-1.), tag::iff, f, tag::less_than, 0., Function(1.), tag::otherwise );  }
+
+//-----------------------------------------------------------------------------------------//
+
+
+namespace tag  {  struct Threshold { };  static const Threshold threshold;  }
 
 inline Function smooth_abs ( const Function & f, const tag::Threshold &, double d )
 // a smooth (C1) approximation of the absolute value
 // 'd' is a threshold; if |f| >= d then smooth_abs(f) == |f|
 // below 'd', the function is smooth but far from the absolute value (never less than d/2)
 {	assert ( d > 0. );
-	return Function ( tag::whose_core_is, new Function::Step
-	      ( -f, tag::iff, f, tag::less_than, -d,
-	        ( f*f + d*d ) / (2.*d), tag::if_less_than, d, f, tag::otherwise ) );  }
-//	Function abs_f = sign_of ( f ) * f;
+	return Function ( tag::piecewise,
+	        -f,                     tag::iff, f, tag::less_than, -d,
+	        ( f*f + d*d ) / (2.*d), tag::if_less_than, d, f, tag::otherwise );  }
+//	Function abs_f = sign ( f ) * f;
 //	return abs_f * abs_f / ( d + abs_f );  }
 
 inline Function smooth_min
@@ -2079,7 +2153,7 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	// use a Function::Jump::Sum::Scalar instead !
 	
 	inline JumpIsSum ( const tag::AssociatedWith &, const Function & f,
-										 std::vector < Function::ActionGenerator > ac, std::vector < double > be )
+	                   std::vector < Function::ActionGenerator > ac, std::vector < double > be )
 	:	Function::Scalar::MultiValued ( tag::associated_with, f, ac ), beta { be }
 	{	assert ( ac .size() == be .size() );  }
 
@@ -2146,6 +2220,12 @@ class Function::Scalar::MultiValued::JumpIsLinear : public Function::Scalar::Mul
 	// and that they commute, that is,  beta[i] / (alpha[i]-1.)  does not depend on i
 	//   often, beta [i] are all zero so this is not a problem
 	
+	inline JumpIsLinear ( const tag::AssociatedWith &, const Function & f,
+										    std::vector < Function::ActionGenerator > ac,
+	                      std::vector < double > al, double ga            )
+	:	Function::Scalar::MultiValued ( tag::associated_with, f, ac ), alpha { al }, gamma { ga }
+	{	assert ( ac .size() == al .size() );  }
+
 	inline JumpIsLinear ( const Function::Scalar::MultiValued::JumpIsLinear & ) = delete;
 	inline JumpIsLinear ( Function::Scalar::MultiValued::JumpIsLinear && ) = delete;
 	
@@ -3055,11 +3135,11 @@ inline Function Function::operator[] ( size_t i ) const
 		return *this;                             }
   Function::Vector * f_vector = dynamic_cast < Function::Vector * > ( this->core );
 	assert ( f_vector );
-	return Function ( tag::whose_core_is, f_vector->component(i).core );               }
+	return Function ( tag::whose_core_is, f_vector->component(i) .core );               }
 
 
 inline Function::TakenOnCell Function::operator() ( const Cell & cll ) const
-{	return Function::TakenOnCell { this->core, cll.core };   }
+{	return Function::TakenOnCell { this->core, cll .core };   }
 
 
 inline Function::TakenOnWindingCell Function::operator()

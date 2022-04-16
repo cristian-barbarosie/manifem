@@ -1,5 +1,5 @@
 
-// manifold.h 2022.02.19
+// manifold.h 2022.04.11
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1562,6 +1562,10 @@ class Manifold::Quotient : public Manifold::Core
 
 inline Manifold::Quotient::Quotient ( Manifold b, const Manifold::Action & a1 )
 
+// a Field::ShortInt is created and kept in this->winding_nbs
+// this increments Cell::Positive::short_int_heap_size [1]
+// thus, future segments will have space reserved for a winding number
+	
 : Manifold::Core(), base_space ( b ), actions { }
 
 {	assert ( a1.index_map.size() == 1 );
@@ -1606,6 +1610,10 @@ inline Manifold::Quotient::Quotient ( Manifold b, const Manifold::Action & a1 )
 
 inline Manifold::Quotient::Quotient
 ( Manifold b, const Manifold::Action & a1, const Manifold::Action & a2 )
+
+// two Field::ShortInt are created and kept in this->winding_nbs
+// this increments by two Cell::Positive::short_int_heap_size [1]
+// thus, future segments will have space reserved for two winding numbers
 	
 : Manifold::Core(), base_space ( b ), actions { }
 
@@ -1656,6 +1664,10 @@ inline Manifold::Quotient::Quotient
 
 inline Manifold::Quotient::Quotient ( Manifold b,
   const Manifold::Action & a1, const Manifold::Action & a2, const Manifold::Action & a3 )
+
+// three Field::ShortInt are created and kept in this->winding_nbs
+// this increments by three Cell::Positive::short_int_heap_size [1]
+// thus, future segments will have space reserved for three winding numbers
 	
 : Manifold::Core(), base_space ( b ), actions { }
 
