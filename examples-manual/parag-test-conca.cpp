@@ -92,9 +92,6 @@ int main2 ( )
 
 	// define new coordinates x and y as arithmetic expressions of theta
 	Function x = cos ( theta ), y = sin ( theta );
-	// forget about theta; in future statements, x and y will be used
-	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
-	RR2 .set_coordinates ( x && y );
 
 	// numbering is explained in paragraph 6.3 of the manual
 	std::map < Cell, size_t > numbering;
@@ -109,35 +106,32 @@ int main2 ( )
 	Function u = cos ( theta / 2. );
 	Function v = sin ( theta / 2. );
 
-	// Function u_mv ( tag::multi_valued, tag::associated_with, u,
-	//                 tag::upon_action, g, tag::becomes, -u      );
-	// Function v_mv ( tag::multi_valued, tag::associated_with, v,
-	//                 tag::upon_action, g, tag::becomes, -v      );
+	Function u_mv = u .make_multivalued ( tag::through, g, tag::becomes, -u );
+	Function v_mv = v .make_multivalued ( tag::through, g, tag::becomes, -v );
 
-	std::vector < Function::ActionGenerator > vec_g;
-	assert ( g .index_map .size() == 1 );
-	assert ( g .index_map .begin()->second == 1 );
-	const Function::ActionGenerator & gg = g .index_map .begin()->first;
-	vec_g .push_back (gg);
-	Function u_mv ( tag::whose_core_is, new Function::Scalar::MultiValued::JumpIsLinear
-									( tag::associated_with, u, vec_g, { -1. }, 0. )                     );
-	Function v_mv ( tag::whose_core_is, new Function::Scalar::MultiValued::JumpIsLinear
-									( tag::associated_with, v, vec_g, { -1. }, 0. )                     );
+	Function theta_mv = circle_manif .coordinates();
 
 	{ // just a block of code for hiding variables
 	Mesh::Iterator it = circle .iterator ( tag::over_segments, tag::require_order );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell seg = *it;
 		Cell AA = seg .base() .reverse(), BB = seg .tip();
-		std::cout << u_mv (BB) - u_mv (AA) << " " << v_mv (BB) - v_mv (AA) << std::endl;  }
+		double du = u (BB) - u (AA),
+		       dv = v (BB) - v (AA),
+		       dt = theta_mv ( BB, tag::winding, seg .winding() ) - theta_mv (AA);
+		std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;                    }
 	std::cout << std::endl;
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell seg = *it;
 		Cell AA = seg .base() .reverse(), BB = seg .tip();
-		std::cout << u_mv ( BB, tag::winding, g ) - u_mv (AA) << " "
-							<< v_mv ( BB, tag::winding, g ) - v_mv (AA) << std::endl;  }
+		double du = u_mv ( BB, tag::winding, seg .winding() ) - u_mv (AA),
+		       dv = v_mv ( BB, tag::winding, seg .winding() ) - v_mv (AA),
+		       dt = theta_mv ( BB, tag::winding, seg .winding() ) - theta_mv (AA);
+		std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;                    }
 	} // just a block of code for hiding variables
 	
+	// forget about theta; in future statements, x and y will be used
+	circle_manif .set_coordinates ( x && y );
 	circle .export_to_file ( tag::msh, "circle.msh", numbering );
 
 	{ // just a block of code for hiding variables

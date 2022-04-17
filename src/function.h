@@ -1,5 +1,5 @@
 
-// function.h 2022.04.16
+// function.h 2022.04.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -164,18 +164,18 @@ class Function
 	inline void set_core_to_null ( );
 	inline void change_core_to ( Function::Core * );
 
-	inline Function multivalued ( const tag::Through &, const Function::ActionGenerator &,
-	                              const tag::Becomes &, const Function &         );
- 	inline Function multivalued ( const tag::Through &, const Function::ActionGenerator &,
-	                              const tag::Becomes &, const Function &,
-	                              const tag::Through &, const Function::ActionGenerator &,
-	                              const tag::Becomes &, const Function &         );
-	inline Function multivalued ( const tag::Through &, const Function::ActionGenerator &,
-	                              const tag::Becomes &, const Function &,
-	                              const tag::Through &, const Function::ActionGenerator &,
-	                              const tag::Becomes &, const Function &,
-	                              const tag::Through &, const Function::ActionGenerator &,
-	                              const tag::Becomes &, const Function &         );
+	inline Function make_multivalued ( const tag::Through &, const Function::Action &,
+	                                   const tag::Becomes &, const Function &         );
+ 	inline Function make_multivalued ( const tag::Through &, const Function::Action &,
+	                                   const tag::Becomes &, const Function &,
+	                                   const tag::Through &, const Function::Action &,
+	                                   const tag::Becomes &, const Function &         );
+	inline Function make_multivalued ( const tag::Through &, const Function::Action &,
+	                                   const tag::Becomes &, const Function &,
+	                                   const tag::Through &, const Function::Action &,
+	                                   const tag::Becomes &, const Function &,
+	                                   const tag::Through &, const Function::Action &,
+	                                   const tag::Becomes &, const Function &         );
 
 	class Jump;
 	inline Jump jump();
@@ -1517,6 +1517,9 @@ class Function::CoupledWithField::Vector
 	
 {	public :
 
+	// inherited from Function::Aggregate :
+	// std::vector < Function > components
+
 	inline Vector ( Field::Double::Block * f )
 	:	Function::Aggregate ( tag::reserve_size, f->nb_of_components() ),
 		Function::CoupledWithField ( f )
@@ -2187,10 +2190,10 @@ class Function::Scalar::MultiValued::JumpIsSum : public Function::Scalar::MultiV
 	Function::Jump jump ( );
 	// virtual, defined by Function::Core, execution forbidden, here overridden
 	
-	// the return value of 'analyse_linear_expression' should be double
+	// the return value of 'analyse_linear_expression' should be a double
 	// however, we use std::vector < double > instead
 	// a zero-length vector means not succeeded
-	// success is represented by a one-length vector
+	// success is represented by a vector of length one
 	inline static std::vector < double > analyse_linear_expression
 		( Function expression, Function base );
 	
@@ -2276,6 +2279,9 @@ class Function::Vector::MultiValued : public Function::MultiValued, public Funct
 	// members inherited from Function::MultiValued :
 	// Function base  -- here must be Function::Vector
 	// std::vector < Function::ActionGenerator > actions
+
+	// inherited from Function::Aggregate :
+	// std::vector < Function > components
 
 	inline MultiValued ( const tag::AssociatedWith &, const Function & b,
 	                     std::vector < Function::ActionGenerator > a     )
@@ -2521,7 +2527,7 @@ Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
 // 'expression' is an expression in x (a sum x+c)
 // we want to identify c
 
-// the return value should be double
+// the return value should be a double
 // however, we use std::vector < double > instead
 // a zero-length vector means not succeeded
 // success is represented by a vector of length one
@@ -2761,6 +2767,50 @@ Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression  // stati
 		res .first .push_back ( std::move ( res_i .first ) );
 		res .second .push_back ( res_i.second );                                   }
 	return res;                                                                    }
+
+//-----------------------------------------------------------------------------------------//
+
+
+inline Function Function::make_multivalued
+( const tag::Through &, const Function::Action & g,
+  const tag::Becomes &, const Function & new_f     )
+
+{	std::vector < Function::ActionGenerator > vec_g;
+	assert ( g .index_map .size() == 1 );
+	assert ( g .index_map .begin()->second == 1 );
+	const Function::ActionGenerator & gg = g .index_map .begin()->first;
+	vec_g .push_back (gg);
+
+	size_t n = this->nb_of_components();
+	assert ( n == new_f .nb_of_components() );
+
+	if ( n == 1 )
+	{	std::vector < double > res_sum =
+			Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
+			( new_f, *this );
+		if ( res_sum .size() > 0 )
+			return Function ( tag::whose_core_is, new Function::Scalar::MultiValued::JumpIsSum
+			                                         ( tag::associated_with, *this, vec_g, res_sum ) );
+		std::pair < std::vector < double >, double > res_lin =
+			Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
+			( new_f, *this );
+		return Function ( tag::whose_core_is, new Function::Scalar::MultiValued::JumpIsLinear
+		                  ( tag::associated_with, *this, vec_g, res_lin .first, res_lin .second ) ); }
+
+	std::vector < double > res_sum =
+		Function::Vector::MultiValued::JumpIsSum::analyse_linear_expression
+		( new_f, *this );
+	if ( res_sum .size() > 0 )
+		return Function ( tag::whose_core_is, new Function::Vector::MultiValued::JumpIsSum
+		                  ( tag::associated_with, *this, vec_g, { res_sum } ) );
+	std::pair < std::vector < std::vector < double > >, std::vector < double > > res_lin =
+		Function::Vector::MultiValued::JumpIsLinear::analyse_linear_expression
+		( new_f, *this );
+	return Function ( tag::whose_core_is, new Function::Vector::MultiValued::JumpIsLinear
+	                  ( tag::associated_with, *this, vec_g, { res_lin .first }, { res_lin .second } ) );
+
+}  // end of  Function Function::make_multivalued  with one action
+
 
 //-----------------------------------------------------------------------------------------//
 
