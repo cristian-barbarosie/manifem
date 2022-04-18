@@ -2536,20 +2536,7 @@ Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
 	size_t dim_expr = expression .nb_of_components();
 	assert ( n_coord == 1 );
 	assert ( dim_expr == 1 );
-	Function::CoupledWithField * cf =
-		dynamic_cast < Function::CoupledWithField* > ( base .core );
-	assert ( cf );
-	Field::Double::Scalar * fi =
-		dynamic_cast < Field::Double::Scalar * > ( cf->field );
-	assert ( fi );
-	Function::CoupledWithField * cfe =
-		dynamic_cast < Function::CoupledWithField* > ( expression .core );
-	if ( cfe )
-	{	Field::Double::Scalar * fie =
-			dynamic_cast < Field::Double::Scalar * > ( cfe->field );
-		if ( fie == nullptr ) return {};
-		if ( fi->index_in_heap != fie->index_in_heap ) return {};
-		return { 0. };                                             }
+	if ( expression .core == base .core ) return { 0. };
 	Function::Sum * sum = dynamic_cast < Function::Sum * > ( expression .core );
 	if ( sum == nullptr ) return {};
 	std::forward_list < Function > terms = sum->terms;
@@ -2558,12 +2545,12 @@ Function::Scalar::MultiValued::JumpIsSum::analyse_linear_expression
 	Function x = *it;
 	if ( x.core != base .core )
 	{	Function c = x;
-		Function::Constant * cc = dynamic_cast < Function::Constant * > ( c.core );
+		Function::Constant * cc = dynamic_cast < Function::Constant * > ( c .core );
 		if ( cc == nullptr ) return {};
 		it++;
 		assert ( it != terms .end() );
 		Function xx = *it;
-		if ( xx.core != base .core ) return {};
+		if ( xx .core != base .core ) return {};
 		return { cc->value };                                                           }
 	it++;
 	assert ( it != terms .end() );
@@ -2621,7 +2608,7 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 	if ( expr_sum )
 	{	std::forward_list < Function > tl = expr_sum->terms;
 		for ( std::forward_list < Function > ::const_iterator
-		      it = tl .begin(); it != tl .end(); it++           )
+		      it = tl .begin(); it != tl .end(); it++         )
 		{	Function term = *it;
 			// often, 'term' will be a product
 			Function::Product * term_prod = dynamic_cast < Function::Product* > ( term.core );
@@ -2637,53 +2624,32 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 				Function var = *itt;
 				itt++;
 				assert ( itt == fl .end() );
-				Function::CoupledWithField::Scalar * var_cf =
-					tag::Util::assert_cast < Function::Core*,
-					                         Function::CoupledWithField::Scalar* > ( var .core );
-				Field::Double::Scalar * var_field =
-					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * > ( var_cf->field );
-				bool found_var = false;
+			  bool found_var = false;
 				size_t i = 0;
 				for ( ; i < n_coord; i++ )
-				{	Function::CoupledWithField::Scalar * base_i_cf =
-						tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-						( base [i] .core );
-					Field::Double::Scalar * base_i_field =
-						tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
-						( base_i_cf->field );
-					if ( base_i_field->index_in_heap == var_field->index_in_heap )
+				{	if ( base [i] .core == var .core )
 					{	found_var = true;  break;  }                                                   }
 				assert ( found_var );
 				assert ( res .first [i] == 0. );
 				res .first [i] = cc->value;                                                          }
 			else  // term is not a product
 			{	// could a variable xi or the constant b
-				Function::CoupledWithField * term_var =
-					dynamic_cast < Function::CoupledWithField* > ( term .core );
-				if ( term_var )
-				{	Field::Double::Scalar * var_field =
-						tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
-						( term_var->field );
-					bool found_var = false;
-					size_t i = 0;
-					for ( ; i < n_coord; i++ )
-					{	Function::CoupledWithField::Scalar * base_i_cf =
-							tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-							( base [i] .core );
-						Field::Double::Scalar * base_i_field =
-							tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
-							( base_i_cf->field );
-						if ( base_i_field->index_in_heap == var_field->index_in_heap )
-							{	found_var = true;  break;  }                                            }
-					assert ( found_var );
-					assert ( res .first [i] == 0. );
-					res .first [i] = 1.;                                                               }
-				else  // term must be the constant b
+				Function::Constant * term_const = dynamic_cast < Function::Constant* > ( term .core );
+				if ( term_const )  // term must be the constant b
 				{	Function::Constant * cc =
 						tag::Util::assert_cast < Function::Core*, Function::Constant* > ( term .core );
 					assert ( res .second == 0. );
-					res .second = cc->value;
-				}  }  }  }
+					res .second = cc->value;                                                          }
+				else  // term must be a product ai xi
+				{	bool found_var = false;
+					size_t i = 0;
+					for ( ; i < n_coord; i++ )
+					{	if ( base [i] .core == term .core )
+						{	found_var = true;  break;  }                                                     }
+					assert ( found_var );
+					assert ( res .first [i] == 0. );
+					res .first [i] = 1.;                                                                   }
+				}  }  }
 	else  // expression is not a sum
 	{	// could be a product
 		Function::Product * expr_prod = dynamic_cast < Function::Product* > ( expression .core );
@@ -2699,43 +2665,20 @@ Function::Scalar::MultiValued::JumpIsLinear::analyse_linear_expression
 			Function var = *itt;
 			itt++;
 			assert ( itt == fl .end() );
-			Function::CoupledWithField::Scalar * var_cf =
-				tag::Util::assert_cast < Function::Core*,
-				                         Function::CoupledWithField::Scalar* > ( var .core );
-			Field::Double::Scalar * var_field =
-				tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * > ( var_cf->field );
 			bool found_var = false;
 			size_t i = 0;
 			for ( ; i < n_coord; i++ )
-			{	Function::CoupledWithField::Scalar * base_i_cf =
-					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-					( base [i] .core );
-				Field::Double::Scalar * base_i_field =
-					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
-					( base_i_cf->field );
-				if ( base_i_field->index_in_heap == var_field->index_in_heap )
-				{	found_var = true;  break;  }                                            }
+				if ( base [i] .core == var .core )
+				{	found_var = true;  break;  }
 			assert ( found_var );
 			assert ( res.first[i] == 0. );
 			res .first [i] = cc->value;                                                       }
 		else  // expression is not a sum, not a product
 		{	// must be a variable xi
-			Function::CoupledWithField::Scalar * expr_var =
-				tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-				( expression .core );
-			Field::Double::Scalar * var_field =
-				tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
-				( expr_var->field );
 			bool found_var = false;
 			size_t i = 0;
 			for ( ; i < n_coord; i++ )
-			{	Function::CoupledWithField::Scalar * base_i_cf =
-					tag::Util::assert_cast < Function::Core*, Function::CoupledWithField::Scalar* >
-					( base [i] .core );
-				Field::Double::Scalar * base_i_field =
-					tag::Util::assert_cast < Field::Core*, Field::Double::Scalar * >
-					( base_i_cf->field );
-				if ( base_i_field->index_in_heap == var_field->index_in_heap )
+			{	if ( base [i] .core == expression .core )
 				{	found_var = true;  break;  }                                            }
 			assert ( found_var );
 			assert ( res .first [i] == 0. );
