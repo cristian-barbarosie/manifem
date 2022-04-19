@@ -45,7 +45,7 @@ int main ( )
 	// the coordinate on circle_manif is a multi-function :
 	Function theta_mv = circle_manif .coordinates();
 
-	Function u = cos ( theta / 2.);
+	Function u = cos ( theta / 2.);   // to change !!
 	Function v = sin ( theta / 2.);
 
 	Function u_mv = u .make_multivalued ( tag::through, g, tag::becomes, -u );
@@ -54,17 +54,48 @@ int main ( )
 	{ // just a block of code for hiding 'it'
 	// first, we compute finite diferences without taking windings into account
 	// and we note a concentration
-	Mesh::Iterator it = circle .iterator ( tag::over_segments, tag::require_order );
-	for ( it .reset(); it .in_range(); it++ )
+	Mesh::Iterator it = circle .iterator ( tag::over_vertices, tag::require_order );
+	it .reset();  assert ( it .in_range() );
+	Cell first_seg = *it;
+	Cell BB = first_seg .tip();
+	Eigen::Matrix2d M;
+	M ( 0, 0 ) =  x (BB);
+	M ( 0, 1 ) =  M ( 1, 0 ) = y (BB);
+	M ( 1, 1 ) = -x (BB);
+	Eigen::SelfAdjointEigenSolver < Eigen::Matrix4f > es;
+	es .compute (M);
+	Eigen::Matrix2d eigenvec = es .eigenvectors();
+	u (BB) = first_eigenvec (0);
+	v (BB) = first_eigenvec (1);
+	for ( it++; it .in_range(); it++ )
 	{	Cell seg = *it;
-		Cell AA = seg .base() .reverse(), BB = seg .tip();
+		Cell AA = seg .base() .reverse();
+		BB = seg .tip();
+		Cell V = *it;
+		M ( 0, 0 ) =  x (BB);
+		M ( 0, 1 ) =  M ( 1, 0 ) = y (BB);
+		M ( 1, 1 ) = -x (BB);
+		es .compute (M);
+		eigenvec = es .eigenvectors();
+		// among four candidates, we choose the one which is closest to previous_eigenvec
+		short int index = -1, sign = 0;
+		double dist_min = 100.;
+		Eigen::Vector2d previous_eigenvec ( u (AA), v (AA) );
+		for ( short int i = 0; i < 2; i++ )
+		for ( short int s = -1; s < 2; s += 2 )
+		{	double d = ( eigenvec .col(i) - s * previous_eigenvec ) .norm();
+			if ( d < dist_min )
+			{	dist_min = d;  index = i;  sign = s;  }                        }
+		assert ( index >= 0 );  assert ( sign != 0 );
+		u (BB) = sign * eigenvec .col (index) (0);
+		v (BB) = sign * eigenvec .col (index) (1);
 		double du = u (BB) - u (AA),
 		       dv = v (BB) - v (AA),
 		       dt = theta_mv ( BB, tag::winding, seg .winding() ) - theta_mv (AA);
 		std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;                    }
 	std::cout << std::endl;
 	// now we take windings into account and notice that all derivatives have the same magnitude
-	for ( it .reset(); it .in_range(); it++ )
+	for ( it++; it .in_range(); it++ )
 	{	Cell seg = *it;
 		Cell AA = seg .base() .reverse(), BB = seg .tip();
 		double du = u_mv ( BB, tag::winding, seg .winding() ) - u_mv (AA),
