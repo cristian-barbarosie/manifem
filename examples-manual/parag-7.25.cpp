@@ -21,7 +21,7 @@ int main ( )
 	Mesh circle ( tag::segment, A .reverse(), A, tag::divided_in, 20, tag::winding, g );
 
 	// it should be noted that, at this stage, theta is not a multifunction
-	// theta is the only coordinate on RR which is a Euclidian manifold
+	// theta is the only coordinate on RR, which is a Euclidian manifold
 	// the coordinate on circle_manif is a multi-function :
 	Function theta_mv = circle_manif .coordinates();
 
