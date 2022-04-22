@@ -1,5 +1,5 @@
 
-// function.h 2022.04.17
+// function.h 2022.04.20
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -49,6 +49,7 @@ namespace tag
 	struct PreviouslyNonExistent { };
 	  static const PreviouslyNonExistent previously_non_existent;
 	struct BasisFunction { };  static const BasisFunction basis_function;
+	struct LivesOn { };  static const LivesOn lives_on;
 	struct LessThan { };  static const LessThan less_than;
 	struct IfLessThan { };  static const IfLessThan if_less_than;
 	struct Otherwise { };  static const Otherwise otherwise;
@@ -89,7 +90,10 @@ class Function
 
 	inline Function ( const Function & f );
 
-	inline Function ( const tag::HasSize &, size_t s );
+	Function ( const tag::LivesOn &, const tag::CellsOfDim &, const size_t dim,
+             const tag::HasSize &, const size_t s                            );
+	inline Function ( const tag::LivesOn &, const tag::Vertices &,
+	                  const tag::HasSize &, const size_t s        );
 
 	inline Function ( double c );
 
@@ -1572,6 +1576,13 @@ inline std::string Function::repr ( ) const  { return core->repr();  }
 #endif
 
 //-----------------------------------------------------------------------------------------//
+
+
+inline Function::Function
+( const tag::LivesOn &, const tag::Vertices &, const tag::HasSize &, const size_t s )
+:	Function ( tag::lives_on, tag::cells_of_dim, 0, tag::has_size, s )
+{	}	
+
 
 Function operator+ ( const Function & f, const Function & g );
 Function operator* ( const Function & f, const Function & g );

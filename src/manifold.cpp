@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.02.23
+// manifold.cpp 2022.04.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -36,6 +36,10 @@ Manifold Manifold::working ( tag::non_existent );
 Function Manifold::Euclid::build_coord_func
 ( const tag::lagrange &, const tag::OfDegree &, size_t deg )
 // virtual from Manifold::Core
+
+// see also Function::Function ( const tag::LivesOn &, const tag::CellsOfDim &, const size_t dim,
+//                               const tag::HasSize &, const size_t s                            )
+
 	
 {	assert ( deg == 1 );
 	Field::Double::Core * field;
@@ -1011,7 +1015,8 @@ void tag::Util::conjugate_gradient   // Polak Ribiere              // static
 
 // norm of 'grad' or of 'direc' can be used as stopping criterion
 
-// it should be possible to avoid divisions by quantities going to zero !
+// is it not possible to avoid divisions by quantities going to zero ?
+// probably not, if we do not use second order derivatives
 	
 {	size_t n = x .size();
 	assert ( direc .size() == n );

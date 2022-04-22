@@ -1,5 +1,6 @@
 
-// function.cpp 2022.02.21
+
+// function.cpp 2022.04.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -30,6 +31,33 @@
 using namespace maniFEM;
 
 //-----------------------------------------------------------------------------------------//
+
+namespace { // anonymous namespace, mimics static linkage
+
+inline Function::Core * function_with_field ( const size_t dim, const size_t s )
+
+// field lives on cells of dim 'dim', has 's' components
+// see also  Manifold::Euclid::build_coord_func
+		
+{	if ( s == 1 )
+	{	Field::Double::Scalar * field_scalar = new Field::Double::Scalar
+			( tag::lives_on_positive_cells, tag::of_dim, dim );
+		return new Function::CoupledWithField::Scalar ( field_scalar );  }
+	assert ( s > 1 );
+	Field::Double::Block * field_block = new Field::Double::Block
+		( tag::lives_on_positive_cells, tag::of_dim, dim, tag::has_size, s );
+	return new Function::CoupledWithField::Vector ( field_block );          }
+
+}  // anonymous namespace
+
+
+Function::Function ( const tag::LivesOn &, const tag::CellsOfDim &, const size_t dim,
+                     const tag::HasSize &, const size_t s                            )
+:	Function ( tag::whose_core_is, function_with_field ( dim, s ) )
+{	}
+	
+//-----------------------------------------------------------------------------------------//
+
 
 unsigned int Function::total_cores { 0 };
 size_t Function::ActionGenerator::counter { 0 };
