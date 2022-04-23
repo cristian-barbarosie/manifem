@@ -1,12 +1,14 @@
 
 // example presented in paragraph 7.27 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// a rotating vector field on a circle, defined by  coef * theta
+// a rotating vector field on a circle, defined as eigenvector
 
 #include <fstream>
 
 #include "maniFEM.h"
 using namespace maniFEM;
+
+#include <Eigen/Eigenvalues>
 
 
 int main ( )
@@ -17,6 +19,10 @@ int main ( )
 	Manifold::Action g ( tag::transforms, theta, tag::into, theta + 2.*pi );
 	Manifold circle_manif = RR .quotient (g);
 
+	// uv  will be a vector field defined at vertices
+	Function uv ( tag::lives_on, tag::vertices, tag::has_size, 2 );
+	Function u = uv[0], v = uv[1];
+
 	Cell A ( tag::vertex );  theta (A) = 0.;
 	Mesh circle ( tag::segment, A .reverse(), A, tag::divided_in, 20, tag::winding, g );
 
@@ -25,42 +31,119 @@ int main ( )
 	// the coordinate on circle_manif is a multi-function :
 	Function theta_mv = circle_manif .coordinates();
 
-	const double coef = 0.3333;
-	Function u = cos ( coef * theta );
-	Function v = sin ( coef * theta );
-	Function uv = u && v;
-
-	const double c = std::cos ( coef * 2.* pi ), s = std::sin ( coef * 2.* pi );
-	Function uv_mv = uv .make_multivalued
-		( tag::through, g, tag::becomes, ( c*u - s*v ) && ( s*u + c*v ) );
-
-	// it would be comfortable to extract components of uv_mv :
-	// Function u_mv = uv_mv [0], v_mv = uv_mv [1]
-	// but maniFEM does not allow extracting components of multi-valued vector fields
-	// so we just use uv_mv and extract components after evaluation at a vertex
-
-	{ // just a block of code for hiding 'it'
 	// first, we compute finite diferences without taking windings into account
 	// and we note a concentration
+
+	{ // just a block of code for hiding 'it'
 	Mesh::Iterator it = circle .iterator ( tag::over_segments, tag::require_order );
-	for ( it .reset(); it .in_range(); it++ )
+	it .reset();  assert ( it .in_range() );
+	Cell first_seg = *it;
+	Cell BB = first_seg .tip();
+	Eigen::Matrix2d M;
+	M ( 0, 0 ) =  1. + std::cos ( theta (BB) );
+	M ( 0, 1 ) =  M ( 1, 0 ) = std::sin ( theta (BB) );
+	M ( 1, 1 ) = -1. - std::cos ( theta (BB) );
+	Eigen::SelfAdjointEigenSolver < Eigen::Matrix2d > es;
+	es .compute (M);
+	Eigen::Matrix2d eigenvec = es .eigenvectors();
+	u (BB) = eigenvec .col (0) (0);
+	v (BB) = eigenvec .col (0) (1);
+	for ( it++; it .in_range(); it++ )
 	{	Cell seg = *it;
-		Cell AA = seg .base() .reverse(), BB = seg .tip();
+		Cell AA = seg .base() .reverse();
+		BB = seg .tip();
+		Cell V = *it;
+		M ( 0, 0 ) =  1. + std::cos ( theta (BB) );
+		M ( 0, 1 ) =  M ( 1, 0 ) = std::sin ( theta (BB) );
+		M ( 1, 1 ) = -1. - std::cos ( theta (BB) );
+		es .compute (M);
+		eigenvec = es .eigenvectors();
+		// among four candidates, we choose the one which is closest to previous eigenvec
+		short int index = -1, sign = 0;
+		double dist_min = 100.;
+		Eigen::Vector2d previous_eigenvec ( u (AA), v (AA) );
+		for ( short int i = 0; i < 2; i++ )
+		for ( short int s = -1; s < 2; s += 2 )
+		{	double d = ( eigenvec .col(i) - s * previous_eigenvec ) .norm();
+			if ( d < dist_min )
+			{	dist_min = d;  index = i;  sign = s;  }                        }
+		assert ( index >= 0 );  assert ( sign != 0 );
+		u (BB) = sign * eigenvec .col (index) (0);
+		v (BB) = sign * eigenvec .col (index) (1);
 		double du = u (BB) - u (AA),
 		       dv = v (BB) - v (AA),
 		       dt = theta_mv ( BB, tag::winding, seg .winding() ) - theta_mv (AA);
 		std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;                    }
+	// the above works fine, but on the last segment u and v have a jump :
+	Cell AA = first_seg .base() .reverse();
+	BB = first_seg .tip();
+	double du = u (BB) - u (AA),
+	       dv = v (BB) - v (AA),
+	       dt = theta_mv ( BB, tag::winding, first_seg .winding() ) - theta_mv (AA);
+	std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;	
 	std::cout << std::endl;
-	// now we take windings into account and notice that all derivatives have the same magnitude
-	for ( it .reset(); it .in_range(); it++ )
+	} // just a block of code
+
+	// by using multi-functions, everything goes into place :
+
+	Function uv_mv = uv .make_multivalued ( tag::through, g, tag::becomes, (-v) && u );
+
+	{ // just a block of code for hiding 'it'
+	Mesh::Iterator it = circle .iterator ( tag::over_segments, tag::require_order );
+	it .reset();  assert ( it .in_range() );
+	Cell first_seg = *it;
+	Cell BB = first_seg .tip();
+	Eigen::Matrix2d M;
+	M ( 0, 0 ) =  1. + std::cos ( theta (BB) );
+	M ( 0, 1 ) =  M ( 1, 0 ) = std::sin ( theta (BB) );
+	M ( 1, 1 ) = -1. - std::cos ( theta (BB) );
+	Eigen::SelfAdjointEigenSolver < Eigen::Matrix2d > es;
+	es .compute (M);
+	Eigen::Matrix2d eigenvec = es .eigenvectors();
+	u (BB) = eigenvec .col (0) (0);
+	v (BB) = eigenvec .col (0) (1);
+	for ( it++; it .in_range(); it++ )
 	{	Cell seg = *it;
-		Cell AA = seg .base() .reverse(), BB = seg .tip();
-		std::vector < double > tmp_BB = uv_mv ( BB, tag::winding, seg .winding() ),
-		                       tmp_AA = uv_mv (AA);
-		double du = tmp_BB [0] - tmp_AA [0],
-		       dv = tmp_BB [1] - tmp_AA [1],
+		Cell AA = seg .base() .reverse();
+		BB = seg .tip();
+		Cell V = *it;
+		M ( 0, 0 ) =  1. + std::cos ( theta (BB) );
+		M ( 0, 1 ) =  M ( 1, 0 ) = std::sin ( theta (BB) );
+		M ( 1, 1 ) = -1. - std::cos ( theta (BB) );
+		es .compute (M);
+		eigenvec = es .eigenvectors();
+		// among four candidates, we choose the one which is closest to previous eigenvec
+		short int index = -1, sign = 0;
+		double dist_min = 100.;
+		// we want to match the current vector with the previous vector
+		// since we are looking back, we change the sign of the winding number
+		// equivalently, we could use  seg .reverse()
+		std::vector < double > uv_prev = uv_mv ( AA, tag::winding, - seg .winding() );
+		Eigen::Vector2d previous_eigenvec ( uv_prev [0], uv_prev [1] );
+		for ( short int i = 0; i < 2; i++ )
+		for ( short int s = -1; s < 2; s += 2 )
+		{	double d = ( eigenvec .col(i) - s * previous_eigenvec ) .norm();
+			if ( d < dist_min )
+			{	dist_min = d;  index = i;  sign = s;  }                        }
+		assert ( index >= 0 );  assert ( sign != 0 );
+		u (BB) = sign * eigenvec .col (index) (0);
+		v (BB) = sign * eigenvec .col (index) (1);
+		std::vector < double > uv_AA = uv_mv (AA),
+		                       uv_BB = uv_mv ( BB, tag::winding, seg .winding() );
+		double du = uv_BB [0] - uv_AA [0],
+		       dv = uv_BB [1] - uv_AA [1],
 		       dt = theta_mv ( BB, tag::winding, seg .winding() ) - theta_mv (AA);
-		std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;                     }
+		std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;                    }
+	// let us check now the first segment
+	Cell AA = first_seg .base() .reverse();
+	BB = first_seg .tip();
+	std::vector < double > uv_AA = uv_mv (AA),
+	                       uv_BB = uv_mv ( BB, tag::winding, first_seg .winding() );
+	double du = uv_BB [0] - uv_AA [0],
+	       dv = uv_BB [1] - uv_AA [1],
+	       dt = theta_mv ( BB, tag::winding, first_seg .winding() ) - theta_mv (AA);
+	std::cout << ( du*du + dv*dv ) / dt / dt << std::endl;
+	std::cout << std::endl;
 	} // just a block of code
 	
 	// numbering is explained in paragraph 6.3 of the manual
@@ -96,8 +179,8 @@ int main ( )
 	Mesh::Iterator it = circle .iterator ( tag::over_vertices );
 	for ( it .reset(); it .in_range(); it++ )
 	{	Cell P = *it;
-		std::vector < double > tmp = uv_mv (P);
-		solution_file << numbering [P] + 1 << " " << tmp [0] << " " << tmp [1] << " 0. "<< std::endl;  }
+		std::vector < double > uv_P = uv_mv (P);
+		solution_file << numbering [P] + 1 << " " << uv_P [0] << " " << uv_P [1] << " 0. "<< std::endl;  }
 	} // just a block of code
 
 	std::cout << "produced file circle.msh" << std::endl;

@@ -118,6 +118,7 @@ int main ( )
 		double dist_min = 100.;
 		// we want to match the current vector with the previous vector
 		// since we are looking back, we change the sign of the winding number
+		// equivalently, we could use  seg .reverse()
 		Eigen::Vector2d previous_eigenvec ( u_mv ( AA, tag::winding, - seg .winding() ),
 		                                    v_mv ( AA, tag::winding, - seg .winding() ) );
 		for ( short int i = 0; i < 2; i++ )
