@@ -16,7 +16,7 @@ int main ()
 	Manifold parab_vert  = RR2 .implicit ( y == x * x - 2. );
 	Manifold parab_horiz = RR2 .implicit ( x == y * y - 2. );
 
-	Manifold four_points = parab_vert .implicit ( x == y * y - 2. );
+	Manifold four_points ( tag::intersection, parab_vert, parab_horiz );
 	
 	Cell A ( tag::vertex, tag::of_coords, { -1., -1. }, tag::project );
 	Cell B ( tag::vertex, tag::of_coords, {  1., -1. }, tag::project );

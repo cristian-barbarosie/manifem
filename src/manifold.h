@@ -1,5 +1,5 @@
 
-// manifold.h 2022.04.11
+// manifold.h 2022.04.24
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -40,6 +40,7 @@ namespace tag
 {	struct euclid { };  static const euclid Euclid;
 	struct lagrange { };  static const lagrange Lagrange;
 	struct Implicit { };  static const Implicit implicit;
+	struct Intersection { };  static const Intersection intersection;
 	struct Parametric { };  static const Parametric parametric;
 	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;  }
 
@@ -86,6 +87,10 @@ class Manifold
 	inline Manifold ( const tag::Implicit &,
 	                  const Manifold &, const Function &, const Function &, const Function & );
 	
+	inline Manifold ( const tag::Intersection &, const Manifold &, const Manifold & );
+	inline Manifold
+	( const tag::Intersection &, const Manifold &, const Manifold &, const Manifold & );
+	
 	inline Manifold ( const tag::Parametric &, const Manifold &, const Function::Equality & );
 	inline Manifold ( const tag::Parametric &,
 	       const Manifold &, const Function::Equality &, const Function::Equality & );
@@ -93,7 +98,7 @@ class Manifold
 	       const Function::Equality &, const Function::Equality &, const Function::Equality & );
 
 	inline ~Manifold ( )
-	{} //	std::cout << "destructor Manifold" << std::endl;  }
+	{} //	std::cout << "destructor Manifold" << std::endl;
 	
 	inline Manifold & operator= ( const Manifold & m )
 	{	core = m.core;
@@ -113,6 +118,8 @@ class Manifold
 	// a non-existent manifold has null core
 	inline bool exists ( ) const { return core != nullptr; }
 
+	inline void build_intersection_of_two_manif ( const Manifold & m1, const Manifold & m2 );
+		
 	// measure of the entire manifold (length for 1D, area for 2D, volume for 3D)
 	// produces run-time error for Euclidian manifolds
 	// and for other manifolds whose measure is infinite (e.g. cylinder)
@@ -1127,6 +1134,109 @@ inline Manifold::Implicit::OneEquation::OneEquation
 	for ( size_t i = 0; i < n; i++ )  // grad->components [i] = f .deriv ( coord [i] );
 		grad->components .emplace_back ( f .deriv ( coord [i] ) );
 	this->grad_lev_func = Function ( tag::whose_core_is, grad );                        }
+
+//-----------------------------------------------------------------------------------------
+
+
+inline void Manifold::build_intersection_of_two_manif ( const Manifold & m1, const Manifold & m2 )
+
+{	Manifold::Euclid * m1_euclid = dynamic_cast < Manifold::Euclid* > ( m1 .core );
+	if ( m1_euclid )
+	{	Manifold::Implicit * m2_implicit = dynamic_cast < Manifold::Implicit* > ( m2 .core );
+		assert ( m2_implicit );
+		assert ( m2_implicit->surrounding_space .core == m1 .core );
+		this->core = m2 .core;
+		Manifold::working = *this;
+		return;                                                    }
+
+	Manifold::Euclid * m2_euclid = dynamic_cast < Manifold::Euclid* > ( m2 .core );
+	if ( m2_euclid )
+	{	Manifold::Implicit * m1_implicit = dynamic_cast < Manifold::Implicit* > ( m1 .core );
+		assert ( m1_implicit );
+		assert ( m1_implicit->surrounding_space .core == m2 .core );
+		this->core = m1 .core;
+		Manifold::working = *this;
+		return;                                                    }
+
+	Manifold::Implicit * m1_implicit = dynamic_cast < Manifold::Implicit* > ( m1 .core );
+	assert ( m1_implicit );
+	Manifold::Implicit * m2_implicit = dynamic_cast < Manifold::Implicit* > ( m2 .core );
+	assert ( m2_implicit );
+	assert ( m1_implicit->surrounding_space .core == m2_implicit->surrounding_space .core );
+
+	Manifold::Implicit::OneEquation * m1_implicit_one =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m1 .core );
+	if ( m1_implicit_one )
+	{	Manifold::Implicit::OneEquation * m2_implicit_one =
+			dynamic_cast < Manifold::Implicit::OneEquation* > ( m2 .core );
+		if ( m2_implicit_one )
+		{	this->core = new Manifold::Implicit::TwoEquations ( m1, m2_implicit_one->level_function );
+			Manifold::working = *this;
+			return;                                                                                    }
+		Manifold::Implicit::OneEquation * m2_implicit_two =
+			dynamic_cast < Manifold::Implicit::OneEquation* > ( m2 .core );
+		assert ( m2_implicit_two );
+		this->core = new Manifold::Implicit::TwoEquations ( m2, m1_implicit_one->level_function );
+		Manifold::working = *this;
+		return;                                                                                         }
+
+	Manifold::Implicit::TwoEquations * m1_implicit_two =
+		dynamic_cast < Manifold::Implicit::TwoEquations* > ( m1 .core );
+	assert ( m1_implicit_two );
+	Manifold::Implicit::OneEquation * m2_implicit_one =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m2 .core );
+	assert ( m2_implicit_one );
+	this->core = new Manifold::Implicit::TwoEquations ( m1, m2_implicit_one->level_function );
+	Manifold::working = *this;
+	return;
+
+}  // end of  build_intersection_two_manif
+	
+
+inline Manifold::Manifold ( const tag::Intersection &, const Manifold & m1, const Manifold & m2 )
+
+:	Manifold ( tag::non_existent )  // temporarily empty manifold
+
+{	this->build_intersection_of_two_manif ( m1, m2 );  }
+
+
+inline Manifold::Manifold
+( const tag::Intersection &, const Manifold & m1, const Manifold & m2, const Manifold & m3 )
+
+:	Manifold ( tag::non_existent )  // temporarily empty manifold
+
+{	Manifold::Euclid * m1_euclid = dynamic_cast < Manifold::Euclid* > ( m1 .core );
+	if ( m1_euclid )
+	{	this->build_intersection_of_two_manif ( m2, m3 );
+		return;                                           }
+
+	Manifold::Euclid * m2_euclid = dynamic_cast < Manifold::Euclid* > ( m2 .core );
+	if ( m2_euclid )
+	{	this->build_intersection_of_two_manif ( m1, m3 );
+		return;                                           }
+	
+	Manifold::Euclid * m3_euclid = dynamic_cast < Manifold::Euclid* > ( m3 .core );
+	if ( m3_euclid )
+	{	this->build_intersection_of_two_manif ( m1, m2 );
+		return;                                           }
+
+	Manifold::Implicit::OneEquation * m1_implicit_one =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m1 .core );
+	assert ( m1_implicit_one );
+	Manifold::Implicit::OneEquation * m2_implicit_one =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m2 .core );
+	assert ( m2_implicit_one );
+	Manifold::Implicit::OneEquation * m3_implicit_one =
+		dynamic_cast < Manifold::Implicit::OneEquation* > ( m3 .core );
+	assert ( m3_implicit_one );
+
+	this->core = new Manifold::Implicit::ThreeEquationsOrMore
+		( m1, m2_implicit_one->level_function, m3_implicit_one->level_function );
+	Manifold::working = *this;
+	return;                                                                         }
+	
+	
+//-----------------------------------------------------------------------------------------
 
 
 inline Manifold::Implicit::TwoEquations::TwoEquations

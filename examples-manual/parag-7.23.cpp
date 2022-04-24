@@ -15,12 +15,6 @@ using namespace maniFEM;
 
 void limit_number_of_neighbours ( Mesh msh );
 	
-void remove_short_segments ( Mesh & msh, double threshold );
-
-void flip_split_long_segments ( Mesh & msh, double threshold );
-
-void baricenters ( Mesh & msh );
-
 
 int main ( )
 
@@ -120,6 +114,14 @@ int main ( )
 // looks like there is a problem in split_segment or in remove_short_segments
 // shows up with MANIFEM_COLLECT_CM on
 
+
+//-----------------------------------------------------------------------------------------
+
+void remove_short_segments ( Mesh & msh, double threshold );
+
+void flip_split_long_segments ( Mesh & msh, double threshold );
+
+void baricenters ( Mesh & msh );
 
 //-----------------------------------------------------------------------------------------
 
