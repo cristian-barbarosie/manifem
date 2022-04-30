@@ -65,18 +65,23 @@ int main ()
 
 	// for surfaces, we do not have so much freedom :
 	
-	RR3 .implicit ( x*x + y*y - p*z*z == 2.-p );
-	Mesh AEFB ( tag::rectangle, AE, EF, BF .reverse(), AB .reverse() );
-	Mesh CGHD ( tag::rectangle, CG, GH, DH .reverse(), CD .reverse() );
-	
-	RR3 .implicit ( x*x - p*y*y + z*z == 2.-p );
-	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
-	Mesh EFGH ( tag::rectangle, EF, FG, GH, HE );
-
-	RR3 .implicit ( - p*x*x + y*y + z*z == 2.-p );
+	Manifold faces_x = RR3 .implicit ( - p*x*x + y*y + z*z == 2.-p );
 	Mesh DHEA ( tag::rectangle, DH, HE, AE .reverse(), DA .reverse() );
 	Mesh BFGC ( tag::rectangle, BF, FG, CG .reverse(), BC .reverse() );
 
+	Manifold faces_y = RR3 .implicit ( x*x - p*y*y + z*z == 2.-p );
+	Mesh ABCD ( tag::rectangle, AB, BC, CD, DA );
+	Mesh EFGH ( tag::rectangle, EF, FG, GH, HE );
+
+	Manifold faces_z = RR3 .implicit ( x*x + y*y - p*z*z == 2.-p );
+	Mesh AEFB ( tag::rectangle, AE, EF, BF .reverse(), AB .reverse() );
+	Mesh CGHD ( tag::rectangle, CG, GH, DH .reverse(), CD .reverse() );
+
+	// by the way, another way of defining the manifolds used to build the sides is :
+	// Manifold sides_x ( tag::intersect, faces_y, faces_z ) -- for building AB, GH, CD, EF
+	// Manifold sides_y ( tag::intersect, faces_x, faces_z ) -- for building AE, BF, CG, DH
+	// Manifold sides_z ( tag::intersect, faces_x, faces_y ) -- for building BC, DA, FG, HE
+	
 	// back to the initial 3D Euclidian space :
 
 	RR3 .set_as_working_manifold();

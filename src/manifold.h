@@ -1,5 +1,5 @@
 
-// manifold.h 2022.04.24
+// manifold.h 2022.04.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -40,7 +40,7 @@ namespace tag
 {	struct euclid { };  static const euclid Euclid;
 	struct lagrange { };  static const lagrange Lagrange;
 	struct Implicit { };  static const Implicit implicit;
-	struct Intersection { };  static const Intersection intersection;
+	struct Intersect { };  static const Intersect intersect;
 	struct Parametric { };  static const Parametric parametric;
 	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;  }
 
@@ -87,9 +87,9 @@ class Manifold
 	inline Manifold ( const tag::Implicit &,
 	                  const Manifold &, const Function &, const Function &, const Function & );
 	
-	inline Manifold ( const tag::Intersection &, const Manifold &, const Manifold & );
+	inline Manifold ( const tag::Intersect &, const Manifold &, const Manifold & );
 	inline Manifold
-	( const tag::Intersection &, const Manifold &, const Manifold &, const Manifold & );
+	( const tag::Intersect &, const Manifold &, const Manifold &, const Manifold & );
 	
 	inline Manifold ( const tag::Parametric &, const Manifold &, const Function::Equality & );
 	inline Manifold ( const tag::Parametric &,
@@ -1193,7 +1193,7 @@ inline void Manifold::build_intersection_of_two_manif ( const Manifold & m1, con
 }  // end of  build_intersection_two_manif
 	
 
-inline Manifold::Manifold ( const tag::Intersection &, const Manifold & m1, const Manifold & m2 )
+inline Manifold::Manifold ( const tag::Intersect &, const Manifold & m1, const Manifold & m2 )
 
 :	Manifold ( tag::non_existent )  // temporarily empty manifold
 
@@ -1201,7 +1201,7 @@ inline Manifold::Manifold ( const tag::Intersection &, const Manifold & m1, cons
 
 
 inline Manifold::Manifold
-( const tag::Intersection &, const Manifold & m1, const Manifold & m2, const Manifold & m3 )
+( const tag::Intersect &, const Manifold & m1, const Manifold & m2, const Manifold & m3 )
 
 :	Manifold ( tag::non_existent )  // temporarily empty manifold
 

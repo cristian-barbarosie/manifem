@@ -1,10 +1,7 @@
 
 // example presented in paragraph 3.24 of the manual
 // http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf
-// a disk with an eccentric hole, anisotropic mesh
-
-// the code shown in the manual does not work (yet)
-// we fake the desired result by meshing a surface in 3D
+// a disk with an eccentric hole, non-uniform meshing
 
 #include "maniFEM.h"
 using namespace maniFEM;
@@ -12,36 +9,28 @@ using namespace maniFEM;
 
 int main ( )
 
-{	Manifold RR3 ( tag::Euclid, tag::of_dim, 3 );
-	Function xyz = RR3 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xyz [0], y = xyz [1], z = xyz [2];
+{	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
+	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
+	Function x = xy [0], y = xy [1];
 
-	Manifold parab_surf =
-		RR3 .implicit ( z == 2. * smooth_max ( 3.*y - x - 3.2 , 0., tag::threshold, 1. ) );
+	Function d = 0.03 + 0.04 * ( ( x + 0.3 ) * ( x + 0.3 ) + ( y - 0.9 ) * ( y - 0.9 ) );
+	// Function d = 0.03 * smooth_max ( x - 3.*y + 3.5, 1., tag::threshold, 0.01 );
 
-	double d = 0.095;
-	Manifold circle = parab_surf .implicit ( x*x + y*y == 1. );
-	Cell P ( tag::vertex );  x (P) = 1.;  y (P) = 0.;  z (P) = 0.;
-	circle .project ( P );
-	Mesh outer ( tag::frontal, tag::start_at, P, tag::desired_length, d,
-							 tag::orientation, tag::random                          );
+	Manifold circle = RR2 .implicit ( x*x + y*y == 1. );
+	Mesh outer ( tag::frontal, tag::entire_manifold, circle, tag::desired_length, d );
 
 	double y0 = 0.37;
-	Manifold ellipse = parab_surf .implicit ( x*x + (y-y0)*(y-y0) + 0.3*x*y == 0.25 );
-	Mesh inner ( tag::frontal, tag::desired_length, d, tag::orientation, tag::random );
+	Manifold ellipse = RR2 .implicit ( x*x + (y-y0)*(y-y0) + 0.3*x*y == 0.25 );
+	Mesh inner ( tag::frontal, tag::entire_manifold, ellipse, tag::desired_length, d );
 
-	Mesh circles ( tag::join, outer, inner );
+	Mesh circles ( tag::join, outer, inner .reverse() );
 
-	parab_surf .set_as_working_manifold();
-	Mesh disk ( tag::frontal, tag::boundary, circles,
-              tag::start_at, P, tag::towards, { -1., 0., 0. },
-              tag::desired_length, d                          );
+	RR2 .set_as_working_manifold();
+	Mesh disk ( tag::frontal, tag::boundary, circles, tag::desired_length, d );
 
 	disk .export_to_file ( tag::msh, "disk.msh");
-	RR3 .set_as_working_manifold();
-	RR3 .set_coordinates ( x && y );
 	disk .draw_ps ("disk.eps");
 
-	std::cout << "produced files disk.eps and disk.msh" << std::endl;
+	std::cout << "produced files disk.msh and disk.eps" << std::endl;
 
 }  // end of main
