@@ -23,8 +23,7 @@ int main ()
 
 	Cell S ( tag::vertex );  x (S) = 0.;  y (S) = -1.;  z (S) = 0.;
 	std::vector < double > tau { 1., 0., 0. };
-	Mesh circle ( tag::frontal, tag::start_at, S, tag::towards, tau,
-                tag::desired_length, 0.1                          );
+	Mesh circle ( tag::frontal, tag::start_at, S, tag::towards, tau, tag::desired_length, 0.1 );
 
 	nut .set_as_working_manifold();
 	std::vector < double > N { 0., 0., 1. };

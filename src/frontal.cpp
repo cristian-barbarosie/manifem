@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.03.16
+// frontal.cpp 2022.05.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2044,7 +2044,9 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 		// in iterator.cpp
 		progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
  		                        tag::stop_at, stop );
-	
+
+		if ( oc == tag::random )  { msh = msh1;  return;  }
+
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
 		// the number of segments does not count, and we don't know it yet
 		Mesh msh2 ( tag::whose_core_is,

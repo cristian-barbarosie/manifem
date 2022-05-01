@@ -18,13 +18,13 @@ int main ( )
 
 	double d = 0.15;
 	
-	Manifold small_circle_left = RR2 .implicit ( (x-2.)*(x-2.) + y*y == 1. );
-	Mesh inner_left ( tag::frontal, tag::desired_length, d );
-	Manifold small_circle_right = RR2 .implicit ( (x+1.)*(x+1.) + y*y == 1. );
+	Manifold small_circle_right = RR2 .implicit ( (x-2.)*(x-2.) + y*y == 1. );
 	Mesh inner_right ( tag::frontal, tag::desired_length, d );
+	Manifold small_circle_left = RR2 .implicit ( (x+1.)*(x+1.) + y*y == 1. );
+	Mesh inner_left ( tag::frontal, tag::desired_length, d );
 
-	Manifold big_circle_left  = RR2 .implicit ( (x-2.)*(x-2.) + y*y == 4. );
-	Manifold big_circle_right = RR2 .implicit ( (x+1.)*(x+1.) + y*y == 4. );
+	Manifold big_circle_right = RR2 .implicit ( (x-2.)*(x-2.) + y*y == 4. );
+	Manifold big_circle_left  = RR2 .implicit ( (x+1.)*(x+1.) + y*y == 4. );
 	Manifold two_points ( tag::intersect, big_circle_left, big_circle_right );
 
 	Cell A ( tag::vertex );  x(A) =  0.;  y(A) =  1.;  two_points .project (A);
@@ -37,10 +37,10 @@ int main ( )
 	// std::cout << x(A) << " " << y(A) << " " << x(B) << " " << y(B) << std::endl;
 
 	big_circle_left .set_as_working_manifold();
-	Mesh outer_left ( tag::frontal, tag::start_at, B, tag:: stop_at, A,
+	Mesh outer_left ( tag::frontal, tag::start_at, A, tag:: stop_at, B,
 	                  tag::orientation, tag::inherent, tag::desired_length, d );
 	big_circle_right .set_as_working_manifold();
-	Mesh outer_right ( tag::frontal, tag::start_at, A, tag:: stop_at, B,
+	Mesh outer_right ( tag::frontal, tag::start_at, B, tag:: stop_at, A,
 	                   tag::orientation, tag::inherent, tag::desired_length, d );
 
 	Mesh bdry ( tag::join, inner_right .reverse(), inner_left .reverse(), outer_right, outer_left );

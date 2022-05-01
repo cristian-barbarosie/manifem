@@ -1,5 +1,5 @@
 
-// finite-elem.h 2022.03.30
+// finite-elem.h 2022.05.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2069,18 +2069,16 @@ inline Integrator FiniteElement::set_integrator ( const tag::HandCoded & )
 	
 { FiniteElement::StandAlone::TypeOne * this_core = tag::Util::assert_cast
 		< FiniteElement::Core *, FiniteElement::StandAlone::TypeOne * > ( this->core );
-	std::cout << "line 2069, this_core->counter " << this_core->counter << std::endl << std::flush;
 	Integrator::HandCoded * integ = new Integrator::HandCoded ( tag::from_finite_element, *this );
 	this_core->integr .core = integ;
 	assert ( integ->counter == 0 );
   integ->counter = 1;
 
 	assert ( this_core->counter > 1 );
-	std::cout << "line 2073, this_core->counter " << this_core->counter << std::endl << std::flush;
 	this_core->counter --;
 	integ->finite_element .weak = true;
 	
-	return this_core->integr;                                                                         }
+	return this_core->integr;                                                                        }
 
 
 }  // end of  namespace maniFEM
