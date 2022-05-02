@@ -84,7 +84,7 @@ int main ( )
 		if ( ver .is_inner_to ( infinity ) ) infinity .baricenter ( ver );  }
 
 	infinity .export_to_file ( tag::msh, "infinity.msh");
-	std::cout << "produced file ininity.msh" << std::endl;
+	std::cout << "produced file infinity.msh" << std::endl;
 
 }  // end of main
 

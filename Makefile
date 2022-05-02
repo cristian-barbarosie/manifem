@@ -4,8 +4,8 @@ CC = g++
 
 # compiler flags
 # CFLAGS = -c -I . -I src/ -I $(HOME)/include/ -std=c++17
-# CFLAGS = -c -Wshadow -Wall -I . -I src/ -I $(HOME)/include/ -std=c++17
-CFLAGS = -c -DMANIFEM_COLLECT_CM -Wshadow -Wall -I . -I src/ -I $(HOME)/include/ -std=c++17
+CFLAGS = -c -Wshadow -Wall -I . -I src/ -I $(HOME)/include/ -std=c++17
+# CFLAGS = -c -DMANIFEM_COLLECT_CM -Wshadow -Wall -I . -I src/ -I $(HOME)/include/ -std=c++17
 # CFLAGS = -c -DNDEBUG -O4 -I . -I src/ -I $(HOME)/include/ -std=c++17
 # CFLAGS = -c -DMANIFEM_COLLECT_CM -DNDEBUG -O4 -I . -I src/ -I $(HOME)/include/ -std=c++17
 # CFLAGS = -c -DNDEBUG -I . -I src/ -I $(HOME)/include/ -std=c++17

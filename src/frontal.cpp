@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.05.01
+// frontal.cpp 2022.05.02
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -2033,19 +2033,10 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 		{	progressive_construct ( msh, tag::start_at, start, tag::orientation, oc );
 			return;                                                                   }
 
-		Mesh msh1 ( tag::whose_core_is,
-		    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-		    tag::freshly_created, tag::is_positive                                              );
-		// the number of segments does not count, and we don't know it yet
-		// we compute it after the mesh is built, by counting segments
-		// but we count segments using an iterator, and the iterator won't work
-		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-		// in iterator.cpp
-		progressive_construct ( msh1, tag::start_at, start, tag::towards, best_tangent,
+		progressive_construct ( msh, tag::start_at, start, tag::towards, best_tangent,
  		                        tag::stop_at, stop );
 
-		if ( oc == tag::random )  { msh = msh1;  return;  }
+		if ( oc == tag::random ) return;
 
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  best_tangent[i] *= -1.;
 		// the number of segments does not count, and we don't know it yet
@@ -2063,11 +2054,11 @@ void progressive_construct ( Mesh & msh, const tag::StartAt &, const Cell & star
 
 		switch_orientation_direct ( msh2 );
 		update_info_connected_one_dim ( msh2, stop, start );
-		Mesh whole ( tag::join, msh1, msh2 );
+		Mesh whole ( tag::join, msh, msh2 );
 
-		if ( correctly_oriented ( whole, tag::orientation, oc ) ) msh = msh1;
-		else  {  switch_orientation_direct ( msh2 );  msh = msh2;  }
-			
+		if ( not correctly_oriented ( whole, tag::orientation, oc ) )
+		{	switch_orientation_direct ( msh2 );  msh = msh2;  }
+
 		return;                                                                                  }
 
 	assert ( oc == tag::intrinsic );
@@ -2577,6 +2568,9 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
 		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 		// in iterator.cpp
+
+		// this mesh is inconsistent, its destructor may produce an error
+
 		progressive_construct ( *this, tag::start_at, start,  // line 1947
 		                        tag::stop_at, start, tag::orientation, oc );   }
 	else
@@ -2603,11 +2597,13 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 // see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
+// this mesh is inconsistent, its destructor may produce an error
+
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1947
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   // line 1947
 	                        tag::orientation, tag::not_provided             );    }
 
 //-------------------------------------------------------------------------------------------------
@@ -2628,11 +2624,13 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 // see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
+// this mesh is inconsistent, its destructor may produce an error
+
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1947
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   // line 1947
 	                        tag::orientation, oc                            );   }
 
 //-------------------------------------------------------------------------------------------------
@@ -2653,11 +2651,13 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 // see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
 // in iterator.cpp
 
+// this mesh is inconsistent, its destructor may produce an error
+
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
 	desired_length = length;
 	
-	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   //line 1947
+	progressive_construct ( *this, tag::start_at, start, tag::stop_at, stop,   // line 1947
 	                        tag::orientation, tag::geodesic                 );   }
 
 

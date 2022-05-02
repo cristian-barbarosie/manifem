@@ -13,12 +13,12 @@ ManiFEM is just a collection of C++ classes.
 It has no user-friendly interface nor graphic capabilities. 
 The user should have some understanding of programming and of C++. 
 However, maniFEM can be used at a basic level by people with no deep knowledge of C++.
-Have a look at the [gallery](https://l.linklyhq.com/l/li6L).	
+Have a look at the [gallery](http://manifem.rd.ciencias.ulisboa.pt/gallery/).	
 Similar products (competitors), as well as strong and weak points of maniFEM,
 are listed in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf),
 at the end of section 1.
 
-In its current version, release 22.04, maniFEM works well for mesh generation,
+In its current version, release 22.05, maniFEM works well for mesh generation,
 including meshes on quotient manifolds.
 ManiFEM deals well with one-dimensional meshes (including curves in R^2 and R^3)
 and two-dimensional meshes (including surfaces in R^3);
@@ -39,7 +39,7 @@ and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com);
 see also the [list of contributors](contributors.md).
 
 To learn maniFEM, you should read the
-[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.04).
+[manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.05).
 
 To use maniFEM, choose a [release](https://github.com/cristian-barbarosie/manifem/releases)
 and download all files to some directory in your computer.
