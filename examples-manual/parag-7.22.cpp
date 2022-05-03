@@ -12,17 +12,17 @@ int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	const double d = 0.13;
 	const size_t n = 1.5 / d, m = 2.6 / d;
 
-	Cell A ( tag::vertex );  x (A) = -1.5;  y (A) = -1.3;
-	Cell B ( tag::vertex );  x (B) =  0. ;  y (B) = -1.3;
-	Cell C ( tag::vertex );  x (C) =  1.5;  y (C) = -1.3;
-	Cell D ( tag::vertex );  x (D) =  1.5;  y (D) =  1.3;
-	Cell E ( tag::vertex );  x (E) =  0. ;  y (E) =  1.3;
-	Cell F ( tag::vertex );  x (F) = -1.5;  y (F) =  1.3;
+	Cell A ( tag::vertex );  x(A) = -1.5;  y(A) = -1.3;
+	Cell B ( tag::vertex );  x(B) =  0. ;  y(B) = -1.3;
+	Cell C ( tag::vertex );  x(C) =  1.5;  y(C) = -1.3;
+	Cell D ( tag::vertex );  x(D) =  1.5;  y(D) =  1.3;
+	Cell E ( tag::vertex );  x(E) =  0. ;  y(E) =  1.3;
+	Cell F ( tag::vertex );  x(F) = -1.5;  y(F) =  1.3;
 
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, n );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, n );

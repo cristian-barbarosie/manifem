@@ -12,7 +12,7 @@ int main ( )
 {	// begin with the usual two-dimensional space
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	// define two actions on RR2 (translations)
 	Manifold::Action g1 ( tag::transforms, xy, tag::into, (x+1.) && y ),

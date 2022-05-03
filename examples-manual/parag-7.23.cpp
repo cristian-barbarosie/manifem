@@ -21,18 +21,18 @@ int main ( )
 {	// begin with the usual two-dimensional space
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
-	Cell A ( tag::vertex );  x (A) =  0.  ;  y (A) = -0.35;
-	Cell B ( tag::vertex );  x (B) =  0.  ;  y (B) = -1.05;
-	Cell C ( tag::vertex );  x (C) =  1.15;  y (C) = -2.15;
-	Cell D ( tag::vertex );  x (D) =  2.3 ;  y (D) = -1.05;
-	Cell E ( tag::vertex );  x (E) =  2.3 ;  y (E) = -0.35;
-	Cell F ( tag::vertex );  x (F) =  1.15;  y (F) = -1.45;
-	Cell G ( tag::vertex );  x (G) =  1.15;  y (G) = -0.75;
-	Cell H ( tag::vertex );  x (H) =  0.  ;  y (H) =  0.35;
-	Cell I ( tag::vertex );  x (I) = -1.15;  y (I) = -0.75;
-	Cell J ( tag::vertex );  x (J) = -1.15;  y (J) = -1.45;
+	Cell A ( tag::vertex );  x(A) =  0.  ;  y(A) = -0.35;
+	Cell B ( tag::vertex );  x(B) =  0.  ;  y(B) = -1.05;
+	Cell C ( tag::vertex );  x(C) =  1.15;  y(C) = -2.15;
+	Cell D ( tag::vertex );  x(D) =  2.3 ;  y(D) = -1.05;
+	Cell E ( tag::vertex );  x(E) =  2.3 ;  y(E) = -0.35;
+	Cell F ( tag::vertex );  x(F) =  1.15;  y(F) = -1.45;
+	Cell G ( tag::vertex );  x(G) =  1.15;  y(G) = -0.75;
+	Cell H ( tag::vertex );  x(H) =  0.  ;  y(H) =  0.35;
+	Cell I ( tag::vertex );  x(I) = -1.15;  y(I) = -0.75;
+	Cell J ( tag::vertex );  x(J) = -1.15;  y(J) = -1.45;
 
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 14 );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 32 );

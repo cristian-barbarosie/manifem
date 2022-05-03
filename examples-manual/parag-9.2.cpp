@@ -11,7 +11,7 @@ int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	short int n_sectors = 15;
 	double step_theta = 8 * atan(1.) / n_sectors;

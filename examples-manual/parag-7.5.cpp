@@ -12,7 +12,7 @@ int main ( )
 {	// begin with the usual two-dimensional space
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function ab = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function alpha = ab [0], beta = ab [1];
+	Function alpha = ab[0], beta = ab[1];
 	const double pi = 3.1415926536;
 
 	// define two actions on RR2 (translations)

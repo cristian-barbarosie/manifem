@@ -12,7 +12,7 @@ int main ( )
 {	// begin with the usual two-dimensional space
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	// define two actions on RR2 (translations)
 	Manifold::Action g1 ( tag::transforms, xy, tag::into, (x+1.) && y ),
@@ -22,7 +22,7 @@ int main ( )
 	Manifold torus_manif = RR2 .quotient ( g1, g2 );
 
 	// one vertex is enough to start the process
-	Cell A ( tag::vertex );  x (A) = 0. ;  y (A) = 0.;
+	Cell A ( tag::vertex );  x(A) = 0. ;  y(A) = 0.;
 
 	// with this vertex, we build three segments
 	Mesh seg_horiz ( tag::segment, A .reverse(), A, tag::divided_in, 10, tag::winding, g1 ),

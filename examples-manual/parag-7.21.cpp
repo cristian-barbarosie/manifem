@@ -11,7 +11,7 @@ int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	const double coef = 0.7;
 
@@ -25,12 +25,12 @@ int main ( )
 	Function dmin = smooth_min ( d_AA, d_BB, d_CC, d_DD, d_EE, d_FF, tag::threshold, 0.01 );
 	Function d = 0.15 * power ( 0.001 + dmin, 0.25 ) - 0.002;
 
-	Cell AA ( tag::vertex );  x (AA) =  0.75 * coef;  y (AA) =  0.43 * coef;
-	Cell BB ( tag::vertex );  x (BB) =  0.         ;  y (BB) =  0.86 * coef;
-	Cell CC ( tag::vertex );  x (CC) = -0.75 * coef;  y (CC) =  0.43 * coef;
-	Cell DD ( tag::vertex );  x (DD) = -0.75 * coef;  y (DD) = -0.43 * coef;
-	Cell EE ( tag::vertex );  x (EE) =  0.         ;  y (EE) = -0.86 * coef;
-	Cell FF ( tag::vertex );  x (FF) =  0.75 * coef;  y (FF) = -0.43 * coef;
+	Cell AA ( tag::vertex );  x(AA) =  0.75 * coef;  y(AA) =  0.43 * coef;
+	Cell BB ( tag::vertex );  x(BB) =  0.         ;  y(BB) =  0.86 * coef;
+	Cell CC ( tag::vertex );  x(CC) = -0.75 * coef;  y(CC) =  0.43 * coef;
+	Cell DD ( tag::vertex );  x(DD) = -0.75 * coef;  y(DD) = -0.43 * coef;
+	Cell EE ( tag::vertex );  x(EE) =  0.         ;  y(EE) = -0.86 * coef;
+	Cell FF ( tag::vertex );  x(FF) =  0.75 * coef;  y(FF) = -0.43 * coef;
 
 	const double r2 = (1.-0.75*coef)*(1.-0.75*coef) + 0.43*0.43*coef*coef;
 	RR2 .implicit ( (x-1.)*(x-1.) + y*y == r2 );
