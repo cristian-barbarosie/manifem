@@ -11,7 +11,7 @@ int main ( )
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	Function d = 0.03 + 0.04 * ( ( x + 0.3 ) * ( x + 0.3 ) + ( y - 0.9 ) * ( y - 0.9 ) );
 	// Function d = 0.03 * smooth_max ( x - 3.*y + 3.5, 1., tag::threshold, 0.01 );

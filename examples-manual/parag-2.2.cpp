@@ -17,15 +17,15 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 
 	// we can extract components of xy using the [] operator :
-	Function x = xy [0], y = xy[1];
+	Function x = xy[0], y = xy[1];
 
-	Cell A ( tag::vertex );  x (A) = 0.;  y (A) =  0.  ;
-	Cell B ( tag::vertex );  x (B) = 1.;  y (B) = -0.5 ;
-	Cell C ( tag::vertex );  x (C) = 1.;  y (C) = -0.25;
-	Cell D ( tag::vertex );  x (D) = 3.;  y (D) = -0.25;
-	Cell E ( tag::vertex );  x (E) = 3.;  y (E) =  0.25;
-	Cell F ( tag::vertex );  x (F) = 1.;  y (F) =  0.25;
-	Cell G ( tag::vertex );  x (G) = 1.;  y (G) =  0.5 ;
+	Cell A ( tag::vertex );  x(A) = 0.;  y(A) =  0.  ;
+	Cell B ( tag::vertex );  x(B) = 1.;  y(B) = -0.5 ;
+	Cell C ( tag::vertex );  x(C) = 1.;  y(C) = -0.25;
+	Cell D ( tag::vertex );  x(D) = 3.;  y(D) = -0.25;
+	Cell E ( tag::vertex );  x(E) = 3.;  y(E) =  0.25;
+	Cell F ( tag::vertex );  x(F) = 1.;  y(F) =  0.25;
+	Cell G ( tag::vertex );  x(G) = 1.;  y(G) =  0.5 ;
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 15 );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in,  4 );
 	Mesh CF ( tag::segment, C .reverse(), F, tag::divided_in,  7 );

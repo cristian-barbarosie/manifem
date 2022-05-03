@@ -13,14 +13,14 @@ int main ()
 	Function xyz = RR3 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
-	Cell A ( tag::vertex );  x (A) = -1.;  y (A) = -1.;  z (A) = -1.;
-	Cell B ( tag::vertex );  x (B) =  1.;  y (B) = -1.;  z (B) = -1.;
-	Cell C ( tag::vertex );  x (C) =  1.;  y (C) = -1.;  z (C) =  1.;
-	Cell D ( tag::vertex );  x (D) = -1.;  y (D) = -1.;  z (D) =  1.;
-	Cell E ( tag::vertex );  x (E) = -1.;  y (E) =  1.;  z (E) = -1.;
-	Cell F ( tag::vertex );  x (F) =  1.;  y (F) =  1.;  z (F) = -1.;
-	Cell G ( tag::vertex );  x (G) =  1.;  y (G) =  1.;  z (G) =  1.;
-	Cell H ( tag::vertex );  x (H) = -1.;  y (H) =  1.;  z (H) =  1.;
+	Cell A ( tag::vertex );  x(A) = -1.;  y(A) = -1.;  z(A) = -1.;
+	Cell B ( tag::vertex );  x(B) =  1.;  y(B) = -1.;  z(B) = -1.;
+	Cell C ( tag::vertex );  x(C) =  1.;  y(C) = -1.;  z(C) =  1.;
+	Cell D ( tag::vertex );  x(D) = -1.;  y(D) = -1.;  z(D) =  1.;
+	Cell E ( tag::vertex );  x(E) = -1.;  y(E) =  1.;  z(E) = -1.;
+	Cell F ( tag::vertex );  x(F) =  1.;  y(F) =  1.;  z(F) = -1.;
+	Cell G ( tag::vertex );  x(G) =  1.;  y(G) =  1.;  z(G) =  1.;
+	Cell H ( tag::vertex );  x(H) = -1.;  y(H) =  1.;  z(H) =  1.;
 
 	const double p = 3.3;  // recommended values p > 3.
 	const double q = (1.-p) / 4.;

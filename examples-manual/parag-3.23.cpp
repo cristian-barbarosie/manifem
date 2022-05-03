@@ -24,20 +24,20 @@ int main ()
 
 	Manifold cyl_manif = RR3 .implicit ( y*y + (z-0.5)*(z-0.5) == 0.25 );
 
-	Cell V ( tag::vertex );  x (V) = 0.;  y (V) =  seg_size;  z (V) = 1.;
+	Cell V ( tag::vertex );  x(V) = 0.;  y(V) =  seg_size;  z(V) = 1.;
 	cyl_manif .project(V);
-	Cell W ( tag::vertex );  x (W) = 0.;  y (W) = -seg_size;  z (W) = 1.;
+	Cell W ( tag::vertex );  x(W) = 0.;  y(W) = -seg_size;  z(W) = 1.;
 	cyl_manif .project(W);
 	
 	Manifold intersection = cyl_manif .implicit ( x*x + y*y + z*z == 1. );
-	Cell O ( tag::vertex );  x (O) =  0.;            y (O) =  0.;            z (O) = 1.;
-	Cell A ( tag::vertex );  x (A) =  0.7*seg_size;  y (A) =  0.7*seg_size;  z (A) = 1.;
+	Cell O ( tag::vertex );  x(O) =  0.;            y(O) =  0.;            z(O) = 1.;
+	Cell A ( tag::vertex );  x(A) =  0.7*seg_size;  y(A) =  0.7*seg_size;  z(A) = 1.;
 	intersection .project(A);
-	Cell B ( tag::vertex );  x (B) = -0.7*seg_size;  y (B) =  0.7*seg_size;  z (B) = 1.;
+	Cell B ( tag::vertex );  x(B) = -0.7*seg_size;  y(B) =  0.7*seg_size;  z(B) = 1.;
 	intersection .project(B);
-	Cell C ( tag::vertex );  x (C) = -0.7*seg_size;  y (C) = -0.7*seg_size;  z (C) = 1.;
+	Cell C ( tag::vertex );  x(C) = -0.7*seg_size;  y(C) = -0.7*seg_size;  z(C) = 1.;
 	intersection .project(C);
-	Cell D ( tag::vertex );  x (D) =  0.7*seg_size;  y (D) = -0.7*seg_size;  z (D) = 1.;
+	Cell D ( tag::vertex );  x(D) =  0.7*seg_size;  y(D) = -0.7*seg_size;  z(D) = 1.;
 	intersection .project(D);
 
 	Cell OA ( tag::segment, O .reverse(), A );

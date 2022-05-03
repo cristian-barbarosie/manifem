@@ -11,17 +11,17 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	Manifold parab_vert  = RR2 .implicit ( y == x * x - 2. );
 	Manifold parab_horiz = RR2 .implicit ( x == y * y - 2. );
 
 	Manifold four_points ( tag::intersect, parab_vert, parab_horiz );
 	
-	Cell A ( tag::vertex, tag::of_coords, { -1., -1. }, tag::project );
-	Cell B ( tag::vertex, tag::of_coords, {  1., -1. }, tag::project );
-	Cell C ( tag::vertex, tag::of_coords, {  1.,  1. }, tag::project );
-	Cell D ( tag::vertex, tag::of_coords, { -1.,  1. }, tag::project );
+	Cell A ( tag::vertex, tag::of_coords, {-1.,-1.}, tag::project );
+	Cell B ( tag::vertex, tag::of_coords, { 1.,-1.}, tag::project );
+	Cell C ( tag::vertex, tag::of_coords, { 1., 1.}, tag::project );
+	Cell D ( tag::vertex, tag::of_coords, {-1., 1.}, tag::project );
 
 	// four arcs of parabola :
 	parab_vert .set_as_working_manifold();

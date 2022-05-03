@@ -39,12 +39,12 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 	Function r2 = x*x + y*y;
 
 	Manifold circle_manif = RR2 .implicit ( x*x + y*y == 1. );
 
-	Cell A ( tag::vertex );  x (A) = 1.;  y (A) = 0.;
+	Cell A ( tag::vertex );  x(A) = 1.;  y(A) = 0.;
 	Mesh circle ( tag::frontal, tag::start_at, A, tag::desired_length, 0.1 );
 
 	RR2 .set_as_working_manifold();

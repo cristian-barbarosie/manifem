@@ -18,8 +18,8 @@ int main ()
 	const double big_radius = 3, small_radius = 1;
 	Manifold torus = RR5 .parametric
 		( x == ( big_radius + small_radius * cos(beta) ) * cos(alpha),
-	    y == ( big_radius + small_radius * cos(beta) ) * sin(alpha),
-	    z == small_radius * sin(beta)                               );
+		  y == ( big_radius + small_radius * cos(beta) ) * sin(alpha),
+		  z == small_radius * sin(beta)                               );
 	
 	const double pi = 4. * std::atan(1.);
 	Cell A ( tag::vertex );  alpha (A) = 0.;       beta (A) = 0.;      torus .project (A);

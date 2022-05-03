@@ -19,14 +19,14 @@ int main ()
 	// we can extract components of xyz using the [] operator :
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 
-	Cell A ( tag::vertex );  x (A) = 0.;  y (A) = 0.;  z (A) = 0.;
-	Cell B ( tag::vertex );  x (B) = 1.;  y (B) = 0.;  z (B) = 0.;
-	Cell C ( tag::vertex );  x (C) = 1.;  y (C) = 0.;  z (C) = 1.;
-	Cell D ( tag::vertex );  x (D) = 0.;  y (D) = 0.;  z (D) = 1.;
-	Cell E ( tag::vertex );  x (E) = 0.;  y (E) = 1.;  z (E) = 0.;
-	Cell F ( tag::vertex );  x (F) = 1.;  y (F) = 1.;  z (F) = 0.;
-	Cell G ( tag::vertex );  x (G) = 1.;  y (G) = 1.;  z (G) = 1.;
-	Cell H ( tag::vertex );  x (H) = 0.;  y (H) = 1.;  z (H) = 1.;
+	Cell A ( tag::vertex );  x(A) = 0.;  y(A) = 0.;  z(A) = 0.;
+	Cell B ( tag::vertex );  x(B) = 1.;  y(B) = 0.;  z(B) = 0.;
+	Cell C ( tag::vertex );  x(C) = 1.;  y(C) = 0.;  z(C) = 1.;
+	Cell D ( tag::vertex );  x(D) = 0.;  y(D) = 0.;  z(D) = 1.;
+	Cell E ( tag::vertex );  x(E) = 0.;  y(E) = 1.;  z(E) = 0.;
+	Cell F ( tag::vertex );  x(F) = 1.;  y(F) = 1.;  z(F) = 0.;
+	Cell G ( tag::vertex );  x(G) = 1.;  y(G) = 1.;  z(G) = 1.;
+	Cell H ( tag::vertex );  x(H) = 0.;  y(H) = 1.;  z(H) = 1.;
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
 	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );

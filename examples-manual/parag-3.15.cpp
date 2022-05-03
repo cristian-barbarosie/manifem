@@ -21,7 +21,7 @@ int main ()
 	// build the base (a closed curve)
 	nut .implicit ( x*x + 3.*z == 0. );
 
-	Cell S ( tag::vertex );  x (S) = 0.;  y (S) = -1.;  z (S) = 0.;
+	Cell S ( tag::vertex );  x(S) = 0.;  y(S) = -1.;  z(S) = 0.;
 	std::vector < double > tau { 1., 0., 0. };
 	Mesh circle ( tag::frontal, tag::start_at, S, tag::towards, tau, tag::desired_length, 0.1 );
 

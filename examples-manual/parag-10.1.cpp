@@ -18,10 +18,10 @@ int main ( )
 	Function xyz = RR3 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	Function x = xyz [0], y = xyz [1], z = xyz [2];
 	
-	Cell SW ( tag::vertex );  x (SW) = 0.;  y (SW) = 0.;  z (SW) = 0.;
-	Cell SE ( tag::vertex );  x (SE) = 1.;  y (SE) = 0.;  z (SE) = 0.;
-	Cell NE ( tag::vertex );  x (NE) = 1.;  y (NE) = 1.;  z (NE) = 0.;
-	Cell NW ( tag::vertex );  x (NW) = 0.;  y (NW) = 1.;  z (NW) = 0.;
+	Cell SW ( tag::vertex );  x(SW) = 0.;  y(SW) = 0.;  z(SW) = 0.;
+	Cell SE ( tag::vertex );  x(SE) = 1.;  y(SE) = 0.;  z(SE) = 0.;
+	Cell NE ( tag::vertex );  x(NE) = 1.;  y(NE) = 1.;  z(NE) = 0.;
+	Cell NW ( tag::vertex );  x(NW) = 0.;  y(NW) = 1.;  z(NW) = 0.;
 	
 	Mesh south ( tag::segment, SW .reverse(), SE, tag::divided_in, 20 );
 	Mesh east  ( tag::segment, SE .reverse(), NE, tag::divided_in, 20 );

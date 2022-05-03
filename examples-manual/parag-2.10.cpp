@@ -11,13 +11,13 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
-	Cell O ( tag::vertex );  x (O) =  0.;   y (O) = 0.;
-	Cell A ( tag::vertex );  x (A) =  1.;   y (A) = 0.;
-	Cell B ( tag::vertex );  x (B) =  0.5;  y (B) = 0.8;
-	Cell C ( tag::vertex );  x (C) = -0.5;  y (C) = 0.8;
-	Cell D ( tag::vertex );  x (D) = -1.;   y (D) = 0.;
+	Cell O ( tag::vertex );  x(O) =  0.;   y(O) = 0.;
+	Cell A ( tag::vertex );  x(A) =  1.;   y(A) = 0.;
+	Cell B ( tag::vertex );  x(B) =  0.5;  y(B) = 0.8;
+	Cell C ( tag::vertex );  x(C) = -0.5;  y(C) = 0.8;
+	Cell D ( tag::vertex );  x(D) = -1.;   y(D) = 0.;
 
 	Manifold circle = RR2 .implicit ( x*x + y*y == 1. );
 	circle .project (B);  circle .project (C);

@@ -15,8 +15,8 @@ int main ()
 	Function t = circle_manif .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	const double pi = 4. * std::atan(1.);
 	
-	Cell A ( tag::vertex );  t (A) = 0.;
-	Cell B ( tag::vertex );  t (B) = 1.9*pi;
+	Cell A ( tag::vertex );  t(A) = 0.;
+	Cell B ( tag::vertex );  t(B) = 1.9*pi;
 	Mesh incomplete_circle ( tag::segment, A .reverse(), B, tag::divided_in, 19 );
 
 	Mesh small_piece ( tag::segment, B .reverse(), A, tag::divided_in, 1 );

@@ -17,11 +17,11 @@ int main ()
 	RR3.implicit ( x*x + y*y + z*z == 1. );
 
 	// let's mesh half of a sphere
-	Cell E ( tag::vertex );  x (E)  =  1.;   y (E)  =  0.;   z (E)  = 0.;
-	Cell N ( tag::vertex );  x (N)  =  0.;   y (N)  =  1.;   z (N)  = 0.;
-	Cell W ( tag::vertex );  x (W)  = -1.;   y (W)  =  0.;   z (W)  = 0.;
-	Cell S ( tag::vertex );  x (S)  =  0.;   y (S)  = -1.;   z (S)  = 0.;
-	Cell up( tag::vertex );  x (up) =  0.;   y (up) =  0.;   z (up) = 1.;
+	Cell E ( tag::vertex );  x(E)  =  1.;   y(E)  =  0.;   z(E)  = 0.;
+	Cell N ( tag::vertex );  x(N)  =  0.;   y(N)  =  1.;   z(N)  = 0.;
+	Cell W ( tag::vertex );  x(W)  = -1.;   y(W)  =  0.;   z(W)  = 0.;
+	Cell S ( tag::vertex );  x(S)  =  0.;   y(S)  = -1.;   z(S)  = 0.;
+	Cell up( tag::vertex );  x(up) =  0.;   y(up) =  0.;   z(up) = 1.;
 	int n = 15;
 	Mesh EN  ( tag::segment,  E .reverse(), N, tag::divided_in, n );
 	Mesh NW  ( tag::segment,  N .reverse(), W, tag::divided_in, n );

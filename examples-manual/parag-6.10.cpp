@@ -37,7 +37,7 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	// declare the type of finite element
 	FiniteElement fe ( tag::rectangle, tag::Lagrange, tag::of_degree, 1 );

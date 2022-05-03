@@ -17,14 +17,14 @@ int main ()
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 
 	// we can extract components of xy using the [] operator :
-	Function x = xy [0],  y = xy [1];
+	Function x = xy[0],  y = xy[1];
 
-	Cell A ( tag::vertex );  x (A) = -1. ;  y (A) = 0. ;
-	Cell B ( tag::vertex );  x (B) =  0. ;  y (B) = 0. ;
-	Cell C ( tag::vertex );  x (C) =  1. ;  y (C) = 0. ;
-	Cell D ( tag::vertex );  x (D) = -0.5;  y (D) = 0.8;
-	Cell E ( tag::vertex );  x (E) =  0.5;  y (E) = 0.8;
-	Cell F ( tag::vertex );  x (F) =  0. ;  y (F) = 1. ;
+	Cell A ( tag::vertex );  x(A) = -1. ;  y(A) = 0. ;
+	Cell B ( tag::vertex );  x(B) =  0. ;  y(B) = 0. ;
+	Cell C ( tag::vertex );  x(C) =  1. ;  y(C) = 0. ;
+	Cell D ( tag::vertex );  x(D) = -0.5;  y(D) = 0.8;
+	Cell E ( tag::vertex );  x(E) =  0.5;  y(E) = 0.8;
+	Cell F ( tag::vertex );  x(F) =  0. ;  y(F) = 1. ;
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 8 );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 8 );
 	Mesh AD ( tag::segment, A .reverse(), D, tag::divided_in, 8 );

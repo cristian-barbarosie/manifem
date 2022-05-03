@@ -21,7 +21,7 @@ int main ( )
 
 	double d = 0.095;
 	Manifold circle = parab_surf .implicit ( x*x + y*y == 1. );
-	Cell P ( tag::vertex );  x (P) = 1.;  y (P) = 0.;  z (P) = 0.;
+	Cell P ( tag::vertex );  x(P) = 1.;  y(P) = 0.;  z(P) = 0.;
 	circle .project ( P );
 	Mesh outer ( tag::frontal, tag::start_at, P, tag::desired_length, d,
 							 tag::orientation, tag::random                          );

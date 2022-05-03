@@ -45,16 +45,16 @@ int main ()
 
 	Manifold cone_manif = RR3 .implicit ( x*x + y*y == z*z );
 	
-	Cell O ( tag::vertex );  x (O) = 0.;  y (O) = 0.;  z (O) = 0.;
-	Cell A ( tag::vertex );  x (A) = 0.7*seg_size;  y (A) = 0.;  z (A) = 0.7*seg_size;
+	Cell O ( tag::vertex );  x(O) = 0.;  y(O) = 0.;  z(O) = 0.;
+	Cell A ( tag::vertex );  x(A) =  0.7*seg_size;  y(A) = 0.;  z(A) = 0.7*seg_size;
 	cone_manif .project (A);
-	Cell B ( tag::vertex );  x (B) = 0.2*seg_size;  y (B) = 0.6*seg_size;  z (B) = 0.7*seg_size;
+	Cell B ( tag::vertex );  x(B) =  0.2*seg_size;  y(B) =  0.6*seg_size;  z(B) = 0.7*seg_size;
 	cone_manif .project (B);
-	Cell C ( tag::vertex );  x (C) = -0.5*seg_size;  y (C) = 0.4*seg_size;  z (C) = 0.7*seg_size;
+	Cell C ( tag::vertex );  x(C) = -0.5*seg_size;  y(C) =  0.4*seg_size;  z(C) = 0.7*seg_size;
 	cone_manif .project (C);
-	Cell D ( tag::vertex );  x (D) = -0.5*seg_size;  y (D) = -0.4*seg_size;  z (D) = 0.7*seg_size;
+	Cell D ( tag::vertex );  x(D) = -0.5*seg_size;  y(D) = -0.4*seg_size;  z(D) = 0.7*seg_size;
 	cone_manif .project (D);
-	Cell E ( tag::vertex );  x (E) = 0.2*seg_size;  y (E) = -0.6*seg_size;  z (E) = 0.7*seg_size;
+	Cell E ( tag::vertex );  x(E) =  0.2*seg_size;  y(E) = -0.6*seg_size;  z(E) = 0.7*seg_size;
 	cone_manif .project (E);
 	Cell OA ( tag::segment, O .reverse(), A );
 	Cell OB ( tag::segment, O .reverse(), B );

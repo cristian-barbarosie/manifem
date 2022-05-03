@@ -11,12 +11,12 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
-	Cell N ( tag::vertex );  x (N) =  0.;  y (N) =  1.;
-	Cell W ( tag::vertex );  x (W) = -1.;  y (W) =  0.;
-	Cell S ( tag::vertex );  x (S) =  0.;  y (S) = -1.;
-	Cell E ( tag::vertex );  x (E) =  1.;  y (E) =  0.;
+	Cell N ( tag::vertex );  x(N) =  0.;  y(N) =  1.;
+	Cell W ( tag::vertex );  x(W) = -1.;  y(W) =  0.;
+	Cell S ( tag::vertex );  x(S) =  0.;  y(S) = -1.;
+	Cell E ( tag::vertex );  x(E) =  1.;  y(E) =  0.;
 
 	RR2 .implicit ( x*y + x - y == -1. );
 	Mesh NW ( tag::segment, N .reverse(), W, tag::divided_in, 10 );

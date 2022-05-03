@@ -15,8 +15,8 @@ int main ()
 	Function t = spiral .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
 	const double pi = 4. * std::atan(1.);
 	
-	Cell A ( tag::vertex );  t (A) = pi/2.;
-	Cell B ( tag::vertex );  t (B) = 5.*pi;
+	Cell A ( tag::vertex );  t(A) = pi/2.;
+	Cell B ( tag::vertex );  t(B) = 5.*pi;
 	Mesh arc_of_spiral ( tag::segment, A .reverse(), B, tag::divided_in, 50 );
 
 	// forget about t, in future statements x and y will be used

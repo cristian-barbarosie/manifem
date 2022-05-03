@@ -38,7 +38,7 @@ int main ()
 
 {	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
 	Function xy = RR2 .build_coordinate_system ( tag::Lagrange, tag::of_degree, 1 );
-	Function x = xy [0], y = xy [1];
+	Function x = xy[0], y = xy[1];
 
 	clock_t started_at = clock();
 
@@ -50,10 +50,10 @@ int main ()
 	Cell::Numbering & numbering = fe .build_global_numbering ( tag::vertices );
 
 	// build a 10x10 square mesh
-	Cell A ( tag::vertex );  x (A) = 0.;   y (A) = 0.;
-	Cell B ( tag::vertex );  x (B) = 1.;   y (B) = 0.;
-	Cell C ( tag::vertex );  x (C) = 1.;   y (C) = 1.;
-	Cell D ( tag::vertex );  x (D) = 0.;   y (D) = 1.;
+	Cell A ( tag::vertex );  x(A) = 0.;   y(A) = 0.;
+	Cell B ( tag::vertex );  x(B) = 1.;   y(B) = 0.;
+	Cell C ( tag::vertex );  x(C) = 1.;   y(C) = 1.;
+	Cell D ( tag::vertex );  x(D) = 0.;   y(D) = 1.;
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 10 );
 	Mesh BC ( tag::segment, B .reverse(), C, tag::divided_in, 10 );
 	Mesh CD ( tag::segment, C .reverse(), D, tag::divided_in, 10 );
