@@ -1,5 +1,5 @@
 
-// manifold.h 2022.04.25
+// manifold.h 2022.05.16
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -42,7 +42,9 @@ namespace tag
 	struct Implicit { };  static const Implicit implicit;
 	struct Intersect { };  static const Intersect intersect;
 	struct Parametric { };  static const Parametric parametric;
-	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;  }
+	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;
+	struct StartWithInconsistentMesh { };
+	static const StartWithInconsistentMesh start_with_inconsistent_mesh;                }
 
 
 //---------------------------------------------------------------------------------------
@@ -136,8 +138,8 @@ class Manifold
 	inline double dist_sq ( const Cell & A, const Cell & B ) const
 	{	const Function & coord = this->coordinates();
 		std::vector < double > vA = coord ( A ), vB = coord ( B ),
-			delta ( coord.nb_of_components() );
-		for ( size_t i = 0; i < coord.nb_of_components(); i++ )
+			delta ( coord .nb_of_components() );
+		for ( size_t i = 0; i < coord .nb_of_components(); i++ )
 			delta[i] = vB[i] - vA[i];
 		return this->inner_prod ( A, delta, delta );               }
 	
@@ -238,7 +240,7 @@ class Manifold
 
 	class Euclid;  class Implicit;  class Parametric;  class Quotient;
 
-	struct Type  // used in progressive.cpp
+	struct Type  // used in frontal.cpp
 	{	class Euclidian;  class Quotient;  };
 
 };  // end of  class Manifold
@@ -299,7 +301,7 @@ class Manifold::Core
 
 	virtual void project ( Cell::Positive::Vertex * ) const = 0;
 
-	// measure of the entire manifold (lenght for 1D, area for 2D, volume for 3D)
+	// measure of the entire manifold (length for 1D, area for 2D, volume for 3D)
 	// produces run-time error for Euclidian manifolds
 	// and for other manifolds whose measure is infinite (e.g. cylinder)
 	// and for manifolds whose measure is too difficult to compute (e.g. implicit manifolds)
@@ -368,6 +370,12 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P, const std::vector < double > & coefs,
 														 const std::vector < Cell::Positive::Vertex * > & points ) const = 0;
 
+	virtual void frontal_method  // defined in frontal.cpp, overridden by Manifold::Quotient
+	( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	  const tag::StartAt &, const Cell & start,
+	  const tag::Towards &, std::vector<double> tangent,
+	  const tag::StopAt &, const Cell & stop             );
+	
 }; // end of class Manifold::Core
 
 //------------------------------------------------------------------------------------------------------//
@@ -816,6 +824,8 @@ class Manifold::Euclid : public Manifold::Core
 	void project ( Cell::Positive::Vertex * ) const;
 	// virtual from Manifold::Core, here does nothing
 
+	// several versions of  frontal_method  defined by Manifold::Core
+
 };  // end of class Manifold::Euclid
 
 //-----------------------------------------------------------------------------------------
@@ -925,6 +935,8 @@ class Manifold::Implicit : public Manifold::Core
 
 	class OneEquation;  class TwoEquations;  class ThreeEquationsOrMore;
 	
+	// several versions of  frontal_method  defined by Manifold::Core
+	
 };  // end of class Manifold::Implicit
 
 //-----------------------------------------------------------------------------------------
@@ -956,6 +968,8 @@ class Manifold::Implicit::OneEquation : public Manifold::Implicit
 	// double measure ( ) const  virtual from Manifold::Core
 	// defined by Manifold::Implicit, execution forbidden
 
+	// several versions of  frontal_method  defined by Manifold::Core
+	
 };  // end of class Manifold::Implicit::OneEquation
 
 //-----------------------------------------------------------------------------------------
@@ -989,6 +1003,8 @@ class Manifold::Implicit::TwoEquations : public Manifold::Implicit
 	// double measure ( ) const  virtual from Manifold::Core
 	// defined by Manifold::Implicit, execution forbidden
 
+	// several versions of  frontal_method  defined by Manifold::Core
+	
 };  // end of class Manifold::Implicit::TwoEquations
 
 //-----------------------------------------------------------------------------------------
@@ -1023,6 +1039,8 @@ class Manifold::Implicit::ThreeEquationsOrMore : public Manifold::Implicit
 	// double measure ( ) const  virtual from Manifold::Core
 	// defined by Manifold::Implicit, execution forbidden
 
+	// several versions of  frontal_method  defined by Manifold::Core
+	
 };  // end of class Manifold::Implicit::ThreeEquationsOrMore
 
 //-----------------------------------------------------------------------------------------
@@ -1664,6 +1682,12 @@ class Manifold::Quotient : public Manifold::Core
 	
 	// measure of the entire manifold
 	double measure ( ) const;  // virtual from Manifold::Core
+	
+	void frontal_method  // defined in frontal.cpp, overrides definition by Manifold::Core
+	( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	  const tag::StartAt &, const Cell & start,
+	  const tag::Towards &, std::vector<double> tangent,
+	  const tag::StopAt &, const Cell & stop             ) override;
 	
 };  // end of class Manifold::Quotient
 

@@ -46,8 +46,7 @@ and download all files to some directory in your computer.
 Current code might be unstable; releases are stable.
 To check which version of maniFEM is installed in your computer,
 see at the beginning of the file `maniFEM.h`.
-You can then run the examples in the manual :
-just `make run-1.1` for the example in paragraph 1.1, 
+To run the examples in the manual, just `make run-1.1` for the example in paragraph 1.1, 
 `make run-2.6` for the example in paragraph 2.6, and so on.
 Paragraph 11.16 in the [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf)
 gives more details.
