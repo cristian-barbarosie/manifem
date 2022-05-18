@@ -1,5 +1,5 @@
 
-// manifold.h 2022.05.16
+// manifold.h 2022.05.17
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -45,6 +45,91 @@ namespace tag
 	struct DoNotSetAsWorking { };  static const DoNotSetAsWorking do_not_set_as_working;
 	struct StartWithInconsistentMesh { };
 	static const StartWithInconsistentMesh start_with_inconsistent_mesh;                }
+
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+// class below will allow us to easily manipulate the metric of a manifold
+
+class tag::Util::Metric
+
+{	public :
+
+	class Trivial;  class Isotropic;  class Anisotropic;
+
+	tag::Util::virtual Metric * scale ( const Function & f ) = 0;
+
+}
+
+	
+class tag::Util::Metric::Trivial : public tag::Util::Metric
+
+{	public :
+
+	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
+
+}
+
+
+class tag::Util::Metric::Isotropic : public tag::Util::Metric
+
+{	public :
+
+	Function zoom;
+	
+	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
+
+}
+
+
+class tag::Util::Metric::Anisotropic
+
+{	public :
+
+	class Matrix;  class Rayleigh;
+
+	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
+
+}
+
+	
+class tag::Util::Metric::Anisotropic::Matrix : public tag::Util::Metric::Anisotropic
+
+{	public :
+
+	Function matrix;  // n^2 components, definite positive
+	
+	// tag::Util::Metric * scale ( const Function & f )
+	// virtual from tag::Util::Metric, defined by tag::Util::Metric::Anisotropic
+
+}
+
+
+class tag::Util::Metric::Anisotropic::Rayleigh : public tag::Util::Metric::Anisotropic
+
+{	public :
+
+	Function rayl;  // scalar, positive
+	Function dev;   // n^2 components, semi-definite positive
+	// matrix = rayl * Id + dev
+	
+	// tag::Util::Metric * scale ( const Function & f )
+	// virtual from tag::Util::Metric, defined by tag::Util::Metric::Anisotropic
+
+}
+
+
+class tag::Util::Metric::Scaled : public tag::Util::Metric
+
+{	public :
+
+	tag::Util::Metric * base;
+	Function factor;  // scalar
+	
+	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
+
+}
 
 
 //---------------------------------------------------------------------------------------
@@ -133,20 +218,6 @@ class Manifold
 	inline double inner_prod ( const Cell & P, const std::vector<double> & v,
                                              const std::vector<double> & w ) const;
 
-	// square of the distance, computed from the inner product
-	// only meaningful for short distances
-	inline double dist_sq ( const Cell & A, const Cell & B ) const
-	{	const Function & coord = this->coordinates();
-		std::vector < double > vA = coord ( A ), vB = coord ( B ),
-			delta ( coord .nb_of_components() );
-		for ( size_t i = 0; i < coord .nb_of_components(); i++ )
-			delta[i] = vB[i] - vA[i];
-		return this->inner_prod ( A, delta, delta );               }
-	
-	// distance, computed from the inner product
-	inline double distance ( const Cell & A, const Cell & B ) const
-	{	return std::sqrt ( this->dist_sq ( A, B ) );  }
-	
 	// metric in the manifold (an inner product on the tangent space) (metric not used)
 	static double default_inner_prod ( const Cell & P, const std::vector<double> & v,
 	                                   const std::vector<double> & w, const Function & metric );
@@ -370,11 +441,11 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P, const std::vector < double > & coefs,
 														 const std::vector < Cell::Positive::Vertex * > & points ) const = 0;
 
-	virtual void frontal_method  // defined in frontal.cpp, overridden by Manifold::Quotient
-	( Mesh & msh, const tag::StartWithInconsistentMesh &,
-	  const tag::StartAt &, const Cell & start,
-	  const tag::Towards &, std::vector<double> tangent,
-	  const tag::StopAt &, const Cell & stop             );
+	// virtual void frontal_method  // defined in frontal.cpp, overridden by Manifold::Quotient
+	// ( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	//   const tag::StartAt &, const Cell & start,
+	//   const tag::Towards &, std::vector<double> tangent,
+	//   const tag::StopAt &, const Cell & stop             );
 	
 }; // end of class Manifold::Core
 
@@ -1683,11 +1754,12 @@ class Manifold::Quotient : public Manifold::Core
 	// measure of the entire manifold
 	double measure ( ) const;  // virtual from Manifold::Core
 	
-	void frontal_method  // defined in frontal.cpp, overrides definition by Manifold::Core
-	( Mesh & msh, const tag::StartWithInconsistentMesh &,
-	  const tag::StartAt &, const Cell & start,
-	  const tag::Towards &, std::vector<double> tangent,
-	  const tag::StopAt &, const Cell & stop             ) override;
+	// void frontal_method  // virtual from Manifold::Core
+	// defined in frontal.cpp, overrides definition by Manifold::Core
+	// ( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	//   const tag::StartAt &, const Cell & start,
+	//   const tag::Towards &, std::vector<double> tangent,
+	//   const tag::StopAt &, const Cell & stop             ) override;
 	
 };  // end of class Manifold::Quotient
 

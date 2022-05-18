@@ -10,7 +10,7 @@ CFLAGS = -c -Wshadow -Wall -I . -I src/ -I $(HOME)/include/ -std=c++17
 # CFLAGS = -c -DMANIFEM_COLLECT_CM -DNDEBUG -O4 -I . -I src/ -I $(HOME)/include/ -std=c++17
 # CFLAGS = -c -DNDEBUG -I . -I src/ -I $(HOME)/include/ -std=c++17
 
-manifem_objects = iterator.o field.o finite-elem.o frontal.o function.o global.o manifold.o mesh.o
+manifem_objects = iterator.o field.o finite-elem.o function.o global.o manifold.o mesh.o
 
 %.o: src/%.cpp
 	$(CC) $(CFLAGS) $^

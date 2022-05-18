@@ -97,7 +97,13 @@ class Manifold::Type::Euclidian::sq_dist
 {	public :
 
 	inline double operator() ( const Cell & A, const Cell & B )
-	{	return Manifold::working .sq_dist ( A, B );  }
+	{	const Function & coord = Manifold::working .coordinates();
+		std::vector < double > vA = coord ( A ), vB = coord ( B ),
+			delta ( coord .nb_of_components() );
+		for ( size_t i = 0; i < coord .nb_of_components(); i++ )
+			delta[i] = vB[i] - vA[i];
+		return Manifold::working .inner_prod ( A, delta, delta );  }
+	// {	return Manifold::working .sq_dist ( A, B );  }
 
 };  // end of  class Manifold::Type::Euclidian::sq_dist
 
@@ -116,6 +122,83 @@ class Manifold::Type::Quotient
 // we only need the winding for searching close neighbours of a given vertex
 // we need 'sq_dist' to keep the "winning" winding, see below
 	
+
+//-----------------------------------------------------------------------------------------
+
+
+class Manifold::Type::Quotient::sq_dist
+
+// a callable object returning the square of the distance between two points
+// used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
+
+{	public :
+
+	inline double dist2
+	( const Cell & A, const Cell & B, const Manifold::Action & winding,
+	  const Function & coords_Eu, const Function & coords_q            )
+	{	double res = 0.;
+		std::vector < double > coord_A = coords_Eu ( A ),
+		                       coord_B = coords_q ( B, tag::winding, winding );
+		const size_t nc = coord_A .size();
+		assert ( nc == coord_B .size() );
+		for ( size_t i = 0; i < nc; i++ )
+		{	double tmp = coord_B [i] - coord_A [i];
+			res += tmp*tmp;                        }
+		return res;                                                            }
+
+	// we provide as Point not just a Cell but a Cell together with a winding number
+	// each call to SqDist will set the "winning" winding of the second Point B
+	// relatively to the first one A
+	// (the winding number of a future segment AB where the minimum distance is achieved)
+
+	inline double operator() ( std::pair < Cell, Manifold::Action > A,
+	                           std::pair < Cell, Manifold::Action > & B )
+	{	Manifold space = Manifold::working;
+		assert ( space .exists() );  // we use the current (quotient) manifold
+		Manifold::Quotient * manif_q = tag::Util::assert_cast
+			< Manifold::Core*, Manifold::Quotient* > ( space .core );
+		assert ( manif_q );
+		Function coords_q = space.coordinates();
+		Manifold mani_Eu = manif_q->base_space;  // underlying Euclidian manifold
+		Function coords_Eu = mani_Eu .coordinates();
+		assert ( coords_Eu .nb_of_components() == 2 );
+		Function x = coords_Eu [0],  y = coords_Eu [1];
+
+		// the action group may have one or two generators
+		assert ( manif_q->actions .size() == 2 );
+		assert ( manif_q->winding_nbs .size() == 2 );
+		Function::ActionGenerator g1 = manif_q->actions [0], g2 = manif_q->actions [1];
+	
+		std::vector < std::vector < short int > > directions
+			{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+		// declare global, here and in global.cpp draw_ps
+		
+		size_t unsuccessful_tries = 0;
+		// we describe a sort of spiral
+		// at the end, we stop after 10 unsuccessful rounds
+		size_t size_of_round = 0;
+		short int ii = 0, jj = 0;
+		// we choose a high value of 'dist', it will be overridden for ii == jj == 0
+		double dist = this->dist2 ( A .first, B .first, 0, coords_Eu, coords_q ) + 1.;
+		while ( unsuccessful_tries < 10 )
+		{	size_of_round++;
+			for ( size_t d = 0; d < 4; d++ )
+			{	if ( d == 2 ) size_of_round++;
+				for ( size_t i = 0; i < size_of_round; i++ )
+				{	Manifold::Action s = ii*g1 + jj*g2;
+					double di = this->dist2 ( A .first, B .first, s, coords_Eu, coords_q );
+					if ( di < dist )
+					{	dist = di;
+						B .second = s;
+						unsuccessful_tries = 0;  }
+					ii += directions [d] [0];
+					jj += directions [d] [1];                                               }  }
+			unsuccessful_tries++;
+		}  // end of  while unsuccessful_tries < 10
+
+	return dist;                                                                          }
+
+};  // end of  class Manifold::Type::Quotient::sq_dist
 
 //-----------------------------------------------------------------------------------------
 
@@ -170,7 +253,7 @@ void progressive_construct ( Mesh & msh,
 		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 		{	Function x = Manifold::working.coordinates()[i];  // recover tangent from hook !
-			tangent[i] = x(B) - x(A);                         }
+			tangent[i] = x(B) - x(A);                       }
 		double n2 = 0.;  // Manifold::working.inner_prod ( A, tangent, tangent ); ?!!
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 		{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }

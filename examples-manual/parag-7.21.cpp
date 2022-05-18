@@ -61,22 +61,22 @@ int main ( )
 
 	RR2 .implicit ( 2.*x + y/0.86 == 2. );
 	Mesh AB ( tag::frontal, tag::start_at, A, tag::stop_at, B,
-						tag::desired_length, d, tag::shortest_path      );
+	          tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( y == 0.86 );
 	Mesh BC ( tag::frontal, tag::start_at, B, tag::stop_at, C,
-						tag::desired_length, d, tag::shortest_path      );
+	          tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( 2.*x - y/0.86 == -2. );
 	Mesh CD ( tag::frontal, tag::start_at, C, tag::stop_at, D,
-						tag::desired_length, d, tag::shortest_path      );
+	          tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( 2.*x + y/0.86 == -2. );
 	Mesh DE ( tag::frontal, tag::start_at, D, tag::stop_at, E,
-						tag::desired_length, d, tag::shortest_path      );
+	          tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( y == -0.86 );
 	Mesh EF ( tag::frontal, tag::start_at, E, tag::stop_at, F,
-						tag::desired_length, d, tag::shortest_path      );
+	          tag::desired_length, d, tag::shortest_path      );
 	RR2 .implicit ( 2.*x - y/0.86 == 2. );
 	Mesh FA ( tag::frontal, tag::start_at, F, tag::stop_at, A,
-						tag::desired_length, d, tag::shortest_path      );
+	          tag::desired_length, d, tag::shortest_path      );
 
 	// we must ensure opposite faces have the same number of elements
 	// and the corresponding vertices have the same positions

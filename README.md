@@ -36,7 +36,7 @@ of the file `maniFEM.h`.
 
 ManiFEM is being developed by [Cristian Barbarosie](mailto:cristian.barbarosie@gmail.com)
 and [Anca-Maria Toader](mailto:anca.maria.toader@gmail.com);
-see also the [list of contributors](contributors.md).
+see also the [list of contributors](contributors.md) and the [colophon](colophon.md).
 
 To learn maniFEM, you should read the
 [manual](http://manifem.rd.ciencias.ulisboa.pt/manual-manifem.pdf) (version 22.05).
