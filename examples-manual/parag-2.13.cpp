@@ -30,7 +30,7 @@ int main ()
 	// because A, B, G and H do and because the equation given below
 	// is symmetric in y and z
 
-	// in paragraph 2.15, we impose explicitly a second equation
+	// in paragraph 2.16, we impose explicitly a second equation
 	
 	RR3 .implicit ( x*x + q*(y+z)*(y+z) == 2.-p );
 	Mesh AB ( tag::segment, A .reverse(), B, tag::divided_in, 15 );

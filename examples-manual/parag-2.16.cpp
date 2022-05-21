@@ -27,7 +27,7 @@ int main ()
 
 	// one can define the same curve by different sets of equations
 
-	// for instance, below we use the equation already introduced in paragraph 2.12
+	// for instance, below we use the equation already introduced in paragraph 2.13
 	// and add the equation of a plane
 	
 	RR3 .implicit ( x*x + q*(y+z)*(y+z) == 2.-p, y == z );
