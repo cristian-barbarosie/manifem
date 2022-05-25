@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.05.16
+// frontal.cpp 2022.05.21
 
 // almost total remake
 
@@ -47,7 +47,7 @@ namespace tag
 
 using namespace maniFEM;
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 // we want to deal with Euclidian manifolds and implicit submanifolds, on one side
@@ -73,7 +73,20 @@ using namespace maniFEM;
 // implement a discrete version of the steepest descent method
 // rather than a blind search as in draw_ps with tag::windng
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
+
+
+// global variables and functions for this file, not visible for other object files
+namespace {  // anonymous namespace, mimics static linkage
+
+Cell temporary_vertex ( tag::non_existent );
+
+size_t progress_nb_of_coords;  // dimension of the surrounding Euclidian space
+// also known as "geometric dimension"
+
+}  // anonymous namespace
+
+//------------------------------------------------------------------------------------------------------//
 
 
 class Manifold::Type::Euclidian
@@ -84,15 +97,58 @@ class Manifold::Type::Euclidian
 	typedef Cell winding_cell;
 	typedef MetricTree < Cell, sq_dist > metric_tree;
 
+	class ConstInnProd;
 };
 	
-//-------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 	
 class Manifold::Type::Euclidian::sq_dist
 
 // a callable object returning the square of the distance between two points
 // used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
+
+// the inner product is not constant, it may be different in A from B
+// this is why we return the arithmetic mean between the two products
+// however, we prefer not to divide by two in order to save computing time
+// the calling code must adjust the desired distance accordingly
+
+{	public :
+
+	inline double operator() ( const Cell & A, const Cell & B )
+	{	const Function & coord = Manifold::working .coordinates();
+		std::vector < double > vA = coord ( A ), vB = coord ( B ),
+			delta ( coord .nb_of_components() );
+		for ( size_t i = 0; i < coord .nb_of_components(); i++ )
+			delta[i] = vB[i] - vA[i];
+		return Manifold::working .inner_prod ( A, delta, delta ) +
+		       Manifold::working .inner_prod ( B, delta, delta )  ;  }
+		// return ( Manifold::working .inner_prod ( A, delta, delta ) +
+		//          Manifold::working .inner_prod ( B, delta, delta )  ) / 2.;  }
+
+};  // end of  class Manifold::Type::Euclidian::sq_dist
+
+//------------------------------------------------------------------------------------------------------//
+
+
+class Manifold::Type::Euclidian::ConstInnProd
+
+{	public :
+
+	class sq_dist;
+	typedef Cell winding_cell;
+	typedef MetricTree < Cell, sq_dist > metric_tree;
+};
+	
+//------------------------------------------------------------------------------------------------------//
+
+	
+class Manifold::Type::Euclidian::ConstInnProd::sq_dist
+
+// a callable object returning the square of the distance between two points
+// used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
+
+// here the inner product is constant, doesn't matter if we use A or B
 
 {	public :
 
@@ -103,11 +159,10 @@ class Manifold::Type::Euclidian::sq_dist
 		for ( size_t i = 0; i < coord .nb_of_components(); i++ )
 			delta[i] = vB[i] - vA[i];
 		return Manifold::working .inner_prod ( A, delta, delta );  }
-	// {	return Manifold::working .sq_dist ( A, B );  }
 
-};  // end of  class Manifold::Type::Euclidian::sq_dist
+};  // end of  class Manifold::Type::Euclidian::ConstInnProd::sq_dist
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 class Manifold::Type::Quotient
@@ -123,7 +178,7 @@ class Manifold::Type::Quotient
 // we need 'sq_dist' to keep the "winning" winding, see below
 	
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 class Manifold::Type::Quotient::sq_dist
@@ -200,14 +255,66 @@ class Manifold::Type::Quotient::sq_dist
 
 };  // end of  class Manifold::Type::Quotient::sq_dist
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
-template < class manif_type >
+namespace { // anonymous namespace, mimics static linkage
+
+inline void manipulate_tangent_1D  // hidden in anonymous namespace
+( const Cell & A, std::vector < double > & tangent )
+
+// ensure the norm is 1., project, ensure again the norm is 1.
+	
+{	double n2 = Manifold::working .inner_prod ( A, tangent, tangent );
+	double norm = std::sqrt ( n2 );
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	Function & x = Manifold::working .coordinates() [i];
+		x ( temporary_vertex ) = x(A) + nor[i];          }
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	Function & x = Manifold::working .coordinates() [i];
+		tangent[i] = x ( temporary_vertex ) - x(A);          }
+	n2 = Manifold::working .inner_prod ( A, tangent, tangent );
+	norm = std::sqrt ( n2 );
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;  }
+		
+	
+inline void manipulate_tangent_1D  // hidden in anonymous namespace
+( const Cell & A, const Cell & B, std::vector < double > tangent );
+	
+//------------------------------------------------------------------------------------------------------//
+
+inline void redistribute_vertices
+( const Mesh & msh, const Cell & start, const Cell & stop, size_t n )
+// hidden in anonymous namespace    // called only once
+
+// just make some baricenters
+	
+{	Cell A = stop;
+	// just in case n is too large, or the curve is too short, we look for 'start'
+	// the statement below is important for closed loops, where start == stop
+	A = msh .cell_behind (A) .base() .reverse();
+	for ( size_t i = 2; i < n; i++ )
+	{	if ( A == start )  {  n = i;  break;  }
+		A = msh .cell_behind ( A, tag::surely_exists ) .base() .reverse();  }
+	assert ( n > 2 );
+	A = stop;
+	Cell B = msh .cell_behind ( A, tag::surely_exists ) .base() .reverse();
+	Cell C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse();
+	for ( size_t i = 2; i < n; i++ )
+	{	Manifold::working .interpolate ( B, 0.3, A, 0.4, B, 0.3, C );
+		if ( C == start ) break;
+		A = B;  B = C;
+		C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse(); }    }
+
+//-----------------------------------------------------------------------------------------------
+
+
+template < class manif_type >                // line 289
 void progressive_construct ( Mesh & msh,
 	const tag::StartAt &, const Cell & start,
-	const tag::Towards &, std::vector < double > & tangent,
-	const tag::StopAt &, const Cell & stop                 )
+	const tag::Towards &, std::vector < double > tangent,
+	const tag::StopAt &, const Cell & stop               )
 // hidden in anonymous namespace
 
 // builds a one-dimensional mesh (a curve)
@@ -221,56 +328,75 @@ void progressive_construct ( Mesh & msh,
 	size_t counter = 1;
 	size_t max_counter = 0;  //  std::cin >> max_counter;
 	Cell A = start;
-	desired_len_at_point = desired_length (A);
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+	// the manifold's metric has been manipulated
+	// so the desired distance is now one
 	while ( true )
-	{	double d = Manifold::working .dist_sq ( A, stop );  // long range distance !
-		double augm_length = desired_len_at_point * 1.618034,  // golden number
-		       augm_len_sq = augm_length * augm_length;
-		if ( d < augm_len_sq )
-		{	// below we could use the Riemannian metric
-			// however, the sign should be the same
+	{	if ( manif_type::dist_less_than_one ( A, stop ) )
+		{	// check that stop' is in front of us, not behind
+			// (or, even worse, A == stop)
+			// below we could use the Riemannian metric
+			// however, the sign should be the same so it does not really matter
 			std::vector < double > e ( progress_nb_of_coords );
 			double prod = 0.;
 			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 			{	Function x = Manifold::working .coordinates() [i];
-				e[i] = x(stop) - x(A);  // recover tangent from hook !
+				e[i] = x(stop) - x(A);  // how about winding numbers ?
 				prod += tangent[i] * e[i];                        }
+			assert ( ( std::abs ( prod - 1.) < 0.3 ) or ( std::abs ( prod + 1.) < 0.3 ) );
 			if ( prod > 0. )
 			{	Cell last ( tag::segment, A.reverse(), stop );
 				last .add_to_mesh ( msh, tag::do_not_bother );
 				// the meaning of tag::do_not_bother is explained
 				// at the end of paragraph 11.6 in the manual
-				redistribute_vertices ( msh, start, stop, 6 );    // line 710
-				break;                                          }      }
+				redistribute_vertices ( msh, start, stop, 6 );  // how about winding numbers ?
+				return;                                        }      }
 		Cell B ( tag::vertex );
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 		{	Function x = Manifold::working.coordinates()[i];
 			x(B) = x(A) + tangent[i];                         }
 		if ( counter == max_counter ) return;
-		Manifold::working.project ( B );
-		desired_len_at_point = desired_length (B);
-		sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+		Manifold::working .project (B);
+		manipulate_tangent_1D ( A, B, tangent);
+		// mudar para dentro de manipulate_tangent_1D as quatro linhas acima ?
+		// statement above modifies 'tangent'
+		// uses tangent from A.hook, sets tangent at B.hook
+		// the manifold's metric has been manipulated
+		// so the desired distance is now 1.
 		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];  // recover tangent from hook !
-			tangent[i] = x(B) - x(A);                       }
-		double n2 = 0.;  // Manifold::working.inner_prod ( A, tangent, tangent ); ?!!
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	double temp = tangent[i];  temp *= temp;  n2 += temp;  }
-		n2 = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
-		n2 = desired_len_at_point / n2;
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] *= n2;
+		{	Function x = Manifold::working.coordinates()[i];
+			x(B) = x(A) + tangent[i];                         }
+		Manifold::working .project (B);
 		Cell AB ( tag::segment, A.reverse(), B );
 		AB .add_to_mesh ( msh, tag::do_not_bother );
 		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 		counter++;  A = B;                                                                      }
+
+	assert ( false );
 	
-	update_info_connected_one_dim ( msh, start, stop );
-		
 } // end of  progressive_construct
 
-//-------------------------------------------------------------------------------------------------
+}  // anonymous namespace
 
+//------------------------------------------------------------------------------------------------------//
+
+
+tag::Util::Metric * tag::Util::Metric::Trivial::scale ( const double f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Constant ( 1. / f );  }
+
+tag::Util::Metric * tag::Util::Metric::Trivial::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Variable ( 0.5 / f );  }
+
+tag::Util::Metric * tag::Util::Metric::Isotropic::Constant::scale ( const double f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Constant ( this->zoom / f );  }
+
+tag::Util::Metric * tag::Util::Metric::Isotropic::Variable::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Variable ( this->zoom / f );  }
+
+//------------------------------------------------------------------------------------------------------//
 
 void Manifold::Core::frontal_method  // virtual, overridden by Manifold::Quotient
 ( Mesh & msh, const tag::StartWithInconsistentMesh &,
@@ -278,20 +404,20 @@ void Manifold::Core::frontal_method  // virtual, overridden by Manifold::Quotien
   const tag::Towards &, std::vector<double> tangent,
   const tag::StopAt &, const Cell & stop             )
 
-{	progressive_construct < Manifold::Type::Euclidian >
+{	progressive_construct < Manifold::Type::Euclidian >  // line 289
 	( *this, tag::start_at, start, tag::towards, tangent,
 	  tag::stop_at, stop                                 );  }
 	
-//-------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
-void Manifold::Quotient::frontal_method  // virtual, overridden by Manifold::Quotient
+void Manifold::Quotient::frontal_method  // virtual from Manifold, here overridden
 ( Mesh & msh, const tag::StartWithInconsistentMesh &,
   const tag::StartAt &, const Cell & start,
   const tag::Towards &, std::vector<double> tangent,
   const tag::StopAt &, const Cell & stop             )
 
-{	progressive_construct < Manifold::Type::Quotient >
+{	progressive_construct < Manifold::Type::Quotient >  // line 289
 	( *this, tag::start_at, start, tag::towards, tangent,
 	  tag::stop_at, stop                                 );  }
 	
@@ -317,25 +443,68 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 
 {	temporary_vertex = Cell ( tag::vertex );
 	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
-	desired_length = length;
 
-	desired_len_at_point = desired_length ( start );
-	sq_desired_len_at_point = desired_len_at_point * desired_len_at_point;
+	// rescale the working manifold's metric
+	// thus we may work with a desired distance of 1.
+	tag::Util::Metric * old_metric = Manifold::working .metric;
+	Manifold::working .metric = old_metric->scale ( length );
 
-	double n2 = 0.;  // ensure that normal has the right norm
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-	{	double temp = tangent [i];  temp *= temp;  n2 += temp;  }
-	double coef = desired_len_at_point / std::sqrt(n2);
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent [i] *= coef;
-
-	improve_tangent ( start, tangent );
+  Manifold::working .core->manipulate_tangent_1D ( start, tangent);
+	// statement above modifies 'tangent', sets tangent at start .hook
 	// ensures again the norm is right, then projects on the tangent space
 
 	// method below is virtual, calls Euclidian or Quotient version
 	Manifold::working .core->frontal_method
 	( *this, tag::start_with_inconsistent_mesh, tag::start_at, start,
-	  tag::towards, tangent, tag::stop_at, stop                      );              }
+	  tag::towards, tangent, tag::stop_at, stop                      );
 
+	delete ( Manifold::working .metric );
+	Manifold::working .metric = old_metric;
+
+	update_info_connected_one_dim ( msh, start, stop );                              }
+		
+//------------------------------------------------------------------------------------------------------//
+
+
+Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
+             const tag::Towards &, std::vector<double> tangent,
+             const tag::StopAt &, const Cell & stop,
+             const tag::DesiredLength &, const double length                )
+
+// 'start' and 'stop' are positive vertices, may be one and the same
+
+:	Mesh ( tag::whose_core_is,
+	       new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
+	       tag::freshly_created, tag::is_positive                                              )
+// the number of segments does not count, and we don't know it yet
+// we compute it after the mesh is built, by counting segments
+// but we count segments using an iterator, and the iterator won't work
+// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
+// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
+// in iterator.cpp
+
+{	temporary_vertex = Cell ( tag::vertex );
+	progress_nb_of_coords = Manifold::working .coordinates() .nb_of_components();
+
+	// rescale the working manifold's metric
+	// thus we may work with a desired distance of 1.
+	tag::Util::Metric * old_metric = Manifold::working .metric;
+	Manifold::working .metric = old_metric->scale ( length );
+
+  Manifold::working .core->manipulate_tangent_1D ( start, tangent);
+	// statement above modifies 'tangent'
+	// ensures again the norm is 1., then projects on the tangent space
+
+	// method below is virtual, calls Euclidian or Quotient version
+	Manifold::working .core->frontal_method
+	( *this, tag::start_with_inconsistent_mesh, tag::start_at, start,
+	  tag::towards, tangent, tag::stop_at, stop                      );
+
+	delete ( Manifold::working .metric );
+	Manifold::working .metric = old_metric;
+
+	update_info_connected_one_dim ( msh, start, stop );                              }
+		
 //------------------------------------------------------------------------------------------------------//
 
 

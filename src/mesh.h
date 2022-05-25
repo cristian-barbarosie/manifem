@@ -1,5 +1,5 @@
 
-// mesh.h  2022.04.02
+// mesh.h  2022.05.22
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -175,6 +175,8 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class CellCore;  //  aka  class Cell::Core
 		class MeshCore;  //  aka  class Mesh::Core
 		class CellIterator;  // aka  class Mesh::Iterator
+		class Metric;
+		class WeakIntegrator;
 		static const std::vector < std::vector < std::vector < short int > > >
 			ortho_basis_int, pm_ortho_basis_int;
 		static const double one_third, minus_one_third, one_sixth, minus_one_sixth,
@@ -208,7 +210,6 @@ namespace tag {  // see paragraph 11.3 in the manual
 		#endif
 		static bool return_true ( );
 		static bool return_false ( );
-		class weakIntegrator;
 	};
 	struct MayBeNull { };  static const MayBeNull may_be_null;
 	struct SurelyNotNull { };  static const SurelyNotNull surely_not_null;
@@ -1171,6 +1172,11 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	       const tag::Towards &, std::vector < double > tangent,
 	       const tag::StopAt &, const Cell & stop,
 	       const tag::DesiredLength &, const Function & length            );
+
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
+	       const tag::Towards &, std::vector < double > tangent,
+	       const tag::StopAt &, const Cell & stop,
+	       const tag::DesiredLength &, const double length                );
 
 	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	       const tag::Towards &, std::vector < double > tangent,

@@ -1,5 +1,5 @@
 
-// manifold.h 2022.05.17
+// manifold.h 2022.05.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -47,66 +47,164 @@ namespace tag
 	static const StartWithInconsistentMesh start_with_inconsistent_mesh;                }
 
 
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
+//------------------------------------------------------------------------------------------------------//
 
 // class below will allow us to easily manipulate the metric of a manifold
 
 class tag::Util::Metric
 
+// abstract class, specialized in tag::Util::Metric::Trivial, Isotropic::***, Anisotropic::***
+
 {	public :
 
 	class Trivial;  class Isotropic;  class Anisotropic;
 
-	tag::Util::virtual Metric * scale ( const Function & f ) = 0;
+	inline   Metric() { }
+	virtual ~Metric() { }
+	
+	virtual tag::Util::Metric * scale ( const Function & f ) = 0;
+	virtual tag::Util::Metric * scale ( const double f ) = 0;
 
-}
+};
 
 	
 class tag::Util::Metric::Trivial : public tag::Util::Metric
 
 {	public :
 
-	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
+	inline   Trivial() : tag::Util::Metric()  { }
+	virtual ~Trivial() { }
 
-}
+	// two 'scale' methods are virtual from tag::Util::Metric
+	tag::Util::Metric * scale ( const Function & f );
+	tag::Util::Metric * scale ( const double f );
+
+};
 
 
 class tag::Util::Metric::Isotropic : public tag::Util::Metric
+
+// abstract class, specialized in tag::Util::Metric::Isotropic::Constant, Variable
+
+{	public :
+
+	inline   Isotropic() : tag::Util::Metric()  { }
+	virtual ~Isotropic() { }
+
+	// two 'scale' methods stay pure virtual from tag::Util::Metric
+	
+	class Constant; class Variable;
+};
+
+	
+class tag::Util::Metric::Isotropic::Constant : public tag::Util::Metric::Isotropic
+
+{	public :
+
+	double zoom;
+	
+	inline   Constant ( const double z ) : tag::Util::Metric::Isotropic(), zoom {z}  { }
+	virtual ~Constant() { }
+
+	// two 'scale' methods are virtual from tag::Util::Metric, defined in frontal.cpp
+	tag::Util::Metric * scale ( const Function & f );
+	tag::Util::Metric * scale ( const double f );
+
+};
+
+
+class tag::Util::Metric::Isotropic::Variable : public tag::Util::Metric::Isotropic
 
 {	public :
 
 	Function zoom;
 	
-	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
+	inline   Variable ( const Function & z ) : tag::Util::Metric::Isotropic(), zoom {z}  { }
+	virtual ~Variable() { }
 
-}
+	// two 'scale' methods are virtual from tag::Util::Metric, defined in frontal.cpp
+	tag::Util::Metric * scale ( const Function & f );
+	tag::Util::Metric * scale ( const double f );
+
+};
 
 
-class tag::Util::Metric::Anisotropic
+class tag::Util::Metric::Anisotropic : public tag::Util::Metric
+
+// abstract class, specialized in tag::Util::Metric::Anisotropic::***
 
 {	public :
 
+	inline   Anisotropic() : tag::Util::Metric() { }
+	virtual ~Anisotropic() { }
+
+	// two 'scale' methods stay pure virtual from tag::Util::Metric
+
 	class Matrix;  class Rayleigh;
-
-	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
-
-}
+};
 
 	
 class tag::Util::Metric::Anisotropic::Matrix : public tag::Util::Metric::Anisotropic
+
+// abstract class, specialized in tag::Util::Metric::Anisotropic::Matrix::Constant, Variable
+
+{	public :
+
+	inline   Matrix() : tag::Util::Metric::Anisotropic()  { }
+	virtual ~Matrix() { }
+
+	// two 'scale' methods stay pure virtual from tag::Util::Metric
+
+	class Constant; class Variable;
+};
+
+
+class tag::Util::Metric::Anisotropic::Matrix::Constant
+:	public tag::Util::Metric::Anisotropic::Matrix
+
+{	public :
+
+	std::vector < double > matrix;  // n^2 components, definite positive
+	
+	inline Constant ( const double a11, const double a12, const double a22 )
+	:	tag::Util::Metric::Anisotropic::Matrix(), matrix { a11, a12, a22 }
+	{ }
+	
+	inline Constant ( const double a11, const double a12, const double a13,
+	                  const double a22, const double a23, const double a33 )
+	:	tag::Util::Metric::Anisotropic::Matrix(), matrix { a11, a12, a13, a22, a23, a33 }
+	{ }
+
+	virtual ~Constant() { };
+
+	// two 'scale' methods are virtual from tag::Util::Metric, defined in frontal.cpp
+	tag::Util::Metric * scale ( const Function & f );
+	tag::Util::Metric * scale ( const double f );
+
+};
+
+
+class tag::Util::Metric::Anisotropic::Matrix::Variable
+:	public tag::Util::Metric::Anisotropic::Matrix
 
 {	public :
 
 	Function matrix;  // n^2 components, definite positive
 	
-	// tag::Util::Metric * scale ( const Function & f )
-	// virtual from tag::Util::Metric, defined by tag::Util::Metric::Anisotropic
+	inline   Variable() : tag::Util::Metric::Anisotropic::Matrix() { };
+	virtual ~Variable() { };
 
-}
+	// two 'scale' methods are virtual from tag::Util::Metric, defined in frontal.cpp
+	tag::Util::Metric * scale ( const Function & f );
+	tag::Util::Metric * scale ( const double f );
+
+};
 
 
 class tag::Util::Metric::Anisotropic::Rayleigh : public tag::Util::Metric::Anisotropic
+
+// abstract class, specialized in tag::Util::Metric::Anisotropic::Rayleigh::Constant, Variable
 
 {	public :
 
@@ -114,22 +212,14 @@ class tag::Util::Metric::Anisotropic::Rayleigh : public tag::Util::Metric::Aniso
 	Function dev;   // n^2 components, semi-definite positive
 	// matrix = rayl * Id + dev
 	
-	// tag::Util::Metric * scale ( const Function & f )
-	// virtual from tag::Util::Metric, defined by tag::Util::Metric::Anisotropic
+	inline   Rayleigh() { }
+	virtual ~Rayleigh() { }
 
-}
+	// two 'scale' methods stay pure virtual from tag::Util::Metric
 
+	class Constant; class Variable;
 
-class tag::Util::Metric::Scaled : public tag::Util::Metric
-
-{	public :
-
-	tag::Util::Metric * base;
-	Function factor;  // scalar
-	
-	tag::Util::Metric * scale ( const Function & f );  // virtual from tag::Util::Metric
-
-}
+};
 
 
 //---------------------------------------------------------------------------------------
@@ -150,6 +240,7 @@ class Manifold
 	class Core;
 	
 	Manifold::Core * core;
+	tag::Util::Metric * metric;
 
 	inline Manifold ( const tag::WhoseCoreIs &, Manifold::Core * c )
 	:	core ( c )
@@ -441,11 +532,11 @@ class Manifold::Core
 	virtual void interpolate ( Cell::Positive::Vertex * P, const std::vector < double > & coefs,
 														 const std::vector < Cell::Positive::Vertex * > & points ) const = 0;
 
-	// virtual void frontal_method  // defined in frontal.cpp, overridden by Manifold::Quotient
-	// ( Mesh & msh, const tag::StartWithInconsistentMesh &,
-	//   const tag::StartAt &, const Cell & start,
-	//   const tag::Towards &, std::vector<double> tangent,
-	//   const tag::StopAt &, const Cell & stop             );
+	virtual void frontal_method  // defined in frontal.cpp, overridden by Manifold::Quotient
+	( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	  const tag::StartAt &, const Cell & start,
+	  const tag::Towards &, std::vector<double> tangent,
+	  const tag::StopAt &, const Cell & stop             );
 	
 }; // end of class Manifold::Core
 

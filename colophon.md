@@ -1,6 +1,6 @@
 
 
-#[colophon](https://www.google.com/search?q=define+colophon)
+# [colophon](https://www.google.com/search?q=define+colophon)
 
 In the development of [maniFEM](http://manifem.rd.ciencias.ulisboa.pt) (and of its manual)
 the following tools have been precious.
