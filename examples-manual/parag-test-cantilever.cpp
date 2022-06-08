@@ -249,8 +249,8 @@ int main1 ( )  // produce initial shape
 
 int main ()
 	
-{	const double eta = 0.00005;
-	const double lagrange = 100.;
+{	const double eta = 0.0001;
+	const double lagrange = 470.;
 	const size_t iter_max = 5;
 
 	Manifold RR2 ( tag::Euclid, tag::of_dim, 2 );
@@ -368,9 +368,9 @@ int main ()
 	} // just a block of code
 
 	// several inner circles
-	std::list < Mesh > inner;
+	std::list < Mesh > inner_pieces;
 	{ // just a block of code for hiding names
-	size_t m;  ff >> m;
+		size_t m;  ff >> m;
 	Manifold circle_manif = RR2 .implicit ( x*x + y*y == 1. );
 	for ( size_t i = 0; i < m; i++ )
 	{	ff >> n;
@@ -383,16 +383,16 @@ int main ()
 		for ( it .reset(); it .in_range(); it++ )
 		{	Cell P = *it;
 			ff >> xx >> yy;  x(P) = xx;  y(P) = yy;   }
-		inner .push_back ( circle );                                                      }
-	assert ( m == inner .size() );
+		inner_pieces .push_back ( circle );                                                      }
+	assert ( m == inner_pieces .size() );
 	} // just a block of code
 
 	std::list < Mesh > bdry_pieces { AB, BE, EF, FC, CD, DG, semi_circle, HA };
 	std::list < Mesh > free_bdry_pieces { AB, BE, FC, CD, semi_circle };
 	std::list < Mesh > Dirichlet_bdry_pieces { DG, HA };
 
-	for ( std::list < Mesh > ::iterator il = inner .begin();
-				il != inner .end(); il++ )
+	for ( std::list < Mesh > ::iterator il = inner_pieces .begin();
+				il != inner_pieces .end(); il++ )
 	{	Mesh circle = *il;
 		bdry_pieces .push_back ( circle );
 		free_bdry_pieces .push_back ( circle );  }
@@ -718,6 +718,10 @@ int main ()
 		y(V) += eta * optim_deform [ numbering[V.core]-1+N ];  }
 	} // just a block of code
 
+	cantilever .draw_ps ("cantilever.eps");
+	bdry .draw_ps ("bdry.eps");
+	exit (0);
+	
 	// eliminate short segments, split long segments
 	{ // just a block of code for hiding variables
 	const double lower_lim = seg_len * seg_len / 2.1;
@@ -828,9 +832,9 @@ int main ()
 	} // just a block of code
 	
 	// several inner curves
-	f << inner .size() << std::endl;
-	for ( std::list < Mesh > ::iterator il = inner .begin();
-				il != inner .end(); il++ )
+	f << inner_pieces .size() << std::endl;
+	for ( std::list < Mesh > ::iterator il = inner_pieces .begin();
+				il != inner_pieces .end(); il++ )
 	{	Mesh circle = *il;
 		f << circle .number_of ( tag::segments ) << std::endl;
 		Mesh::Iterator it = circle .iterator ( tag::over_vertices, tag::require_order );
@@ -921,8 +925,8 @@ int main ()
 	
 	// three inner curves
 	f << "0.01 setlinewidth 0 0 1 setrgbcolor" << std::endl;
-	for ( std::list < Mesh > ::iterator il = inner .begin();
-				il != inner .end(); il++ )
+	for ( std::list < Mesh > ::iterator il = inner_pieces .begin();
+				il != inner_pieces .end(); il++ )
 	{	Mesh circle = *il;
 		Mesh::Iterator it = circle .iterator ( tag::over_segments, tag::require_order );
 		it .reset();  assert ( it .in_range() );

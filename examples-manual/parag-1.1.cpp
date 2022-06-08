@@ -42,7 +42,7 @@ int main ()
 	 
 	// we may want to visualize the resulting mesh
 	// here is one way to export the mesh in the "msh" format :
-	rect_mesh.export_to_file ( tag::msh, "rectangle.msh");
+	rect_mesh .export_to_file ( tag::msh, "rectangle.msh");
 
 	// or, directly draw a postscript file :
 	// rect_mesh.draw_ps ("rectangle.eps")
