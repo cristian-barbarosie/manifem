@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.04.21
+// manifold.cpp 2022.06.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1060,4 +1060,23 @@ void tag::Util::conjugate_gradient   // Polak Ribiere              // static
 }  // end of  conjugate_gradient
 
 //---------------------------------------------------------------------------------------------------//
+
+
+tag::Util::Metric * tag::Util::Metric::Trivial::scale ( const double f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Constant ( f );  }
+
+tag::Util::Metric * tag::Util::Metric::Trivial::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Variable ( f );  }
+
+tag::Util::Metric * tag::Util::Metric::Isotropic::Constant::scale ( const double f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Constant ( this->zoom * f );  }
+
+tag::Util::Metric * tag::Util::Metric::Isotropic::Variable::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Variable ( this->zoom * f );  }
+
+//------------------------------------------------------------------------------------------------------//
 

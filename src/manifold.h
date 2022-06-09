@@ -1,5 +1,5 @@
 
-// manifold.h 2022.05.21
+// manifold.h 2022.06.08
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -536,7 +536,7 @@ class Manifold::Core
 	( Mesh & msh, const tag::StartWithInconsistentMesh &,
 	  const tag::StartAt &, const Cell & start,
 	  const tag::Towards &, std::vector<double> tangent,
-	  const tag::StopAt &, const Cell & stop             );
+	  const tag::StopAt &,  const Cell & stop            );
 	
 }; // end of class Manifold::Core
 
@@ -1845,12 +1845,12 @@ class Manifold::Quotient : public Manifold::Core
 	// measure of the entire manifold
 	double measure ( ) const;  // virtual from Manifold::Core
 	
-	// void frontal_method  // virtual from Manifold::Core
+	void frontal_method  // virtual from Manifold::Core
 	// defined in frontal.cpp, overrides definition by Manifold::Core
-	// ( Mesh & msh, const tag::StartWithInconsistentMesh &,
-	//   const tag::StartAt &, const Cell & start,
-	//   const tag::Towards &, std::vector<double> tangent,
-	//   const tag::StopAt &, const Cell & stop             ) override;
+	( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	  const tag::StartAt &, const Cell & start,
+	  const tag::Towards &, std::vector<double> tangent,
+	  const tag::StopAt &,  const Cell & stop            ) override;
 	
 };  // end of class Manifold::Quotient
 

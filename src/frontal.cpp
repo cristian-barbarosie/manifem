@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.05.21
+// frontal.cpp 2022.06.08
 
 // almost total remake
 
@@ -269,11 +269,12 @@ inline void manipulate_tangent_1D  // hidden in anonymous namespace
 	double norm = std::sqrt ( n2 );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-	{	Function & x = Manifold::working .coordinates() [i];
-		x ( temporary_vertex ) = x(A) + nor[i];          }
+	{	const Function & x = Manifold::working .coordinates() [i];
+		x ( temporary_vertex ) = x(A) + tangent [i];              }
+	Manifold::working .project ( temporary_vertex );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-	{	Function & x = Manifold::working .coordinates() [i];
-		tangent[i] = x ( temporary_vertex ) - x(A);          }
+	{	const Function & x = Manifold::working .coordinates() [i];
+		tangent[i] = x ( temporary_vertex ) - x(A);               }
 	n2 = Manifold::working .inner_prod ( A, tangent, tangent );
 	norm = std::sqrt ( n2 );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;  }
@@ -311,11 +312,11 @@ inline void redistribute_vertices
 
 
 template < class manif_type >                // line 289
-void progressive_construct ( Mesh & msh,
+void progressive_construct          // hidden in anonymous namespace
+( Mesh & msh, const tag::StartWithInconsistentMesh &,
 	const tag::StartAt &, const Cell & start,
 	const tag::Towards &, std::vector < double > tangent,
 	const tag::StopAt &, const Cell & stop               )
-// hidden in anonymous namespace
 
 // builds a one-dimensional mesh (a curve)
 // orientation given by 'tangent'
@@ -380,33 +381,16 @@ void progressive_construct ( Mesh & msh,
 //------------------------------------------------------------------------------------------------------//
 
 
-tag::Util::Metric * tag::Util::Metric::Trivial::scale ( const double f )
-// virtual from tag::Util::Metric
-{	return new tag::Util::Metric::Isotropic::Constant ( 1. / f );  }
-
-tag::Util::Metric * tag::Util::Metric::Trivial::scale ( const Function & f )
-// virtual from tag::Util::Metric
-{	return new tag::Util::Metric::Isotropic::Variable ( 0.5 / f );  }
-
-tag::Util::Metric * tag::Util::Metric::Isotropic::Constant::scale ( const double f )
-// virtual from tag::Util::Metric
-{	return new tag::Util::Metric::Isotropic::Constant ( this->zoom / f );  }
-
-tag::Util::Metric * tag::Util::Metric::Isotropic::Variable::scale ( const Function & f )
-// virtual from tag::Util::Metric
-{	return new tag::Util::Metric::Isotropic::Variable ( this->zoom / f );  }
-
-//------------------------------------------------------------------------------------------------------//
-
 void Manifold::Core::frontal_method  // virtual, overridden by Manifold::Quotient
 ( Mesh & msh, const tag::StartWithInconsistentMesh &,
   const tag::StartAt &, const Cell & start,
   const tag::Towards &, std::vector<double> tangent,
-  const tag::StopAt &, const Cell & stop             )
+  const tag::StopAt &,  const Cell & stop            )
 
 {	progressive_construct < Manifold::Type::Euclidian >  // line 289
-	( *this, tag::start_at, start, tag::towards, tangent,
-	  tag::stop_at, stop                                 );  }
+	( msh, tag::start_with_inconsistent_mesh,
+	  tag::start_at, start, tag::towards, tangent,
+	  tag::stop_at, stop                          );  }
 	
 //------------------------------------------------------------------------------------------------------//
 
@@ -415,11 +399,12 @@ void Manifold::Quotient::frontal_method  // virtual from Manifold, here overridd
 ( Mesh & msh, const tag::StartWithInconsistentMesh &,
   const tag::StartAt &, const Cell & start,
   const tag::Towards &, std::vector<double> tangent,
-  const tag::StopAt &, const Cell & stop             )
+  const tag::StopAt &,  const Cell & stop            )
 
 {	progressive_construct < Manifold::Type::Quotient >  // line 289
-	( *this, tag::start_at, start, tag::towards, tangent,
-	  tag::stop_at, stop                                 );  }
+	( msh, tag::start_with_inconsistent_mesh,
+	  tag::start_at, start, tag::towards, tangent,
+	  tag::stop_at, stop                          );  }
 	
 //-------------------------------------------------------------------------------------------------
 
@@ -447,7 +432,7 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	// rescale the working manifold's metric
 	// thus we may work with a desired distance of 1.
 	tag::Util::Metric * old_metric = Manifold::working .metric;
-	Manifold::working .metric = old_metric->scale ( length );
+	Manifold::working .metric = old_metric->scale ( 1. / length );
 
   Manifold::working .core->manipulate_tangent_1D ( start, tangent);
 	// statement above modifies 'tangent', sets tangent at start .hook
@@ -489,7 +474,7 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	// rescale the working manifold's metric
 	// thus we may work with a desired distance of 1.
 	tag::Util::Metric * old_metric = Manifold::working .metric;
-	Manifold::working .metric = old_metric->scale ( length );
+	Manifold::working .metric = old_metric->scale ( 1. / length );
 
   Manifold::working .core->manipulate_tangent_1D ( start, tangent);
 	// statement above modifies 'tangent'
