@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.06.08
+// frontal.cpp 2022.06.15
 
 // almost total remake
 
@@ -16,8 +16,8 @@
 //   or (at your option) any later version.
 
 //   ManiFEM is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//   but WITHOUT ANY WARRANTY; without even the implied warranty
+//   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //   See the GNU Lesser General Public License for more details.
 
 //   You should have received a copy of the GNU Lesser General Public License
@@ -257,33 +257,71 @@ class Manifold::Type::Quotient::sq_dist
 
 //------------------------------------------------------------------------------------------------------//
 
-
 namespace { // anonymous namespace, mimics static linkage
 
-inline void manipulate_tangent_1D  // hidden in anonymous namespace
+inline double approx_sqrt ( const double x )  // hidden in anonymous namespace
+
+// a reasonable approximation of the square root of x
+// for x between 	0.5 and 2.
+// this is not the Taylor polynomial in x = 1. (it would be for coef = 0.25)
+
+{	assert ( ( x > 0.5 ) and ( x < 2. ) );
+	const double coef = 0.10294;
+	const double tmp = x - 1.;
+	return ( x + 1.) / 2. - coef * tmp * tmp;   }
+
+
+inline void improve_tangent  // hidden in anonymous namespace
 ( const Cell & A, std::vector < double > & tangent )
 
 // ensure the norm is 1., project, ensure again the norm is 1.
+
+// in this version we do not assume the norm of 'tangent'  is close to 1.
+// also, 'tangent' may be far from the tangent line or tangent plane
 	
-{	double n2 = Manifold::working .inner_prod ( A, tangent, tangent );
+{	double n2 = this->inner_prod ( A, tangent, tangent, this->metric );
+	// tangent may have norm far away from 1., so we use true square root below
 	double norm = std::sqrt ( n2 );
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i];
-		x ( temporary_vertex ) = x(A) + tangent [i];              }
+		x ( temporary_vertex ) = x(A) + tangent [i] / norm;        }
 	Manifold::working .project ( temporary_vertex );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i];
 		tangent[i] = x ( temporary_vertex ) - x(A);               }
-	n2 = Manifold::working .inner_prod ( A, tangent, tangent );
+  n2 = manif_type::sq_dist ( A, temporary_vertex, tangent );
+	// because the 'tangent' provided may not be tangent to the working manifold,
+	// we use the true square root below
 	norm = std::sqrt ( n2 );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;  }
 		
 	
-inline void manipulate_tangent_1D  // hidden in anonymous namespace
-( const Cell & A, const Cell & B, std::vector < double > tangent );
+inline Cell project_vertex_forward  // hidden in anonymous namespace
+( const Cell & A, std::vector < double > & tangent )
+
+// we assume the norm of 'tangent' is close to 1.
+// we also assume it is nearly tangent to the working manifold
+	
+{	double n2 = this->inner_prod ( A, tangent, tangent, this->metric );
+	double norm = aprox_sqrt ( n2 );
+	Cell B ( tag::vertex );
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	const Function & x = Manifold::working .coordinates() [i];
+		x(B) = x(A) + tangent [i] / norm;                          }
+	Manifold::working .project (B);
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	const Function & x = Manifold::working .coordinates() [i];
+		tangent[i] = x(B) - x(A);                                  }
+  n2 = manif_type::sq_dist ( A, B, tangent );
+	norm = aprox_sqrt ( n2 );
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
+	{	const Function & x = Manifold::working .coordinates() [i]; 
+		x(B) = x(A) + tangent [i] / norm;                          }
+	Manifold::working .project (B);
+	return B;                                                          }
 	
 //------------------------------------------------------------------------------------------------------//
+
 
 inline void redistribute_vertices
 ( const Mesh & msh, const Cell & start, const Cell & stop, size_t n )
@@ -326,48 +364,32 @@ void progressive_construct          // hidden in anonymous namespace
 {	assert ( start .dim() == 0 );
 	assert ( stop  .dim() == 0 );
 
+	improve_tangent ( start, tangent);  // modifies 'tangent'
+
 	size_t counter = 1;
 	size_t max_counter = 0;  //  std::cin >> max_counter;
 	Cell A = start;
-	// the manifold's metric has been manipulated
+	// the manifold's metric has been scaled
 	// so the desired distance is now one
 	while ( true )
-	{	if ( manif_type::dist_less_than_one ( A, stop ) )
-		{	// check that stop' is in front of us, not behind
-			// (or, even worse, A == stop)
+	{	std::vector < double > e = Manifold::working .core->get_vector ( A, stop );
+		if ( Manifold::working .core->dist_less_than_one ( A, stop, e ) )
+			// check that stop' is in front of us, not behind (or, even worse, A == stop)
 			// below we could use the Riemannian metric
 			// however, the sign should be the same so it does not really matter
-			std::vector < double > e ( progress_nb_of_coords );
-			double prod = 0.;
+		{	double prod = 0.;
 			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-			{	Function x = Manifold::working .coordinates() [i];
-				e[i] = x(stop) - x(A);  // how about winding numbers ?
-				prod += tangent[i] * e[i];                        }
+				prod += tangent[i] * e[i];
 			assert ( ( std::abs ( prod - 1.) < 0.3 ) or ( std::abs ( prod + 1.) < 0.3 ) );
 			if ( prod > 0. )
-			{	Cell last ( tag::segment, A.reverse(), stop );
+			{	Cell last ( tag::segment, A.reverse(), stop );  // how about winding numbers ?
 				last .add_to_mesh ( msh, tag::do_not_bother );
 				// the meaning of tag::do_not_bother is explained
 				// at the end of paragraph 11.6 in the manual
 				redistribute_vertices ( msh, start, stop, 6 );  // how about winding numbers ?
 				return;                                        }      }
-		Cell B ( tag::vertex );
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			x(B) = x(A) + tangent[i];                         }
-		if ( counter == max_counter ) return;
-		Manifold::working .project (B);
-		manipulate_tangent_1D ( A, B, tangent);
-		// mudar para dentro de manipulate_tangent_1D as quatro linhas acima ?
-		// statement above modifies 'tangent'
-		// uses tangent from A.hook, sets tangent at B.hook
-		// the manifold's metric has been manipulated
-		// so the desired distance is now 1.
-		for ( size_t i = 0; i < progress_nb_of_coords; i++ )
-		{	Function x = Manifold::working.coordinates()[i];
-			x(B) = x(A) + tangent[i];                         }
-		Manifold::working .project (B);
-		Cell AB ( tag::segment, A.reverse(), B );
+		Cell B = project_vertex_forward ( A, tangent );  // modifies 'tangent'
+		Cell AB ( tag::segment, A.reverse(), B );        // zero winding
 		AB .add_to_mesh ( msh, tag::do_not_bother );
 		// the meaning of tag::do_not_bother is explained at the end of paragraph 11.6 in the manual
 		counter++;  A = B;                                                                      }
@@ -434,10 +456,6 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	tag::Util::Metric * old_metric = Manifold::working .metric;
 	Manifold::working .metric = old_metric->scale ( 1. / length );
 
-  Manifold::working .core->manipulate_tangent_1D ( start, tangent);
-	// statement above modifies 'tangent', sets tangent at start .hook
-	// ensures again the norm is right, then projects on the tangent space
-
 	// method below is virtual, calls Euclidian or Quotient version
 	Manifold::working .core->frontal_method
 	( *this, tag::start_with_inconsistent_mesh, tag::start_at, start,
@@ -475,10 +493,6 @@ Mesh::Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	// thus we may work with a desired distance of 1.
 	tag::Util::Metric * old_metric = Manifold::working .metric;
 	Manifold::working .metric = old_metric->scale ( 1. / length );
-
-  Manifold::working .core->manipulate_tangent_1D ( start, tangent);
-	// statement above modifies 'tangent'
-	// ensures again the norm is 1., then projects on the tangent space
 
 	// method below is virtual, calls Euclidian or Quotient version
 	Manifold::working .core->frontal_method
