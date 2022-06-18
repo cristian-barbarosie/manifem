@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.06.17
+// frontal.cpp 2022.06.18
 
 // almost total remake
 
@@ -282,7 +282,7 @@ inline double approx_sqrt ( const double x )  // hidden in anonymous namespace
 	constexpr double coef1 = 0.5 - coef;
 	constexpr double coef2 = 4.*coef;
 	const double tmp = x + 1.;
-	return coef1 * tmp - coef2 * x / tmp;   }
+	return coef1 * tmp + coef2 * x / tmp;   }
 
 
 inline void improve_tangent  // hidden in anonymous namespace
@@ -293,7 +293,7 @@ inline void improve_tangent  // hidden in anonymous namespace
 // in this version we do not assume the norm of 'tangent' is close to 1.
 // also, 'tangent' may be far from the tangent line or tangent plane
 	
-{	double n2 = this->inner_prod ( A, tangent, tangent, this->metric );
+{	double n2 = Manifold::working .core->metric->inner_prod ( A, tangent, tangent );
 	// tangent may have norm far away from 1., so we use true square root below
 	double norm = std::sqrt ( n2 );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
@@ -317,7 +317,7 @@ inline Cell project_vertex_forward  // hidden in anonymous namespace
 // we assume the norm of 'tangent' is close to 1.
 // we also assume it is nearly tangent to the working manifold
 	
-{	double n2 = this->inner_prod ( A, tangent, tangent, this->metric );
+{	double n2 = Manifold::working .core->metric->inner_prod ( A, tangent, tangent );
 	double norm = aprox_sqrt ( n2 );
 	Cell B ( tag::vertex );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )

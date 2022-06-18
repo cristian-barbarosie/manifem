@@ -62,10 +62,15 @@ class tag::Util::Metric
 
 	inline   Metric() { }
 	virtual ~Metric() { }
-	
+
+	// produce a new, scaled, metric
 	virtual tag::Util::Metric * scale ( const Function & f ) = 0;
 	virtual tag::Util::Metric * scale ( const double f ) = 0;
 
+	// inner product
+	virtual double inner_prod
+	( const Cell & P, const std::vector < double > v, const std::vector < double > w ) = 0;	
+	// compute distance between two points
 };
 
 	
