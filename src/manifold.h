@@ -240,7 +240,6 @@ class Manifold
 	class Core;
 	
 	Manifold::Core * core;
-	tag::Util::Metric * metric;
 
 	inline Manifold ( const tag::WhoseCoreIs &, Manifold::Core * c )
 	:	core ( c )
@@ -443,7 +442,7 @@ class Manifold::Core
 
 	size_t dim;
 
-	Function metric;  // may be a matrix function
+	tag::Util::Metric * metric;
 
 	double (*inner_prod) ( const Cell & P, const std::vector<double> & v,
 	                       const std::vector<double> & w, const Function & metric );
@@ -467,7 +466,7 @@ class Manifold::Core
 	// produces run-time error for Euclidian manifolds
 	// and for other manifolds whose measure is infinite (e.g. cylinder)
 	// and for manifolds whose measure is too difficult to compute (e.g. implicit manifolds)
-	// significant for torus
+	// significant for quotient manifolds (torus)
 	
 	virtual double measure ( ) const = 0;
 	

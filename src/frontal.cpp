@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.06.15
+// frontal.cpp 2022.06.17
 
 // almost total remake
 
@@ -257,18 +257,32 @@ class Manifold::Type::Quotient::sq_dist
 
 //------------------------------------------------------------------------------------------------------//
 
+
+// there are two aspects to be taken into account
+
+// first, we must distinguish between a "usual" manifold and a quotient one
+// a "usual" manifold may be e.g. Euclidian or implicit
+// the 'manif_type' will help us make this distinction
+// it allows to have two types of cells (simple and rich, the latter having winding)
+
+// second, we must distinguish between different types of metric :
+// trivial, isotropic (constant zoom, variable zoom), anisotropic, Rayleigh
+// virtual methods of the metric itself will allow us to treat differently these situations
+
+
 namespace { // anonymous namespace, mimics static linkage
 
 inline double approx_sqrt ( const double x )  // hidden in anonymous namespace
 
-// a reasonable approximation of the square root of x
-// for x between 	0.5 and 2.
-// this is not the Taylor polynomial in x = 1. (it would be for coef = 0.25)
+// a good approximation of the square root of x
+// for x between 	0.25 and 4.
 
-{	assert ( ( x > 0.5 ) and ( x < 2. ) );
-	const double coef = 0.10294;
-	const double tmp = x - 1.;
-	return ( x + 1.) / 2. - coef * tmp * tmp;   }
+{	assert ( ( x > 0.25 ) and ( x < 4. ) );
+	constexpr double coef = 0.27;
+	constexpr double coef1 = 0.5 - coef;
+	constexpr double coef2 = 4.*coef;
+	const double tmp = x + 1.;
+	return coef1 * tmp - coef2 * x / tmp;   }
 
 
 inline void improve_tangent  // hidden in anonymous namespace
@@ -276,7 +290,7 @@ inline void improve_tangent  // hidden in anonymous namespace
 
 // ensure the norm is 1., project, ensure again the norm is 1.
 
-// in this version we do not assume the norm of 'tangent'  is close to 1.
+// in this version we do not assume the norm of 'tangent' is close to 1.
 // also, 'tangent' may be far from the tangent line or tangent plane
 	
 {	double n2 = this->inner_prod ( A, tangent, tangent, this->metric );
@@ -288,17 +302,18 @@ inline void improve_tangent  // hidden in anonymous namespace
 	Manifold::working .project ( temporary_vertex );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i];
-		tangent[i] = x ( temporary_vertex ) - x(A);               }
-  n2 = manif_type::sq_dist ( A, temporary_vertex, tangent );
+		tangent[i] = x ( temporary_vertex ) - x(A);                }
+  n2 = Manifold::working .core->metric->sq_dist ( A, temporary_vertex, tangent );
 	// because the 'tangent' provided may not be tangent to the working manifold,
 	// we use the true square root below
 	norm = std::sqrt ( n2 );
-	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;  }
+	for ( size_t i = 0; i < progress_nb_of_coords; i++ )  tangent[i] /= norm;       }
 		
 	
 inline Cell project_vertex_forward  // hidden in anonymous namespace
 ( const Cell & A, std::vector < double > & tangent )
 
+// similar to 'improve_tangent'
 // we assume the norm of 'tangent' is close to 1.
 // we also assume it is nearly tangent to the working manifold
 	
@@ -312,7 +327,7 @@ inline Cell project_vertex_forward  // hidden in anonymous namespace
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i];
 		tangent[i] = x(B) - x(A);                                  }
-  n2 = manif_type::sq_dist ( A, B, tangent );
+  n2 = Manifold::working .core->metric->sq_dist ( A, B, tangent );
 	norm = aprox_sqrt ( n2 );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i]; 
@@ -342,6 +357,7 @@ inline void redistribute_vertices
 	Cell C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse();
 	for ( size_t i = 2; i < n; i++ )
 	{	Manifold::working .interpolate ( B, 0.3, A, 0.4, B, 0.3, C );
+		// the above method is not compatible with a non-uniform metric
 		if ( C == start ) break;
 		A = B;  B = C;
 		C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse(); }    }
