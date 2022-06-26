@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.06.08
+// manifold.cpp 2022.06.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1074,9 +1074,166 @@ tag::Util::Metric * tag::Util::Metric::Isotropic::Constant::scale ( const double
 // virtual from tag::Util::Metric
 {	return new tag::Util::Metric::Isotropic::Constant ( this->zoom * f );  }
 
+tag::Util::Metric * tag::Util::Metric::Isotropic::Constant::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Variable ( this->zoom * f );  }
+
+tag::Util::Metric * tag::Util::Metric::Isotropic::Variable::scale ( const double f )
+// virtual from tag::Util::Metric
+{	return new tag::Util::Metric::Isotropic::Variable ( this->zoom * f );  }
+
 tag::Util::Metric * tag::Util::Metric::Isotropic::Variable::scale ( const Function & f )
 // virtual from tag::Util::Metric
 {	return new tag::Util::Metric::Isotropic::Variable ( this->zoom * f );  }
 
+tag::Util::Metric * tag::Util::Metric::Anisotropic::Matrix::Constant::scale ( const double f )
+// virtual from tag::Util::Metric
+{	assert ( false );
+	return new tag::Util::Metric::Isotropic::Constant ( f );  }
+
+tag::Util::Metric * tag::Util::Metric::Anisotropic::Matrix::Constant::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	assert ( false );
+	return new tag::Util::Metric::Isotropic::Variable ( f );  }
+
+tag::Util::Metric * tag::Util::Metric::Anisotropic::Matrix::Variable::scale ( const double f )
+// virtual from tag::Util::Metric
+{	assert ( false );
+	return new tag::Util::Metric::Isotropic::Constant ( f );  }
+
+tag::Util::Metric * tag::Util::Metric::Anisotropic::Matrix::Variable::scale ( const Function & f )
+// virtual from tag::Util::Metric
+{	assert ( false );
+	return new tag::Util::Metric::Isotropic::Variable ( f );  }
+
 //------------------------------------------------------------------------------------------------------//
 
+
+double tag::Util::Metric::Trivial::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+
+
+double tag::Util::Metric::Isotropic::Constant::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return this->zoom * prod;                                         }
+ 
+ 
+double tag::Util::Metric::Isotropic::Variable::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( false );
+	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+ 
+ 
+double tag::Util::Metric::Anisotropic::Matrix::Constant::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( false );
+	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+ 
+ 
+double tag::Util::Metric::Anisotropic::Matrix::Variable::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( false );
+	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+ 
+ 	
+double tag::Util::Metric::Trivial::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const Cell & Q, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( P .dim() == 0 );
+	assert ( Q .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+
+
+double tag::Util::Metric::Isotropic::Constant::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const Cell & Q, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( P .dim() == 0 );
+	assert ( Q .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return this->zoom * prod;                                         }
+ 
+ 
+double tag::Util::Metric::Isotropic::Variable::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const Cell & Q, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( false );
+	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+ 
+ 
+double tag::Util::Metric::Anisotropic::Matrix::Constant::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const Cell & Q, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( false );
+	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+ 
+ 
+double tag::Util::Metric::Anisotropic::Matrix::Variable::inner_prod  // virtual from tag::Util::Metric
+( const Cell & P, const Cell & Q, const std::vector < double > & v, const std::vector < double > & w )
+
+{	assert ( false );
+	assert ( P .dim() == 0 );
+	size_t n = Manifold::working .coordinates() .nb_of_components();
+	assert ( v .size() == n );
+	assert ( w .size() == n );
+	double prod = 0.;
+	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
+	return prod;                                                       }
+ 
+ 	

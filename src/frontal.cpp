@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.06.18
+// frontal.cpp 2022.06.26
 
 // almost total remake
 
@@ -71,7 +71,7 @@ using namespace maniFEM;
 
 // for computing this winding number,
 // implement a discrete version of the steepest descent method
-// rather than a blind search as in draw_ps with tag::windng
+// rather than a blind spiral search as in draw_ps with tag::windng
 
 //------------------------------------------------------------------------------------------------------//
 
@@ -84,12 +84,12 @@ Cell temporary_vertex ( tag::non_existent );
 size_t progress_nb_of_coords;  // dimension of the surrounding Euclidian space
 // also known as "geometric dimension"
 
-}  // anonymous namespace
-
 //------------------------------------------------------------------------------------------------------//
 
 
-class Manifold::Type::Euclidian
+class ManifoldNoWinding  // hidden in anonymous namespace
+
+// Euclidian manifold, implicit submanifold, parametric
 
 {	public :
 
@@ -97,36 +97,39 @@ class Manifold::Type::Euclidian
 	typedef Cell winding_cell;
 	typedef MetricTree < Cell, sq_dist > metric_tree;
 
-	class ConstInnProd;
+	inline Cell remove_winding ( const Cell & P )  {  return P;  }
+
+	inline std::vector < double > get_vector ( const Cell & A, const Cell & B );
+			
 };
 	
 //------------------------------------------------------------------------------------------------------//
 
+
+inline std::vector < double > ManifoldNoWinding::get_vector ( const Cell & A, const Cell & B )
+
+{	const Function & coord = Manifold::working .coordinates();
+	const size_t n = coord .nb_of_components();
+	std::vector < double > res (n);
+	for ( size_t i = 0; i < n; i++ )
+	{	const Function & x = coord [i];
+		res[i] = x(B) - x(A);           }
+	return res;                                                  }
+			
+//------------------------------------------------------------------------------------------------------//
+
 	
-class Manifold::Type::Euclidian::sq_dist
+class ManifoldNoWinding::sq_dist
 
 // a callable object returning the square of the distance between two points
 // used for MetricTree, see paragraphs 12.10 and 12.11 in the manual
-
-// the inner product is not constant, it may be different in A from B
-// this is why we return the arithmetic mean between the two products
-// however, we prefer not to divide by two in order to save computing time
-// the calling code must adjust the desired distance accordingly
-
+ 
 {	public :
 
 	inline double operator() ( const Cell & A, const Cell & B )
-	{	const Function & coord = Manifold::working .coordinates();
-		std::vector < double > vA = coord ( A ), vB = coord ( B ),
-			delta ( coord .nb_of_components() );
-		for ( size_t i = 0; i < coord .nb_of_components(); i++ )
-			delta[i] = vB[i] - vA[i];
-		return Manifold::working .inner_prod ( A, delta, delta ) +
-		       Manifold::working .inner_prod ( B, delta, delta )  ;  }
-		// return ( Manifold::working .inner_prod ( A, delta, delta ) +
-		//          Manifold::working .inner_prod ( B, delta, delta )  ) / 2.;  }
-
-};  // end of  class Manifold::Type::Euclidian::sq_dist
+	{	return Manifold::working .sq_dist  ( A, B );  }
+		
+};  // end of  class ManifoldNoWinding::sq_dist
 
 //------------------------------------------------------------------------------------------------------//
 
@@ -138,6 +141,10 @@ class Manifold::Type::Euclidian::ConstInnProd
 	class sq_dist;
 	typedef Cell winding_cell;
 	typedef MetricTree < Cell, sq_dist > metric_tree;
+
+	inline Cell remove_winding ( consst Cell & P )
+	{	return P;  }
+	
 };
 	
 //------------------------------------------------------------------------------------------------------//
@@ -258,7 +265,7 @@ class Manifold::Type::Quotient::sq_dist
 //------------------------------------------------------------------------------------------------------//
 
 
-// there are two aspects to be taken into account
+// there are two difficulties here
 
 // first, we must distinguish between a "usual" manifold and a quotient one
 // a "usual" manifold may be e.g. Euclidian or implicit
@@ -269,8 +276,6 @@ class Manifold::Type::Quotient::sq_dist
 // trivial, isotropic (constant zoom, variable zoom), anisotropic, Rayleigh
 // virtual methods of the metric itself will allow us to treat differently these situations
 
-
-namespace { // anonymous namespace, mimics static linkage
 
 inline double approx_sqrt ( const double x )  // hidden in anonymous namespace
 
@@ -318,7 +323,7 @@ inline Cell project_vertex_forward  // hidden in anonymous namespace
 // we also assume it is nearly tangent to the working manifold
 	
 {	double n2 = Manifold::working .core->metric->inner_prod ( A, tangent, tangent );
-	double norm = aprox_sqrt ( n2 );
+	double norm = approx_sqrt ( n2 );
 	Cell B ( tag::vertex );
 	for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i];
@@ -358,6 +363,7 @@ inline void redistribute_vertices
 	for ( size_t i = 2; i < n; i++ )
 	{	Manifold::working .interpolate ( B, 0.3, A, 0.4, B, 0.3, C );
 		// the above method is not compatible with a non-uniform metric
+		// so it will produce imperfect (but hopefully acceptable) results
 		if ( C == start ) break;
 		A = B;  B = C;
 		C = msh .cell_behind ( B, tag::surely_exists ) .base() .reverse(); }    }
@@ -370,7 +376,7 @@ void progressive_construct          // hidden in anonymous namespace
 ( Mesh & msh, const tag::StartWithInconsistentMesh &,
 	const tag::StartAt &, const Cell & start,
 	const tag::Towards &, std::vector < double > tangent,
-	const tag::StopAt &, const Cell & stop               )
+	const tag::StopAt &, const manif_type::winding_cell & stop )
 
 // builds a one-dimensional mesh (a curve)
 // orientation given by 'tangent'
@@ -385,19 +391,19 @@ void progressive_construct          // hidden in anonymous namespace
 	size_t counter = 1;
 	size_t max_counter = 0;  //  std::cin >> max_counter;
 	Cell A = start;
-	// the manifold's metric has been scaled
-	// so the desired distance is now one
+	// the manifold's metric has been scaled, so the desired distance is now one
 	while ( true )
-	{	std::vector < double > e = Manifold::working .core->get_vector ( A, stop );
-		if ( Manifold::working .core->dist_less_than_one ( A, stop, e ) )
-			// check that stop' is in front of us, not behind (or, even worse, A == stop)
-			// below we could use the Riemannian metric
+	{	std::vector < double > e = manif_type::get_vector ( A, stop );
+		if ( Manifold::working .core->sq_dist ( A, manif_type::remove_winding ( stop ), e ) < 1.44 )
+		// distance is less than 1.2, we may stop now
+		{	// check that 'stop' is in front of us, not behind (or, even worse, A == stop)
+			// below we could use the Riemannian inner product
 			// however, the sign should be the same so it does not really matter
-		{	double prod = 0.;
+			double prod = 0.;
 			for ( size_t i = 0; i < progress_nb_of_coords; i++ )
 				prod += tangent[i] * e[i];
-			assert ( ( std::abs ( prod - 1.) < 0.3 ) or ( std::abs ( prod + 1.) < 0.3 ) );
-			if ( prod > 0. )
+			// assert ( ( std::abs ( prod - 1.) < 0.3 ) or ( std::abs ( prod + 1.) < 0.3 ) );
+			if ( prod > 0. )  // yes, 'stop' is in front of us
 			{	Cell last ( tag::segment, A.reverse(), stop );  // how about winding numbers ?
 				last .add_to_mesh ( msh, tag::do_not_bother );
 				// the meaning of tag::do_not_bother is explained

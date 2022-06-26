@@ -1,5 +1,5 @@
 
-// mesh.h  2022.05.22
+// mesh.h  2022.06.21
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -661,7 +661,8 @@ class Cell : public tag::Util::Wrapper < tag::Util::CellCore > ::Inactive
 	              const tag::IsPositive & ispos = tag::is_positive                                );
 	inline Cell ( const tag::Vertex &, const tag::OfCoordinates &, const std::vector < double > &,
 	              const tag::Project &, const tag::IsPositive & ispos = tag::is_positive          );
-	// these two constructors are defined in  manifold.h  because we need to set coordinates and to project
+	// the two constructors above are defined in  manifold.h
+  // because we need to set coordinates and to project
 
 	inline Cell ( const tag::Segment &, const Cell & A, const Cell & B );
 

@@ -1,5 +1,5 @@
 
-// manifold.h 2022.06.08
+// manifold.h 2022.06.25
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -63,16 +63,28 @@ class tag::Util::Metric
 	inline   Metric() { }
 	virtual ~Metric() { }
 
-	// produce a new, scaled, metric
+	// metamorphosis : produce a modified copy of self (a new, scaled, metric)
 	virtual tag::Util::Metric * scale ( const Function & f ) = 0;
 	virtual tag::Util::Metric * scale ( const double f ) = 0;
 
 	// inner product
 	virtual double inner_prod
-	( const Cell & P, const std::vector < double > v, const std::vector < double > w ) = 0;	
-	// compute distance between two points
-};
+	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w ) = 0;	
+	virtual double inner_prod
+	( const Cell & A, const Cell & B,
+	  const std::vector < double > & v, const std::vector < double > & w ) = 0;	
 
+	// compute (square of) distance between two points
+	inline double sq_dist ( const Cell & A, const Cell & B );
+	inline double sq_dist ( const Cell & A, const Cell & B, const std::vector < double > & w );
+	
+};  // end of  class tag::Util::Metric
+
+	
+inline double tag::Util::Metric::sq_dist
+( const Cell & A, const Cell & B, const std::vector < double > & w )
+{	return this->inner_prod ( A, B, w, w );  }
+		
 	
 class tag::Util::Metric::Trivial : public tag::Util::Metric
 
@@ -85,7 +97,16 @@ class tag::Util::Metric::Trivial : public tag::Util::Metric
 	tag::Util::Metric * scale ( const Function & f );
 	tag::Util::Metric * scale ( const double f );
 
-};
+	// two 'inner_prod' methods are virtual from tag::Util::Metric
+	double inner_prod
+	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w );	
+	double inner_prod
+	( const Cell & A, const Cell & B,
+	  const std::vector < double > & v, const std::vector < double > & w );	
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
+};  // end of  class tag::Util::Metric::Trivial
 
 
 class tag::Util::Metric::Isotropic : public tag::Util::Metric
@@ -99,8 +120,11 @@ class tag::Util::Metric::Isotropic : public tag::Util::Metric
 
 	// two 'scale' methods stay pure virtual from tag::Util::Metric
 	
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
 	class Constant; class Variable;
-};
+
+};  // end of  class tag::Util::Metric::Isotropic
 
 	
 class tag::Util::Metric::Isotropic::Constant : public tag::Util::Metric::Isotropic
@@ -116,7 +140,16 @@ class tag::Util::Metric::Isotropic::Constant : public tag::Util::Metric::Isotrop
 	tag::Util::Metric * scale ( const Function & f );
 	tag::Util::Metric * scale ( const double f );
 
-};
+	// inner product, virtual from tag::Util::Metric
+	virtual double inner_prod
+	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w );	
+	virtual double inner_prod
+	( const Cell & A, const Cell & B,
+	  const std::vector < double > & v, const std::vector < double > & w );	
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
+};  // end of  class tag::Util::Metric:Isotropic::Constant;
 
 
 class tag::Util::Metric::Isotropic::Variable : public tag::Util::Metric::Isotropic
@@ -132,7 +165,16 @@ class tag::Util::Metric::Isotropic::Variable : public tag::Util::Metric::Isotrop
 	tag::Util::Metric * scale ( const Function & f );
 	tag::Util::Metric * scale ( const double f );
 
-};
+	// inner product, virtual from tag::Util::Metric
+	virtual double inner_prod
+	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w );	
+	virtual double inner_prod
+	( const Cell & A, const Cell & B,
+	  const std::vector < double > & v, const std::vector < double > & w );	
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
+};  // end of  class tag::Util::Metric::Isotropic::Variable
 
 
 class tag::Util::Metric::Anisotropic : public tag::Util::Metric
@@ -146,8 +188,13 @@ class tag::Util::Metric::Anisotropic : public tag::Util::Metric
 
 	// two 'scale' methods stay pure virtual from tag::Util::Metric
 
+	// two 'inner_product' methods stay pure virtual from tag::Util::Metric
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
 	class Matrix;  class Rayleigh;
-};
+
+};  // end of  class tag::Util::Metric::Anisotropic
 
 	
 class tag::Util::Metric::Anisotropic::Matrix : public tag::Util::Metric::Anisotropic
@@ -161,8 +208,13 @@ class tag::Util::Metric::Anisotropic::Matrix : public tag::Util::Metric::Anisotr
 
 	// two 'scale' methods stay pure virtual from tag::Util::Metric
 
+	// two 'inner_product' methods stay pure virtual from tag::Util::Metric
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
 	class Constant; class Variable;
-};
+
+};  // end of  class tag::Util::Metric::Anisotropic::Matrix
 
 
 class tag::Util::Metric::Anisotropic::Matrix::Constant
@@ -187,7 +239,16 @@ class tag::Util::Metric::Anisotropic::Matrix::Constant
 	tag::Util::Metric * scale ( const Function & f );
 	tag::Util::Metric * scale ( const double f );
 
-};
+	// inner product, virtual from tag::Util::Metric
+	virtual double inner_prod
+	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w );	
+	virtual double inner_prod
+	( const Cell & A, const Cell & B,
+	  const std::vector < double > & v, const std::vector < double > & w );	
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
+};  // end of  class tag::Util::Metric::Anisotropic::Matrix::Constant
 
 
 class tag::Util::Metric::Anisotropic::Matrix::Variable
@@ -204,7 +265,16 @@ class tag::Util::Metric::Anisotropic::Matrix::Variable
 	tag::Util::Metric * scale ( const Function & f );
 	tag::Util::Metric * scale ( const double f );
 
-};
+	// inner product, virtual from tag::Util::Metric
+	virtual double inner_prod
+	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w );	
+	virtual double inner_prod
+	( const Cell & A, const Cell & B,
+	  const std::vector < double > & v, const std::vector < double > & w );	
+
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
+};  // end of  class tag::Util::Metric::Anisotropic::Matrix::Variable
 
 
 class tag::Util::Metric::Anisotropic::Rayleigh : public tag::Util::Metric::Anisotropic
@@ -222,9 +292,11 @@ class tag::Util::Metric::Anisotropic::Rayleigh : public tag::Util::Metric::Aniso
 
 	// two 'scale' methods stay pure virtual from tag::Util::Metric
 
+	// two inlined 'sq_dist' methods defined by tag::Util::Metric
+
 	class Constant; class Variable;
 
-};
+};  // end of  class tag::Util::Metric::Anisotropic::Rayleigh
 
 
 //---------------------------------------------------------------------------------------
@@ -414,6 +486,20 @@ class Manifold
 //------------------------------------------------------------------------------------------------------//
 
 
+inline double tag::Util::Metric::sq_dist ( const Cell & A, const Cell & B )
+
+{	Manifold & space = Manifold::working;
+	assert ( space .exists() );  // we use the current manifold
+	const size_t n = space .coordinates() .nb_of_components();
+	std::vector < double > w ( n );
+	for ( size_t i = 0; i < n; i++ )
+	{	const Function & x = space .coordinates() [i];
+		w[i] = x(B) - x(A);                            }
+	return this->sq_dist ( A, B, w );                         }
+
+//------------------------------------------------------------------------------------------------------//
+
+
 inline Cell::Cell ( const tag::Vertex &, const tag::OfCoordinates &, const std::vector < double > & v,
                     const tag::IsPositive & ispos                                                     )
 // by default, ispos = tag::is_positive, so may be called with only three arguments
@@ -449,11 +535,8 @@ class Manifold::Core
 
 	tag::Util::Metric * metric;
 
-	double (*inner_prod) ( const Cell & P, const std::vector<double> & v,
-	                       const std::vector<double> & w, const Function & metric );
-
 	inline Core ( )
-	:	metric (1.), inner_prod { & Manifold::default_inner_prod }
+	:	metric ( new tag::Util::Metric::Trivial )
 	{ }
 
 	virtual ~Core ( ) { };
@@ -564,27 +647,6 @@ inline void Manifold::set_coordinates ( const Function co )
 
 inline double Manifold::measure ( ) const
 {	return this->core->measure();  }
-
-
-// metric in the manifold (an inner product on the tangent space)
-inline double Manifold::inner_prod
-( const Cell & P, const std::vector<double> & v, const std::vector<double> & w ) const
-{	if ( v .size() != w .size() )
-		std::cout << "manifold.h line 338, v " << v.size() << ", w " << w.size()
-							<< std::endl << std::flush;
-	assert ( v .size() == w .size() );
-	assert ( P .dim() == 0 );
-	return this->core->inner_prod ( P, v, w, this->core->metric );  }
-
-
-inline void Manifold::set_metric ( const Function & m )
-{	size_t dim = this->coordinates() .nb_of_components();
-	this->core->metric = m;
-	if ( m .nb_of_components() == 1 )
-		this->core->inner_prod = Manifold::zoom_inner_prod;
-	else
-	{	assert ( m .nb_of_components() == dim*dim );
-		this->core->inner_prod = Manifold::matrix_inner_prod;  }  }
 
 
 // P = sA + sB,  s+t == 1
