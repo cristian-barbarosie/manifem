@@ -1,5 +1,5 @@
 
-// mesh.h  2022.06.21
+// mesh.h  2022.06.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1219,9 +1219,21 @@ class Mesh : public tag::Util::Wrapper < tag::Util::MeshCore > ::Inactive
 	       const tag::DesiredLength &, const Function & length,
 	       const tag::ShortestPath &                                      );
 
+	Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
+	       const tag::StopAt &, const Cell & stop,
+	       const tag::DesiredLength &, const double length,
+	       const tag::ShortestPath &                                      );
+
 	inline Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
 	              const tag::StopAt &, const Cell & stop, const tag::ShortestPath &,
 	              const tag::DesiredLength &, const Function & length               )
+	:	Mesh ( tag::frontal, tag::start_at, start, tag::stop_at, stop,
+		       tag::desired_length, length, tag::shortest_path        )
+	{	}
+
+	inline Mesh ( const tag::Frontal &, const tag::StartAt &, const Cell & start,
+	              const tag::StopAt &, const Cell & stop, const tag::ShortestPath &,
+	              const tag::DesiredLength &, const double length                   )
 	:	Mesh ( tag::frontal, tag::start_at, start, tag::stop_at, stop,
 		       tag::desired_length, length, tag::shortest_path        )
 	{	}

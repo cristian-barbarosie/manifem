@@ -24,6 +24,10 @@ for working on an android-based tablet.
 
 LaTeX with [scrreprt](https://ctan.org/pkg/scrreprt) (Koma-Script report class).
 
+[This script](https://github.com/cristian-barbarosie/manifem-manual/blob/master/enum.py)
+is useful for keeping track of numbering (of sections, paragraphs, figures) in the LaTeX source
+of the manual.
+
 [evince](https://wiki.gnome.org/Apps/Evince) (on windows) for viewing PostScript files,
 [Foxit PDF Reader](https://www.foxit.com/pdf-reader/).
 

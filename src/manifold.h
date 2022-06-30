@@ -1,5 +1,5 @@
 
-// manifold.h 2022.06.25
+// manifold.h 2022.06.29
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -75,6 +75,8 @@ class tag::Util::Metric
 	  const std::vector < double > & v, const std::vector < double > & w ) = 0;	
 
 	// compute (square of) distance between two points
+	// the first version computes the (coordinates of the) vector AB
+	// the second version trusts that  w == AB
 	inline double sq_dist ( const Cell & A, const Cell & B );
 	inline double sq_dist ( const Cell & A, const Cell & B, const std::vector < double > & w );
 	
@@ -372,6 +374,12 @@ class Manifold
 	// a non-existent manifold has null core
 	inline bool exists ( ) const { return core != nullptr; }
 
+	// compute (square of) distance between two points
+	// the first version computes the (coordinates of the) vector AB
+	// the second version trusts that  w == AB
+	inline double sq_dist ( const Cell & A, const Cell & B );
+	inline double sq_dist ( const Cell & A, const Cell & B, const std::vector < double > & w );
+
 	inline void build_intersection_of_two_manif ( const Manifold & m1, const Manifold & m2 );
 		
 	// measure of the entire manifold (length for 1D, area for 2D, volume for 3D)
@@ -410,31 +418,31 @@ class Manifold
 	// P = sA + sB,  s+t == 1
 	inline void interpolate
 	( const Cell & P, double s, const Cell & A, double t, const Cell & B,
-	  const tag::Winding &, const Manifold::Action & exp            ) const;
+	  const tag::Winding &, const Manifold::Action & exp                 ) const;
 
 	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
 	  double t, const Cell & B, double u, const Cell & C, double v, const Cell & D ) const;
 
+	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
+	inline void interpolate ( const Cell & P, double s, const Cell & A,
+	  double t, const Cell & B, double u, const Cell & C, double v, const Cell & D,
+	  double w, const Cell & E, double z, const Cell & F                           ) const;
+
 	// P = sA + sB + uC,  s+t+u == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
 	  double t, const Cell & B, double u, const Cell & C               ) const;
-
-	// P = sA + sB + uC + vD,  s+t+u+v == 1
-	inline void interpolate ( const Cell & P, double s, const Cell & A,
-	  double t, const Cell & B, const tag::Winding &, const Manifold::Action &,
-	  double u, const Cell & C, const tag::Winding &, const Manifold::Action &,
-	  double v, const Cell & D, const tag::Winding &, const Manifold::Action & ) const;
 
 	// P = sA + sB + uC,  s+t+u == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
 	  double t, const Cell & B, const tag::Winding &, const Manifold::Action &,
 	  double u, const Cell & C, const tag::Winding &, const Manifold::Action & ) const;
 
-	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
+	// P = sA + sB + uC + vD,  s+t+u+v == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
-	  double t, const Cell & B, double u, const Cell & C, double v, const Cell & D,
-	  double w, const Cell & E, double z, const Cell & F                           ) const;
+	  double t, const Cell & B, const tag::Winding &, const Manifold::Action &,
+	  double u, const Cell & C, const tag::Winding &, const Manifold::Action &,
+	  double v, const Cell & D, const tag::Winding &, const Manifold::Action & ) const;
 
 	// P = sA + sB + uC + vD + wE + zF,  s+t+u+v+w+z == 1
 	inline void interpolate ( const Cell & P, double s, const Cell & A,
@@ -625,7 +633,23 @@ class Manifold::Core
 	  const tag::Towards &, std::vector<double> tangent,
 	  const tag::StopAt &,  const Cell & stop            );
 	
+	virtual void frontal_method  // defined in frontal.cpp, overridden by Manifold::Quotient
+	( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	  const tag::StartAt &, const Cell & start,
+	  const tag::StopAt &,  const Cell & stop,
+	  const tag::ShortestPath &                          );
+	
 }; // end of class Manifold::Core
+
+//------------------------------------------------------------------------------------------------------//
+
+
+inline double Manifold::sq_dist ( const Cell & A, const Cell & B )
+{	return this->core->metric->sq_dist ( A, B );  }
+
+
+inline double Manifold::sq_dist ( const Cell & A, const Cell & B, const std::vector < double > & w )
+{	return this->core->metric->sq_dist ( A, B, w );  }
 
 //------------------------------------------------------------------------------------------------------//
 
@@ -1917,6 +1941,13 @@ class Manifold::Quotient : public Manifold::Core
 	  const tag::StartAt &, const Cell & start,
 	  const tag::Towards &, std::vector<double> tangent,
 	  const tag::StopAt &,  const Cell & stop            ) override;
+	
+	void frontal_method  // virtual from Manifold::Core
+	// defined in frontal.cpp, overrides definition by Manifold::Core
+	( Mesh & msh, const tag::StartWithInconsistentMesh &,
+	  const tag::StartAt &, const Cell & start,
+	  const tag::StopAt &,  const Cell & stop,
+	  const tag::ShortestPath &                          ) override;
 	
 };  // end of class Manifold::Quotient
 

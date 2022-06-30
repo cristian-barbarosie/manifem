@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.03.09
+// mesh.cpp 2022.06.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -20,6 +20,7 @@
 
 //   You should have received a copy of the GNU Lesser General Public License
 //   along with maniFEM.  If not, see <https://www.gnu.org/licenses/>.
+
 
 #include <forward_list>
 
@@ -5590,14 +5591,14 @@ void Mesh::ZeroDim::closed_loop ( const Cell & ver )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dim meshes cannot be closed loops" << std::endl;
-	exit ( 1 );                                                     }
+	exit ( 1 );                                                         }
 
 
 void Mesh::ZeroDim::closed_loop ( const Cell & ver, size_t n )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Zero-dim meshes cannot be closed loops" << std::endl;
-	exit ( 1 );                                                     }
+	exit ( 1 );                                                         }
 
 
 void Mesh::Connected::OneDim::closed_loop ( const Cell & ver )
@@ -5620,7 +5621,7 @@ void Mesh::Fuzzy::closed_loop ( const Cell & ver )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Fuzzy meshes cannot be closed loops" << std::endl;
-	exit ( 1 );                                                     }
+	exit ( 1 );                                                      }
 
 
 void Mesh::Fuzzy::closed_loop ( const Cell & ver, size_t n )
@@ -5628,7 +5629,7 @@ void Mesh::Fuzzy::closed_loop ( const Cell & ver, size_t n )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "Fuzzy meshes cannot be closed loops" << std::endl;
-	exit ( 1 );                                                     }
+	exit ( 1 );                                                      }
 
 //-----------------------------------------------------------------------------------------//
 
@@ -5638,14 +5639,14 @@ Mesh::Core * Mesh::ZeroDim::build_deep_copy ( )
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "No deep copy for zero-dim meshes" << std::endl;
-	exit ( 1 );                                                     }
+	exit ( 1 );                                                   }
 	
 Mesh::Core * Mesh::NotZeroDim::build_deep_copy ( )
 // virtual from Mesh::Core
 {	std::cout << __FILE__ << ":" <<__LINE__ << ": "
 	          << __extension__ __PRETTY_FUNCTION__ << ": ";
 	std::cout << "build_deep_copy not implemented yet" << std::endl;
-	exit ( 1 );                                                     }
+	exit ( 1 );                                                      }
 
 //-----------------------------------------------------------------------------------------//
 

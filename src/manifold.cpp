@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.06.25
+// manifold.cpp 2022.06.28
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -1136,14 +1136,13 @@ double tag::Util::Metric::Isotropic::Constant::inner_prod  // virtual from tag::
 double tag::Util::Metric::Isotropic::Variable::inner_prod  // virtual from tag::Util::Metric
 ( const Cell & P, const std::vector < double > & v, const std::vector < double > & w )
 
-{	assert ( false );
-	assert ( P .dim() == 0 );
+{	assert ( P .dim() == 0 );
 	size_t n = Manifold::working .coordinates() .nb_of_components();
 	assert ( v .size() == n );
 	assert ( w .size() == n );
 	double prod = 0.;
 	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
-	return prod;                                                       }
+	return this->zoom (P) * prod;                                    }
  
  
 double tag::Util::Metric::Anisotropic::Matrix::Constant::inner_prod  // virtual from tag::Util::Metric
@@ -1201,14 +1200,13 @@ double tag::Util::Metric::Isotropic::Constant::inner_prod  // virtual from tag::
 double tag::Util::Metric::Isotropic::Variable::inner_prod  // virtual from tag::Util::Metric
 ( const Cell & P, const Cell & Q, const std::vector < double > & v, const std::vector < double > & w )
 
-{	assert ( false );
-	assert ( P .dim() == 0 );
+{	assert ( P .dim() == 0 );
 	size_t n = Manifold::working .coordinates() .nb_of_components();
 	assert ( v .size() == n );
 	assert ( w .size() == n );
 	double prod = 0.;
 	for ( size_t i = 0; i < n; i++ )  prod += v[i] * w[i];
-	return prod;                                                       }
+	return ( this->zoom(P) + this->zoom(Q) ) / 2. * prod;            }
  
  
 double tag::Util::Metric::Anisotropic::Matrix::Constant::inner_prod  // virtual from tag::Util::Metric
