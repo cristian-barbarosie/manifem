@@ -1,5 +1,5 @@
 
-// frontal.cpp 2022.06.30
+// frontal.cpp 2022.07.02
 
 // almost total remake
 
@@ -64,7 +64,19 @@ using namespace maniFEM;
 //    SqDist ( const Point & A, const Point & B )
 //    SqDist ( const Point & A, RichPoint & B )
 // the latter sets the winding of B to that winding which achieves the minimum distance
-// (no need to change anything in MetricTree)
+
+
+// there are two difficulties here
+
+// first, we must distinguish between a "usual" manifold and a quotient one
+// a "usual" manifold may be e.g. Euclidian or implicit
+// the 'manif_type' will help us make this distinction
+// it allows to have two types of cells (simple and rich, the latter having winding)
+
+// second, we must distinguish between different types of metric :
+// trivial, isotropic (constant zoom, variable zoom), anisotropic, Rayleigh
+// virtual methods of the metric itself will allow us to treat differently these situations
+
 
 // for computing this winding number,
 // implement a discrete version of the steepest descent method
@@ -345,22 +357,9 @@ class ManifoldQuotient::sq_dist
 //------------------------------------------------------------------------------------------------------//
 
 
-// there are two difficulties here
-
-// first, we must distinguish between a "usual" manifold and a quotient one
-// a "usual" manifold may be e.g. Euclidian or implicit
-// the 'manif_type' will help us make this distinction
-// it allows to have two types of cells (simple and rich, the latter having winding)
-
-// second, we must distinguish between different types of metric :
-// trivial, isotropic (constant zoom, variable zoom), anisotropic, Rayleigh
-// virtual methods of the metric itself will allow us to treat differently these situations
-
-
 inline double approx_sqrt ( const double x )  // hidden in anonymous namespace
 
-// a good approximation of the square root of x
-// for x between 	0.25 and 4.
+// a good approximation of the square root of x, for x between 0.25 and 4.
 
 {	assert ( ( x > 0.25 ) and ( x < 4. ) );
 	constexpr double coef = 0.27;
@@ -370,9 +369,24 @@ inline double approx_sqrt ( const double x )  // hidden in anonymous namespace
 	return coef1 * tmp + coef2 * x / tmp;   }
 
 
+inline void project_tangent  // hidden in anonymous namespace
+( const Cell & A, const Cell & B, std::vector < double > & tangent )
+
+// modifies 'tangent', sets coordinates of B
+// often, B == temporary_vertex
+	
+{	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
+	{	const Function & x = Manifold::working .coordinates() [i];
+		x (B) = x(A) + tangent [i];                               }
+	Manifold::working .project (B);
+	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
+	{	const Function & x = Manifold::working .coordinates() [i];
+		tangent[i] = x (B) - x(A);                                }  }
+
+	
 inline void improve_tangent  // hidden in anonymous namespace
 ( const Cell & A, std::vector < double > & tangent )
-
+	
 // ensure the norm is 1., project, ensure again the norm is 1.
 
 // in this version we do not assume the norm of 'tangent' is close to 1.
@@ -381,18 +395,13 @@ inline void improve_tangent  // hidden in anonymous namespace
 {	double n2 = Manifold::working .core->metric->inner_prod ( A, tangent, tangent );
 	// tangent may have norm far away from 1., so we use true square root below
 	double norm = std::sqrt ( n2 );
-	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-	{	const Function & x = Manifold::working .coordinates() [i];
-		x ( temporary_vertex ) = x(A) + tangent [i] / norm;        }
-	Manifold::working .project ( temporary_vertex );
-	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-	{	const Function & x = Manifold::working .coordinates() [i];
-		tangent[i] = x ( temporary_vertex ) - x(A);                }
+	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  tangent [i] /= norm;
+	project_tangent ( A, temporary_vertex, tangent );  // modifies 'tangent', sets coordinates of temp_ver
   n2 = Manifold::working .core->metric->sq_dist ( A, temporary_vertex, tangent );
 	// because the 'tangent' provided may not be tangent to the working manifold,
 	// we use the true square root below
 	norm = std::sqrt ( n2 );
-	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  tangent[i] /= norm;       }
+	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  tangent[i] /= norm;         }
 		
 	
 inline Cell project_vertex_forward  // hidden in anonymous namespace
@@ -405,20 +414,15 @@ inline Cell project_vertex_forward  // hidden in anonymous namespace
 {	double n2 = Manifold::working .core->metric->inner_prod ( A, tangent, tangent );
 	double norm = approx_sqrt ( n2 );
 	Cell B ( tag::vertex );
-	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-	{	const Function & x = Manifold::working .coordinates() [i];
-		x(B) = x(A) + tangent [i] / norm;                          }
-	Manifold::working .project (B);
-	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-	{	const Function & x = Manifold::working .coordinates() [i];
-		tangent[i] = x(B) - x(A);                                  }
+	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  tangent [i] /= norm;
+	project_tangent ( A, B, tangent );  // modifies 'tangent', sets coordinates of B
   n2 = Manifold::working .core->metric->sq_dist ( A, B, tangent );
 	norm = approx_sqrt ( n2 );
 	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 	{	const Function & x = Manifold::working .coordinates() [i]; 
 		x(B) = x(A) + tangent [i] / norm;                          }
 	Manifold::working .project (B);
-	return B;                                                          }
+	return B;                                                                         }
 	
 //------------------------------------------------------------------------------------------------------//
 
@@ -470,7 +474,7 @@ void frontal_construct          // hidden in anonymous namespace
 				// at the end of paragraph 11.6 in the manual
 				manif_type::redistribute_vertices ( msh, start, stop, 6, e );
 				// for a quotient manifold, 'e' provides the winding number
-				return;                                        }      }
+				return;                                                       }        }
 		Cell B = project_vertex_forward ( A, tangent );  // modifies 'tangent'
 		Cell AB ( tag::segment, A.reverse(), B );        // zero winding
 		AB .add_to_mesh ( msh, tag::do_not_bother );
@@ -485,75 +489,44 @@ void frontal_construct          // hidden in anonymous namespace
 
 
 std::vector < double > compute_tangent_vec      // hidden in anonymous namespace
-(	Cell start, bool check_orth, std::vector < double > given_vec )
+(	const Cell & start, bool check_orth, std::vector < double > given_vec )
 	
 // computes a vector tangent to Manifold::working at point 'start'
+// here the working manifold is not a quotient manifold
 
 // if second argument is true, candidates will be projected onto the space orthogonal to given_vec
 // given_vec must be tangent to Manifold::working at point 'start'
-// and must have length approximately equal to desired_length
+// and must have length (approximately) equal to 1.
 	
 {	// Manifold::Implicit * m_impl =  dynamic_cast<Manifold::Implicit*> ( Manifold::working.core );
 	// assert ( m_impl );
 	// Manifold::Euclid * m_euclid =
 	// 	dynamic_cast<Manifold::Euclid*> ( m_impl->surrounding_space.core );
 	// assert ( m_euclid );
-	std::vector < double > best_tangent;  double longest_projection = 0.;
-	for ( size_t n = 1; n <= frontal_nb_of_coords; n++ )
-	{	const double coef = desired_len_at_point / std::sqrt(n);
-		// we make sums of n vectors in the canonical basis with both signs
-		std::vector < size_t > indices ( n+1 );
-		for ( size_t i = 0; i < n; i++ )  indices [i] = i;
-		indices [n] = frontal_nb_of_coords;
-		while ( true )
-		{	std::vector < short int > signs ( n, 1. );
-			while ( true )
-			{	std::vector < double > tangent ( frontal_nb_of_coords, 0. );
-				for ( size_t i = 0; i < n; i++ )  tangent [ indices[i] ] = signs [i];
-				// we normalize 'tangent'
-				for ( size_t i = 0; i < frontal_nb_of_coords; i++ ) tangent [i] *= coef;
-				// we project
-				for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-				{	Function x = Manifold::working .coordinates() [i];
-					x ( temporary_vertex ) = x ( start ) + tangent [i];  }
-				Manifold::working.project ( temporary_vertex );
-				for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-				{	Function x = Manifold::working .coordinates() [i];
-					tangent [i] = x ( temporary_vertex ) - x ( start );  }
-				if ( check_orth )
-				{	double prod = Manifold::working.inner_prod ( start, tangent, given_vec );
-					double lambd = prod / sq_desired_len_at_point;
-					for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
-						tangent [i] -= lambd * given_vec [i];                                      }
-				// we choose the longest projection
-				double n2 = Manifold::working.inner_prod ( start, tangent, tangent );
-				if ( n2 > longest_projection )
-				{	best_tangent = tangent;  longest_projection = n2;  }
-				// now change signs
-				bool found = false;
-				for ( int i = n-1; i >= 0; i-- )
-					if ( signs [i] == 1 )
-					{	found = true;  signs [i] = -1;
-						for ( size_t j = i+1; j < n; j++ ) signs [j] = 1;
-						break;                                            }
-				if ( not found ) break;                                                  }
- 			// now change indices
-			bool found = false;
-			for ( int i = n-1; i >= 0; i-- )
-				if ( indices [i] < indices [i+1] - 1 )
-				{	found = true;
-					indices [i] ++;
-					for ( size_t j = i+1; j<n; j++ )
-					{	indices [j] = indices [j-1] + 1;
-						assert ( indices [j] < frontal_nb_of_coords );     }
-					break;                                                            }
-			if ( not found ) break;                                                  }
-	}  // end of  for n
+
+	std::vector < double > best_tangent;
+	double longest_projection = 0.;
+	// 'direc' contains 8 directions for 2D, 26 directions for 3D
+	const std::vector < std::vector < double > > & direc =
+		tag::Util::directions [ frontal_nb_of_coords ];
+	const size_t n_dir = direc .size();
+	for ( size_t dir = 1; dir < n_dir; dir++ )
+	{	std::vector < double > tangent = direc [dir];
+		project_tangent ( start, temporary_vertex, tangent );  // modifies 'tangent'
+		if ( check_orth )
+		{	double prod = Manifold::working .inner_prod ( start, tangent, given_vec );
+			assert ( false );
+			for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
+				tangent [i] -= prod * given_vec [i];                                    }
+		// we choose the longest projection
+		double n2 = Manifold::working.inner_prod ( start, tangent, tangent );
+		if ( n2 > longest_projection )
+		{	best_tangent = tangent;  longest_projection = n2;  }                            }
+
 	// normalize best_tangent
-	double n2 = Manifold::working.inner_prod ( start, best_tangent, best_tangent );
-	double norm = approx_sqrt ( n2, tag::around, sq_desired_len_at_point, desired_len_at_point );
-	double coef = desired_len_at_point / approx_sqrt ( n2, tag::around, norm*norm, norm );
-	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  best_tangent [i] *= coef;
+	double norm = Manifold::working.inner_prod ( start, best_tangent, best_tangent );
+	norm = std::sqrt ( norm );
+	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  best_tangent [i] /= norm;
 	return best_tangent;
 
 }  // end of  compute_tangent_vec
@@ -573,8 +546,6 @@ inline std::vector < double > compute_tangent_vec
 {	return compute_tangent_vec ( start, true, given_vec );  }
 	// 'true' as second argument means "do check orthogonality"
 	
-//-----------------------------------------------------------------------------------------------
-
 
 inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell start )
 // hidden in anonymous namespace
@@ -584,7 +555,9 @@ inline std::vector < double > compute_tangent_vec ( const tag::AtPoint &, Cell s
 {	return compute_tangent_vec ( start, false, std::vector<double>() );  }
 	// 'false' as second argument means "do not check orthogonality"
 
-//----------------------------------------------------------------------------------------------
+}  // anonymous namespace
+
+//------------------------------------------------------------------------------------------------------//
 
 
 void frontal_construct          // hidden in anonymous namespace
@@ -595,11 +568,23 @@ void frontal_construct          // hidden in anonymous namespace
 
 // 'start' and 'stop' are positive vertices (may be one and the same)
 
+// here the working manifold is not a quotient manifold
+
+// uses two new temporary vertices
+
 {	assert ( start .dim() == 0 );
 	assert ( stop  .dim() == 0 );
 	assert ( start .is_positive() );
 	assert ( stop  .is_positive() );
 	assert ( msh .dim() == 1 );
+
+	// here the working manifold is not a quotient manifold
+	#ifndef NDEBUG
+	{ // just a block of code for hiding 'm'
+	Manifold::Quotient * m = dynamic_cast < Manifold::Quotient * > ( Manifold::working .core );
+	assert ( m == nullptr );
+	} // just a block of code
+	#endif
 
 	if ( oc == tag::not_provided )
 	{	std::cout << "when starting and stopping points are provided," << std::endl;
@@ -614,92 +599,63 @@ void frontal_construct          // hidden in anonymous namespace
 	{	assert ( start != stop );
 		
 		// start walking along the manifold from 'start' in the direction of best_tangent
-		// and, simultaneously, in the opposite direction, given by -best_tangent
+		// and, simultaneously, in the opposite direction, given by  - best_tangent
 		std::vector < double > tan1 = best_tangent, tan2 = best_tangent;
 		for ( size_t i = 0; i < frontal_nb_of_coords; i++ ) tan2 [i] *= -1.;
 		Cell ver1 ( tag::vertex ), ver2 ( tag::vertex );
 		for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 		{	Function x = Manifold::working .coordinates() [i];
 			x ( ver1 ) = x ( start );  x ( ver2 ) = x ( start );  }
-		int winner = 0;  //  will be 1 or -1
+		double winner = 0.;  //  will be 1. or -1.
 		while ( true )
-		{	double augm_length = desired_length(ver1) * 1.5,
-			       augm_len_sq = augm_length * augm_length;
-			for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
+		{	for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 			{	Function x = Manifold::working .coordinates() [i];
-				x ( temporary_vertex ) = x ( ver1 ) + tan1 [i];  }
+				x ( temporary_vertex ) = x ( ver1 ) + tan1 [i];    }
 			Manifold::working .project ( temporary_vertex );
 			for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 			{	Function x = Manifold::working .coordinates() [i];
-				tan1[i] = x ( temporary_vertex ) - x ( ver1 );
-				x ( ver1 ) = x ( temporary_vertex );            }
-			double d = Manifold::working .dist_sq ( ver1, stop );
-			if ( d < augm_len_sq )
-			{	double prod = 0.;
+				tan1 [i] = x ( temporary_vertex ) - x ( ver1 );
+				x ( ver1 ) = x ( temporary_vertex );               }
+			double sd = Manifold::working .sq_dist ( ver1, stop );
+			if ( sd < 1.44 )  // dist < 1.2
+			{	// check that 'stop' is in front of us
+				// below we could use the Riemannian inner product
+				// however, the sign should be the same so it does not really matter
+				double prod = 0.;
 				for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 				{	Function x = Manifold::working .coordinates() [i];
 					prod += tan1[i] * ( x (stop) - x (ver1) );         }
-				if ( prod > 0. )  { winner = 1;  break;  }             }
+				if ( prod > 0. )  { winner = 1.;  break;  }             }
 			for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 			{	Function x = Manifold::working .coordinates() [i];
 				x ( temporary_vertex ) = x ( ver2 ) + tan2 [i];  }
 			Manifold::working .project ( temporary_vertex );
 			for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 			{	Function x = Manifold::working .coordinates() [i];
-				tan2[i] = x ( temporary_vertex ) - x ( ver2 );
+				tan2 [i] = x ( temporary_vertex ) - x ( ver2 );
 				x ( ver2 ) = x ( temporary_vertex );            }
-			d = Manifold::working .dist_sq ( ver2, stop );
-			if ( d < augm_len_sq )
-			{	double prod = 0.;
+			sd = Manifold::working .sq_dist ( ver2, stop );
+			if ( sd < 1.44 )  // dist < 1.2
+			{	// check that 'stop' is in front of us
+				// below we could use the Riemannian inner product
+				// however, the sign should be the same so it does not really matter
+				double prod = 0.;
 				for ( size_t i = 0; i < frontal_nb_of_coords; i++ )
 				{	Function x = Manifold::working .coordinates() [i];
-					prod += tan2 [i] * ( x (stop) - x (ver2) );          }
-				if ( prod > 0. )  { winner = -1;  break;  }           }
+					prod += tan2 [i] * ( x (stop) - x (ver2) );        }
+				if ( prod > 0. )  { winner = -1.;  break;  }            }
 		}  // end of  while true
 
-		assert ( ( winner == 1 ) or ( winner == -1 ) );
+		assert ( ( winner == 1. ) or ( winner == -1. ) );
 		for ( size_t i = 0; i < frontal_nb_of_coords; i++ ) best_tangent [i] *= winner;
-		frontal_construct ( msh, tag::start_with_inconsistent_mesh,
-		                    tag::start_at, start, tag::towards, best_tangent,
-		                    tag::stop_at, stop                                    );
-		return;                                                                          }
+		frontal_construct < ManifoldNoWinding >
+		( msh, tag::start_with_inconsistent_mesh, tag::start_at, start,
+		       tag::towards, best_tangent,        tag::stop_at, stop   );
+		return;
+	}  // end of  if
 
 	if ( ( oc == tag::inherent ) or ( oc == tag::random ) )
-
-	{	if ( start == stop )
-		{	frontal_construct ( msh, tag::start_with_inconsistent_mesh,
-			                    tag::start_at, start, tag::orientation, oc );
-			return;                                                           }
-
-		frontal_construct ( msh, tag::start_with_inconsistent_mesh,
-		                    tag::start_at, start, tag::towards, best_tangent,
- 		                    tag::stop_at, stop                               );
-
-		if ( oc == tag::random ) return;
-
-		for ( size_t i = 0; i < frontal_nb_of_coords; i++ )  best_tangent[i] *= -1.;
-		// the number of segments does not count, and we don't know it yet
-		Mesh msh2 ( tag::whose_core_is,
-		    new Mesh::Connected::OneDim ( tag::with, 1, tag::segments, tag::one_dummy_wrapper ),
-	  	  tag::freshly_created, tag::is_positive                                              );
-		// the number of segments does not count, and we don't know it yet
-		// we compute it after the mesh is built, by counting segments
-		// but we count segments using an iterator, and the iterator won't work
-		// if this->msh->nb_of_segs == 0, so we set nb_of_segs to 1 (dirty trick)
-		// see Mesh::Iterator::Over::VerticesOfConnectedOneDimMesh::NormalOrder::reset
-		// in iterator.cpp
-		frontal_construct ( msh2, tag::start_with_inconsistent_mesh,
-		                    tag::start_at, start, tag::towards, best_tangent,
-		                    tag::stop_at, stop                               );
-
-		switch_orientation_direct ( msh2 );
-		update_info_connected_one_dim ( msh2, stop, start );
-		Mesh whole ( tag::join, msh, msh2 );
-
-		if ( not correctly_oriented ( whole, tag::orientation, oc ) )
-		{	switch_orientation_direct ( msh2 );  msh = msh2;  }
-
-		return;                                                                                  }
+	{	}  // see tmp.cpp
 
 	assert ( oc == tag::intrinsic );
 	assert ( false );
@@ -708,8 +664,6 @@ void frontal_construct          // hidden in anonymous namespace
 	exit (1);
 
 } // end of  frontal_construct
-
-}  // anonymous namespace
 
 //------------------------------------------------------------------------------------------------------//
 
@@ -745,7 +699,7 @@ void Manifold::Core::frontal_method  // virtual, overridden by Manifold::Quotien
   const tag::StartAt &, const Cell & start,
   const tag::StopAt &,  const Cell & stop, const tag::ShortestPath & )
 
-{	frontal_construct < ManifoldNoWinding >  // line ???
+{	frontal_construct  // line ???
 	( msh, tag::start_with_inconsistent_mesh,
 	  tag::start_at, start, tag::stop_at, stop,
 		tag::orientation, tag::geodesic          );  }

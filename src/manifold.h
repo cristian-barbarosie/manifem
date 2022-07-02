@@ -99,7 +99,7 @@ class tag::Util::Metric::Trivial : public tag::Util::Metric
 	tag::Util::Metric * scale ( const Function & f );
 	tag::Util::Metric * scale ( const double f );
 
-	// two 'inner_prod' methods are virtual from tag::Util::Metric
+	// inner product, virtual from tag::Util::Metric
 	double inner_prod
 	( const Cell & P, const std::vector < double > & v, const std::vector < double > & w );	
 	double inner_prod
@@ -392,6 +392,8 @@ class Manifold
 	// metric in the manifold (an inner product on the tangent space)
 	inline double inner_prod ( const Cell & P, const std::vector<double> & v,
                                              const std::vector<double> & w ) const;
+	inline double inner_prod ( const Cell & P, const Cell & Q,
+		const std::vector<double> & v, const std::vector<double> & w ) const;
 
 	// metric in the manifold (an inner product on the tangent space) (metric not used)
 	static double default_inner_prod ( const Cell & P, const std::vector<double> & v,
@@ -650,6 +652,16 @@ inline double Manifold::sq_dist ( const Cell & A, const Cell & B )
 
 inline double Manifold::sq_dist ( const Cell & A, const Cell & B, const std::vector < double > & w )
 {	return this->core->metric->sq_dist ( A, B, w );  }
+
+
+inline double Manifold::inner_prod
+( const Cell & P, const std::vector<double> & v, const std::vector<double> & w ) const
+{	return this->core->metric->inner_prod ( P, v, w );  }
+
+
+inline double Manifold::inner_prod
+( const Cell & P, const Cell & Q, const std::vector<double> & v, const std::vector<double> & w ) const
+{	return this->core->metric->inner_prod ( P, Q, v, w );  }
 
 //------------------------------------------------------------------------------------------------------//
 

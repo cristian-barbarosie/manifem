@@ -1,5 +1,5 @@
 
-// mesh.cpp 2022.06.28
+// mesh.cpp 2022.07.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -56,61 +56,6 @@ std::vector < std::vector < void(*)(Cell::Core*,void*) > >
    Cell::init_neg_cell ( Mesh::maximum_dimension_plus_one );
 std::vector < std::vector < void* > > Cell::data_for_init_pos ( Mesh::maximum_dimension_plus_one );
 std::vector < std::vector < void* > > Cell::data_for_init_neg ( Mesh::maximum_dimension_plus_one );
-
-const std::vector < std::vector < std::vector < short int > > >
-	tag::Util::ortho_basis_int { { }, { { 1 } }, { { 1, 0 }, { 0, 1 } },
-	                             { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } } },
-	tag::Util::pm_ortho_basis_int { { }, { { 1 }, { -1 } },
-		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } },
-		{ { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { -1, 0, 0 }, { 0, -1, 0 }, { 0, 0, -1 } } };
-
-const double tag::Util::one_third = 1. / 3.,
-             tag::Util::minus_one_third = - tag::Util::minus_one_third,
-             tag::Util::one_sixth = 1. / 6.,
-             tag::Util::minus_one_sixth = - tag::Util::one_sixth,
-             tag::Util::two_thirds = 2. / 3.,
-             tag::Util::minus_two_thirds = - tag::Util::two_thirds,
-             tag::Util::sqrt_2 = std::sqrt (2.),
-             tag::Util::sqrt_half = 1./ tag::Util::sqrt_2,
-             tag::Util::sqrt_3 = std::sqrt (3.),
-             tag::Util::sqrt_third = 1./ tag::Util::sqrt_3,
-             tag::Util::sqrt_two_thirds = std::sqrt ( tag::Util::two_thirds ),
-             tag::Util::sqrt_three_quarters = std::sqrt (0.75);
-
-const std::vector < std::vector < std::vector < double > > >
-	tag::Util::ortho_basis_double { { }, { { 1. } }, { { 1., 0. }, { 0., 1. } },
-	                                { { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. } } },
-	tag::Util::pm_ortho_basis_double { { }, { { 1. }, { -1. } },
-		{ { 1., 0. }, { 0., 1. }, { -1., 0. }, { 0., -1. } },
-		{ { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. }, { -1., 0., 0. }, { 0., -1., 0 }, { 0., 0., -1. } } },
-	tag::Util::directions { { }, { { 1. }, { -1. } },
-		{ { 1., 0. },  {  tag::Util::sqrt_half,  tag::Util::sqrt_half },
-		  { 0., 1. },  { -tag::Util::sqrt_half,  tag::Util::sqrt_half },
-		  { -1., 0. }, { -tag::Util::sqrt_half, -tag::Util::sqrt_half },
-		  { 0., -1. }, {  tag::Util::sqrt_half, -tag::Util::sqrt_half } },
-		{ { 1., 0., 0. }, { -1., 0., 0. }, { 0., 1., 0. }, 
-		  { 0., -1., 0. }, { 0., 0., 1. }, { 0., 0., -1. },
-		  { tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
-		  { tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
-		  { -tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
-		  { -tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
-		  { tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
-		  { tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
-		  { -tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
-		  { -tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
-		  { 0., tag::Util::sqrt_half, tag::Util::sqrt_half },
-		  { 0., tag::Util::sqrt_half, -tag::Util::sqrt_half },
-		  { 0., -tag::Util::sqrt_half, tag::Util::sqrt_half },
-		  { 0., -tag::Util::sqrt_half, -tag::Util::sqrt_half },
-		  {  tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
-		  {  tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
-		  {  tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
-		  {  tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third },
-		  { -tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
-		  { -tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
-		  { -tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
-		  { -tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third } } };
-
 
 // int Cell::counter { 0 };
 

@@ -1,5 +1,5 @@
 
-// mesh.h  2022.06.28
+// mesh.h  2022.07.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -178,12 +178,12 @@ namespace tag {  // see paragraph 11.3 in the manual
 		class Metric;
 		class WeakIntegrator;
 		static const std::vector < std::vector < std::vector < short int > > >
-			ortho_basis_int, pm_ortho_basis_int;
+			ortho_basis_int, pm_ortho_basis_int;  // defined in manifold.cpp
 		static const double one_third, minus_one_third, one_sixth, minus_one_sixth,
 		                    two_thirds, minus_two_thirds, sqrt_2, sqrt_half,
 		                    sqrt_3, sqrt_third, sqrt_two_thirds, sqrt_three_quarters;
 		static const std::vector < std::vector < std::vector < double > > >
-			ortho_basis_double, pm_ortho_basis_double, directions;
+			ortho_basis_double, pm_ortho_basis_double, directions;  // defined in manifold.cpp
 		class Action;  //  aka class Function::Action, aka class Manfold::Action
 		// we define it in function.h because we need it for Function::MultiValued
 		// but we prefer the user to see it as an attribute of class Manifold

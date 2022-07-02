@@ -1,5 +1,5 @@
 
-// manifold.cpp 2022.06.28
+// manifold.cpp 2022.07.01
 
 //   This file is part of maniFEM, a C++ library for meshes and finite elements on manifolds.
 
@@ -25,12 +25,71 @@
 
 using namespace maniFEM;
 
+//------------------------------------------------------------------------------------------------------//
+
 	
 Manifold Manifold::working ( tag::non_existent );
 // anything would do, the user must set this variable before anything else
 // by simply declaring any Manifold object (constructor assigns to Manifold::working)
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
+
+
+const std::vector < std::vector < std::vector < short int > > >
+	tag::Util::ortho_basis_int { { }, { { 1 } }, { { 1, 0 }, { 0, 1 } },
+	                             { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } } },
+	tag::Util::pm_ortho_basis_int { { }, { { 1 }, { -1 } },
+		{ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } },
+		{ { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { -1, 0, 0 }, { 0, -1, 0 }, { 0, 0, -1 } } };
+
+const double tag::Util::one_third = 1. / 3.,
+             tag::Util::minus_one_third = - tag::Util::minus_one_third,
+             tag::Util::one_sixth = 1. / 6.,
+             tag::Util::minus_one_sixth = - tag::Util::one_sixth,
+             tag::Util::two_thirds = 2. / 3.,
+             tag::Util::minus_two_thirds = - tag::Util::two_thirds,
+             tag::Util::sqrt_2 = std::sqrt (2.),
+             tag::Util::sqrt_half = 1./ tag::Util::sqrt_2,
+             tag::Util::sqrt_3 = std::sqrt (3.),
+             tag::Util::sqrt_third = 1./ tag::Util::sqrt_3,
+             tag::Util::sqrt_two_thirds = std::sqrt ( tag::Util::two_thirds ),
+             tag::Util::sqrt_three_quarters = std::sqrt (0.75);
+
+const std::vector < std::vector < std::vector < double > > >
+	tag::Util::ortho_basis_double { { }, { { 1. } }, { { 1., 0. }, { 0., 1. } },
+	                                { { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. } } },
+	tag::Util::pm_ortho_basis_double { { }, { { 1. }, { -1. } },
+		{ { 1., 0. }, { 0., 1. }, { -1., 0. }, { 0., -1. } },
+		{ { 1., 0., 0. }, { 0., 1., 0 }, { 0., 0., 1. }, { -1., 0., 0. }, { 0., -1., 0 }, { 0., 0., -1. } } },
+	tag::Util::directions { { }, { { 1. }, { -1. } },
+		{ { 1., 0. },  {  tag::Util::sqrt_half,  tag::Util::sqrt_half },
+		  { 0., 1. },  { -tag::Util::sqrt_half,  tag::Util::sqrt_half },
+		  { -1., 0. }, { -tag::Util::sqrt_half, -tag::Util::sqrt_half },
+		  { 0., -1. }, {  tag::Util::sqrt_half, -tag::Util::sqrt_half } },
+		{ { 1., 0., 0. }, { -1., 0., 0. }, { 0., 1., 0. }, 
+		  { 0., -1., 0. }, { 0., 0., 1. }, { 0., 0., -1. },
+		  { tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
+		  { tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
+		  { -tag::Util::sqrt_half, tag::Util::sqrt_half, 0. },
+		  { -tag::Util::sqrt_half, -tag::Util::sqrt_half, 0. },
+		  { tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
+		  { tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
+		  { -tag::Util::sqrt_half, 0., tag::Util::sqrt_half },
+		  { -tag::Util::sqrt_half, 0., -tag::Util::sqrt_half },
+		  { 0., tag::Util::sqrt_half, tag::Util::sqrt_half },
+		  { 0., tag::Util::sqrt_half, -tag::Util::sqrt_half },
+		  { 0., -tag::Util::sqrt_half, tag::Util::sqrt_half },
+		  { 0., -tag::Util::sqrt_half, -tag::Util::sqrt_half },
+		  {  tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
+		  {  tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
+		  {  tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
+		  {  tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third },
+		  { -tag::Util::sqrt_third,  tag::Util::sqrt_third,  tag::Util::sqrt_third },
+		  { -tag::Util::sqrt_third,  tag::Util::sqrt_third, -tag::Util::sqrt_third },
+		  { -tag::Util::sqrt_third, -tag::Util::sqrt_third,  tag::Util::sqrt_third },
+		  { -tag::Util::sqrt_third, -tag::Util::sqrt_third, -tag::Util::sqrt_third } } };
+
+//------------------------------------------------------------------------------------------------------//
 
 
 Function Manifold::Euclid::build_coord_func
@@ -78,7 +137,7 @@ Function Manifold::Quotient::build_coord_func  // virtual from Manifold::Core
 	// we return a non-existent Function just to avoid compilation errors
 	return Function ( tag::non_existent );  }
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 	
 Function Manifold::Euclid::get_coord_func ( ) const  // virtual from Manifold::Core
 {	return this->coord_func;  }
@@ -92,7 +151,7 @@ Function Manifold::Parametric::get_coord_func ( ) const  // virtual from Manifol
 Function Manifold::Quotient::get_coord_func ( ) const  // virtual from Manifold::Core
 {	return this->coord_func;  }
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 void Manifold::Euclid::set_coords ( const Function co )  // virtual from Manifold::Core
 {	this->coord_func = co;  }
@@ -114,7 +173,7 @@ void Manifold::Quotient::set_coords ( const Function co )  // virtual from Manif
 		< Manifold::Core*, Manifold::Quotient* > ( this );
 	m_q->coord_func = co;                                }
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 double Manifold::Euclid::measure ( ) const  // virtual from Manifold::Core
@@ -183,7 +242,7 @@ double Manifold::Quotient::measure ( ) const  // virtual from Manifold::Core
 
 }  // end of  Manifold::Quotient::measure
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 // metric in the manifold (an inner product on the tangent space)
@@ -226,7 +285,7 @@ double Manifold::matrix_inner_prod  // static
 		res += v[i]*w[j] * metric[dim*i+j](P);
 	return res;                                        }
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------//
 
 
 // P = sA + sB,  s+t == 1
