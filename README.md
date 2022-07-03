@@ -1,12 +1,14 @@
 # Give Up GitHub
 
-This project has given up GitHub.  ([See Software Freedom Conservancy's *Give Up  GitHub* site for details](https://GiveUpGitHub.org).)
+This project has given up GitHub.
+(See [Software Freedom Conservancy](https://sfconservancy.org/)'s [*Give Up  GitHub* site](https://GiveUpGitHub.org) for details.)
 
-You can now find this project at [CodeBerg](https://codeberg.org/cristian.barbarosie/manifem) instead.
+You can now find maniFEM at [CodeBerg](https://codeberg.org/cristian.barbarosie/manifem) instead.
 
-Any use of this project's code by GitHub Copilot, past or present, is done without our permission.  We do not consent to GitHub's use of this project's code in Copilot.
+Any use of this project's code by GitHub Copilot, past or present, is done without our permission.
+We do not consent to GitHub's use of this project's code in Copilot.
 
-Join us; you can [give up GitHub](https://GiveUpGitHub.org) too!
+Join us; you can [give up GitHub](https://GiveUpGitHub.org) too !
 
 # maniFEM
 [ManiFEM](http://manifem.rd.ciencias.ulisboa.pt) is a C++ library
